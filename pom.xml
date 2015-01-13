@@ -86,6 +86,10 @@
       <name>myGrid Repository</name>
       <url>http://www.mygrid.org.uk/maven/repository</url>
     </repository>
+    <repository>
+      <id>snapshots-repo</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -98,6 +102,11 @@
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
       <version>2.1</version>
+    </dependency>
+    <dependency>
+        <groupId>com.github.tulskiy</groupId>
+        <artifactId>jkeymaster</artifactId>
+        <version>1.2-SNAPSHOT</version>
     </dependency>
     <!--
     Javassist (Java Programming Assistant) makes Java bytecode manipulation simple.
