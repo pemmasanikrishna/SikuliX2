@@ -13,7 +13,7 @@ import javax.swing.JPanel;
 
 import org.sikuli.guide.SikuliGuideComponent.Layout;
 import org.sikuli.basics.Debug;
-import org.sikuli.script.OverlayTransparentWindow;
+import org.sikuli.util.OverlayTransparentWindow;
 import org.sikuli.script.Region;
 import org.sikuli.basics.Settings;
 import org.sikuli.natives.SysUtil;

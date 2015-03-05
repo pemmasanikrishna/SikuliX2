@@ -95,7 +95,7 @@ public class SikuliGuideComponent extends JComponent
    * @param back sets the background color
    * @param frame sets the color of the frame
    * @param text sets the color of the text
-   * @return the component itself for dot-chaining 
+   * @return the component itself for dot-chaining
    */
   public SikuliGuideComponent setColors(Color all, Color front, Color back, Color frame, Color text) {
     if (all != null) {
@@ -126,7 +126,7 @@ public class SikuliGuideComponent extends JComponent
    * @param back sets the background color
    * @param frame sets the color of the frame
    * @param text sets the color of the text
-   * @return the component itself for dot-chaining 
+   * @return the component itself for dot-chaining
    */
   public SikuliGuideComponent setColors(int[] front, int[] back, int[] frame, int[] text) {
     Color cf = null;
@@ -153,6 +153,7 @@ public class SikuliGuideComponent extends JComponent
   /**
    * set the front and back color
    * @param color
+	 * @return the component itself
    */
   public SikuliGuideComponent setColor(Color color) {
     setColors(null, color, color, null, null);
@@ -161,6 +162,7 @@ public class SikuliGuideComponent extends JComponent
 
   /**
    * set the front and back color as (r, g, b) integer array
+	 * @return the component itself
    */
   public SikuliGuideComponent setColor(int r, int g, int b) {
     setColor(new Color(r, g, b));
@@ -170,6 +172,7 @@ public class SikuliGuideComponent extends JComponent
   /**
    * set the text color
    * @param color
+	 * @return the component itself
    */
   public SikuliGuideComponent setTextColor(Color color) {
     setColors(null, null, null, null, color);
@@ -178,6 +181,7 @@ public class SikuliGuideComponent extends JComponent
 
   /**
    * set text color as (r, g, b) integer array
+	 * @return the component itself
    */
   public SikuliGuideComponent setTextColor(int r, int g, int b) {
     setTextColor(new Color(r, g, b));

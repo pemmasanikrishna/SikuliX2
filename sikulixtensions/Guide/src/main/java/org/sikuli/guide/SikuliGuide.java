@@ -17,13 +17,13 @@ import javax.swing.JPanel;
 
 import org.sikuli.guide.Transition.TransitionListener;
 import org.sikuli.basics.Debug;
-import org.sikuli.script.EventObserver;
-import org.sikuli.script.EventSubject;
+import org.sikuli.util.EventObserver;
+import org.sikuli.util.EventSubject;
 import org.sikuli.script.Location;
 import org.sikuli.script.Pattern;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
-import org.sikuli.script.OverlayTransparentWindow;
+import org.sikuli.util.OverlayTransparentWindow;
 import org.sikuli.basics.Settings;
 import org.sikuli.natives.SysUtil;
 
@@ -715,7 +715,7 @@ public class SikuliGuide extends OverlayTransparentWindow implements EventObserv
    * create a rectangle in this guide plane and add to front
    * @return the rectangle
    */
-  
+
   public SikuliGuideComponent rectangle() {
     SikuliGuideComponent gc = new SikuliGuideRectangle();
     gc.setGuide(this);

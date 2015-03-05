@@ -1,7 +1,7 @@
 package org.sikuli.guide;
 
 import org.sikuli.script.Region;
-import org.sikuli.script.OverlayTransparentWindow;
+import org.sikuli.util.OverlayTransparentWindow;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
@@ -18,8 +18,8 @@ import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import org.sikuli.script.EventObserver;
-import org.sikuli.script.EventSubject;
+import org.sikuli.util.EventObserver;
+import org.sikuli.util.EventSubject;
 import org.sikuli.basics.Settings;
 import org.sikuli.natives.SysUtil;
 
