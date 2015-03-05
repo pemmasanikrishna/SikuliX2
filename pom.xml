@@ -103,11 +103,11 @@
       <artifactId>log4j-core</artifactId>
       <version>2.1</version>
     </dependency>
-    <dependency>
+<!--    <dependency>
         <groupId>com.github.tulskiy</groupId>
         <artifactId>jkeymaster</artifactId>
         <version>1.2-SNAPSHOT</version>
-    </dependency>
+    </dependency>-->
     <!--
     Javassist (Java Programming Assistant) makes Java bytecode manipulation simple.
     http://www.csg.ci.i.u-tokyo.ac.jp/~chiba/javassist/
