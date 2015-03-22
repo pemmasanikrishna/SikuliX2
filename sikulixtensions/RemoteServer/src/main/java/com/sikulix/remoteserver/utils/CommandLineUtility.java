@@ -1,6 +1,6 @@
 package com.sikulix.remoteserver.utils;
 
-import org.sikuli.remoteinterfaces.entities.Command;
+import com.sikulix.restcore.entities.Command;
 import org.apache.commons.exec.*;
 
 import java.io.IOException;

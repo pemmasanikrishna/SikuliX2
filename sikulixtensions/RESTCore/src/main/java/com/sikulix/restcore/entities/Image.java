@@ -1,17 +1,17 @@
-package com.sikulix.entities;
-
-
-import org.sikuli.remoteinterfaces.entities.Image;
+package com.sikulix.restcore.entities;
 
 /**
  * Author: Sergey Kuts
  */
-public class ImageBox implements Image {
+public class Image {
 
     private String path;
     private float similarity;
 
-    public ImageBox(final String path, final float similarity) {
+    public Image() {
+    }
+
+    public Image(final String path, final float similarity) {
         this.path = path;
         this.similarity = similarity;
     }

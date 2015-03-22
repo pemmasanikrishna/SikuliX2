@@ -1,6 +1,6 @@
 package com.sikulix.remoteserver.wrapper;
 
-import org.sikuli.remoteinterfaces.entities.Image;
+import com.sikulix.restcore.entities.Image;
 import org.sikuli.script.*;
 
 import java.awt.*;

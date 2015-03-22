@@ -1,7 +1,7 @@
 package com.sikulix.entities;
 
 import com.sikulix.restclient.client.Client;
-import org.sikuli.remoteinterfaces.common.Sikulix;
+import com.sikulix.restcore.interfaces.RemoteSikulix;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 
@@ -13,7 +13,7 @@ import java.util.logging.Logger;
  * Author: Sergey Kuts
  */
 public class BaseTest {
-    
+
     // You should set real IP, instead of localhost
     public static final String SIKULIX_SERVER_IP = "127.0.0.1";
     public static final int SIKULIX_SERVER_PORT = 4041;
@@ -37,7 +37,7 @@ public class BaseTest {
     private static final Logger BASE_TEST_LOGGER = Logger.getLogger(BaseTest.class.getName());
 
     // In case of tests scalability, you should take care about Sikulix thread-safety!
-    private static Sikulix sikuliXClient;
+    private static RemoteSikulix sikuliXClient;
 
     @BeforeSuite
     public void initClient() {
@@ -53,7 +53,7 @@ public class BaseTest {
         }
     }
 
-    public Sikulix getClient() {
+    public RemoteSikulix getClient() {
         return sikuliXClient;
     }
 
