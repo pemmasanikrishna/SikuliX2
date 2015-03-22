@@ -1,8 +1,8 @@
 package com.sikulix.tests;
 
 import com.sikulix.entities.BaseTest;
-import com.sikulix.entities.CommandLineBox;
-import com.sikulix.entities.ImageBox;
+import com.sikulix.restcore.entities.Command;
+import com.sikulix.restcore.entities.Image;
 import org.apache.commons.io.FileUtils;
 import org.sikuli.script.Key;
 import org.testng.annotations.Test;
@@ -51,7 +51,7 @@ public class LinuxTests extends BaseTest {
     @Test(priority = 3)
     public void executeScript() {
         getClient().executeCommandLine(
-                new CommandLineBox("sh", Arrays.asList(SERVER_PATH.getPath() + "/" + SH_SCRIPT.getName()), WAIT_TIMEOUT));
+                new Command("sh", Arrays.asList(SERVER_PATH.getPath() + "/" + SH_SCRIPT.getName()), WAIT_TIMEOUT));
         assertTrue(getClient().exists(Arrays.asList(SERVER_PATH.getPath() + "/" + EMPTY_FILE)));
     }
 
@@ -63,9 +63,9 @@ public class LinuxTests extends BaseTest {
 
     @Test(priority = 5)
     public void callFirefoxFromTerminal() {
-        getClient().click(new ImageBox(getResource(RESOURCE_TERMINAL_IMAGE).getPath(), SIMILARITY), 3);
-        getClient().setText(new ImageBox(getResource(RESOURCE_INPUT_TERMINAL_IMAGE).getPath(), SIMILARITY),
+        getClient().click(new Image(getResource(RESOURCE_TERMINAL_IMAGE).getPath(), SIMILARITY), 3);
+        getClient().setText(new Image(getResource(RESOURCE_INPUT_TERMINAL_IMAGE).getPath(), SIMILARITY),
                 "firefox" + Key.ENTER, 3);
-        getClient().exists(new ImageBox(getResource(RESOURCE_LABEL_FF_IMAGE).getPath(), SIMILARITY), 5);
+        getClient().exists(new Image(getResource(RESOURCE_LABEL_FF_IMAGE).getPath(), SIMILARITY), 5);
     }
 }

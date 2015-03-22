@@ -1,19 +1,20 @@
-package com.sikulix.entities;
-
-import org.sikuli.remoteinterfaces.entities.Command;
+package com.sikulix.restcore.entities;
 
 import java.util.List;
 
 /**
  * Author: Sergey Kuts
  */
-public class CommandLineBox implements Command {
+public class Command {
 
     private String process;
     private List<String> args;
     private int timeout;
 
-    public CommandLineBox(final String process, final List<String> args, final int timeout) {
+    public Command() {
+    }
+
+    public Command(final String process, final List<String> args, final int timeout) {
         this.process = process;
         this.args = args;
         this.timeout = timeout;
