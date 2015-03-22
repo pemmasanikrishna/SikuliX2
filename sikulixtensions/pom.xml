@@ -42,7 +42,7 @@
 	</repositories>
 
 	<modules>
-		<!--<module>Guide</module>-->
+		<module>Guide</module>
 		<module>RemoteRobot</module>
         <module>RESTCore</module>
 		<module>RemoteServer</module>
