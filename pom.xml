@@ -10,7 +10,7 @@
 
   <groupId>com.sikulix</groupId>
   <artifactId>SikuliX2</artifactId>
-  <version>2.0.0-b1</version>
+  <version>2.0.0-SNAPSHOT</version>
 
   <!-- to globally change the pom version:
   mvn versions:set -DnewVersion=1.1.0
@@ -19,7 +19,9 @@
 
   <packaging>pom</packaging>
 
-  <url>http://www.sikuli.org</url>
+	<name>SikuliX version 2</name>
+	<description>... for visual testing and automation</description>
+	<url>http://www.sikulix.com</url>
 
   <licenses>
     <license>
@@ -37,6 +39,12 @@
     </developer>
   </developers>
 
+	<scm>
+		<connection>scm:git:git@github.com:RaiMan/SikuliX2.git</connection>
+		<developerConnection>scm:git:git@github.com:RaiMan/SikuliX2.git</developerConnection>
+		<url>git@github.com:RaiMan/SikuliX2.git</url>
+	</scm>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <sikuli.jartype>plain.xml</sikuli.jartype>
@@ -44,20 +52,18 @@
     <sikulixvmaj>2</sikulixvmaj>
     <sikulixvmin>0</sikulixvmin>
     <sikulixvsub>0</sikulixvsub>
-    <sikulixbeta>1</sikulixbeta>
+    <sikulixbeta>0</sikulixbeta>
+
     <!--   this decides, where setup downloads from   -->
     <!--		<sikulixdev>release</sikulixdev>-->
     <sikulixdev>development</sikulixdev>
-    <!-- TODO: find better solution for beta / non-beta -->
-    <!--
-    <sikuli.usedversion>${sikulixvmaj}.${sikulixvmin}.${sikulixvsub}-Beta${sikulixbeta}</sikuli.usedversion>
-    -->
-    <sikuli.usedversion>${sikulixvmaj}.${sikulixvmin}.${sikulixvsub}</sikuli.usedversion>
+
+		<sikuli.usedversion>${sikulixvmaj}.${sikulixvmin}.${sikulixvsub}</sikuli.usedversion>
     <sikuli.minorversion>${sikulixvmaj}.${sikulixvmin}.${sikulixvsub}</sikuli.minorversion>
-    <sikulixjythonversion>2.7-b3</sikulixjythonversion>
-    <sikulixjrubyversion>1.7.18</sikulixjrubyversion>
+    <sikulixjythonversion>2.7-b4</sikulixjythonversion>
+    <sikulixjrubyversion>1.7.19</sikulixjrubyversion>
     <sikulixlocalrepo>${settings.localRepository}</sikulixlocalrepo>
-    <sikuli.helpers>Setup/src/main/resources</sikuli.helpers>
+		<sikuli.helpers>Setup/src/main/resources/content</sikuli.helpers>
     <timestamp>${maven.build.timestamp}</timestamp>
     <maven.build.timestamp.format>yyyy-MM-dd_HH:mm</maven.build.timestamp.format>
   </properties>
@@ -126,19 +132,19 @@
   </dependencies>
 
   <modules>
-    <module>sikulixapi</module>
-    <module>sikulix</module>
-    <module>sikulixtensions</module>
+    <module>sikulix2api</module>
+<!--    <module>sikulix</module>-->
+<!--    <module>sikulixtensions</module>-->
   </modules>
 
   <build>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
+        <version>3.2</version>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.7</source>
+          <target>1.7</target>
           <!--					might be needed for compiling with Java 8 -->
           <!--					<compilerArgument>-XDignore.symbol.file=true</compilerArgument>-->
         </configuration>

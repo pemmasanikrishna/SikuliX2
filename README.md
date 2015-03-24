@@ -2,9 +2,9 @@
 ============
 
 <hr>
-**Version 2.0.0-Beta1 under developement** (starting somewhen in January 2015)
+**Version 2.0.0-Beta1 under developement** (starting somewhen in March 2015)
 <hr>
-**[latest stable version is 1.1.0](https://github.com/RaiMan/SikuliX-2014)** 
+**[latest stable version is 1.1.0](https://github.com/RaiMan/SikuliX-2014)**
 <hr>
 
 **Forking and/or downloading this repo only makes sense:**
@@ -12,7 +12,7 @@
  - if you want to get a knowledge about the internals of Sikuli
  - if you want to create your own packages containing Sikuli features
  - if you want to contribute.
- 
+
 **In any case: be sure you know the content of the [SikuliX Quickstart](http://www.sikulix.com/quickstart.html)**
 
 <hr>
@@ -20,15 +20,15 @@
 Maven module structure for developement
 ---
 
-**sikulixapi**
+**sikulix2api**
 
 the API to be used in Java and Java aware scripting languages
 
-**sikulix**
+**sikulix2** (inactive as module currently)
 
 the Sikuli IDE and the support for running scripts in a supported scripting language.
 
-**sikulixtensions** 
+**sikulixtensions** (inactive as module currently)
 
 Packages that extend the SikuliX features in various ways.<br>
 On the usage and/or developement level they depend on the core features of sikulixapi or sikulix.
@@ -40,5 +40,5 @@ Prerequisites for development
 
  - a Java JDK 1.7+
  - Maven 3+
- 
+
 I use **NetBeans 8+** for developement.
