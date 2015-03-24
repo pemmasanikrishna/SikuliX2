@@ -12,5 +12,13 @@
 hs_err_pid*
 
 target*/
-
+.idea
+nb*
+stuff/
+.settings/
+.project
+.classpath
+*$py.class
+.exe
+original/
 *.versionsBackup

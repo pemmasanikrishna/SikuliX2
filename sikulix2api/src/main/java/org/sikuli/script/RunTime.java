@@ -58,6 +58,7 @@ public class RunTime {
     uScriptProject = null;
   }
  public static String appDataMsg = "";
+ private static boolean isVersion2 = true;
 
 //<editor-fold defaultstate="collapsed" desc="logging">
   private final String me = "RunTime%s: ";
@@ -648,6 +649,7 @@ int nMonitors = 0;
 
 //<editor-fold defaultstate="collapsed" desc="libs export">
   public void makeFolders() {
+		if (isVersion2) return;
     fLibsFolder = new File(fSikulixAppPath, "SikulixLibs_" + sxBuildStamp);
     if (testing) {
       logp("***** for testing: delete folders SikulixLibs/ and Lib/");
@@ -703,6 +705,7 @@ int nMonitors = 0;
   }
 
   private void libsExport(Type typ) {
+		if (isVersion2) return;
     boolean shouldExport = false;
     makeFolders();
     URL uLibsFrom = null;
@@ -757,6 +760,7 @@ int nMonitors = 0;
         dumpClassPath();
       }
       if (uLibsFrom == null) {
+				if (isVersion2) return;
         terminate(1, "libs to export not found on above classpath: " + fpJarLibs);
       }
       log(lvl, "libs to export are at:\n%s", uLibsFrom);

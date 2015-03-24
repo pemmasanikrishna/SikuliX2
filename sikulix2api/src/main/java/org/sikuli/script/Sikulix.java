@@ -55,34 +55,34 @@ public class Sikulix {
   public static int testNumber = -1;
 
   static {
-    String jarName = "";
-
-    CodeSource codeSrc =  Sikulix.class.getProtectionDomain().getCodeSource();
-    if (codeSrc != null && codeSrc.getLocation() != null) {
-      jarName = codeSrc.getLocation().getPath();
-    }
-
-    if (jarName.contains("sikulixsetupAPI")) {
-      JOptionPane.showMessageDialog(null, "Not useable!\nRun setup first!",
-              "sikulixsetupAPI", JOptionPane.ERROR_MESSAGE);
-      System.exit(0);
-    }
-
+//    String jarName = "";
+//
+//    CodeSource codeSrc =  Sikulix.class.getProtectionDomain().getCodeSource();
+//    if (codeSrc != null && codeSrc.getLocation() != null) {
+//      jarName = codeSrc.getLocation().getPath();
+//    }
+//
+//    if (jarName.contains("sikulixsetupAPI")) {
+//      JOptionPane.showMessageDialog(null, "Not useable!\nRun setup first!",
+//              "sikulixsetupAPI", JOptionPane.ERROR_MESSAGE);
+//      System.exit(0);
+//    }
+//
     rt = RunTime.get();
-    if (Debug.getDebugLevel() == 0) {
-      Debug.setDebugLevel(1);
-    }
-
-    if (codeSrc != null && codeSrc.getLocation() != null) {
-      URL jarURL = codeSrc.getLocation();
-      jarPath = FileManager.slashify(new File(jarURL.getPath()).getAbsolutePath(), false);
-      jarParentPath = (new File(jarPath)).getParent();
-      if (jarPath.endsWith(".jar")) {
-        runningFromJar = true;
-      } else {
-        jarPath += "/";
-      }
-    }
+//    if (Debug.getDebugLevel() == 0) {
+//      Debug.setDebugLevel(1);
+//    }
+//
+//    if (codeSrc != null && codeSrc.getLocation() != null) {
+//      URL jarURL = codeSrc.getLocation();
+//      jarPath = FileManager.slashify(new File(jarURL.getPath()).getAbsolutePath(), false);
+//      jarParentPath = (new File(jarPath)).getParent();
+//      if (jarPath.endsWith(".jar")) {
+//        runningFromJar = true;
+//      } else {
+//        jarPath += "/";
+//      }
+//    }
   }
 
   /**
