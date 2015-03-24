@@ -1,4 +1,4 @@
-package com.sikulix.restclient.utils;
+package com.sikulix.restcore.utils;
 
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;

@@ -1,7 +1,7 @@
 package com.sikulix.remoteserver.service;
 
-import org.sikuli.remoteinterfaces.entities.Image;
 import com.sikulix.remoteserver.wrapper.RemoteDesktop;
+import com.sikulix.restcore.entities.Image;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;

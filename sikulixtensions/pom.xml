@@ -44,9 +44,10 @@
 	<modules>
 		<module>Guide</module>
 		<module>RemoteRobot</module>
+        <module>RESTCore</module>
 		<module>RemoteServer</module>
-    <module>RESTClient</module>
-    <module>Tesseract4SikuliX</module>
-	</modules>
+        <module>RESTClient</module>
+        <module>Tesseract4SikuliX</module>
+    </modules>
 
 </project>

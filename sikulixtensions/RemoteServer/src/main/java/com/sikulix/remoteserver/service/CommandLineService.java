@@ -1,7 +1,7 @@
 package com.sikulix.remoteserver.service;
 
 import com.sikulix.remoteserver.utils.CommandLineUtility;
-import org.sikuli.remoteinterfaces.entities.Command;
+import com.sikulix.restcore.entities.Command;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
