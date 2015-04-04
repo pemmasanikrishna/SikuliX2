@@ -6,10 +6,8 @@
 
 package org.sikuli.guide;
 
-import java.awt.Component;
-import java.awt.Point;
-import java.util.ArrayList;
-import javax.swing.JComponent;
+import java.awt.Color;
+import org.sikuli.script.*;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -17,10 +15,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Ignore;
-import org.sikuli.script.Pattern;
-import org.sikuli.script.Region;
-import org.sikuli.script.Screen;
-import org.sikuli.util.EventSubject;
 
 /**
  *
@@ -28,7 +22,7 @@ import org.sikuli.util.EventSubject;
  */
 public class SikuliGuideTest {
 
-	SikuliGuide guide = null;
+	Guide guide = null;
 	static Screen scr;
 
 	public SikuliGuideTest() {
@@ -37,6 +31,7 @@ public class SikuliGuideTest {
 	@BeforeClass
 	public static void setUpClass() {
 		scr = new Screen();
+    ImagePath.add("org.sikuli.script.RunTime/ImagesAPI.sikuli");
 	}
 
 	@AfterClass
@@ -45,7 +40,7 @@ public class SikuliGuideTest {
 
 	@Before
 	public void setUp() {
-		guide = new SikuliGuide();
+		guide = new Guide();
 	}
 
 	@After
@@ -55,130 +50,115 @@ public class SikuliGuideTest {
 	}
 
 	/**
-	 * Test of rectangle method, of class SikuliGuide.
+	 * Test of rectangle method, of class Guide.
 	 */
 	@Test
 	public void testRectangle() {
-		SikuliGuideComponent result = guide.rectangle();
-		result.setActualSize(100, 100);
-		result.setTarget(scr.getCenter().grow(100));
-		assertNotNull(result);
-		// TODO review the generated test code and remove the default call to fail.
-		//fail("The test case is a prototype.");
+		Visual g = guide.rectangle();
+		g.setTarget(scr.getCenter().grow(100));
+    g.setActualSize(300, 300);
+		assertNotNull(g);
 	}
 
 	/**
-	 * Test of circle method, of class SikuliGuide.
+	 * Test of circle method, of class Guide.
 	 */
-	@Ignore
 	@Test
 	public void testCircle() {
 		System.out.println("circle");
-		SikuliGuide instance = new SikuliGuide();
-		SikuliGuideComponent expResult = null;
-		SikuliGuideComponent result = instance.circle();
-		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
-		fail("The test case is a prototype.");
+		Visual g = guide.circle();
+		g.setTarget(scr.getCenter().grow(100));
+    g.setActualSize(300, 300);
+		assertNotNull(g);
 	}
 
 	/**
-	 * Test of text method, of class SikuliGuide.
+	 * Test of text method, of class Guide.
 	 */
-	@Ignore
-	@Test
+  @Test
 	public void testText() {
-		System.out.println("text");
-		String text = "";
-		SikuliGuide instance = new SikuliGuide();
-		SikuliGuideComponent expResult = null;
-		SikuliGuideComponent result = instance.text(text);
-		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
-		fail("The test case is a prototype.");
+		String text = "some words<br>and more<br>and even more";
+		Visual g = guide.text(text);
+    g.setFont("Palatino", 24);
+    g.updateComponent();
+    g.setColor(Color.yellow);
+    g.setTextColor(Color.blue);
+    g.setLocationRelativeToRegion(scr.getCenter().grow(100), Visual.Layout.TOP);
+		System.out.println("text: " + g.getStyleString());
+		assertNotNull(g);
 	}
 
 	/**
-	 * Test of flag method, of class SikuliGuide.
+	 * Test of flag method, of class Guide.
 	 */
-	@Ignore
 	@Test
 	public void testFlag() {
 		System.out.println("flag");
-		String text = "";
-		SikuliGuide instance = new SikuliGuide();
-		SikuliGuideComponent expResult = null;
-		SikuliGuideComponent result = instance.flag(text);
-		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
-		fail("The test case is a prototype.");
+		String text = "tooltip: some words and more and even more";
+		Visual g = guide.flag(text);
+    g.setLocationRelativeToRegion(scr.getCenter().grow(100), Visual.Layout.TOP);
+    g.setFontSize(12);
+    g.setColor(Color.white);
+    g.setTextColor(Color.black);
+		assertNotNull(g);
 	}
 
 	/**
-	 * Test of callout method, of class SikuliGuide.
+	 * Test of callout method, of class Guide.
 	 */
-	@Ignore
 	@Test
 	public void testCallout() {
 		System.out.println("callout");
-		String text = "";
-		SikuliGuide instance = new SikuliGuide();
-		SikuliGuideComponent expResult = null;
-		SikuliGuideComponent result = instance.callout(text);
-		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
-		fail("The test case is a prototype.");
+		String text = "some words<br>and more<br>and even more";
+		Visual g = guide.callout(text);
+    g.setLocationRelativeToRegion(scr.getCenter().grow(100), Visual.Layout.LEFT);
+    g.setFontSize(16);
+    g.setColor(Color.black);
+    g.setTextColor(Color.white);
+		assertNotNull(g);
 	}
 
 	/**
-	 * Test of button method, of class SikuliGuide.
+	 * Test of bracket method, of class Guide.
+	 */
+	@Test
+	public void testBracket() {
+		System.out.println("bracket");
+		Visual g = guide.bracket();
+    g.setLocationRelativeToRegion(scr.getCenter().grow(100), Visual.Layout.RIGHT);
+    g.setColor(Color.red);
+		assertNotNull(g);
+	}
+
+	/**
+	 * Test of image method, of class Guide.
+	 */
+	@Test
+	public void testImage() {
+		System.out.println("image");
+		Visual g = guide.image("firefox");
+    g.setLocationRelativeToRegion(scr.getCenter().grow(200), Visual.Layout.OVER);
+		assertNotNull(g);
+	}
+
+	/**
+	 * Test of button method, of class Guide.
 	 */
 	@Ignore
 	@Test
 	public void testButton() {
 		System.out.println("button");
 		String name = "";
-		SikuliGuide instance = new SikuliGuide();
-		SikuliGuideComponent expResult = null;
-		SikuliGuideComponent result = instance.button(name);
+		Guide instance = new Guide();
+		Visual expResult = null;
+		Visual result = instance.button(name);
 		assertEquals(expResult, result);
 		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
 	/**
-	 * Test of bracket method, of class SikuliGuide.
-	 */
-	@Ignore
-	@Test
-	public void testBracket() {
-		System.out.println("bracket");
-		SikuliGuide instance = new SikuliGuide();
-		SikuliGuideComponent expResult = null;
-		SikuliGuideComponent result = instance.bracket();
-		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
-		fail("The test case is a prototype.");
-	}
-
-	/**
-	 * Test of image method, of class SikuliGuide.
-	 */
-	@Ignore
-	@Test
-	public void testImage() {
-		System.out.println("image");
-		Object img = null;
-		SikuliGuide instance = new SikuliGuide();
-		SikuliGuideComponent expResult = null;
-		SikuliGuideComponent result = instance.image(img);
-		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
-		fail("The test case is a prototype.");
-	}
-
-	/**
-	 * Test of arrow method, of class SikuliGuide.
+	 * Test of arrow method, of class Guide.
 	 */
 	@Ignore
 	@Test
@@ -186,9 +166,9 @@ public class SikuliGuideTest {
 		System.out.println("arrow");
 		Object from = null;
 		Object to = null;
-		SikuliGuide instance = new SikuliGuide();
-		SikuliGuideComponent expResult = null;
-		SikuliGuideComponent result = instance.arrow(from, to);
+		Guide instance = new Guide();
+		Visual expResult = null;
+		Visual result = instance.arrow(from, to);
 		assertEquals(expResult, result);
 		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
