@@ -4,7 +4,7 @@
 [![Join the chat at https://gitter.im/RaiMan/SikuliX2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RaiMan/SikuliX2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 <hr>
-**Version 2.0.0 under developement** (starting somewhen in March 2015)
+**Version 2.0.0 under developement** (starting somewhen in Summer 2015)
 <hr>
 **[latest stable version is 1.1.0](https://github.com/RaiMan/SikuliX-2014)**
 <hr>
