@@ -32,7 +32,7 @@ public class Mouse {
   }
 
   private static Mouse mouse = null;
-  private Device device = null;
+  private static Device device = null;
 
   protected Location mousePos;
   protected boolean clickDouble;
@@ -46,7 +46,6 @@ public class Mouse {
   public static final int RIGHT = InputEvent.BUTTON3_MASK;
   public static final int WHEEL_UP = -1;
   public static int WHEEL_DOWN = 1;
-  public static final int WHEEL_STEP_DELAY = 50;
 
   private Mouse() {
   }
@@ -54,10 +53,8 @@ public class Mouse {
   public static void init() {
     if (mouse == null) {
       mouse = new Mouse();
-      mouse.device = new Device(mouse);
-      mouse.device.isMouse = true;
-      move(at());
-      mouse.device.lastPos = null;
+      device = new Device(mouse);
+      device.isMouse = true;
       log(3, "init");
     }
   }
@@ -86,25 +83,24 @@ public class Mouse {
   }
 
   protected static boolean let(Object owner) {
-    return get().get().device.let(owner);
+    return get().device.let(owner);
   }
 
   public static Location at() {
-    return get().device.getLocation();
+    return device.getLocation();
   }
 
   public static void reset() {
     if (mouse == null) {
       return;
     }
-    get().device.unblock(get().device.owner);
-    mouse.get().device.let(get().device.owner);
-    get().device.let(get().device.owner);
+    device.unblock(device.owner);
+    device.let(device.owner);
+    device.let(device.owner);
     up();
-    get().device.mouseMovedResponse = get().device.MouseMovedIgnore;
-    get().device.mouseMovedCallback = null;
-		get().device.callback = null;
-    get().device.lastPos = null;
+    device.mouseMovedResponse = device.MouseMovedIgnore;
+    device.mouseMovedCallback = null;
+    device.lastPos = null;
   }
 
   /**
@@ -113,7 +109,7 @@ public class Mouse {
    * @return current setting see {@link #setMouseMovedAction(int)}
    */
   public static int getMouseMovedResponse() {
-    return get().device.mouseMovedResponse;
+    return device.mouseMovedResponse;
   }
 
   /**
@@ -127,9 +123,9 @@ public class Mouse {
    */
   public static void setMouseMovedAction(int movedAction) {
     if (movedAction > -1 && movedAction < 3) {
-      get().device.mouseMovedResponse = movedAction;
-      get().device.mouseMovedCallback = null;
-      log(lvl, "setMouseMovedAction: %d", get().device.mouseMovedResponse);
+      device.mouseMovedResponse = movedAction;
+      device.mouseMovedCallback = null;
+      log(lvl, "setMouseMovedAction: %d", device.mouseMovedResponse);
     }
   }
 
@@ -140,29 +136,21 @@ public class Mouse {
    *
    * @param callBack ObserverCallBack
    */
-  public static void setMouseMovedCallback(Object callBack) {
+  public static void setMouseMovedCallback(ObserverCallBack callBack) {
     if (callBack != null) {
-      get().device.mouseMovedResponse = 3;
-      get().device.mouseMovedCallback = new ObserverCallBack(callBack, ObserveEvent.Type.GENERIC);
+      device.mouseMovedResponse = 3;
+      device.mouseMovedCallback = callBack;
     }
   }
 
-  /**
-   *
-   * @param state
-   */
-  public static void setMouseMovedHighlight(boolean state) {
-    get().device.MouseMovedHighlight = state;
-}
-  
   /**
    * check if mouse was moved since last mouse action
    *
    * @return true/false
    */
   public static boolean hasMoved() {
-    Location pos = get().device.getLocation();
-    if (get().device.lastPos.x != pos.x || get().device.lastPos.y != pos.y) {
+    Location pos = device.getLocation();
+    if (device.lastPos.x != pos.x || device.lastPos.y != pos.y) {
       return true;
     }
     return false;
@@ -188,16 +176,16 @@ public class Mouse {
    * @return the location
    */
   public static Location click(Location loc, String action, Integer... args) {
-    if (get().device.isSuspended() || loc.isOtherScreen()) {
+    if (device.isSuspended() || loc.isOtherScreen()) {
       return null;
     }
     getArgsClick(loc, action, args);
-    get().device.use();
+    device.use();
     Device.delay(mouse.beforeWait);
     Settings.ClickDelay = mouse.innerWait / 1000;
     click(loc, mouse.buttons, 0, ((Mouse) get()).clickDouble, null);
     Device.delay(mouse.afterWait);
-    get().device.let();
+    device.let();
     return loc;
   }
 
@@ -242,23 +230,19 @@ public class Mouse {
     }
   }
 
-  protected static int click(Location loc, int buttons, Integer modifiers, boolean dblClick, Region region) {
-    if (modifiers == null) {
-      modifiers = 0;
-    }
+  protected static int click(Location loc, int buttons, int modifiers, boolean dblClick, Region region) {
     Debug profiler = Debug.startTimer("Mouse.click");
     boolean shouldMove = true;
     if (loc == null) {
       shouldMove = false;
       loc = at();
     }
-    IRobot r = null;
-    r = Screen.getMouseRobot();
+    DesktopRobot r = loc.getRobotForPoint("click");
     if (r == null) {
       profiler.end();
       return 0;
     }
-    get().device.use(region);
+    device.use(region);
     profiler.lap("after use");
     Debug.action(getClickMsg(loc, buttons, modifiers, dblClick));
     if (shouldMove) {
@@ -283,7 +267,7 @@ public class Mouse {
     r.clickEnds();
     r.waitForIdle();
     profiler.lap("before let");
-    get().device.let(region);
+    device.let(region);
     profiler.end();
     return 1;
   }
@@ -329,22 +313,21 @@ public class Mouse {
   }
 
   protected static int move(Location loc, Region region) {
-    if (get().device.isSuspended()) {
+    if (device.isSuspended()) {
       return 0;
     }
     if (loc != null) {
-      IRobot r = null;
-      r = Screen.getMouseRobot();
+      DesktopRobot r = loc.getRobotForPoint("mouseMove");
       if (r == null) {
         return 0;
       }
       if (!r.isRemote()) {
-        get().device.use(region);
+        device.use(region);
       }
       r.smoothMove(loc);
       r.waitForIdle();
       if (!r.isRemote()) {
-        get().device.let(region);
+        device.let(region);
       }
       return 1;
     }
@@ -361,11 +344,11 @@ public class Mouse {
   }
 
   protected static void down(int buttons, Region region) {
-    if (get().device.isSuspended()) {
+    if (device.isSuspended()) {
       return;
     }
-    get().device.use(region);
-    Screen.getMouseRobot().mouseDown(buttons);
+    device.use(region);
+    device.primaryRobot.mouseDown(buttons);
   }
 
   /**
@@ -386,12 +369,12 @@ public class Mouse {
   }
 
   protected static void up(int buttons, Region region) {
-    if (get().device.isSuspended()) {
+    if (device.isSuspended()) {
       return;
     }
-    Screen.getMouseRobot().mouseUp(buttons);
+    device.primaryRobot.mouseUp(buttons);
     if (region != null) {
-      get().device.let(region);
+      device.let(region);
     }
   }
 
@@ -407,21 +390,17 @@ public class Mouse {
   }
 
   protected static void wheel(int direction, int steps, Region region) {
-    wheel(direction,steps,region, WHEEL_STEP_DELAY);
-  }
-    
-  protected static void wheel(int direction, int steps, Region region, int stepDelay) {
-    if (get().device.isSuspended()) {
+    if (device.isSuspended()) {
       return;
     }
-    IRobot r = Screen.getMouseRobot();
-    get().device.use(region);
+    DesktopRobot r = device.primaryRobot;
+    device.use(region);
     Debug.log(3, "Region: wheel: %s steps: %d",
             (direction == WHEEL_UP ? "WHEEL_UP" : "WHEEL_DOWN"), steps);
     for (int i = 0; i < steps; i++) {
       r.mouseWheel(direction);
-      r.delay(stepDelay);
+      r.delay(50);
     }
-    get().device.let(region);
+    device.let(region);
   }
 }

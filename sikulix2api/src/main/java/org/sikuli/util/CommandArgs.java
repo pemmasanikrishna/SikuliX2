@@ -25,7 +25,6 @@ public class CommandArgs {
   Options _options;
   ArrayList<String> userArgs = new ArrayList<String>();
   ArrayList<String> sikuliArgs = new ArrayList<String>();
-  static String argsOrg = "";
 
   private static boolean isIDE(String callerType) {
     return ("IDE".equals(callerType));
@@ -133,13 +132,6 @@ public class CommandArgs {
             .create(CommandArgsEnum.INTERACTIVE.shortname().charAt(0)));
 
     _options.addOption(
-            OptionBuilder.withLongOpt(CommandArgsEnum.SERVER.longname())
-            .hasOptionalArg()
-            .withArgName(CommandArgsEnum.SERVER.argname())
-            .withDescription(CommandArgsEnum.SERVER.description())
-            .create(CommandArgsEnum.SERVER.shortname().charAt(0)));
-
-     _options.addOption(
             OptionBuilder.withLongOpt(CommandArgsEnum.LOAD.longname())
             .withDescription(CommandArgsEnum.LOAD.description())
             .hasOptionalArgs()
@@ -182,12 +174,9 @@ public class CommandArgs {
   
   public static String[] scanArgs(String[] args) {
 //TODO detect leading and/or trailing blanks
-    argsOrg = System.getenv("SIKULI_COMMAND");
-    if (argsOrg == null) {
-      argsOrg = System.getProperty("sikuli.SIKULI_COMMAND");
-    }
-    if (argsOrg == null) {
-      argsOrg = "";
+    String cmdOrg = System.getenv("SIKULI_COMMAND");
+    if (cmdOrg == null) {
+      cmdOrg = System.getProperty("sikuli.SIKULI_COMMAND");
     }
     String sep = "\"";
     String temp = null;
@@ -206,10 +195,10 @@ public class CommandArgs {
       } else if (arg.endsWith(sep)) {
         if (temp != null) {
           arg = temp + " " + arg.substring(0, arg.length() - 1);
-          if (argsOrg != null && !argsOrg.contains(arg)) {
+          if (cmdOrg != null && !cmdOrg.contains(arg)) {
             arg = arg.replace(" ", " *?");
             pat = Pattern.compile("(" + arg + ")");
-            m = pat.matcher(argsOrg);
+            m = pat.matcher(cmdOrg);
             if (m.find()) {
               arg = m.group();
             } else {
@@ -225,9 +214,5 @@ public class CommandArgs {
       nargs.add(arg);
     }
     return nargs.toArray(new String[0]);
-  }
-
-  public String getArgsOrg() {
-    return argsOrg;
   }
 }

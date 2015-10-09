@@ -10,7 +10,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
@@ -267,7 +266,7 @@ public class ImagePath {
   }
 
   /**
-   * given absolute or relative (searched on image path) file name<br>
+   * given absolute or relative (searched on imaga path) file name<br>
    * is tried to open as a BufferedReader<br>
    * BE AWARE: use br.close() when finished
    *
@@ -355,21 +354,6 @@ public class ImagePath {
 		}
 		return true;
   }
-  
-  public static boolean removeHTTP(String pathHTTP) {
-		try {
-      String proto = "http://";
-      String protos = "https://";
-      if (pathHTTP.startsWith(proto) || pathHTTP.startsWith(protos)) {
-        proto = "";
-      }
-			pathHTTP = FileManager.slashify(pathHTTP, false);
-			return remove(new URL(proto + pathHTTP));
-    } catch (Exception ex) {
-      log (-1, "removeHTTP: not possible: %s\n%s", pathHTTP, ex);
-      return false;
-		}
-  }
 
   /**
    * create a new PathEntry from the given absolute path name and add it to the
@@ -407,18 +391,6 @@ public class ImagePath {
     }
     return false;
   }
-  
-  public static boolean addJar(String fpJar, String fpImage) {
-    URL pathURL = null;
-    if (new File(fpJar).exists()) {
-      if (fpImage == null) {
-        fpImage = "";
-      }
-      pathURL = FileManager.makeURL(fpJar + "!/" + fpImage, "jar");
-      add(pathURL);
-    }
-    return true;
-  }
 
   private static int hasPath(PathEntry path) {
     PathEntry pe = imagePaths.get(0);
@@ -452,10 +424,6 @@ public class ImagePath {
    * @return true on success, false otherwise
    */
   public static boolean remove(String path) {
-    File fPath = new File(path);
-    if (!fPath.isAbsolute() && path.contains(":")) {
-      return removeHTTP(path);
-    }
     return remove(makePathURL(FileManager.normalize(path), null).pathURL);
   }
 
@@ -575,18 +543,7 @@ public class ImagePath {
     if (bundlePath == null) {
       setBundlePath(null);
     }
-    return new File(FileManager.slashify(bundlePath.getPath(), false)).getAbsolutePath();
-  }
-
-  /**
-   * no trailing path separator
-   * @return the current bundle path (might be the fallback working folder)
-   */
-  public static String getBundlePathSet() {
-    if (bundlePath == null) {
-      return null;
-    }
-    return new File(FileManager.slashify(bundlePath.getPath(), false)).getAbsolutePath();
+		return FileManager.slashify(bundlePath.getPath(), false);
   }
 
   /**
@@ -597,7 +554,7 @@ public class ImagePath {
     if (bundlePath == null) {
       setBundlePath(null);
     }
-    return new File(FileManager.slashify(bundlePath.getPath(), true)).getAbsolutePath();
+		return FileManager.slashify(bundlePath.getPath(), true);
   }
 
   private static PathEntry makePathURL(String fpMainPath, String fpAltPath) {
@@ -605,7 +562,7 @@ public class ImagePath {
 			return null;
 		}
 		URL pathURL = null;
-    File fPath = new File(FileManager.normalizeAbsolute(fpMainPath, false)); 
+    File fPath = new File(FileManager.normalizeAbsolute(fpMainPath, false));
 		if (fPath.exists()) {
 			pathURL = FileManager.makeURL(fPath.getAbsolutePath());
 		} else {

@@ -6,37 +6,53 @@
 
 package org.sikuli.script;
 
-import java.awt.Point;
-
 /**
  *
  * @author rhocke
  */
-class Location {
-	int x;
-	int y;
+class DesktopRobot {
 
-	Location(Point location) {
+	void smoothMove(Location loc) {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
-	Location(Location pos) {
+	void clickStarts() {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
-	boolean isOtherScreen() {
+	void pressModifiers(int modifiers) {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
-	Point getPoint() {
+	void mouseDown(int buttons) {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
-	DesktopRobot getRobotForPoint(String click) {
+	void mouseUp(int buttons) {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
-	Location offset(int xoff, int yoff) {
+	void delay(int pause) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+	void releaseModifiers(int modifiers) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+	void clickEnds() {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+	void waitForIdle() {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+	boolean isRemote() {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+	void mouseWheel(int direction) {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 

@@ -50,11 +50,7 @@ public enum CommandArgsEnum {
 	/**
 	 * Preloads script in IDE
 	 */
-	LOAD("load", "l", "one or more foobar.sikuli", "preload scripts in IDE"),
-	/**
-	 * run as server
-	 */
-	SERVER("server", "s", "[port (50001)]", "run as server on optional port");
+	LOAD("load", "l", "one or more foobar.sikuli", "preload scripts in IDE");
 
 	/**
 	 * Longname of the parameter

@@ -95,7 +95,7 @@ public class ObserverCallBack implements EventListener {
     boolean success = true;
 		Object[] args = new Object[] {callback, e};
 		if (scriptRunnerType == "jython") {
-			success = ((JythonHelper) scriptRunner).runObserveCallback(args);
+			((JythonHelper) scriptRunner).runObserveCallback(args);
 		} else {
 			String msg = "IScriptRunner: doSomethingSpecial returned false";
 			try {

@@ -26,6 +26,10 @@ public class Device {
     Debug.logx(level, me + message, args);
   }
 
+	static void reset() {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
   private Object device = null;
   private String devName = "Device";
 
@@ -42,24 +46,9 @@ public class Device {
   protected int MouseMovedPause = 2;
   protected int MouseMovedAction = 3;
   protected int mouseMovedResponse = MouseMovedIgnore;
-  protected boolean MouseMovedHighlight = true;
   protected ObserverCallBack mouseMovedCallback = null;
-  protected ObserverCallBack callback = null;
-  private  boolean shouldRunCallback = false;
-	static boolean shouldTerminate = false;
+	protected DesktopRobot primaryRobot = new DesktopRobot();
 
-	public static void setShouldTerminate() {
-		shouldTerminate = true;
-		log(lvl, "setShouldTerminate: request issued");
-	}
-
-  public boolean isShouldRunCallback() {
-    return shouldRunCallback;
-  }
-
-  public void setShouldRunCallback(boolean shouldRunCallback) {
-    this.shouldRunCallback = shouldRunCallback;
-  }
 
   protected Device(Mouse m) {
     device = m;
@@ -69,11 +58,6 @@ public class Device {
   protected Device(Keys k) {
     device = k;
     devName = "KeyBoard";
-  }
-
-  protected Device(Screen s) {
-    device = s;
-    devName = "Screen";
   }
 
   public boolean isInUse() {
@@ -177,12 +161,9 @@ public class Device {
     }
     if (!inUse) {
       inUse = true;
-      checkLastPos();
-      checkShouldRunCallback();
-			if (shouldTerminate) {
-				shouldTerminate = false;
-				throw new AssertionError("aborted by unknown source");
-			}
+      if (isMouse) {
+        checkLastPos();
+      }
       keep = false;
       this.owner = owner;
       log(lvl + 1, "%s: use start: %s", devName, owner);
@@ -252,17 +233,13 @@ public class Device {
       log(lvl, "%s: moved externally: now (%d,%d) was (%d,%d) (mouseMovedResponse %d)",
               devName, pos.x, pos.y, lastPos.x, lastPos.y, mouseMovedResponse);
       if (mouseMovedResponse > 0) {
-        if (MouseMovedHighlight) {
-          showMousePos(pos.getPoint());
-        }
+        showMousePos(pos.getPoint());
       }
       if (mouseMovedResponse == MouseMovedPause) {
 				while (pos.x > 0 && pos.y > 0) {
 					delay(500);
 					pos = getLocation();
-          if (MouseMovedHighlight) {
-    				showMousePos(pos.getPoint());
-          }
+					showMousePos(pos.getPoint());
 				}
 				if (pos.x < 1) {
 					return;
@@ -275,46 +252,19 @@ public class Device {
         if (mouseMovedCallback != null) {
           mouseMovedCallback.happened(new ObserveEvent("MouseMoved", ObserveEvent.Type.GENERIC,
                   lastPos, new Location(pos), null, (new Date()).getTime()));
-					if (shouldTerminate) {
-						shouldTerminate = false;
-						throw new AssertionError("aborted by Sikulix.MouseMovedCallBack");
-					}
         }
       }
     }
   }
 
-  private void checkShouldRunCallback() {
-    if (shouldRunCallback && callback != null) {
-      callback.happened(new ObserveEvent("DeviceGeneric", ObserveEvent.Type.GENERIC,
-              null, null, null, (new Date()).getTime()));
-			if (shouldTerminate) {
-				shouldTerminate = false;
-				throw new AssertionError("aborted by Sikulix.GenericDeviceCallBack");
-			}
-    }
-  }
-
-  /**
-   * what to do if mouse is moved outside Sikuli's mouse protection <br>
-   * in case of event the user provided callBack.happened is called
-   *
-   * @param givenCallBack
-   */
-
-  public void setCallback(Object givenCallBack) {
-    if (givenCallBack != null) {
-      callback = new ObserverCallBack(givenCallBack, ObserveEvent.Type.GENERIC);
-    }
-  }
-
   private static void showMousePos(Point pos) {
-    Location lPos = new Location(pos);
-    Region inner = lPos.grow(20).highlight();
-    delay(500);
-    lPos.grow(40).highlight(1);
-    delay(500);
-    inner.highlight();
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//    Location lPos = new Location(pos);
+//    Region inner = lPos.grow(20).highlight();
+//    delay(500);
+//    lPos.grow(40).highlight(1);
+//    delay(500);
+//    inner.highlight();
   }
 
   protected static void delay(int time) {

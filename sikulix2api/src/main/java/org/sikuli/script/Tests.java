@@ -10,13 +10,10 @@ package org.sikuli.script;
  *
  * @author rhocke
  */
-public class Observer {
+class Tests {
 
-	void repeat(String name, long secs) {
+	static void runTest(int testNumber) {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
-	int getCount(String name) {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-	}
 }

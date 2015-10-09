@@ -68,8 +68,6 @@ public class Debug {
 	private static boolean isJython;
 	private static boolean isJRuby;
   private static Object scriptRunner = null;
-  
-  private static boolean searchHighlight = false;
 
 	private static PrintStream redirectedOut = null, redirectedErr = null;
 
@@ -97,20 +95,6 @@ public class Debug {
     if (DEBUG_LEVEL > 0) {
       logx(DEBUG_LEVEL, "Debug.init: from sikuli.Debug: on: %d", DEBUG_LEVEL);
     }
-  }
-  
-  public static void highlightOn() {
-    searchHighlight = true;
-    Settings.Highlight = true;
-  }
-
-  public static void highlightOff() {
-    searchHighlight = false;
-    Settings.Highlight = false;
-  }
-  
-  public static boolean shouldHighlight() {
-    return searchHighlight;
   }
 
 	/**
@@ -550,14 +534,13 @@ public class Debug {
    */
   public static void action(String message, Object... args) {
     if (Settings.ActionLogs) {
-      if (doRedirect(CallbackType.ACTION, "", message, args)) {
-        return;
-      }
-      if (is(3)) {
-        logx(3, message, args);
-      } else {
-        log(-1, actionPrefix, message, args);
-      }
+			if (doRedirect(CallbackType.ACTION, "", message, args)) {
+				return;
+			}
+      log(-1, actionPrefix, message, args);
+    }
+    if (is(3)) {
+      logx(3, message, args);
     }
   }
 
@@ -681,12 +664,6 @@ public class Debug {
       sout = log(level, debugPrefix, message, args);
     }
     return sout;
-  }
-  
-  public static String logp(String msg, Object... args) {
-    String out = String.format(msg, args);
-    System.out.println(out);
-    return out;
   }
 
   private static synchronized String log(int level, String prefix, String message, Object... args) {
