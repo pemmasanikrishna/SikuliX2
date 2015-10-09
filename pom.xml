@@ -13,15 +13,15 @@
   <version>2.0.0-SNAPSHOT</version>
 
   <!-- to globally change the pom version:
-  mvn versions:set -DnewVersion=1.1.0
+  mvn versions:set -DnewVersion=2.0.0
   reminder: property sikuli.usedversion
   -->
 
   <packaging>pom</packaging>
 
-	<name>SikuliX version 2</name>
-	<description>... for visual testing and automation</description>
-	<url>http://www.sikulix.com</url>
+  <name>SikuliX version 2</name>
+  <description>... for visual testing and automation</description>
+  <url>http://www.sikulix.com</url>
 
   <licenses>
     <license>
@@ -35,15 +35,15 @@
     <developer>
       <id>RaiMan</id>
       <name>Raimund Hocke</name>
-      <email>rmhdevelop@me.com</email>
+      <email>sikulix@outlook.com</email>
     </developer>
   </developers>
 
-	<scm>
-		<connection>scm:git:git@github.com:RaiMan/SikuliX2.git</connection>
-		<developerConnection>scm:git:git@github.com:RaiMan/SikuliX2.git</developerConnection>
-		<url>git@github.com:RaiMan/SikuliX2.git</url>
-	</scm>
+  <scm>
+    <connection>scm:git:git@github.com:RaiMan/SikuliX2.git</connection>
+    <developerConnection>scm:git:git@github.com:RaiMan/SikuliX2.git</developerConnection>
+    <url>git@github.com:RaiMan/SikuliX2.git</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -52,18 +52,14 @@
     <sikulixvmaj>2</sikulixvmaj>
     <sikulixvmin>0</sikulixvmin>
     <sikulixvsub>0</sikulixvsub>
-    <sikulixbeta>0</sikulixbeta>
-
-    <!--   this decides, where setup downloads from   -->
-    <!--		<sikulixdev>release</sikulixdev>-->
-    <sikulixdev>development</sikulixdev>
-
-		<sikuli.usedversion>${sikulixvmaj}.${sikulixvmin}.${sikulixvsub}</sikuli.usedversion>
+    <!--   this decides, SNAPSHOT (1) or Release (0)   -->
+    <sikulixbeta>1</sikulixbeta>
+    <sikuli.usedversion>${sikulixvmaj}.${sikulixvmin}.${sikulixvsub}</sikuli.usedversion>
     <sikuli.minorversion>${sikulixvmaj}.${sikulixvmin}.${sikulixvsub}</sikuli.minorversion>
-    <sikulixjythonversion>2.7-b4</sikulixjythonversion>
-    <sikulixjrubyversion>1.7.19</sikulixjrubyversion>
+    <sikulixjythonversion>2.7.0</sikulixjythonversion>
+    <sikulixjrubyversion>9.0.1.0</sikulixjrubyversion>
     <sikulixlocalrepo>${settings.localRepository}</sikulixlocalrepo>
-		<sikuli.helpers>Setup/src/main/resources/content</sikuli.helpers>
+    <sikuli.helpers>API/src/main/resources/content</sikuli.helpers>
     <timestamp>${maven.build.timestamp}</timestamp>
     <maven.build.timestamp.format>yyyy-MM-dd_HH:mm</maven.build.timestamp.format>
   </properties>
@@ -109,7 +105,7 @@
       <artifactId>log4j-core</artifactId>
       <version>2.1</version>
     </dependency>
-<!--    <dependency>
+    <!--    <dependency>
         <groupId>com.github.tulskiy</groupId>
         <artifactId>jkeymaster</artifactId>
         <version>1.2-SNAPSHOT</version>
@@ -133,8 +129,8 @@
 
   <modules>
     <module>sikulix2api</module>
-<!--    <module>sikulix</module>-->
-<!--    <module>sikulixtensions</module>-->
+    <!--    <module>sikulix</module>-->
+    <!--    <module>sikulixtensions</module>-->
   </modules>
 
   <build>
