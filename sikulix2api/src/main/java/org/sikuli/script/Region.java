@@ -17,7 +17,6 @@ import java.util.List;
 import org.sikuli.basics.Debug;
 import org.sikuli.basics.Settings;
 
-import edu.unh.iol.dlc.VNCScreen;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -238,35 +237,16 @@ public class Region {
     // crop to the screen with the largest intersection
     screenRect = new Rectangle(0, 0, 0, 0);
     screenOn = null;
-    boolean isVNC;
-    if (iscr == null) {
-      isVNC = scr instanceof VNCScreen;
-    } else {
-      isVNC = iscr instanceof VNCScreen;
+    for (int i = 0; i < Screen.getNumberScreens(); i++) {
+      screen = Screen.getScreen(i);
+      rect = regionOnScreen(screen);
+      if (rect != null) {
+        if (rect.width * rect.height > screenRect.width * screenRect.height) {
+          screenRect = rect;
+          screenOn = screen;
+        }
+      }
     }
-    if (!isVNC) {
-      for (int i = 0; i < Screen.getNumberScreens(); i++) {
-        screen = Screen.getScreen(i);
-        rect = regionOnScreen(screen);
-        if (rect != null) {
-          if (rect.width * rect.height > screenRect.width * screenRect.height) {
-            screenRect = rect;
-            screenOn = screen;
-          }
-        }
-      }
-    } else {
-      for (int i = 0; i < VNCScreen.getNumberScreens(); i++) {
-        screen = VNCScreen.getScreen(i);
-        rect = regionOnScreen(screen);
-        if (rect != null) {
-          if (rect.width * rect.height > screenRect.width * screenRect.height) {
-            screenRect = rect;
-            screenOn = screen;
-          }
-        }
-      }
-    } 
     if (screenOn != null) {
       x = screenRect.x;
       y = screenRect.y;
@@ -2835,15 +2815,11 @@ public class Region {
       float score = (float) (img.getLastSeenScore() - 0.01); 
       if (this.contains(r)) {
         Finder f = null;
-        if (this.scr instanceof VNCScreen) {
-          f = new Finder(new VNCScreen().capture(r), r);
-        } else {
-          f = new Finder(base.getSub(r.getRect()), r);
-          if (Debug.shouldHighlight()) {
-            if (this.scr.getW() > w + 10 && this.scr.getH() > h + 10)
-              highlight(2, "#000255000");
-          }          
-        }
+        f = new Finder(base.getSub(r.getRect()), r);
+        if (Debug.shouldHighlight()) {
+          if (this.scr.getW() > w + 10 && this.scr.getH() > h + 10)
+            highlight(2, "#000255000");
+        }          
         if (ptn == null) {
           f.find(new Pattern(img).similar(score));
         } else {
@@ -3678,9 +3654,6 @@ public class Region {
         r1.delay((int) (Settings.DelayBeforeMouseDown * 1000));
         r1.mouseDown(InputEvent.BUTTON1_MASK);
         double DelayBeforeDrag = Settings.DelayBeforeDrag;
-        if (DelayBeforeDrag < 0.0) {
-          DelayBeforeDrag = Settings.DelayAfterDrag;
-        }
         r1.delay((int) (DelayBeforeDrag * 1000));
         r2.smoothMove(loc2);
         r2.delay((int) (Settings.DelayBeforeDrop * 1000));
@@ -3690,7 +3663,6 @@ public class Region {
       }
     }
     Settings.DelayBeforeMouseDown = Settings.DelayValue;
-    Settings.DelayAfterDrag = Settings.DelayValue;
     Settings.DelayBeforeDrag = -Settings.DelayValue;
     Settings.DelayBeforeDrop = Settings.DelayValue; 
     return retVal;
@@ -3716,9 +3688,6 @@ public class Region {
         r.delay((int) (Settings.DelayBeforeMouseDown * 1000));
         r.mouseDown(InputEvent.BUTTON1_MASK);
         double DelayBeforeDrag = Settings.DelayBeforeDrag;
-        if (DelayBeforeDrag < 0.0) {
-          DelayBeforeDrag = Settings.DelayAfterDrag;
-        }
         r.delay((int) (DelayBeforeDrag * 1000));
         r.waitForIdle();
         Mouse.let(this);
@@ -3726,7 +3695,6 @@ public class Region {
       }
     }
     Settings.DelayBeforeMouseDown = Settings.DelayValue;
-    Settings.DelayAfterDrag = Settings.DelayValue;
     Settings.DelayBeforeDrag = -Settings.DelayValue;
     Settings.DelayBeforeDrop = Settings.DelayValue; 
     return retVal;
@@ -3758,7 +3726,6 @@ public class Region {
       }
     }
     Settings.DelayBeforeMouseDown = Settings.DelayValue;
-    Settings.DelayAfterDrag = Settings.DelayValue;
     Settings.DelayBeforeDrag = -Settings.DelayValue;
     Settings.DelayBeforeDrop = Settings.DelayValue; 
     return retVal;

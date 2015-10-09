@@ -312,10 +312,7 @@ public class Settings {
 
   public static double DelayValue = 0.3;
   public static double DelayBeforeMouseDown = DelayValue;
-  @Deprecated
-  // use DelayBeforeDrag instead
-	public static double DelayAfterDrag = DelayValue;
-	public static double DelayBeforeDrag = -DelayValue;
+	public static double DelayBeforeDrag = DelayValue;
 	public static double DelayBeforeDrop = DelayValue;
   
 	/**

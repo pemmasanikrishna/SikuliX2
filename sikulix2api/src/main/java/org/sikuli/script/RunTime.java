@@ -1651,7 +1651,6 @@ Point pNull = new Point(0, 0);
       Sikulix.terminate(999);
     }
     tessData.put("eng", "http://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.eng.tar.gz");
-    Env.setSikuliVersion(SikuliVersion);
   }
 
 //</editor-fold>
