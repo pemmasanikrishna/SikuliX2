@@ -26,7 +26,7 @@ public class Commands {
 
   private static Region scr = new Screen();
   private static Region scrSaved = null;
-
+  
   private static RunTime runTime = RunTime.get();
 
   /**
@@ -68,7 +68,22 @@ public class Commands {
     }
     return retVal;
   }
+  
+  public static Object run(Object... args) {
+    String script = args[0].toString();
+    String scriptArgs[] = new String[args.length - 1];
+    if (scriptArgs.length > 0) {
+      for (int i = 1; i < args.length; i++) {
+        scriptArgs[i-1] = args[i].toString();
+      }
+    }
+    return Runner.run(script, scriptArgs);
+  }  
 
+  public static Object circle(Object args) {
+    return 0;
+  }  
+  
 //<editor-fold defaultstate="collapsed" desc="conversions">
   private static boolean isNumber(Object aObj) {
     if (aObj instanceof Integer || aObj instanceof Long || aObj instanceof Float || aObj instanceof Double) {
@@ -76,7 +91,7 @@ public class Commands {
     }
     return false;
   }
-
+  
   private static int getInteger(Object aObj, int deflt) {
     Integer val = deflt;
     if (aObj instanceof Integer || aObj instanceof Long) {
@@ -90,11 +105,11 @@ public class Commands {
     }
     return val;
   }
-
+  
   private static int getInteger(Object aObj) {
     return getInteger(aObj, 0);
   }
-
+  
   private static double getNumber(Object aObj, Double deflt) {
     Double val = deflt;
     if (aObj instanceof Integer) {
@@ -108,16 +123,16 @@ public class Commands {
     }
     return val;
   }
-
+  
   private static double getNumber(Object aObj) {
     return getNumber(aObj, 0.0);
   }
 //</editor-fold>
-
+  
 //<editor-fold defaultstate="collapsed" desc="use/use1">
 
   /**
-   * all following undotted function calls will use the given screen or region
+   * all following undotted function calls will use the given screen or region 
    * until this is changed by a later use()<br>
    * -- no args: use Screen(0) (this is the default after start)<br>
    * -- a number: use Screen(number), Screen(0) if not valid<br>
@@ -130,7 +145,7 @@ public class Commands {
     scrSaved = null;
     return usex(args);
   }
-
+  
   /**
    * same as use(), but only affects the next processed undotted function
    * after that the use() active before is restored
@@ -142,9 +157,9 @@ public class Commands {
     scrSaved = scr;
     return usex(args);
   }
-
+  
   /**
-   * INTERNAL USE: restore a saved use() after a use1()
+   * INTERNAL USE: restore a saved use() after a use1() 
    */
   public static void restoreUsed() {
     if (scrSaved != null) {
@@ -153,7 +168,7 @@ public class Commands {
       log(lvl, "restored: %s", scr);
     }
   }
-
+  
   private static Region usex(Object... args) {
     int len = args.length;
     int nScreen = -1;
@@ -173,7 +188,7 @@ public class Commands {
     return scr;
   }
 //</editor-fold>
-
+  
 //<editor-fold defaultstate="collapsed" desc="wait/waitVanish/exists">
 
   /**
@@ -186,13 +201,13 @@ public class Commands {
    * @return the match or throws FindFailed
    * @throws FindFailed
    */
-    public static Match wait(Object... args) {
+    public static Match wait(Object... args) throws FindFailed {
     logCmd("wait", args);
     Object[] realArgs = waitArgs(args);
     return waitx((String) realArgs[0], (Pattern) realArgs[1], (Double) realArgs[2], (Float) realArgs[3]);
   }
-
-  private static Match waitx(String image, Pattern pimage, double timeout, float score) {
+  
+  private static Match waitx(String image, Pattern pimage, double timeout, float score) throws FindFailed {
     Object aPattern = null;
     if (image != null) {
       if (score > 0) {
@@ -211,7 +226,7 @@ public class Commands {
     }
     return null;
   }
-
+  
   private static Object[] waitArgs(Object... args) {
     int len = args.length;
     String image = "";
@@ -265,9 +280,9 @@ public class Commands {
     }
     return realArgs;
   }
-
+  
   /**
-   * wait for the given visual to vanish within the given wait time
+   * wait for the given visual to vanish within the given wait time 
    * @param args see wait()
    * @return true if not there from beginning or vanished within wait time, false otherwise
    */
@@ -293,9 +308,9 @@ public class Commands {
     }
     return scr.waitVanish(aPattern);
   }
-
+  
   /**
-   * wait for the given visual to appear within the given wait time
+   * wait for the given visual to appear within the given wait time 
    * @param args see wait()
    * @return the match or null if not found within wait time (no FindFailed exception)
    */
@@ -314,7 +329,7 @@ public class Commands {
     return match;
   }
 //</editor-fold>
-
+  
 //<editor-fold defaultstate="collapsed" desc="hover/click/doubleClick/rightClick">
 
   /**
@@ -324,13 +339,13 @@ public class Commands {
    * --2: move to the given region/location/match with a given offset<br>
    * --3: move to the given offset relative to the last match of the region in use
    * @param args
-   * @return the evaluated location to where the mouse should have moved
+   * @return the evaluated location to where the mouse should have moved 
    */
     public static Location hover(Object... args) {
     logCmd("hover", args);
     return hoverx(args);
   }
-
+  
   private static Location hoverx(Object... args) {
     int len = args.length;
     Match aMatch;
@@ -374,7 +389,7 @@ public class Commands {
     Mouse.move(scr.checkMatch());
     return Mouse.at();
   }
-
+  
   /**
    * move the mouse with hover() and click using the left button
    * @param args see hover()
@@ -386,7 +401,7 @@ public class Commands {
     Mouse.click(null, Button.LEFT, 0, false, null);
     return Mouse.at();
   }
-
+  
   /**
    * move the mouse with hover() and double click using the left button
    * @param args see hover()
@@ -398,7 +413,7 @@ public class Commands {
     Mouse.click(null, Button.LEFT, 0, true, null);
     return Mouse.at();
   }
-
+  
   /**
    * move the mouse with hover() and do a right click
    * @param args see hover()
@@ -411,7 +426,7 @@ public class Commands {
     return Mouse.at();
   }
 //</editor-fold>
-
+  
 //<editor-fold defaultstate="collapsed" desc="type/write/paste">
 
   /**
@@ -419,13 +434,13 @@ public class Commands {
    * @param args only one parameter being a String
    * @return true if paste() returned 1, false otherwise
    */
-
+  
   public static boolean paste(Object... args) {
     logCmd("paste", args);
     Object[] realArgs = typeArgs(args);
     return 0 < scr.paste((String) realArgs[0]);
   }
-
+  
   /**
    * just doing a currentRegion.write(text) (see write())
    * @param args only one parameter being a String
@@ -436,7 +451,7 @@ public class Commands {
     Object[] realArgs = typeArgs(args);
     return 0 < scr.write((String) realArgs[0]);
   }
-
+  
   private static Object[] typeArgs(Object... args) {
     Object[] realArgs = new Object[] {null};
     if (! (args[0] instanceof String)) {
@@ -446,7 +461,7 @@ public class Commands {
     return realArgs;
   }
 //</editor-fold>
-
+  
 //<editor-fold defaultstate="collapsed" desc="JSON support">
 
   /**
@@ -460,7 +475,7 @@ public class Commands {
     }
     return false;
   }
-
+  
   /**
    * experimental: create the real object from the given JSON<br>
    * take care: content length not checked if valid (risk for index out of bounds)<br>
@@ -508,7 +523,7 @@ public class Commands {
     }
     return newObj;
   }
-
+  
   private static Rectangle rectFromJSON(String[] json) {
     int[] vals = new int[4];
     for (int n = 1; n < 5; n++) {
@@ -520,7 +535,7 @@ public class Commands {
     }
     return new Rectangle(vals[0], vals[1], vals[2], vals[3]);
   }
-
+  
   private static Point locFromJSON(String[] json) {
     int[] vals = new int[2];
     for (int n = 1; n < 3; n++) {
@@ -532,7 +547,7 @@ public class Commands {
     }
     return new Point(vals[0], vals[1]);
   }
-
+  
   private static int intFromJSON(String[] json, int pos) {
     try {
       return Integer.parseInt(json[pos].trim());
@@ -540,7 +555,7 @@ public class Commands {
       return 0;
     }
   }
-
+  
   private static float fltFromJSON(String[] json, int pos) {
     try {
       return Float.parseFloat(json[pos].trim());
@@ -548,7 +563,7 @@ public class Commands {
       return 0;
     }
   }
-
+  
   private static double dblFromJSON(String[] json, int pos) {
     try {
       return Double.parseDouble(json[pos].trim());

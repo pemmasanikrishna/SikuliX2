@@ -54,8 +54,11 @@
     <sikulixvsub>0</sikulixvsub>
     <!--   this decides, SNAPSHOT (1) or Release (0)   -->
     <sikulixbeta>1</sikulixbeta>
+    <sikulixversionstable>1.1.0</sikulixversionstable>
+<!--
     <sikuli.usedversion>${sikulixvmaj}.${sikulixvmin}.${sikulixvsub}</sikuli.usedversion>
     <sikuli.minorversion>${sikulixvmaj}.${sikulixvmin}.${sikulixvsub}</sikuli.minorversion>
+-->
     <sikulixjythonversion>2.7.0</sikulixjythonversion>
     <sikulixjrubyversion>9.0.1.0</sikulixjrubyversion>
     <sikulixlocalrepo>${settings.localRepository}</sikulixlocalrepo>
@@ -64,7 +67,49 @@
     <maven.build.timestamp.format>yyyy-MM-dd_HH:mm</maven.build.timestamp.format>
   </properties>
 
+	<profiles>
+		<profile>
+			<id>Windows</id>
+			<activation>
+				<os>
+					<family>windows</family>
+				</os>
+			</activation>
+			<properties>
+				<sikulix.libs>sikulixlibswin</sikulix.libs>
+			</properties>
+		</profile>
+		<profile>
+			<id>Unix</id>
+			<activation>
+				<os>
+					<family>unix</family>
+				</os>
+			</activation>
+			<properties>
+				<sikulix.libs>sikulixlibslux</sikulix.libs>
+			</properties>
+		</profile>
+		<profile>
+			<id>Mac</id>
+			<activation>
+				<os>
+					<family>mac</family>
+				</os>
+			</activation>
+			<properties>
+				<sikulix.libs>sikulixlibsmac</sikulix.libs>
+			</properties>
+		</profile>
+	</profiles>
+
   <repositories>
+    <repository>  <!-- OSSRH: com.sikulix -->
+      <id>com-sikulix-snapshots</id>
+      <name>com-sikulix-snapshots</name>
+      <url>https://oss.sonatype.org/content/groups/public</url>
+      <layout>default</layout>
+    </repository>
     <repository>  <!-- com.sikulix.sikulixapi: jxgrabkey -->
       <id>uni-due.de</id>
       <name>uni-due.de</name>
@@ -78,19 +123,6 @@
         <enabled>false</enabled>
         <updatePolicy>never</updatePolicy>
       </snapshots>
-    </repository>
-    <repository> <!-- Tesseract4SikuliX: java/dev/jai-imageio/jai-imageio-core-standalone/1.2 -->
-      <releases/>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>mygrid-repository</id>
-      <name>myGrid Repository</name>
-      <url>http://www.mygrid.org.uk/maven/repository</url>
-    </repository>
-    <repository>
-      <id>snapshots-repo</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </repository>
   </repositories>
 
