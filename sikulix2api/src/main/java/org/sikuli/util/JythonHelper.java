@@ -19,7 +19,7 @@ import org.sikuli.script.RunTime;
 
 public class JythonHelper {
 
-  RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.get();
 
 	//<editor-fold defaultstate="collapsed" desc="new logging concept">
 	private static final String me = "JythonSupport: ";
@@ -46,10 +46,13 @@ public class JythonHelper {
   static JythonHelper instance = null;
   static Object interpreter = null;
   List<String> sysPath = new ArrayList<String>();
+  List<String> sysArgv = new ArrayList<String>();
   int nPathAdded = 0;
   int nPathSaved = -1;
   static Class[] nc = new Class[0];
+  static Class[] nc1 = new Class[1];
   static Class cInterpreter = null;
+  static Class cPyException = null;
   static Class cList = null;
   static Class cPy = null;
   static Class cPyFunction = null;
@@ -57,8 +60,8 @@ public class JythonHelper {
   static Class cPyInstance = null;
   static Class cPyObject = null;
   static Class cPyString = null;
-  static Method mLen, mGet, mSet, mAdd, mRemove;
-  static Method mGetSystemState;
+  static Method mLen, mGet, mSet, mAdd, mRemove, mClear;
+  static Method mGetSystemState, mExec, mExecfile;
   static Field PI_path;
 
   private JythonHelper(){}
@@ -69,9 +72,25 @@ public class JythonHelper {
       instance.log(lvl, "init: starting");
       try {
         cInterpreter = Class.forName("org.python.util.PythonInterpreter");
+      } catch (Exception ex) {
+        String sJython = new File(runTime.SikuliJython).getName();
+        File fJython = new File(runTime.fSikulixDownloadsGeneric, sJython);
+        instance.log(lvl, "trying to use setup downloaded Jython:\n%s", fJython.getAbsolutePath());
+        if (fJython.exists()) {
+          runTime.addToClasspath(fJython.getAbsolutePath());
+        } else {
+          instance.log(-1, "Not possible to get a Jython on to the classpath!");
+          cInterpreter = null;
+        }
+      }
+      try {
+        cInterpreter = Class.forName("org.python.util.PythonInterpreter");
         mGetSystemState = cInterpreter.getMethod("getSystemState", nc);
+        mExec = cInterpreter.getMethod("exec", new Class[] {String.class});
+        mExecfile = cInterpreter.getMethod("execfile", new Class[] {String.class});
         Constructor PI_new = cInterpreter.getConstructor(nc);
         interpreter = PI_new.newInstance(null);
+        cPyException = Class.forName("org.python.core.PyException");
         cList = Class.forName("org.python.core.PyList");
         cPy = Class.forName("org.python.core.Py");
         cPyFunction = Class.forName("org.python.core.PyFunction");
@@ -80,6 +99,7 @@ public class JythonHelper {
         cPyObject = Class.forName("org.python.core.PyObject");
         cPyString = Class.forName("org.python.core.PyString");
         mLen = cList.getMethod("__len__", nc);
+        mClear = cList.getMethod("clear", nc);
         mGet = cList.getMethod("get", new Class[]{int.class});
         mSet = cList.getMethod("set", new Class[]{int.class, Object.class});
         mAdd = cList.getMethod("add", new Class[]{Object.class});
@@ -92,10 +112,39 @@ public class JythonHelper {
     if (cInterpreter == null) {
       instance.runTime.terminate(1, "JythonHelper: no Jython on classpath");
     }
+    runTime.isJythonReady = true;
     return instance;
   }
 
   private void noOp() {} // for debugging as breakpoint
+
+  class PyException {
+    Object inst = null;
+    Field fType = null;
+    Field fValue = null;
+    Field fTrBack = null;
+    public PyException(Object i) {
+      inst = i;
+			cPyException.cast(inst);
+			try {
+				fType = cPyException.getField("type");
+        fValue = cPyException.getField("value");
+        fTrBack = cPyException.getField("traceback");
+			} catch (Exception ex) {
+				noOp();
+			}
+    }
+    public int isTypeExit() {
+      try {
+        if (fType.get(inst).toString().contains("SystemExit")) {
+          return Integer.parseInt(fValue.get(inst).toString());
+        }
+      } catch (Exception ex) {
+        return -999;
+      }
+      return -1;
+    }
+  }
 
   class PyInstance {
     Object inst = null;
@@ -213,6 +262,32 @@ public class JythonHelper {
 		}
   }
 
+  public boolean exec(String code) {
+    try {
+      mExec.invoke(interpreter, code);
+    } catch (Exception ex) {
+      PyException pex = new PyException(ex.getCause());
+      if (pex.isTypeExit() < 0) {
+        log(-1, "exec: returns:\n%s", ex.getCause());
+      }
+      return false;
+    }
+    return true;
+  }
+
+  public int execfile(String fpScript) {
+    int retval = -999;
+    try {
+      mExecfile.invoke(interpreter, fpScript);
+    } catch (Exception ex) {
+      PyException pex = new PyException(ex.getCause());
+      if ((retval = pex.isTypeExit()) < 0) {
+        log(-1, "execFile: returns:\n%s", ex.getCause());
+      }
+    }
+    return retval;
+  }
+
 //TODO check signature (instance method)
   public boolean checkCallback(Object[] args) {
     PyInstance inst = new PyInstance(args[0]);
@@ -294,7 +369,7 @@ public class JythonHelper {
     return instance;
   }
 
-  public boolean load(String fpJarOrFolder) {
+  public String load(String fpJarOrFolder) {
 //##
 //# loads a Sikuli extension (.jar) from
 //#  1. user's sikuli data path
@@ -323,6 +398,9 @@ public class JythonHelper {
 //        return True
 //    return False
     log(lvl, "load: to be loaded:\n%s", fpJarOrFolder);
+    if (!fpJarOrFolder.endsWith(".jar")) {
+      fpJarOrFolder += ".jar";
+    }
     String fpBundle = ImagePath.getBundlePath();
     File fJar = new File(FileManager.normalizeAbsolute(fpJarOrFolder, false));
     if (!fJar.exists()) {
@@ -331,7 +409,10 @@ public class JythonHelper {
       if (!fJar.exists()) {
         fJar = new File(runTime.fSikulixExtensions, fpJarOrFolder);
         if (!fJar.exists()) {
-          fJar = null;
+					fJar = new File(runTime.fSikulixLib, fpJarOrFolder);
+					if (!fJar.exists()) {
+						fJar = null;
+					}
         }
       }
     }
@@ -342,13 +423,14 @@ public class JythonHelper {
         }
       } else {
         log(-1, "load: not possible");
-        return false;
       }
     } else {
-      log(-1, "load: could not be found - even not in bundle nor in extensions");
-      return false;
+      log(-1, "load: could not be found - even not in bundle nor in Lib nor in Extensions");
     }
-    return true;
+    if (fJar == null) {
+      return null;
+    }
+    return fJar.getAbsolutePath();
   }
 
   public String findModule(String modName, Object packPath, Object sysPath) {
@@ -371,7 +453,10 @@ public class JythonHelper {
     if (modName.endsWith(".*")) {
       return null;
     }
-    log(lvl + 1, "findModule: %s", modName);
+    int nDot = modName.lastIndexOf(".");
+    if (nDot > -1) {
+      modName = modName.substring(nDot + 1);
+    }
     String fpBundle = ImagePath.getBundlePath();
     File fParentBundle = null;
     File fModule = null;
@@ -379,12 +464,19 @@ public class JythonHelper {
       fParentBundle = new File(fpBundle).getParentFile();
       fModule = existsModule(modName, fParentBundle);
     }
+    if (fModule == null && packPath != null) {
+//      log(lvl, "findModule: packpath not null");
+    }
     if (fModule == null) {
       fModule = existsSysPathModule(modName);
       if (fModule == null) {
         return null;
       }
     }
+    log(lvl, "findModule: %s (%s)", fModule.getName(), packPath);
+//    if (!fModule.getName().endsWith(".sikuli")) {
+//      fModule = fModule.getParentFile();
+//    }
     return fModule.getAbsolutePath();
   }
 
@@ -395,13 +487,15 @@ public class JythonHelper {
 //  Sikuli._addModPath(self.path)
 //  return self._load_module(module_name)
 
-    log(lvl + 1, "loadModulePrepare: %s", modName);
+    log(lvl, "loadModulePrepare: %s in %s", modName, modPath);
     int nDot = modName.lastIndexOf(".");
     if (nDot > -1) {
       modName = modName.substring(nDot + 1);
     }
     addSysPath(modPath);
-    ImagePath.add(modPath);
+    if (modPath.endsWith(".sikuli")) {
+      ImagePath.add(modPath);
+    }
     return modName;
   }
 
@@ -413,11 +507,49 @@ public class JythonHelper {
     if (fSikuli.exists()) {
       return fSikuli;
     }
-    File fPython = new File(fFolder, mName + ".py");
-    if (fPython.exists()) {
-      return fPython;
-    }
+//    File fPython = new File(fFolder, mName + ".py");
+//    if (fPython.exists()) {
+//      return fPython;
+//    }
     return null;
+  }
+
+  public void getSysArgv() {
+    sysArgv = new ArrayList<String>();
+    if (null == cInterpreter) {
+      sysArgv = null;
+      return;
+    }
+    try {
+      Object aState  = mGetSystemState.invoke(interpreter, (Object[]) null);
+      Field fArgv = aState.getClass().getField("argv");
+      Object pyArgv = fArgv.get(aState);
+      Integer argvLen = (Integer) mLen.invoke(pyArgv, (Object[]) null);
+      for (int i = 0; i < argvLen; i++) {
+        String entry = (String) mGet.invoke(pyArgv, i);
+        log(lvl + 1, "sys.path[%2d] = %s", i, entry);
+        sysArgv.add(entry);
+      }
+    } catch (Exception ex) {
+      sysArgv = null;
+    }
+  }
+
+  public void setSysArgv(String[] args) {
+    if (null == cInterpreter || null == sysArgv) {
+      return;
+    }
+    try {
+      Object aState  = mGetSystemState.invoke(interpreter, (Object[]) null);
+      Field fArgv = aState.getClass().getField("argv");
+      Object pyArgv = fArgv.get(aState);
+      mClear.invoke(pyArgv, null);
+      for (String arg : args) {
+        mAdd.invoke(pyArgv, arg);
+      }
+    } catch (Exception ex) {
+      sysArgv = null;
+    }
   }
 
   public void getSysPath() {
@@ -474,9 +606,42 @@ public class JythonHelper {
     }
   }
 
+	public void addSitePackages() {
+		File fLibFolder = runTime.fSikulixLib;
+		File fSitePackages = new File(fLibFolder, "site-packages");
+		if (fSitePackages.exists()) {
+			addSysPath(fSitePackages);
+			if (hasSysPath(fSitePackages.getAbsolutePath())) {
+				log(lvl, "added as Jython::sys.path[0]:\n%s", fSitePackages);
+			}
+			File fSites = new File(fSitePackages, "sites.txt");
+			String sSites = "";
+			if (fSites.exists()) {
+				sSites = FileManager.readFileToString(fSites);
+				if (!sSites.isEmpty()) {
+					String[] listSites = sSites.split("\n");
+					for (String site : listSites) {
+            String path = site.trim();
+            if (!path.isEmpty()) {
+              appendSysPath(path);
+            }
+					}
+				}
+			}
+		}
+	}
+
   public void addSysPath(String fpFolder) {
     if (!hasSysPath(fpFolder)) {
       sysPath.add(0, fpFolder);
+      setSysPath();
+      nPathAdded++;
+    }
+  }
+
+  public void appendSysPath(String fpFolder) {
+    if (!hasSysPath(fpFolder)) {
+      sysPath.add(fpFolder);
       setSysPath();
       nPathAdded++;
     }
@@ -545,6 +710,19 @@ public class JythonHelper {
       }
     }
     return fModule;
+  }
+
+  public File existsSysPathJar(String fpJar) {
+    getSysPath();
+    File fJar = null;
+    for (String fpPath : sysPath) {
+      fJar = new File(fpPath, fpJar);
+      if (fJar.exists()) {
+        break;
+      }
+      fJar = null;
+    }
+    return fJar;
   }
 
   public void showSysPath() {

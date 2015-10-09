@@ -7,6 +7,8 @@
 package org.sikuli.script;
 
 import org.sikuli.basics.HotkeyManager;
+import org.sikuli.util.Tests;
+import org.sikuli.util.ScreenHighlighter;
 import java.awt.Dimension;
 import java.io.File;
 import java.net.URL;
@@ -23,6 +25,7 @@ import org.sikuli.basics.Debug;
 import org.sikuli.basics.FileManager;
 import org.sikuli.basics.PreferencesUser;
 import org.sikuli.basics.Settings;
+import org.sikuli.util.JythonHelper;
 
 /**
  * global services for package API
@@ -53,36 +56,37 @@ public class Sikulix {
   private static final String prefNonSikuli = "nonSikuli_";
   private static RunTime rt = null;
   public static int testNumber = -1;
+  private static boolean shouldRunServer = false;
 
   static {
-//    String jarName = "";
-//
-//    CodeSource codeSrc =  Sikulix.class.getProtectionDomain().getCodeSource();
-//    if (codeSrc != null && codeSrc.getLocation() != null) {
-//      jarName = codeSrc.getLocation().getPath();
-//    }
-//
-//    if (jarName.contains("sikulixsetupAPI")) {
-//      JOptionPane.showMessageDialog(null, "Not useable!\nRun setup first!",
-//              "sikulixsetupAPI", JOptionPane.ERROR_MESSAGE);
-//      System.exit(0);
-//    }
-//
+    String jarName = "";
+
+    CodeSource codeSrc =  Sikulix.class.getProtectionDomain().getCodeSource();
+    if (codeSrc != null && codeSrc.getLocation() != null) {
+      jarName = codeSrc.getLocation().getPath();
+    }
+
+    if (jarName.contains("sikulixsetupAPI")) {
+      JOptionPane.showMessageDialog(null, "Not useable!\nRun setup first!",
+              "sikulixsetupAPI", JOptionPane.ERROR_MESSAGE);
+      System.exit(0);
+    }
+
     rt = RunTime.get();
-//    if (Debug.getDebugLevel() == 0) {
-//      Debug.setDebugLevel(1);
-//    }
-//
-//    if (codeSrc != null && codeSrc.getLocation() != null) {
-//      URL jarURL = codeSrc.getLocation();
-//      jarPath = FileManager.slashify(new File(jarURL.getPath()).getAbsolutePath(), false);
-//      jarParentPath = (new File(jarPath)).getParent();
-//      if (jarPath.endsWith(".jar")) {
-//        runningFromJar = true;
-//      } else {
-//        jarPath += "/";
-//      }
-//    }
+    if (Debug.getDebugLevel() == 0) {
+      Debug.setDebugLevel(1);
+    }
+
+    if (codeSrc != null && codeSrc.getLocation() != null) {
+      URL jarURL = codeSrc.getLocation();
+      jarPath = FileManager.slashify(new File(jarURL.getPath()).getAbsolutePath(), false);
+      jarParentPath = (new File(jarPath)).getParent();
+      if (jarPath.endsWith(".jar")) {
+        runningFromJar = true;
+      } else {
+        jarPath += "/";
+      }
+    }
   }
 
   /**
@@ -93,62 +97,254 @@ public class Sikulix {
    *
    * @param args currently only -d is evaluated
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws FindFailed {
 
-    System.out.println("********** Running Sikulix.main");
-
-    int dl = RunTime.checkArgs(args, RunTime.Type.API);
-    if (dl > -1 && dl < 999) {
-      testNumber = dl;
-      Debug.on(3);
+    if (args.length > 0 && args[0].toLowerCase().startsWith("-s")) {
+      shouldRunServer = true;
     } else {
-      testNumber = -1;
-    }
+      System.out.println("********** Running Sikulix.main");
 
-    testNumber = rt.getOptionNumber("testing.test", testNumber);
-
-    if (dl == 999) {
-      int exitCode = Runner.runScripts(args);
-      cleanUp(exitCode);
-      System.exit(exitCode);
-    } else if (testNumber > -1) {
-      if (!rt.testing) {
-        rt.show();
-        rt.testing = true;
+      int dl = RunTime.checkArgs(args, RunTime.Type.API);
+      if (dl > -1 && dl < 999) {
+        testNumber = dl;
+        Debug.on(3);
+      } else {
+        testNumber = -1;
       }
-      Tests.runTest(testNumber);
-      System.exit(1);
-    } else {
-      rt = RunTime.get();
-      if (rt.fSxBaseJar.getName().contains("setup")) {
-        Sikulix.popError("Not useable!\nRun setup first!");
-        System.exit(0);
-      }
-      Debug.on(3);
-      Settings.InfoLogs = false;
-      Settings.ActionLogs = false;
 
-      if (rt.runningWinApp) {
-        popup("Hello World\nNot much else to do ( yet ;-)", rt.fSxBaseJar.getName());
+      testNumber = rt.getOptionNumber("testing.test", testNumber);
+
+      if (dl == 999) {
+        int exitCode = Runner.runScripts(args);
+        cleanUp(exitCode);
+        System.exit(exitCode);
+      } else if (testNumber > -1) {
+        if (!rt.testing) {
+          rt.show();
+          rt.testing = true;
+        }
+        Tests.runTest(testNumber);
         System.exit(1);
       }
-      String version = String.format("(%s-%s)", rt.getVersionShort(), rt.sxBuildStamp);
-      File lastSession = new File(rt.fSikulixStore, "LastAPIJavaScript.js");
-      String runSomeJS = "";
-      if (lastSession.exists()) {
-        runSomeJS = FileManager.readFileToString(lastSession);
-      }
-      runSomeJS = inputText("enter some JavaScript (know what you do - may silently die ;-)"
-              + "\nexample: run(\"git*\") will run the JavaScript showcase from GitHub"
-              + "\nWhat you enter now will be shown the next time.",
-              "API::JavaScriptRunner " + version, 10, 60, runSomeJS);
-      if (runSomeJS.isEmpty()) {
-        popup("Nothing to do!", version);
-      } else {
-        FileManager.writeStringToFile(runSomeJS, lastSession);
-        Runner.runjs(null, null, runSomeJS, null);
+    }
+    rt = RunTime.get();
+    if (rt.fSxBaseJar.getName().contains("setup")) {
+      Sikulix.popError("Not useable!\nRun setup first!");
+      System.exit(0);
+    }
+    
+    if (shouldRunServer) {
+      if (RunServer.run(null)) {
+        System.exit(1);
       }
     }
+    
+    Debug.on(3);
+    //******Test Space*************************************
+//    Screen.showMonitors();
+//    Screen s = Screen.as(0);
+
+//    System.exit(1);
+    
+//    Run.connect();
+//    p(Run.show());
+//    p(Run.send("START"));
+//    p(Run.send("EVAL?r=Region.create(100,100,100,100);r.toJSON();"));
+//    Run.close();
+//    Run.stop();
+    //*********************************
+
+    Settings.InfoLogs = false;
+    Settings.ActionLogs = false;
+    
+    ImagePath.add("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
+
+    if (rt.runningWinApp) {
+      popup("Hello World\nNot much else to do ( yet ;-)", rt.fSxBaseJar.getName());
+      try {
+        Screen scr = new Screen();
+        scr.find(new Image(scr.userCapture("grab something to find"))).highlight(3);
+      } catch (Exception ex) {
+        popup("Uuups :-(\n" + ex.getMessage(), rt.fSxBaseJar.getName());
+      }
+      popup("Hello World\nNothing else to do ( yet ;-)", rt.fSxBaseJar.getName());
+      System.exit(1);
+    }
+    String version = String.format("(%s-%s)", rt.getVersionShort(), rt.sxBuildStamp);
+    File lastSession = new File(rt.fSikulixStore, "LastAPIJavaScript.js");
+    String runSomeJS = "";
+    if (lastSession.exists()) {
+      runSomeJS = FileManager.readFileToString(lastSession);
+    }
+    runSomeJS = inputText("enter some JavaScript (know what you do - may silently die ;-)"
+            + "\nexample: run(\"git*\") will run the JavaScript showcase from GitHub"
+            + "\nWhat you enter now will be shown the next time.",
+            "API::JavaScriptRunner " + version, 10, 60, runSomeJS);
+    if (runSomeJS.isEmpty()) {
+      popup("Nothing to do!", version);
+    } else {
+      while (!runSomeJS.isEmpty()) {
+        FileManager.writeStringToFile(runSomeJS, lastSession);
+        Runner.runjs(null, null, runSomeJS, null);
+        runSomeJS = inputText("Edit the JavaScript and/or press OK to run it (again)\n"
+                + "Press Cancel to terminate",
+            "API::JavaScriptRunner " + version, 10, 60, runSomeJS);
+      }
+    }
+    System.exit(0);
+  }
+  
+  /**
+   * add a jar to the scripting environment<br>
+   * Jython: added to sys.path<br>
+   * JRuby: not yet supported<br>
+   * JavaScript: not yet supported<br>
+   * if no scripting active (API usage), jar is added to classpath if available
+   * @param fpJar absolute path to a jar (relative: searched according to Extension concept, 
+   * but first on sys.path)
+   * @return the absolute path to the jar or null, if not available
+   */
+  public static String load(String fpJar) {
+    return load(fpJar, null);
+  }
+
+  /**
+   * add a jar to the scripting environment or to classpath<br>
+   * Jython: added to sys.path<br>
+   * JRuby: only added to classpath<br>
+   * JavaScript: only added to classpath<br>
+   * if no scripting is active (API usage), jar is added to classpath if available<br>
+   * additionally: fpJar/fpJarImagePath is added to ImagePath (not checked)
+   * @param fpJar absolute path to a jar (relative: searched according to Extension concept, 
+   * but first on sys.path)
+   * @param fpJarImagePath path relative to jar root inside jar
+   * @return the absolute path to the jar or null, if not available
+   */
+  public static String load(String fpJar, String fpJarImagePath) {
+    JythonHelper jython = JythonHelper.get();
+    String fpJarFound = null;
+    if (jython != null) {
+      File aFile = jython.existsSysPathJar(fpJar);
+      if (aFile != null) {
+        fpJar = aFile.getAbsolutePath();
+      }
+      fpJarFound = jython.load(fpJar);
+    } else {
+      File fJarFound = rt.asExtension(fpJar);
+      if (fJarFound != null) {
+        fpJarFound = fJarFound.getAbsolutePath();
+        rt.addToClasspath(fpJarFound);
+      } 
+    }
+    if (fpJarFound != null && fpJarImagePath != null) {
+      ImagePath.addJar(fpJarFound, fpJarImagePath);
+    }
+    return fpJarFound;
+  }
+  
+  /**
+   * build a jar on the fly at runtime from a folder.<br>
+   * special for Jython: if the folder contains a __init__.py on first level, 
+   * the folder will be copied to the jar root (hence preserving module folders)
+   * @param targetJar absolute path to the created jar (parent folder must exist, jar is overwritten) 
+   * @param sourceFolder absolute path to a folder, the contained folder structure 
+   * will be copied to the jar root level
+   * @return
+   */
+  public static boolean buildJarFromFolder(String targetJar, String sourceFolder) {
+    log(lvl, "buildJarFromFolder: \nfrom Folder: %s\nto Jar: %s", sourceFolder, targetJar);
+    File fJar = new File(targetJar);
+    if (!fJar.getParentFile().exists()) {
+      log(-1, "buildJarFromFolder: parent folder of Jar not available");
+      return false;
+    }
+    File fSrc = new File(sourceFolder);
+    if (!fSrc.exists() || !fSrc.isDirectory()) {
+      log(-1, "buildJarFromFolder: source folder not available");
+      return false;
+    }
+    String prefix = null;
+    if (new File(fSrc, "__init__.py").exists() || new File(fSrc, "__init__$py.class").exists()) {
+      prefix = fSrc.getName();
+      if (prefix.endsWith("_")) {
+        prefix = prefix.substring(0, prefix.length() - 1);
+      }
+    }
+    return FileManager.buildJar(targetJar, new String[]{null}, 
+            new String[] {sourceFolder}, new String[] {prefix}, null);
+  }
+  
+  /**
+   * the foo.py files in the given source folder are compiled to JVM-ByteCode-classfiles foo$py.class 
+   * and stored in the target folder (thus securing your code against changes).<br>
+   * A folder structure is preserved. All files not ending as .py will be copied also.
+   * The target folder might then be packed to a jar using buildJarFromFolder.<br>
+   * Be aware: you will get no feedback about any compile problems, 
+   * so make sure your code compiles error free. Currently there is no support for running such a jar,
+   * it can only be used with load()/import, but you might provide a simple script that does load()/import
+   * and then runs something based on available functions in the jar code.
+   * @param fpSource absolute path to a folder/folder-tree containing the stuff to be copied/compiled
+   * @param fpTarget the folder that will contain the copied/compiled stuff (folder is first deleted)
+   * @return false if anything goes wrong, true means should have worked
+   */
+  public static boolean compileJythonFolder(String fpSource, String fpTarget) {
+    JythonHelper jython = JythonHelper.get();
+    if (jython != null) {
+      File fTarget = new File(fpTarget);
+      FileManager.deleteFileOrFolder(fTarget);
+      fTarget.mkdirs();
+      if (!fTarget.exists()) {
+        log(-1, "compileJythonFolder: target folder not available\n%", fTarget);
+        return false;
+      }
+      File fSource = new File(fpSource);
+      if (!fSource.exists()) {
+        log(-1, "compileJythonFolder: source folder not available\n", fSource);
+        return false;
+      }
+      if (fTarget.equals(fSource)) {
+        log(-1, "compileJythonFolder: target folder cannot be the same as the source folder");
+        return false;
+      }
+      FileManager.xcopy(fSource, fTarget);
+      if (!jython.exec("import compileall")) {
+        return false;
+      }
+      jython = doCompileJythonFolder(jython, fTarget);
+      FileManager.traverseFolder(fTarget, new CompileJythonFilter(jython));
+    }
+    return false;
+  }
+  
+  private static class CompileJythonFilter implements FileManager.FileFilter {
+    
+    JythonHelper jython = null;
+    
+    public CompileJythonFilter(JythonHelper jython) {
+      this.jython = jython;
+    }
+
+    @Override
+    public boolean accept(File entry) {
+      if (jython != null && entry.isDirectory()) {
+        jython = doCompileJythonFolder(jython, entry);
+      }
+      return false;
+    }
+  }
+  
+  private static JythonHelper doCompileJythonFolder(JythonHelper jython, File fSource) {
+    String fpSource = FileManager.slashify(fSource.getAbsolutePath(), false);
+    if (!jython.exec(String.format("compileall.compile_dir(\"%s\","
+            + "maxlevels = 0, quiet = 1)", fpSource))) {
+      return null;
+    }
+    for (File aFile : fSource.listFiles()) {
+      if (aFile.getName().endsWith(".py")) {
+        aFile.delete();
+      }
+    }
+    return jython;
   }
 
   private static boolean addFromProject(String project, String aJar) {
@@ -284,9 +480,88 @@ public class Sikulix {
    */
   public static void cleanUp(int n) {
     log(lvl, "cleanUp: %d", n);
-    Device.reset();
+    ScreenHighlighter.closeAll();
+    Observing.cleanUp();
+    Mouse.reset();
+    //TODO move to class Keys after implementation
+    Screen.getPrimaryScreen().getRobot().keyUp();
     //TODO what about remote screen sessions????
     HotkeyManager.reset();
+  }
+
+  /**
+   * INTERNAL USE: used in setup: tests basic SikulixUtil features
+   *
+   * @return success
+   */
+  public static boolean testSetup() {
+    return doTestSetup("Java API", false);
+  }
+
+  /**
+   * INTERNAL USE: used in setup: tests basic SikulixUtil features
+   *
+   * @return success
+   */
+  public static boolean testSetup(String src) {
+    return doTestSetup(src, false);
+  }
+
+  /**
+   * INTERNAL USE: used in setup: tests basic SikulixUtil features
+   *
+   * @return success
+   */
+  public static boolean testSetupSilent() {
+    Settings.noPupUps = true;
+    return doTestSetup("Java API", true);
+  }
+
+  private static boolean doTestSetup(String testSetupSource, boolean silent) {
+    Region r = Region.create(0, 0, 100, 100);
+    Image img = new Image(r.getScreen().capture(r).getImage());
+    Pattern p = new Pattern(img);
+    Finder f = new Finder(img);
+    boolean success = (null != f.find(p));
+    log(lvl, "testSetup: Finder setup with image %s", (!success ? "did not work" : "worked"));
+    if (success &= f.hasNext()) {
+      success = (null != f.find(img.asFile()));
+      log(lvl, "testSetup: Finder setup with image file %s", (!success ? "did not work" : "worked"));
+      success &= f.hasNext();
+      String screenFind = "Screen.find(imagefile)";
+      try {
+        ((Screen) r.getScreen()).find(img.asFile());
+        log(lvl, "testSetup: %s worked", screenFind);
+        screenFind = "repeated Screen.find(imagefile)";
+        ((Screen) r.getScreen()).find(img.asFile());
+        log(lvl, "testSetup: %s worked", screenFind);
+      } catch (Exception ex) {
+        log(lvl, "testSetup: %s did not work", screenFind);
+        success = false;
+      }
+    }
+    if (success) {
+      if (!silent) {
+        popup("Hallo from Sikulix.testSetup: " + testSetupSource + "\n"
+                + "SikuliX seems to be working!\n\nHave fun!");
+        log(lvl, "testSetup: Finder.find: worked");
+      } else {
+        System.out.println("[info] RunSetup: Sikulix.testSetup: Java Sikuli seems to be working!");
+      }
+      return true;
+    }
+    log(lvl, "testSetup: last Screen/Finder.find: did not work");
+    return false;
+  }
+
+  @Deprecated
+  public static boolean addToClasspath(String jar) {
+    return RunTime.get().addToClasspath(jar);
+  }
+
+  @Deprecated
+  public static boolean isOnClasspath(String artefact) {
+    return null != RunTime.get().isOnClasspath(artefact);
   }
 
   public static String run(String cmdline) {
@@ -473,19 +748,6 @@ public class Sikulix {
     }
   }
 
-  public static void pause(int time) {
-    try {
-      Thread.sleep(time * 1000);
-    } catch (InterruptedException ex) {
-    }
-  }
-
-  public static void pause(float time) {
-    try {
-      Thread.sleep((int) (time * 1000));
-    } catch (InterruptedException ex) {
-    }
-  }
 
   public static boolean importPrefs(String path) {
     return true;
