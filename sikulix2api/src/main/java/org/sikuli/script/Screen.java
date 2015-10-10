@@ -16,6 +16,7 @@ import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.util.Date;
+import org.sikuli.util.Commands;
 
 /**
  * A screen represents a physical monitor with its coordinates and size according to the global
@@ -117,7 +118,7 @@ public class Screen extends Region implements EventObserver, IScreen {
       }
     } catch (AWTException e) {
       Debug.error("Can't initialize global Robot for Mouse: " + e.getMessage());
-      Sikulix.terminate(999);
+      Commands.terminate(999);
     }
     return globalRobot;
   }

@@ -47,6 +47,7 @@ import javax.swing.JFrame;
 import org.sikuli.script.Image;
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.Sikulix;
+import org.sikuli.util.Commands;
 
 /**
  * INTERNAL USE: Support for accessing files and other ressources
@@ -1181,7 +1182,7 @@ public class FileManager {
       jarParentPath = FileManager.slashify((new File(jarPath)).getParent(), true);
     } else {
       log(-1, "Fatal Error 101: Not possible to access the jar files!");
-      Sikulix.terminate(101);
+      Commands.terminate(101);
     }
     return RunningFromJar + jarParentPath;
   }

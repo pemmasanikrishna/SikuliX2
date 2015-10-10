@@ -15,6 +15,7 @@ import org.sikuli.basics.FileManager;
 import org.sikuli.basics.Settings;
 import org.sikuli.util.CommandArgs;
 import org.sikuli.util.CommandArgsEnum;
+import org.sikuli.util.Commands;
 import org.sikuli.util.JythonHelper;
 
 public class Runner {
@@ -959,7 +960,7 @@ public class Runner {
               try {
                 Runner.mShow.invoke(null, new Class[0]);
               } catch (Exception e) {
-                Sikulix.terminate(901);
+                Commands.terminate(901);
               }
             }
           }

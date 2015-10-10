@@ -20,6 +20,7 @@ import org.sikuli.basics.Settings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import org.sikuli.util.Commands;
 
 /**
  * A Region is a rectengular area and lies always completely inside its parent screen
@@ -2770,7 +2771,7 @@ public class Region {
         }
       } else {
         log(-1, "doFind: invalid parameter: %s", ptn);
-        Sikulix.terminate(999);
+        Commands.terminate(999);
       }
       if (repeating != null) {
         repeating._finder = f;
@@ -2900,7 +2901,7 @@ public class Region {
         }
       } else {
         log(-1, "doFind: invalid parameter: %s", ptn);
-        Sikulix.terminate(999);
+        Commands.terminate(999);
       }
       if (repeating != null) {
         repeating._finder = f;

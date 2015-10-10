@@ -43,6 +43,7 @@ import java.util.zip.ZipInputStream;
 import org.sikuli.basics.Debug;
 import org.sikuli.basics.FileManager;
 import org.sikuli.basics.Settings;
+import org.sikuli.util.Commands;
 import org.sikuli.util.JythonHelper;
 import org.sikuli.util.SysJNA;
 import org.sikuli.util.LinuxSupport;
@@ -60,6 +61,7 @@ public class RunTime {
     scriptProject = null;
     uScriptProject = null;
   }
+
   public static String appDataMsg = "";
 
   public static void pause(int time) {
@@ -323,12 +325,10 @@ public class RunTime {
    *
    * @return
    */
-  public static synchronized RunTime reset(Type typ) {
+  protected static synchronized RunTime reset(Type typ) {
     if (runTime != null) {
       preLogMessages += "RunTime: resetting RunTime instance;";
-      if (Sikulix.testNumber == 1) {
-        Debug.setDebugLevel(debugLevelSaved);
-      }
+      Debug.setDebugLevel(debugLevelSaved);
       Debug.setLogFile(debugLogfileSaved);
       runTime = null;
     }
@@ -340,7 +340,7 @@ public class RunTime {
    *
    * @return
    */
-  public static synchronized RunTime reset() {
+  protected static synchronized RunTime reset() {
     return reset(Type.API);
   }
 //</editor-fold>
@@ -434,15 +434,14 @@ public class RunTime {
   public String linuxAppSupport = "";
   public String linuxNeededLibs = "";
 
+  private GraphicsEnvironment genv = null;
+  private GraphicsDevice[] gdevs;
+  public Rectangle[] monitorBounds = null;
+  private Rectangle rAllMonitors;
+  protected int mainMonitor = -1;
+  protected int nMonitors = 0;
+  private Point pNull = new Point(0, 0);
 //</editor-fold>
-
-GraphicsEnvironment genv = null;
-GraphicsDevice[] gdevs;
-public Rectangle[] monitorBounds = null;
-Rectangle rAllMonitors;
-int mainMonitor = -1;
-int nMonitors = 0;
-Point pNull = new Point(0, 0);
 
 //<editor-fold defaultstate="collapsed" desc="global init">
   private void init(Type typ) {
@@ -534,11 +533,11 @@ Point pNull = new Point(0, 0);
         isRunning.createNewFile();
         isRunningFile = new FileOutputStream(isRunning);
         if (null == isRunningFile.getChannel().tryLock()) {
-          Sikulix.popError("Terminating: IDE already running");
+          Commands.popError("Terminating: IDE already running");
           shouldTerminate = true;
         }
       } catch (Exception ex) {
-        Sikulix.popError("Terminating on FatalError: cannot access IDE lock for/n" + isRunning);
+        Commands.popError("Terminating on FatalError: cannot access IDE lock for/n" + isRunning);
         shouldTerminate = true;
       }
       if (shouldTerminate) {
@@ -1001,7 +1000,7 @@ Point pNull = new Point(0, 0);
       String libsPath = (fLibsFolder.getAbsolutePath()).replaceAll("/", "\\");
       if (!syspath.toUpperCase().contains(libsPath.toUpperCase())) {
         if (!SysJNA.WinKernel32.setEnvironmentVariable("PATH", libsPath + ";" + syspath)) {
-          Sikulix.terminate(999);
+          Commands.terminate(999);
         }
         syspath = SysJNA.WinKernel32.getEnvironmentVariable("PATH");
         if (!syspath.toUpperCase().contains(libsPath.toUpperCase())) {
@@ -1078,7 +1077,7 @@ Point pNull = new Point(0, 0);
       } catch (IOException ex) {
       }
       if (!jyversion.isEmpty() && !jyversion.startsWith("2.5")) {
-        Sikulix.popError(String.format("The bundled Jython %s\n"
+        Commands.popError(String.format("The bundled Jython %s\n"
                 + "cannot be used on Java 6!\n"
                 + "Run setup again in this environment.\n"
                 + "Click OK to terminate now", jyversion));
@@ -1091,7 +1090,7 @@ Point pNull = new Point(0, 0);
     if (runningMac) {
       System.setProperty("apple.laf.useScreenMenuBar", "true");
       if (!runningMacApp && !runningInProject) {
-        if (!Sikulix.popAsk("This use of SikuliX is not supported\n"
+        if (!Commands.popAsk("This use of SikuliX is not supported\n"
                 + "and might lead to misbehavior!\n"
                 + "Click YES to continue (you should be sure)\n"
                 + "Click NO to terminate and check the situation.")) {
@@ -1648,7 +1647,7 @@ Point pNull = new Point(0, 0);
 //      log(lvl, "%s version: downloading from %s", svt, downloadBaseDir);
     } catch (Exception e) {
       Debug.error("Settings: load version file %s did not work", svf);
-      Sikulix.terminate(999);
+      Commands.terminate(999);
     }
     tessData.put("eng", "http://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.eng.tar.gz");
   }
@@ -2479,6 +2478,17 @@ Point pNull = new Point(0, 0);
     }
     return fJarFound;
   }
+  
+  protected static boolean addFromProject(String project, String aJar) {
+    File aFile = null;
+    if (runTime.fSxProject == null) {
+      return false;
+    } else {
+      aFile = new File(runTime.fSxProject, project);
+    }
+    aFile = new File(aFile, "target/" + aJar);
+    return runTime.addToClasspath(aFile.getAbsolutePath());
+  }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="system enviroment">
@@ -2641,9 +2651,9 @@ Point pNull = new Point(0, 0);
     try {
       if (!silent) {
         if (lvl <= Debug.getDebugLevel()) {
-          log(lvl, Sikulix.arrayToString(args));
+          log(lvl, arrayToString(args));
         } else {
-          Debug.info("runcmd: " + Sikulix.arrayToString(args));
+          Debug.info("runcmd: " + arrayToString(args));
         }
       }
       Process process = Runtime.getRuntime().exec(args);
@@ -2755,6 +2765,72 @@ Point pNull = new Point(0, 0);
     }
     return debugLevel;
   }
+  
+  protected static String arrayToString(String[] args) {
+    String ret = "";
+    for (String s : args) {
+      if (s.contains(" ")) {
+        s = "\"" + s + "\"";
+      }
+      ret += s + " ";
+    }
+    return ret;
+  }
 //</editor-fold>
+  
+//<editor-fold defaultstate="collapsed" desc="testSetup">
+  public static boolean canRun() {
+    return !RunTime.get().isHeadless();
+  }
 
+  protected boolean testSetup() {
+    return doTestSetup("Java API", false);
+  }
+  
+  protected boolean doTestSetup(String testSetupSource, boolean silent) {
+    Region r = Region.create(0, 0, 100, 100);
+    Image img = new Image(r.getScreen().capture(r).getImage());
+    Pattern p = new Pattern(img);
+    Finder f = new Finder(img);
+    boolean success = null != f.find(p);
+    log(lvl, "testSetup: Finder setup with image %s", !success ? "did not work" : "worked");
+    if (success &= f.hasNext()) {
+      success = (null != f.find(img.asFile()));
+      log(lvl, "testSetup: Finder setup with image file %s", !success ? "did not work" : "worked");
+      success &= f.hasNext();
+      String screenFind = "Screen.find(imagefile)";
+      try {
+        ((Screen) r.getScreen()).find(img.asFile());
+        log(lvl, "testSetup: %s worked", screenFind);
+        screenFind = "repeated Screen.find(imagefile)";
+        ((Screen) r.getScreen()).find(img.asFile());
+        log(lvl, "testSetup: %s worked", screenFind);
+      } catch (Exception ex) {
+        log(lvl, "testSetup: %s did not work", screenFind);
+        success = false;
+      }
+    }
+    if (success) {
+      if (!silent) {
+        Commands.popup("Hallo from Sikulix.testSetup: " + testSetupSource + "\n" + "SikuliX seems to be working!\n\nHave fun!");
+        log(lvl, "testSetup: Finder.find: worked");
+      } else {
+        System.out.println("[info] RunSetup: Sikulix.testSetup: Java Sikuli seems to be working!");
+      }
+      return true;
+    }
+    log(lvl, "testSetup: last Screen/Finder.find: did not work");
+    return false;
+  }
+  
+  protected boolean testSetup(String src) {
+    return doTestSetup(src, false);
+  }
+  
+  protected boolean testSetupSilent() {
+    Settings.noPupUps = true;
+    return doTestSetup("Java API", true);
+  }
+//</editor-fold>
+  
 }
