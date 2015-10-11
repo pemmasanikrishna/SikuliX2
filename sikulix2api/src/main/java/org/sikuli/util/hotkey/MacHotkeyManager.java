@@ -4,7 +4,7 @@
  *
  * modified RaiMan 2013
  */
-package org.sikuli.basics;
+package org.sikuli.util.hotkey;
 
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;

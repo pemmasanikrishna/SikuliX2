@@ -6,9 +6,8 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.basics.HotkeyManager;
-import org.sikuli.basics.HotkeyListener;
-import org.sikuli.basics.OS;
+import org.sikuli.util.hotkey.HotkeyManager;
+import org.sikuli.util.hotkey.HotkeyListener;
 import org.sikuli.natives.OSUtil;
 import org.sikuli.basics.Settings;
 import org.sikuli.natives.SysUtil;
@@ -36,7 +35,7 @@ public class Env {
    */
   @Deprecated
   public static String getSikuliVersion() {
-    return RunTime.get().SikuliVersion;
+    return RunTime.get().SikulixVersion;
   }
   
   /**
@@ -63,48 +62,38 @@ public class Env {
   }
 
   /**
-   * use Settings.isWindows .isMac .isLinux instead
-   * @return the OS.XXX
-   * @deprecated use the Settings features
+   * @deprecated use Command features --- see docs
    */
   @Deprecated
-  public static OS getOS() {
-		if (Settings.isWindows()) {
-			return OS.WINDOWS;
-		} else if (Settings.isMac()) {
-			return OS.MAC;
-		} else if (Settings.isLinux()) {
-			return OS.LINUX;
-		} else {
-			return OS.NOT_SUPPORTED;
-		}
+  public static void getOS() throws Exception{
+    throw new NoSuchMethodException("no longer supported --- see docs");
 	}
 
   /**
    * @return true/false
-   * @deprecated use Settings. ... instead
+   * @deprecated use Command features --- see docs
    */
   @Deprecated
   public static boolean isWindows() {
-    return Settings.isWindows();
+    return RunTime.get().runningWindows;
   }
 
   /**
    * @return true/false
-   * @deprecated use Settings. ... instead
+   * @deprecated use Command features --- see docs
    */
   @Deprecated
   public static boolean isLinux() {
-    return Settings.isLinux();
+    return RunTime.get().runningLinux;
   }
 
   /**
    * @return true/false
-   * @deprecated use Settings. ... instead
+   * @deprecated use Command features --- see docs
    */
   @Deprecated
   public static boolean isMac() {
-    return Settings.isMac();
+    return RunTime.get().runningMac;
   }
 
   /**

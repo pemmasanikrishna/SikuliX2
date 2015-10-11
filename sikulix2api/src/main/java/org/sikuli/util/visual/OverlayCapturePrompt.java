@@ -4,7 +4,7 @@
  *
  * modified RaiMan
  */
-package org.sikuli.util;
+package org.sikuli.util.visual;
 
 import org.sikuli.basics.Settings;
 import org.sikuli.basics.Debug;
@@ -18,6 +18,8 @@ import org.sikuli.script.RunTime;
 import org.sikuli.script.Screen;
 import org.sikuli.script.ScreenImage;
 import org.sikuli.script.ScreenUnion;
+import org.sikuli.util.EventObserver;
+import org.sikuli.util.EventSubject;
 
 /**
  * INTERNAL USE implements the screen overlay used with the capture feature

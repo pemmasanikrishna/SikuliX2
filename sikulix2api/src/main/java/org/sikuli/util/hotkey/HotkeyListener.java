@@ -4,7 +4,7 @@
  *
  * modified RaiMan 2014
  */
-package org.sikuli.basics;
+package org.sikuli.util.hotkey;
 
 public abstract class HotkeyListener {
 

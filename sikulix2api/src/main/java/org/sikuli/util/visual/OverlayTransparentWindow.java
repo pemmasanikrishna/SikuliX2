@@ -4,7 +4,7 @@
  *
  * modified RaiMan
  */
-package org.sikuli.util;
+package org.sikuli.util.visual;
 
 import org.sikuli.util.EventObserver;
 import org.sikuli.util.EventSubject;
@@ -18,6 +18,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import org.sikuli.util.EventObserver;
+import org.sikuli.util.EventSubject;
 
 /**
  * INTERNAL USE

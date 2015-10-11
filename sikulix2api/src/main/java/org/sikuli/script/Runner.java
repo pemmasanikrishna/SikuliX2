@@ -11,11 +11,10 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import org.apache.commons.cli.CommandLine;
 import org.sikuli.basics.Debug;
-import org.sikuli.basics.FileManager;
+import org.sikuli.util.FileManager;
 import org.sikuli.basics.Settings;
 import org.sikuli.util.CommandArgs;
 import org.sikuli.util.CommandArgsEnum;
-import org.sikuli.util.Commands;
 import org.sikuli.util.JythonHelper;
 
 public class Runner {

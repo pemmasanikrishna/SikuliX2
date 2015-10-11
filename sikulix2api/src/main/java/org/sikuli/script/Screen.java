@@ -6,8 +6,8 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.util.ScreenHighlighter;
-import org.sikuli.util.OverlayCapturePrompt;
+import org.sikuli.util.visual.ScreenHighlighter;
+import org.sikuli.util.visual.OverlayCapturePrompt;
 import org.sikuli.util.EventSubject;
 import org.sikuli.util.EventObserver;
 import org.sikuli.basics.Settings;
@@ -16,7 +16,6 @@ import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.util.Date;
-import org.sikuli.util.Commands;
 
 /**
  * A screen represents a physical monitor with its coordinates and size according to the global

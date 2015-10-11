@@ -1,4 +1,4 @@
-package org.sikuli.util;
+package org.sikuli.script;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -14,8 +14,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import org.sikuli.basics.Debug;
-import org.sikuli.basics.FileManager;
-import org.sikuli.basics.HotkeyManager;
+import org.sikuli.util.hotkey.HotkeyManager;
 import org.sikuli.basics.PreferencesUser;
 import org.sikuli.basics.Settings;
 import org.sikuli.script.FindFailed;
@@ -30,6 +29,9 @@ import org.sikuli.script.RunTime;
 import org.sikuli.script.Runner;
 import org.sikuli.script.Screen;
 import org.sikuli.script.Sikulix;
+import org.sikuli.util.FileManager;
+import org.sikuli.util.JythonHelper;
+import org.sikuli.util.visual.ScreenHighlighter;
 
 public class Commands {
 

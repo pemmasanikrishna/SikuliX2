@@ -4,12 +4,13 @@
  *
  * modified RaiMan 2013
  */
-package org.sikuli.basics;
+package org.sikuli.util.hotkey;
 
 import org.sikuli.script.RunTime;
 import java.util.*;
 import jxgrabkey.HotkeyConflictException;
 import jxgrabkey.JXGrabKey;
+import org.sikuli.basics.Debug;
 import org.sikuli.basics.Debug;
 import org.sikuli.script.RunTime;
 

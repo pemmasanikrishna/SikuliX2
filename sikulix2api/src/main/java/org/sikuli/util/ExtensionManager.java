@@ -4,13 +4,16 @@
  *
  * modified RaiMan 2013
  */
-package org.sikuli.basics;
+package org.sikuli.util;
 
+import org.sikuli.util.FileManager;
 import org.sikuli.script.RunTime;
 import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
+import org.sikuli.basics.Debug;
+import org.sikuli.basics.Settings;
 
 public class ExtensionManager {
 	private static ExtensionManager _instance = null;
@@ -47,7 +50,7 @@ public class ExtensionManager {
 
 	public boolean install(String name, String url, String version) {
     if (url.startsWith("---extensions---")) {
-      url = RunTime.get().SikuliRepo + name + "-" + version + ".jar";
+      url = RunTime.get().SikulixRepo + name + "-" + version + ".jar";
     }
 		String extPath = Settings.getUserExtPath();
 		String tmpdir = RunTime.get().fpBaseTempPath;

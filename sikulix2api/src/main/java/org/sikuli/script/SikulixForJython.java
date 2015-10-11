@@ -10,7 +10,7 @@ package org.sikuli.script;
 
 import java.io.File;
 import java.net.URL;
-import org.sikuli.basics.FileManager;
+import org.sikuli.util.FileManager;
 import org.sikuli.util.JythonHelper;
 
 /**

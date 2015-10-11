@@ -4,10 +4,10 @@
  *
  * modified RaiMan
  */
-package org.sikuli.util;
+package org.sikuli.util.visual;
 
-import org.sikuli.util.OverlayTransparentWindow;
-import org.sikuli.basics.Animator;
+import org.sikuli.util.visual.OverlayTransparentWindow;
+import org.sikuli.util.visual.animation.Animator;
 import org.sikuli.basics.Settings;
 import org.sikuli.basics.Debug;
 import java.awt.*;

@@ -13,7 +13,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import org.sikuli.basics.Debug;
-import org.sikuli.basics.FileManager;
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.RunTime;
 
@@ -73,7 +72,7 @@ public class JythonHelper {
       try {
         cInterpreter = Class.forName("org.python.util.PythonInterpreter");
       } catch (Exception ex) {
-        String sJython = new File(runTime.SikuliJython).getName();
+        String sJython = new File(runTime.SikulixJython).getName();
         File fJython = new File(runTime.fSikulixDownloadsGeneric, sJython);
         instance.log(lvl, "trying to use setup downloaded Jython:\n%s", fJython.getAbsolutePath());
         if (fJython.exists()) {

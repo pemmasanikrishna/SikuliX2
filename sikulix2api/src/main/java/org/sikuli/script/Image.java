@@ -35,7 +35,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 import org.sikuli.basics.Debug;
-import org.sikuli.basics.FileManager;
+import org.sikuli.util.FileManager;
 import org.sikuli.basics.Settings;
 import org.sikuli.natives.Vision;
 

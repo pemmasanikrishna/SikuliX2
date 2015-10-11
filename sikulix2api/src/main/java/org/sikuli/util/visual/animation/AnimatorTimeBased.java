@@ -1,4 +1,4 @@
-package org.sikuli.basics;
+package org.sikuli.util.visual.animation;
 
 import java.util.Date;
 

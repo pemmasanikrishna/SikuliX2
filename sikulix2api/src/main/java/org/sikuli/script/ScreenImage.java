@@ -7,7 +7,7 @@
 package org.sikuli.script;
 
 import org.sikuli.basics.Settings;
-import org.sikuli.basics.FileManager;
+import org.sikuli.util.FileManager;
 import org.sikuli.basics.Debug;
 import java.awt.*;
 import java.awt.image.*;

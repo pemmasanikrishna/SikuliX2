@@ -4,14 +4,17 @@
  *
  * modified RaiMan 2014
  */
-package org.sikuli.basics;
+package org.sikuli.util.hotkey;
 
 import java.awt.event.KeyEvent;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import org.sikuli.basics.Debug;
+import org.sikuli.basics.Debug;
 import org.sikuli.basics.PreferencesUser;
+import org.sikuli.basics.PreferencesUser;
+import org.sikuli.basics.Settings;
 import org.sikuli.basics.Settings;
 import org.sikuli.script.Key;
 import org.sikuli.script.Key;

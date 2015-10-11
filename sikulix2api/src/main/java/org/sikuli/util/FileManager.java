@@ -1,10 +1,8 @@
 /*
- * Copyright 2010-2014, Sikuli.org, sikulix.com
+ * Copyright 2010-2016, Sikuli.org, sikulix.com
  * Released under the MIT License.
- *
- * modified RaiMan 2014
  */
-package org.sikuli.basics;
+package org.sikuli.util;
 
 import org.sikuli.script.RunTime;
 import java.awt.Desktop;
@@ -44,10 +42,13 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import org.sikuli.basics.Debug;
+import org.sikuli.basics.PreferencesUser;
+import org.sikuli.basics.Settings;
 import org.sikuli.script.Image;
 import org.sikuli.script.ImagePath;
-import org.sikuli.script.Sikulix;
-import org.sikuli.util.Commands;
+import org.sikuli.script.Commands;
+import org.sikuli.util.visual.SplashFrame;
 
 /**
  * INTERNAL USE: Support for accessing files and other ressources

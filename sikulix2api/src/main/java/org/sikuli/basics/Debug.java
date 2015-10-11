@@ -6,6 +6,7 @@
  */
 package org.sikuli.basics;
 
+import org.sikuli.util.FileManager;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.lang.reflect.Method;

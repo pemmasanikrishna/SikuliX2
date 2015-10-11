@@ -7,13 +7,12 @@ package org.sikuli.script;
 import java.io.File;
 import java.net.URL;
 import java.security.CodeSource;
-import org.sikuli.basics.FileManager;
+import org.sikuli.util.FileManager;
 import org.sikuli.basics.Settings;
-import org.sikuli.util.Commands;
 
 public class Sikulix {
 
-  private static RunTime rt = RunTime.get();
+  private static RunTime rt;
 
   private static String imgLink = "http://www.sikulix.com/uploads/1/4/2/8/14281286";
   private static String imgHttp = "1389888228.jpg";
@@ -41,6 +40,8 @@ public class Sikulix {
 
   public static void main(String[] args) throws FindFailed {
 
+    rt = RunTime.get();
+    
     if (args.length > 0 && args[0].toLowerCase().startsWith("-s")) {
       if (RunServer.run(null)) {
         System.exit(1);

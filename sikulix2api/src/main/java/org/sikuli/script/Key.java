@@ -6,8 +6,8 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.basics.HotkeyManager;
-import org.sikuli.basics.HotkeyListener;
+import org.sikuli.util.hotkey.HotkeyManager;
+import org.sikuli.util.hotkey.HotkeyListener;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;

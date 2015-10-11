@@ -12,7 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import org.sikuli.basics.Debug;
-import org.sikuli.basics.FileManager;
+import org.sikuli.util.FileManager;
 
 /**
  * UNDER DEVELOPMENT - EXPERIMENTAL

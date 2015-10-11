@@ -8,7 +8,7 @@ package org.sikuli.script;
 
 import java.awt.image.BufferedImage;
 import org.sikuli.basics.Settings;
-import org.sikuli.basics.FileManager;
+import org.sikuli.util.FileManager;
 import org.sikuli.basics.Debug;
 import java.io.*;
 import java.util.LinkedList;

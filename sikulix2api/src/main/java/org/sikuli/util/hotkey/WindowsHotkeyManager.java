@@ -4,10 +4,11 @@
  *
  * modified RaiMan 2013
  */
-package org.sikuli.basics;
+package org.sikuli.util.hotkey;
 
 import com.melloware.jintellitype.JIntellitype;
 import java.util.*;
+import org.sikuli.basics.Debug;
 import org.sikuli.basics.Debug;
 
 public class WindowsHotkeyManager extends HotkeyManager {

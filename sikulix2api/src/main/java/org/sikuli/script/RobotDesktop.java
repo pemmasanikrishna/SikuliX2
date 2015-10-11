@@ -6,9 +6,9 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.basics.Animator;
-import org.sikuli.basics.AnimatorOutQuarticEase;
-import org.sikuli.basics.AnimatorTimeBased;
+import org.sikuli.util.visual.animation.Animator;
+import org.sikuli.util.visual.animation.AnimatorOutQuarticEase;
+import org.sikuli.util.visual.animation.AnimatorTimeBased;
 import org.sikuli.basics.Settings;
 import org.sikuli.basics.Debug;
 import java.awt.AWTException;
