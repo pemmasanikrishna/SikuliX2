@@ -76,7 +76,7 @@
 				</os>
 			</activation>
 			<properties>
-				<sikulix.libs>sikulixlibswin</sikulix.libs>
+				<sikulix.libs>sikulix2libswin</sikulix.libs>
 			</properties>
 		</profile>
 		<profile>
@@ -87,7 +87,7 @@
 				</os>
 			</activation>
 			<properties>
-				<sikulix.libs>sikulixlibslux</sikulix.libs>
+				<sikulix.libs>sikulix2libslux</sikulix.libs>
 			</properties>
 		</profile>
 		<profile>
@@ -98,7 +98,7 @@
 				</os>
 			</activation>
 			<properties>
-				<sikulix.libs>sikulixlibsmac</sikulix.libs>
+				<sikulix.libs>sikulix2libsmac</sikulix.libs>
 			</properties>
 		</profile>
 	</profiles>
@@ -160,6 +160,9 @@
   </dependencies>
 
   <modules>
+    <module>sikulix2libslux</module>
+    <module>sikulix2libsmac</module>
+    <module>sikulix2libswin</module>
     <module>sikulix2api</module>
     <!--    <module>sikulix</module>-->
     <!--    <module>sikulixtensions</module>-->
