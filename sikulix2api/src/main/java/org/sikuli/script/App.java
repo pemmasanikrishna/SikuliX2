@@ -6,7 +6,7 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.natives.OSUtil;
 import org.sikuli.natives.SysUtil;
 

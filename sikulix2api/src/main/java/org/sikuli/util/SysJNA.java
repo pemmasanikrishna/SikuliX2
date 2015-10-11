@@ -3,7 +3,6 @@ package org.sikuli.util;
 import org.bridj.BridJ;
 import org.bridj.Pointer;
 import org.bridj.ann.Library;
-import org.sikuli.basics.Debug;
 
 /**
  * Direct access to system functions via JNI, JNA, BridJ, ...

@@ -19,7 +19,7 @@ import org.opencv.core.MatOfDouble;
 import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.basics.Settings;
 
 /**

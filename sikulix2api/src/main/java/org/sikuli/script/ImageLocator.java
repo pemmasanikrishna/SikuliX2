@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.basics.Settings;
 

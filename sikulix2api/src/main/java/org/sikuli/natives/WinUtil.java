@@ -6,7 +6,7 @@
  */
 package org.sikuli.natives;
 
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.script.App;
 import org.sikuli.script.Key;
 import org.sikuli.script.RunTime;

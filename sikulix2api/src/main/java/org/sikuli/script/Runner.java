@@ -10,7 +10,7 @@ import java.util.Map;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import org.apache.commons.cli.CommandLine;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.basics.Settings;
 import org.sikuli.util.CommandArgs;

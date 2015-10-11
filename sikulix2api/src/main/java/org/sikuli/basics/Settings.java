@@ -6,6 +6,7 @@
  */
 package org.sikuli.basics;
 
+import org.sikuli.util.Debug;
 import org.sikuli.script.RunTime;
 import java.io.File;
 import java.net.InetAddress;

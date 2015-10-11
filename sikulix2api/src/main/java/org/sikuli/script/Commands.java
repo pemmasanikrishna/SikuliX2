@@ -13,7 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.util.hotkey.HotkeyManager;
 import org.sikuli.basics.PreferencesUser;
 import org.sikuli.basics.Settings;

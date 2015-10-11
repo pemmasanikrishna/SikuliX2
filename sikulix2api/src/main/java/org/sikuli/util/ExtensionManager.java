@@ -12,7 +12,6 @@ import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
-import org.sikuli.basics.Debug;
 import org.sikuli.basics.Settings;
 
 public class ExtensionManager {

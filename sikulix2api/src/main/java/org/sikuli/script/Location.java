@@ -6,7 +6,7 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;

@@ -13,7 +13,7 @@ import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.basics.Settings;
 
 /**

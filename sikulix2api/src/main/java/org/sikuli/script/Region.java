@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.basics.Settings;
 
 import java.util.ArrayList;

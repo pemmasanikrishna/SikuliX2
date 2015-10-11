@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 
 /**
  * This class globally collects

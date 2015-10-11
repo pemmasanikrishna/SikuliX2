@@ -7,7 +7,7 @@
 package org.sikuli.script;
 
 import org.sikuli.basics.Settings;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Iterator;

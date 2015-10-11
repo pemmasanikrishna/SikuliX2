@@ -11,7 +11,7 @@ import org.sikuli.util.visual.OverlayCapturePrompt;
 import org.sikuli.util.EventSubject;
 import org.sikuli.util.EventObserver;
 import org.sikuli.basics.Settings;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.Robot;

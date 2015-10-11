@@ -15,7 +15,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.basics.Settings;
 
 /**

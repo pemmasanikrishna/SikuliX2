@@ -13,7 +13,7 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import javax.swing.ImageIcon;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.basics.Settings;
 
 /**

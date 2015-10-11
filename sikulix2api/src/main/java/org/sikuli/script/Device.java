@@ -10,7 +10,7 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.PointerInfo;
 import java.util.Date;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 
 /**
  *

@@ -11,7 +11,6 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
-import org.sikuli.basics.Debug;
 import org.sikuli.script.RunTime;
 
 /**

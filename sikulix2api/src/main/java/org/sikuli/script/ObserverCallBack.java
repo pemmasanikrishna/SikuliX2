@@ -8,7 +8,7 @@ package org.sikuli.script;
 
 import java.lang.reflect.Method;
 import java.util.EventListener;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.util.JythonHelper;
 
 /**

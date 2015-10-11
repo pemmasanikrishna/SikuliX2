@@ -6,6 +6,7 @@
  */
 package org.sikuli.basics;
 
+import org.sikuli.util.Debug;
 import java.awt.Dimension;
 import java.awt.Event;
 import java.awt.Point;

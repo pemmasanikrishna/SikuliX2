@@ -34,7 +34,7 @@ import javax.imageio.ImageIO;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.basics.Settings;
 import org.sikuli.natives.Vision;

@@ -8,7 +8,7 @@ package org.sikuli.script;
 
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.basics.Settings;
 
 /**

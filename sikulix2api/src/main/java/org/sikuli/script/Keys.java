@@ -6,7 +6,7 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 
 /**
  * Main pupose is to coordinate the keyboard usage among threads <br>

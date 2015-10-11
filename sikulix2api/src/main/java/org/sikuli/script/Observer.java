@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.sikuli.basics.Settings;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import org.sikuli.natives.FindInput;
 import org.sikuli.natives.FindResult;
 import org.sikuli.natives.FindResults;

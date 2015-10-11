@@ -9,7 +9,7 @@ package org.sikuli.util.visual;
 import org.sikuli.util.EventObserver;
 import org.sikuli.util.EventSubject;
 import org.sikuli.basics.Settings;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;

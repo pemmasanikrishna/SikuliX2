@@ -9,7 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 import javax.script.ScriptEngine;
-import org.sikuli.basics.Debug;
+import org.sikuli.util.Debug;
 
 
 public class RunServer {
