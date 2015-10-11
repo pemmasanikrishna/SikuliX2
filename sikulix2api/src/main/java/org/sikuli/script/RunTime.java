@@ -1,8 +1,6 @@
 /*
- * Copyright 2010-2015, Sikuli.org, sikulix.com
+ * Copyright 2010-2016, Sikuli.org, sikulix.com
  * Released under the MIT License.
- *
- * RaiMan 2015
  */
 package org.sikuli.script;
 
@@ -43,11 +41,11 @@ import java.util.zip.ZipInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sikuli.basics.Debug;
-import org.sikuli.util.FileManager;
 import org.sikuli.basics.Settings;
+import org.sikuli.util.FileManager;
 import org.sikuli.util.JythonHelper;
-import org.sikuli.util.SysJNA;
 import org.sikuli.util.LinuxSupport;
+import org.sikuli.util.SysJNA;
 
 /**
  * Intended to concentrate all, that is needed at startup of sikulix or sikulixapi
@@ -637,16 +635,16 @@ public class RunTime {
       fSxBaseJar = new File(base);
       String jn = fSxBaseJar.getName();
       fSxBase = fSxBaseJar.getParentFile();
-      log(lvl, "runs as %s in: %s", jn, fSxBase.getAbsolutePath());
+      log(lvl, "runs as %s in:\n%s", jn, fSxBase.getAbsolutePath());
       if (jn.contains("classes")) {
         runningJar = false;
         fSxProject = fSxBase.getParentFile().getParentFile();
-        log(lvl, "not jar - supposing Maven project: %s", fSxProject);
+        log(lvl, "not jar - supposing Maven project:\n%s", fSxProject);
         appType = "in Maven project from classes";
         runningInProject = true;
       } else if ("target".equals(fSxBase.getName())) {
         fSxProject = fSxBase.getParentFile().getParentFile();
-        log(lvl, "folder target detected - supposing Maven project: %s", fSxProject);
+        log(lvl, "folder target detected - supposing Maven project:\n%s", fSxProject);
         appType = "in Maven project from some jar";
         runningInProject = true;
       } else {
@@ -777,9 +775,9 @@ public class RunTime {
       if (!fLibsFolder.exists()) {
         terminate(1, "libs folder not available: " + fLibsFolder.toString());
       }
-      log(lvl, "new libs folder at: %s", fLibsFolder);
+      log(lvl, "new libs folder at:\n%s", fLibsFolder);
     } else {
-      log(lvl, "exists libs folder at: %s", fLibsFolder);
+      log(lvl, "exists libs folder at:\n%s", fLibsFolder);
     }
     String[] fpList = fTempPath.list(new FilenameFilter() {
       @Override
@@ -1247,7 +1245,7 @@ public class RunTime {
 //<editor-fold defaultstate="collapsed" desc="options handling">
   private void loadOptions(Type typ) {
 		for (File aFile : new File[] {fWorkDir, fUserDir, fSikulixStore}) {
-      log(lvl, "loadOptions: check: %s", aFile);
+      log(lvl+1, "loadOptions: check: %s", aFile);
 			fOptions = new File(aFile, fnOptions);
       if (fOptions.exists()) {
 				break;
@@ -1505,7 +1503,7 @@ public class RunTime {
   }
 //</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="Sikulix options handling">
+//<editor-fold defaultstate="collapsed" desc="Sikulix version options handling">
   public String SikulixRepo;
   public String SikulixVersion;
   public String SikulixJython;
@@ -1718,9 +1716,9 @@ public class RunTime {
       }
     }
     if (ecount > 0) {
-      log(lvl, "files exported: %d - skipped: %d from %s to:\n %s", count, ecount, fpRessources, fFolder);
+      log(lvl, "files exported: %d - skipped: %d from %s to:\n%s", count, ecount, fpRessources, fFolder);
     } else {
-      log(lvl, "files exported: %d from: %s to:\n %s", count, fpRessources, fFolder);
+      log(lvl, "files exported: %d from: %s to:\n%s", count, fpRessources, fFolder);
     }
     return content;
   }
@@ -1754,7 +1752,7 @@ public class RunTime {
     } else {
       uaJar = fromClasspath(aJar);
       if (uaJar == null) {
-        log(-1, "extractResourcesToFolderFromJar: not on classpath: %s", aJar);
+        log(-1, "extractResourcesToFolderFromJar: not on classpath:\n%s", aJar);
         return null;
       }
       try {
@@ -1866,7 +1864,7 @@ public class RunTime {
   }
 
   public URL resourceLocation(String folderOrFile) {
-		log(lvl, "resourceLocation: (%s) %s", clsRef, folderOrFile);
+    log(lvl, "resourceLocation: (%s) %s", clsRef, folderOrFile);
     if (!folderOrFile.startsWith("/")) {
       folderOrFile = "/" + folderOrFile;
     }
@@ -1874,14 +1872,14 @@ public class RunTime {
   }
 
   private List<String> resourceList(String folder, FilenameFilter filter) {
-		log(lvl, "resourceList: enter");
+    log(lvl, "resourceList: enter");
     List<String> files = new ArrayList<String>();
     if (!folder.startsWith("/")) {
       folder = "/" + folder;
     }
     URL uFolder = resourceLocation(folder);
     if (uFolder == null) {
-			log(lvl, "resourceList: not found: %s", folder);
+      log(lvl, "resourceList: not found: %s", folder);
       return files;
     }
     try {
@@ -1894,7 +1892,7 @@ public class RunTime {
     File fFolder = null;
     try {
       fFolder = new File(uFolder.toURI());
-			log(lvl, "resourceList: having folder: %s", fFolder);
+      log(lvl, "resourceList: having folder:\n%s", fFolder);
       String sFolder = FileManager.normalizeAbsolute(fFolder.getPath(), false);
       if (":".equals(sFolder.substring(2, 3))) {
         sFolder = sFolder.substring(1);
@@ -1913,11 +1911,11 @@ public class RunTime {
     String[] parts = uFolder.getPath().split("!");
     if (parts.length < 2 || !parts[0].startsWith("file:")) {
       log(lvl, "resourceList:\n%s", folder);
-      log(-1, "resourceList: not a valid jar URL: " + uFolder.getPath());
+      log(-1, "resourceList: not a valid jar URL:\n" + uFolder.getPath());
       return null;
     }
     String fpFolder = parts[1];
-		log(lvl, "resourceList: having jar: %s", uFolder);
+		log(lvl, "resourceList: having jar:\n%s", uFolder);
     return doResourceListJar(uFolder, fpFolder, files, filter);
   }
 
