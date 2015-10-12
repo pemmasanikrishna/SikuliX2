@@ -11,11 +11,11 @@ import org.sikuli.util.Debug;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Iterator;
-import org.sikuli.natives.FindInput;
-import org.sikuli.natives.FindResult;
-import org.sikuli.natives.FindResults;
-import org.sikuli.natives.TARGET_TYPE;
-import org.sikuli.natives.Vision;
+import org.sikuli.zdeprecated.natives.FindInput;
+import org.sikuli.zdeprecated.natives.FindResult;
+import org.sikuli.zdeprecated.natives.FindResults;
+import org.sikuli.zdeprecated.natives.TARGET_TYPE;
+import org.sikuli.zdeprecated.natives.Vision;
 
 /**
  * implements the process to find one image in another image <br>

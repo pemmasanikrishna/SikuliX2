@@ -8,9 +8,9 @@ package org.sikuli.script;
 
 import org.sikuli.util.hotkey.HotkeyManager;
 import org.sikuli.util.hotkey.HotkeyListener;
-import org.sikuli.natives.OSUtil;
+import org.sikuli.zdeprecated.natives.OSUtil;
 import org.sikuli.basics.Settings;
-import org.sikuli.natives.SysUtil;
+import org.sikuli.zdeprecated.natives.SysUtil;
 
 /**
  * features moved to other classes, details below with the methods

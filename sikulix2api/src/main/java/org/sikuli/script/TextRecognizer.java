@@ -13,10 +13,10 @@ import org.sikuli.util.Debug;
 import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
-import org.sikuli.natives.Mat;
-import org.sikuli.natives.OCRWord;
-import org.sikuli.natives.OCRWords;
-import org.sikuli.natives.Vision;
+import org.sikuli.zdeprecated.natives.Mat;
+import org.sikuli.zdeprecated.natives.OCRWord;
+import org.sikuli.zdeprecated.natives.OCRWords;
+import org.sikuli.zdeprecated.natives.Vision;
 
 /**
  * INTERNAL USE

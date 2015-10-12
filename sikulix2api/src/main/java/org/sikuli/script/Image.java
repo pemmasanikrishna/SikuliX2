@@ -31,13 +31,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
+import org.sikuli.zexternal.opencv.core.CvType;
+import org.sikuli.zexternal.opencv.core.Mat;
+import org.sikuli.zexternal.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.basics.Settings;
-import org.sikuli.natives.Vision;
+import org.sikuli.zdeprecated.natives.Vision;
 
 /**
  * This class hides the complexity behind image names given as string.
@@ -1237,15 +1237,15 @@ public class Image {
    * @deprecated
    */
   @Deprecated
-  protected org.sikuli.natives.Mat getMatNative() {
+  protected org.sikuli.zdeprecated.natives.Mat getMatNative() {
     return convertBufferedImageToMat(get());
   }
 
-  protected static org.sikuli.natives.Mat convertBufferedImageToMat(BufferedImage img) {
+  protected static org.sikuli.zdeprecated.natives.Mat convertBufferedImageToMat(BufferedImage img) {
     if (img != null) {
       long theMatTime = new Date().getTime();
       byte[] data = convertBufferedImageToByteArray(img);
-      org.sikuli.natives.Mat theMat = Vision.createMat(img.getHeight(), img.getWidth(), data);
+      org.sikuli.zdeprecated.natives.Mat theMat = Vision.createMat(img.getHeight(), img.getWidth(), data);
       if (Settings.FindProfiling) {
         Debug.logp("[FindProfiling] createCVMat [%d x %d]: %d msec", 
                 img.getWidth(), img.getHeight(), new Date().getTime() - theMatTime);

@@ -10,11 +10,11 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
+import org.sikuli.zexternal.opencv.core.Core;
+import org.sikuli.zexternal.opencv.core.Mat;
+import org.sikuli.zexternal.opencv.core.MatOfPoint;
+import org.sikuli.zexternal.opencv.core.Size;
+import org.sikuli.zexternal.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.basics.Settings;
 

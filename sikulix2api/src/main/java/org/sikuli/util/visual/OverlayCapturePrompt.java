@@ -11,7 +11,7 @@ import org.sikuli.util.Debug;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
-import org.sikuli.natives.SysUtil;
+import org.sikuli.zdeprecated.natives.SysUtil;
 import org.sikuli.script.IScreen;
 import org.sikuli.script.Location;
 import org.sikuli.script.RunTime;
