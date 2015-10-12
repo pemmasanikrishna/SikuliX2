@@ -6,20 +6,19 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.util.visual.ScreenHighlighter;
 import java.awt.Rectangle;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Settings;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import org.sikuli.util.visual.ScreenHighlighter;
 
 /**
  * A Region is a rectengular area and lies always completely inside its parent screen
@@ -2409,7 +2408,7 @@ public class Region {
   }
   
   private Match findInImage(ScreenImage base, Object target) throws IOException {
-    Finder finder = null;
+    AFinder finder = null;
     Match match = null;
     boolean findingText = false;
     Image img = null;
@@ -2694,7 +2693,7 @@ public class Region {
    * waiting.
    */
   private <PSI> Match doFind(PSI ptn, RepeatableFind repeating) throws IOException {
-    Finder f = null;
+    AFinder f = null;
     Match m = null;
     IScreen s = null;
     boolean findingText = false;
@@ -2790,7 +2789,7 @@ public class Region {
     return m;
   }
   
-  private void runFinder(Finder f, Object target) {
+  private void runFinder(AFinder f, Object target) {
     if (Debug.shouldHighlight()) {
       if (this.scr.getW() > w + 20 && this.scr.getH() > h + 20)
         highlight(2, "#000255000");
@@ -2802,11 +2801,11 @@ public class Region {
     }
   }
 
-  private Finder checkLastSeenAndCreateFinder(Image img, double findTimeout, Pattern ptn) {
+  private AFinder checkLastSeenAndCreateFinder(Image img, double findTimeout, Pattern ptn) {
     return doCheckLastSeenAndCreateFinder(null, img, findTimeout, ptn);
   }
   
-  private Finder doCheckLastSeenAndCreateFinder(ScreenImage base, Image img, double findTimeout, Pattern ptn) {
+  private AFinder doCheckLastSeenAndCreateFinder(ScreenImage base, Image img, double findTimeout, Pattern ptn) {
     if (base == null) {
       base = getScreen().capture(this);
     }
@@ -2959,7 +2958,7 @@ public class Region {
 
     Object _target;
     Match _match = null;
-    Finder _finder = null;
+    AFinder _finder = null;
     Image _image = null;
 
     public <PSI> RepeatableFind(PSI target) {

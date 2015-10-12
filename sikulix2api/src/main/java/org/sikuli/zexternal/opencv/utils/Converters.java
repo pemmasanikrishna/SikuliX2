@@ -3,17 +3,17 @@ package org.sikuli.zexternal.opencv.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.sikuli.zexternal.opencv.core.CvType;
-import org.sikuli.zexternal.opencv.core.Mat;
-import org.sikuli.zexternal.opencv.core.MatOfByte;
-import org.sikuli.zexternal.opencv.core.MatOfDMatch;
-import org.sikuli.zexternal.opencv.core.MatOfKeyPoint;
-import org.sikuli.zexternal.opencv.core.MatOfPoint;
-import org.sikuli.zexternal.opencv.core.MatOfPoint2f;
-import org.sikuli.zexternal.opencv.core.MatOfPoint3f;
-import org.sikuli.zexternal.opencv.core.Point;
-import org.sikuli.zexternal.opencv.core.Point3;
-import org.sikuli.zexternal.opencv.core.Rect;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfDMatch;
+import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.Point;
+import org.opencv.core.Point3;
+import org.opencv.core.Rect;
 import org.sikuli.zexternal.opencv.features2d.DMatch;
 import org.sikuli.zexternal.opencv.features2d.KeyPoint;
 

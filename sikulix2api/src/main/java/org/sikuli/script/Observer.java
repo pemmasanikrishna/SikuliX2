@@ -12,13 +12,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.sikuli.util.Settings;
+import org.sikuli.natives.FindInput;
+import org.sikuli.natives.FindResult;
+import org.sikuli.natives.FindResults;
+import org.sikuli.natives.Mat;
+import org.sikuli.natives.Vision;
 import org.sikuli.util.Debug;
-import org.sikuli.zdeprecated.natives.FindInput;
-import org.sikuli.zdeprecated.natives.FindResult;
-import org.sikuli.zdeprecated.natives.FindResults;
-import org.sikuli.zdeprecated.natives.Mat;
-import org.sikuli.zdeprecated.natives.Vision;
+import org.sikuli.util.Settings;
 
 /**
  * INTERNAL USE implements the observe action for a region and calls the ObserverCallBacks
@@ -38,7 +38,7 @@ public class Observer {
   }
   private Region observedRegion = null;
   private Mat lastImgMat = null;
-  private org.sikuli.zexternal.opencv.core.Mat lastImageMat = null;
+  private org.opencv.core.Mat lastImageMat = null;
   private Map<String, State> eventStates = null;
   private Map<String, Long> eventRepeatWaitTimes = null;
   private Map<String, Match> eventMatches = null;
@@ -175,7 +175,7 @@ public class Observer {
     if (!observedRegion.isObserving()) {
       return false;
     }
-    Finder finder = null;
+    AFinder finder = null;
     for (String name : eventStates.keySet()) {
       if (!patternsToCheck()) {
         continue;
@@ -307,7 +307,7 @@ public class Observer {
     boolean leftToDo = false;
     if (lastImgMat == null) {
       if (Settings.UseImageFinder) {
-        lastImageMat = new org.sikuli.zexternal.opencv.core.Mat();
+        lastImageMat = new org.opencv.core.Mat();
       } else {
         lastImgMat = Image.convertBufferedImageToMat(img.getImage());
       }
@@ -334,7 +334,7 @@ public class Observer {
       if (Settings.UseImageFinder) {
         ImageFinder f = new ImageFinder(lastImageMat);
         f.setMinChanges(minChanges);
-        org.sikuli.zexternal.opencv.core.Mat current = Image.createMat(img.getImage());
+        org.opencv.core.Mat current = Image.createMat(img.getImage());
         if (f.hasChanges(current)) {
           //TODO implement ChangeObserver: processing changes
           log(lvl, "TODO: processing changes");

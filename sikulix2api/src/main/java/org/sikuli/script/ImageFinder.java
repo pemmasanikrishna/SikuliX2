@@ -10,11 +10,11 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.sikuli.zexternal.opencv.core.Core;
-import org.sikuli.zexternal.opencv.core.Mat;
-import org.sikuli.zexternal.opencv.core.MatOfPoint;
-import org.sikuli.zexternal.opencv.core.Size;
-import org.sikuli.zexternal.opencv.imgproc.Imgproc;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Settings;
 
@@ -23,7 +23,7 @@ import org.sikuli.util.Settings;
  * Intended replacement for Finder together with ImageFind
  * completely implementing the OpenCV usage on the Java level.
  */
-public class ImageFinder extends Finder {
+public class ImageFinder extends AFinder{
   
   static RunTime runTime = RunTime.get();
 
@@ -94,7 +94,6 @@ public class ImageFinder extends Finder {
     base = new Mat();
   }
 
-  @Override
   public void destroy() {
     reset();
   }
@@ -120,7 +119,7 @@ public class ImageFinder extends Finder {
   }
 
   protected void setBase(BufferedImage bImg) {
-    log(3, "search in: \n%s", bImg);
+    log(4, "search in: \n%s", bImg);
     base = Image.createMat(bImg);
   }
 
@@ -149,7 +148,7 @@ public class ImageFinder extends Finder {
     MaxTimePerScan = (int) (1000.0 / r.getWaitScanRate());
     offX = r.x;
     offY = r.y;
-    log(3, "search in: \n%s", r);
+    log(3, "search in: %s", r);
   }
 
   public void setFindTimeout(double t) {
@@ -164,7 +163,6 @@ public class ImageFinder extends Finder {
     return true;
   }
 
-  @Override
   public String find(Image img) {
     if (null == imageFind(img)) {
       return null;
@@ -173,7 +171,6 @@ public class ImageFinder extends Finder {
     }
   }
 
-  @Override
   public String find(String filenameOrText) {
     if (null == imageFind(filenameOrText)) {
       return null;
@@ -182,7 +179,6 @@ public class ImageFinder extends Finder {
     }
   }
 
-  @Override
   public String find(Pattern pat) {
     if (null == imageFind(pat)) {
       return null;
@@ -191,7 +187,6 @@ public class ImageFinder extends Finder {
     }
   }
 
-  @Override
   public String findText(String text) {
     log(-1, "findText: not yet implemented");
     return null;
@@ -256,7 +251,6 @@ public class ImageFinder extends Finder {
     return imageFindAll(probe, ImageFind.BEST_FIRST, count, args);
   }
 
-  @Override
   public String findAll(Image img) {
     if (null == imageFindAll(img, ImageFind.BEST_FIRST, 0)) {
       return null;
@@ -265,7 +259,6 @@ public class ImageFinder extends Finder {
     }
   }
 
-  @Override
   public String findAll(String filenameOrText) {
     if (null == imageFindAll(filenameOrText, ImageFind.BEST_FIRST, 0)) {
       return null;
@@ -274,7 +267,6 @@ public class ImageFinder extends Finder {
     }
   }
 
-  @Override
   public String findAll(Pattern pat) {
     if (null == imageFindAll(pat, ImageFind.BEST_FIRST, 0)) {
       return null;
@@ -360,7 +352,6 @@ public class ImageFinder extends Finder {
     minChanges = min;
   }
 
-  @Override
   public boolean hasNext() {
     if (null != firstFind) {
       return firstFind.hasNext();
@@ -368,7 +359,6 @@ public class ImageFinder extends Finder {
     return false;
   }
 
-  @Override
   public Match next() {
     if (firstFind != null) {
       return firstFind.next();
@@ -376,7 +366,6 @@ public class ImageFinder extends Finder {
     return null;
   }
 
-  @Override
   public void remove() {
   }
 }

@@ -6,16 +6,16 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.util.Settings;
-import org.sikuli.util.Debug;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Iterator;
-import org.sikuli.zdeprecated.natives.FindInput;
-import org.sikuli.zdeprecated.natives.FindResult;
-import org.sikuli.zdeprecated.natives.FindResults;
-import org.sikuli.zdeprecated.natives.TARGET_TYPE;
-import org.sikuli.zdeprecated.natives.Vision;
+import org.sikuli.natives.FindInput;
+import org.sikuli.natives.FindResult;
+import org.sikuli.natives.FindResults;
+import org.sikuli.natives.TARGET_TYPE;
+import org.sikuli.natives.Vision;
+import org.sikuli.util.Debug;
+import org.sikuli.util.Settings;
 
 /**
  * implements the process to find one image in another image <br>
@@ -25,13 +25,13 @@ import org.sikuli.zdeprecated.natives.Vision;
  * completely in Java using the OpenCV newly provided JAVA interface<br>
  * At time of realisation the Finder API will be redirected to ImageFinder
  */
-public class Finder implements Iterator<Match> {
+public class Finder extends AFinder implements Iterator<Match>{
 
   static RunTime runTime = RunTime.get();
 
   private Region _region = null;
   private Pattern _pattern = null;
-  private FindInput _findInput = new FindInput();
+  private FindInput _findInput = null;
   private FindResults _results = null;
   private int _cur_result_i;
   private boolean repeating = false;
@@ -40,6 +40,8 @@ public class Finder implements Iterator<Match> {
 
   static {
     RunTime.loadLibrary("VisionProxy");
+//    String opencvLib = Core.NATIVE_LIBRARY_NAME;
+//    RunTime.loadLibrary(opencvLib);
   }
 
   private static String me = "Finder: ";
@@ -52,7 +54,9 @@ public class Finder implements Iterator<Match> {
   /**
    * Just to force library initialization
    */
-  public Finder() {}
+  public Finder() {
+    _findInput = new FindInput();
+  }
 
   /**
    * Finder constructor (finding within an image).
@@ -63,6 +67,7 @@ public class Finder implements Iterator<Match> {
    */
   public Finder(String imageFilename) throws IOException {
     this(imageFilename, null);
+    _findInput = new FindInput();
   }
 
   /**
@@ -74,6 +79,7 @@ public class Finder implements Iterator<Match> {
    * @throws java.io.IOException if imagefile not found
    */
   public Finder(String imageFilename, Region region) throws IOException  {
+    _findInput = new FindInput();
     Image img = Image.create(imageFilename);
     if (img.isValid()) {
       _findInput.setSource(Image.convertBufferedImageToMat(img.get()));
@@ -91,6 +97,7 @@ public class Finder implements Iterator<Match> {
    * @param bimg BufferedImage
    */
   public Finder(BufferedImage bimg) {
+    _findInput = new FindInput();
     _findInput.setSource(Image.convertBufferedImageToMat(bimg));
   }
 
@@ -100,6 +107,7 @@ public class Finder implements Iterator<Match> {
    * @param simg ScreenImage
    */
   public Finder(ScreenImage simg) {
+    _findInput = new FindInput();
     initScreenFinder(simg, null);
   }
 
@@ -110,6 +118,7 @@ public class Finder implements Iterator<Match> {
    * @param region the cropping region
    */
   public Finder(ScreenImage simg, Region region) {
+    _findInput = new FindInput();
     initScreenFinder(simg, region);
   }
 
@@ -120,6 +129,7 @@ public class Finder implements Iterator<Match> {
    */
   public Finder(Image img) {
     log(lvl, "Image: %s", img);
+    _findInput = new FindInput();
     _findInput.setSource(Image.convertBufferedImageToMat(img.get()));
   }
 

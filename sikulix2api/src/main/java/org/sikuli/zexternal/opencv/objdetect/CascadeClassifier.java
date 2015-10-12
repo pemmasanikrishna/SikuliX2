@@ -5,11 +5,11 @@
 package org.sikuli.zexternal.opencv.objdetect;
 
 import java.lang.String;
-import org.sikuli.zexternal.opencv.core.Mat;
-import org.sikuli.zexternal.opencv.core.MatOfDouble;
-import org.sikuli.zexternal.opencv.core.MatOfInt;
-import org.sikuli.zexternal.opencv.core.MatOfRect;
-import org.sikuli.zexternal.opencv.core.Size;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfInt;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Size;
 
 // C++: class CascadeClassifier
 /**

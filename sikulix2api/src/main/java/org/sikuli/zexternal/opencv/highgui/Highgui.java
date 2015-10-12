@@ -5,9 +5,9 @@
 package org.sikuli.zexternal.opencv.highgui;
 
 import java.lang.String;
-import org.sikuli.zexternal.opencv.core.Mat;
-import org.sikuli.zexternal.opencv.core.MatOfByte;
-import org.sikuli.zexternal.opencv.core.MatOfInt;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfInt;
 
 public class Highgui {
 

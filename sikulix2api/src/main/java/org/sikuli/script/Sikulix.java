@@ -7,6 +7,7 @@ package org.sikuli.script;
 import java.io.File;
 import java.net.URL;
 import java.security.CodeSource;
+import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
 
@@ -42,26 +43,36 @@ public class Sikulix {
 
     rt = RunTime.get();
     
-    if (args.length > 0 && args[0].toLowerCase().startsWith("-s")) {
-      if (RunServer.run(null)) {
-        System.exit(1);
-      }
-    } else {
-      System.out.println("********** Running Sikulix.main");
+    System.out.println("********** Running Sikulix.main");
 
-      int dl = RunTime.checkArgs(args, RunTime.Type.API);
-
-      if (dl == 999) {
-        int exitCode = Runner.runScripts(args);
-        Commands.cleanUp(exitCode);
-        System.exit(exitCode);
-      }
-    }
-
+    Debug.on(3);
     Settings.InfoLogs = false;
     Settings.ActionLogs = false;
     
+    
     ImagePath.add("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
+    Screen s = new Screen();
+    
+    Image.create("nbicons");
+
+    Settings.CheckLastSeen = false;
+    
+    Settings.UseImageFinder = false;
+    s.find("nbicons");
+
+    Settings.UseImageFinder = true;
+    s.find("nbicons");
+
+    Settings.CheckLastSeen = true;
+    
+    Settings.UseImageFinder = false;
+    s.find("nbicons");
+
+    Settings.UseImageFinder = true;
+    s.find("nbicons");
+
+//    Commands.endNormal(1);
+    System.exit(1);
 
     if (rt.runningWinApp) {
       Commands.popup("Hello World\nNot much else to do ( yet ;-)", Sikulix.rt.fSxBaseJar.getName());

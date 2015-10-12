@@ -5,12 +5,12 @@
 package org.sikuli.zexternal.opencv.objdetect;
 
 import java.lang.String;
-import org.sikuli.zexternal.opencv.core.Mat;
-import org.sikuli.zexternal.opencv.core.MatOfDouble;
-import org.sikuli.zexternal.opencv.core.MatOfFloat;
-import org.sikuli.zexternal.opencv.core.MatOfPoint;
-import org.sikuli.zexternal.opencv.core.MatOfRect;
-import org.sikuli.zexternal.opencv.core.Size;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Size;
 
 // C++: class HOGDescriptor
 public class HOGDescriptor {

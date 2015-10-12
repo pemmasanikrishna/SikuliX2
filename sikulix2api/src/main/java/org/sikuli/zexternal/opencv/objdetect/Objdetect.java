@@ -4,9 +4,9 @@
 //
 package org.sikuli.zexternal.opencv.objdetect;
 
-import org.sikuli.zexternal.opencv.core.Mat;
-import org.sikuli.zexternal.opencv.core.MatOfInt;
-import org.sikuli.zexternal.opencv.core.MatOfRect;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfInt;
+import org.opencv.core.MatOfRect;
 
 public class Objdetect {
 

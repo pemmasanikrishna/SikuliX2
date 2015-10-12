@@ -6,11 +6,11 @@ package org.sikuli.zexternal.opencv.features2d;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.sikuli.zexternal.opencv.core.Mat;
-import org.sikuli.zexternal.opencv.core.MatOfByte;
-import org.sikuli.zexternal.opencv.core.MatOfDMatch;
-import org.sikuli.zexternal.opencv.core.MatOfKeyPoint;
-import org.sikuli.zexternal.opencv.core.Scalar;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfDMatch;
+import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.Scalar;
 import org.sikuli.zexternal.opencv.utils.Converters;
 
 public class Features2d {

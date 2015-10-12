@@ -6,13 +6,12 @@
  */
 package org.sikuli.util;
 
-import org.sikuli.util.Debug;
-import org.sikuli.script.RunTime;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.Proxy;
 import java.util.Date;
 import org.sikuli.script.Image;
+import org.sikuli.script.RunTime;
 
 /**
  * This is the container for all
@@ -291,7 +290,7 @@ public class Settings {
 	public static double MinSimilarity = 0.7;
 	public static boolean CheckLastSeen = true;
 	public static float CheckLastSeenSimilar = 0.95f;
-	public static boolean UseImageFinder = false;
+	public static boolean UseImageFinder = true;
 
   private static int ImageCache = 64;
 

@@ -5,7 +5,7 @@
 package org.sikuli.zexternal.opencv.highgui;
 
 import java.lang.String;
-import org.sikuli.zexternal.opencv.core.Mat;
+import org.opencv.core.Mat;
 
 // C++: class VideoCapture
 /**
@@ -487,14 +487,14 @@ public class VideoCapture {
     }
 
 
-    public java.util.List<org.sikuli.zexternal.opencv.core.Size> getSupportedPreviewSizes()
+    public java.util.List<org.opencv.core.Size> getSupportedPreviewSizes()
     {
         String[] sizes_str = getSupportedPreviewSizes_0(nativeObj).split(",");
-        java.util.List<org.sikuli.zexternal.opencv.core.Size> sizes = new java.util.ArrayList<org.sikuli.zexternal.opencv.core.Size>(sizes_str.length);
+        java.util.List<org.opencv.core.Size> sizes = new java.util.ArrayList<org.opencv.core.Size>(sizes_str.length);
 
         for (String str : sizes_str) {
             String[] wh = str.split("x");
-            sizes.add(new org.sikuli.zexternal.opencv.core.Size(Double.parseDouble(wh[0]), Double.parseDouble(wh[1])));
+            sizes.add(new org.opencv.core.Size(Double.parseDouble(wh[0]), Double.parseDouble(wh[1])));
         }
 
         return sizes;

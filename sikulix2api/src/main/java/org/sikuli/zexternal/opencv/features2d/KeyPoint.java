@@ -1,6 +1,6 @@
 package org.sikuli.zexternal.opencv.features2d;
 
-import org.sikuli.zexternal.opencv.core.Point;
+import org.opencv.core.Point;
 
 /**
  * <p>Data structure for salient point detectors.</p>

@@ -7,7 +7,7 @@
 package org.sikuli.script;
 
 import org.sikuli.util.Settings;
-import org.sikuli.zdeprecated.natives.FindResult;
+import org.sikuli.natives.FindResult;
 
 /**
  * holds the result of a find operation, is itself the region on the screen,

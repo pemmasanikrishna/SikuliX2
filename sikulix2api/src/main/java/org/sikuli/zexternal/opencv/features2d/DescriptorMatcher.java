@@ -7,8 +7,8 @@ package org.sikuli.zexternal.opencv.features2d;
 import java.lang.String;
 import java.util.ArrayList;
 import java.util.List;
-import org.sikuli.zexternal.opencv.core.Mat;
-import org.sikuli.zexternal.opencv.core.MatOfDMatch;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfDMatch;
 import org.sikuli.zexternal.opencv.utils.Converters;
 
 // C++: class javaDescriptorMatcher

@@ -6,16 +6,16 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.util.visual.ScreenHighlighter;
-import org.sikuli.util.visual.OverlayCapturePrompt;
-import org.sikuli.util.EventSubject;
-import org.sikuli.util.EventObserver;
-import org.sikuli.util.Settings;
-import org.sikuli.util.Debug;
 import java.awt.AWTException;
 import java.awt.Rectangle;
-import java.awt.Robot;
 import java.util.Date;
+import org.opencv.core.Core;
+import org.sikuli.util.Debug;
+import org.sikuli.util.EventObserver;
+import org.sikuli.util.EventSubject;
+import org.sikuli.util.Settings;
+import org.sikuli.util.visual.OverlayCapturePrompt;
+import org.sikuli.util.visual.ScreenHighlighter;
 
 /**
  * A screen represents a physical monitor with its coordinates and size according to the global
@@ -54,7 +54,9 @@ public class Screen extends Region implements EventObserver, IScreen {
   //<editor-fold defaultstate="collapsed" desc="Initialization">
 
   static {
-    RunTime.loadLibrary("VisionProxy");
+//    RunTime.loadLibrary("VisionProxy");
+    String opencvLib = Core.NATIVE_LIBRARY_NAME;
+    RunTime.loadLibrary(opencvLib);
     initScreens(false);
   }
   private long lastCaptureTime = -1;

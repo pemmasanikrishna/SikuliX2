@@ -5,5 +5,5 @@
 "quickstart.png"
 "raimanlogo.png"
 "sxpower.png"
-"netbicons.png"
+nbicons = "nbicons.png"
 "firefox.png"

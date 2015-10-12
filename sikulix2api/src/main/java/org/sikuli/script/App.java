@@ -7,8 +7,8 @@
 package org.sikuli.script;
 
 import org.sikuli.util.Debug;
-import org.sikuli.zdeprecated.natives.OSUtil;
-import org.sikuli.zdeprecated.natives.SysUtil;
+import org.sikuli.natives.OSUtil;
+import org.sikuli.natives.SysUtil;
 
 import java.awt.*;
 import java.awt.datatransfer.*;
