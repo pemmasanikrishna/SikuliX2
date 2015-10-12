@@ -4,7 +4,7 @@
  *
  * added RaiMan 2013
  */
-package org.sikuli.basics;
+package org.sikuli.util;
 
 /**
  * to activate Jython support use org.sikuli.script.SikulixForJython instead

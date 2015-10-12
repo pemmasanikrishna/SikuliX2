@@ -12,10 +12,10 @@ import java.util.HashMap;
 import java.util.Map;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Debug;
-import org.sikuli.basics.PreferencesUser;
-import org.sikuli.basics.PreferencesUser;
-import org.sikuli.basics.Settings;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.PreferencesUser;
+import org.sikuli.util.PreferencesUser;
+import org.sikuli.util.Settings;
+import org.sikuli.util.Settings;
 import org.sikuli.script.Key;
 import org.sikuli.script.Key;
 

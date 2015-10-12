@@ -15,7 +15,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import org.sikuli.util.Debug;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 
 import java.util.ArrayList;
 import java.util.Collections;

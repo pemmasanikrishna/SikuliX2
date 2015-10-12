@@ -8,7 +8,7 @@ import java.io.File;
 import java.net.URL;
 import java.security.CodeSource;
 import org.sikuli.util.FileManager;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 
 public class Sikulix {
 

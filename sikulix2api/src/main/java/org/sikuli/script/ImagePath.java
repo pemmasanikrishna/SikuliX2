@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 
 /**
  * runtain the path list of locations, where images will be searched.

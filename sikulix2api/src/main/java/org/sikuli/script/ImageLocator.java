@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.Map;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 
 /**
  * This class was used to locate image files in the filesystem <br>

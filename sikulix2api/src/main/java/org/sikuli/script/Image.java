@@ -36,7 +36,7 @@ import org.sikuli.zexternal.opencv.core.Mat;
 import org.sikuli.zexternal.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 import org.sikuli.zdeprecated.natives.Vision;
 
 /**

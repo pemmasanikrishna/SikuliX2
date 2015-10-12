@@ -41,7 +41,7 @@ import java.util.zip.ZipInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sikuli.util.Debug;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.JythonHelper;
 import org.sikuli.util.LinuxSupport;

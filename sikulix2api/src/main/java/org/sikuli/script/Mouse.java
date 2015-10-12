@@ -9,7 +9,7 @@ package org.sikuli.script;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import org.sikuli.util.Debug;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 
 /**
  * Main pupose is to coordinate the mouse usage among threads <br>

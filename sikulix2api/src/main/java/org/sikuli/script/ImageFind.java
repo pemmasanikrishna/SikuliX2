@@ -20,7 +20,7 @@ import org.sikuli.zexternal.opencv.core.Rect;
 import org.sikuli.zexternal.opencv.core.Size;
 import org.sikuli.zexternal.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 
 /**
  * UNDER DEVELOPMENT --- SURELY HAS BUGS ;-)

@@ -9,7 +9,7 @@ package org.sikuli.script;
 import org.sikuli.util.hotkey.HotkeyManager;
 import org.sikuli.util.hotkey.HotkeyListener;
 import org.sikuli.zdeprecated.natives.OSUtil;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 import org.sikuli.zdeprecated.natives.SysUtil;
 
 /**

@@ -13,7 +13,6 @@ import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import org.sikuli.basics.Settings;
 import org.sikuli.util.JythonHelper;
 
 /**

@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import org.sikuli.util.Debug;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 
 /**
  * this class implements an interface to the Java key system

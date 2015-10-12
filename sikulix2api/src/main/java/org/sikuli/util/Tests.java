@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.lang.reflect.Method;
 import java.net.URI;
-import org.sikuli.basics.Settings;
 import org.sikuli.script.App;
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.Match;

@@ -7,7 +7,7 @@
 package org.sikuli.script;
 
 import java.awt.image.BufferedImage;
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Debug;
 import java.io.*;

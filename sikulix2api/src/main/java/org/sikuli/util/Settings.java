@@ -4,7 +4,7 @@
  *
  * modified RaiMan 2013
  */
-package org.sikuli.basics;
+package org.sikuli.util;
 
 import org.sikuli.util.Debug;
 import org.sikuli.script.RunTime;

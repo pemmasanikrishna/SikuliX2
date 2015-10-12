@@ -6,7 +6,7 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 import org.sikuli.zdeprecated.natives.FindResult;
 
 /**

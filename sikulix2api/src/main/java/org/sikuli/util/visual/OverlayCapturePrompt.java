@@ -6,7 +6,7 @@
  */
 package org.sikuli.util.visual;
 
-import org.sikuli.basics.Settings;
+import org.sikuli.util.Settings;
 import org.sikuli.util.Debug;
 import java.awt.*;
 import java.awt.event.*;
