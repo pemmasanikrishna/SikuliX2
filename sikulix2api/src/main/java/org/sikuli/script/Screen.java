@@ -56,6 +56,9 @@ public class Screen extends Region implements EventObserver, IScreen {
   static {
 //    RunTime.loadLibrary("VisionProxy");
     String opencvLib = Core.NATIVE_LIBRARY_NAME;
+    if (runTime.runningWindows) {
+      opencvLib = opencvLib.replaceFirst("2412", "2411");
+    }
     RunTime.loadLibrary(opencvLib);
     initScreens(false);
   }
