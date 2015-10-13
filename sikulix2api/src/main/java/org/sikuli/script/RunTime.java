@@ -279,7 +279,7 @@ public class RunTime {
       }
 
       Settings.init(); // force Settings initialization
-      runTime.initSikulixVersionOptions();
+      runTime.initSikulixVersionInfo();
 
       runTime.init(typ);
       if (Type.IDE.equals(typ)) {
@@ -874,8 +874,7 @@ public class RunTime {
 
   private boolean libsCheck(File flibsFolder) {
     // 1.1-MadeForSikuliX64M.txt
-    String name = String.format("1.1-MadeForSikuliX%d%s.txt", javaArch, runningOn.toString().substring(0, 1));
-    if (!new File(flibsFolder, name).exists()) {
+    if (!new File(flibsFolder, libsCheckName).exists()) {
       log(lvl, "libs folder empty or has wrong content");
       return false;
     }
@@ -911,12 +910,12 @@ public class RunTime {
       }
       boolean shouldAddLibsJar = false;
       if (testing && !runningJar) {
-        if (testingWinApp || testSwitch()) {
-          logp("***** for testing: exporting from classes");
-        } else {
-          logp("***** for testing: exporting from jar");
-          shouldAddLibsJar = true;
-        }
+//        if (testingWinApp || testSwitch()) {
+//          logp("***** for testing: exporting from classes");
+//        } else {
+//          logp("***** for testing: exporting from jar");
+//          shouldAddLibsJar = true;
+//        }
       }
       if (null != isJarOnClasspath("sikulix.jar") || null != isJarOnClasspath("sikulixapi.jar")) {
         shouldAddLibsJar = false;
@@ -1155,9 +1154,33 @@ public class RunTime {
   public boolean isJava7() {
     return javaVersion > 6;
   }
+  
+  public String getSikulixRepo() {
+    return SikulixRepo;
+  }
 
-  public boolean isOSX10() {
-    return osVersion.startsWith("10.10.");
+  public String getSikulixJython() {
+    return SikulixJython;
+  }
+
+//  public boolean isOSX10() {
+//    return osVersion.startsWith("10.10.");
+//  }
+
+  public boolean isVersionRelease() {
+    return SikuliVersionType.isEmpty();
+  }
+
+  public String getVersion() {
+    return SikulixVersion;
+  }
+
+  public String getVersionShort() {
+    return String.format("%d.%d", SikuliVersionMajor, SikuliVersionMinor);
+  }
+
+  public String getSystemInfo() {
+    return String.format("%s/%s/%s", SikuliVersionLong, SikuliSystemVersion, SikuliJavaVersion);
   }
 
   /**
@@ -1191,37 +1214,6 @@ public class RunTime {
       }
     }
     logp("***** show environment end");
-  }
-
-  public boolean testSwitch() {
-    if (0 == (new Date().getTime() / 10000) % 2) {
-      return true;
-    }
-    return false;
-  }
-
-  public String getVersionShortBasic() {
-    return sversion.substring(0, 3);
-  }
-
-  public String getVersionShort() {
-    if (SikuliVersionBetaN > 0 && SikuliVersionBetaN < 99) {
-      return bversion;
-    } else {
-      return sversion;
-    }
-  }
-
-  public String getSystemInfo() {
-    return String.format("%s/%s/%s", SikuliVersionLong, SikuliSystemVersion, SikuliJavaVersion);
-  }
-
-  public boolean isVersionRelease() {
-    return SikuliVersionType.isEmpty();
-  }
-
-  public String getVersion() {
-    return SikulixVersion;
   }
 
   public void getStatus() {
@@ -1503,29 +1495,20 @@ public class RunTime {
   }
 //</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="Sikulix version options handling">
-  public String SikulixRepo;
-  public String SikulixVersion;
-  public String SikulixJython;
+//<editor-fold defaultstate="collapsed" desc="Sikulix version handling">
+  private String SikulixRepo = "";
 
+  private String SikulixVersion;
   private int SikuliVersionMajor;
   private int SikuliVersionMinor;
   private int SikuliVersionSub;
   private int SikuliVersionBetaN;
+
   private String SikuliProjectVersionUsed = "";
   private String SikuliProjectVersion = "";
   private String SikuliVersionBuild;
   private String SikuliVersionType = "";
-  private String downloadBaseDirBase;
-  private String downloadBaseDirWeb;
-  private String downloadBaseDir;
-  // used for download of production versions
-  private final String dlProdLink = "https://launchpad.net/raiman/sikulix2013+/";
-  private final String dlProdLink1 = ".0";
-  private final String dlProdLink2 = "/+download/";
-  // used for download of development versions (nightly builds)
-  private final String dlDevLink = "http://nightly.sikuli.de/";
-  private String SikuliLocalRepo = "";
+
   private String sversion;
   private String bversion;
   private String SikuliVersionDefault;
@@ -1536,28 +1519,37 @@ public class RunTime {
   private String SikuliVersionBetaScript;
   private String SikuliVersionIDE;
   private String SikuliVersionScript;
+
+  private String SikulixJython;
   private String SikuliJythonVersion;
   private String SikuliJythonVersion25 = "2.5.4-rc1";
   private String SikuliJythonMaven;
   private String SikuliJythonMaven25;
   private String SikuliJython25;
+  
   private String SikuliJRubyVersion;
   private String SikuliJRuby;
   private String SikuliJRubyMaven;
+
   private String dlMavenRelease = "https://repo1.maven.org/maven2/";
   private String dlMavenSnapshot = "https://oss.sonatype.org/content/groups/public/";
 
-  public Map<String, String> tessData = new HashMap<String, String>();
+  private String downloadBaseDirBase;
+  private String downloadBaseDirWeb;
+  private String downloadBaseDir;
 
-  //TODO needed ???
-  public final String libOpenCV = "libopencv_java248";
+  private String SikuliLocalRepo = "";
 
-  public String SikuliVersionLong;
-  public String SikuliSystemVersion;
-  public String SikuliJavaVersion;
+  private Map<String, String> tessData = new HashMap<String, String>();
 
-  private void initSikulixVersionOptions() {
-    SikulixRepo = null;
+  private String SikuliVersionLong;
+  private String SikuliSystemVersion;
+  private String SikuliJavaVersion;
+  
+  private String libsCheckNameTemplate = "%s-MadeForSikuliX%d%s.txt";
+  private String libsCheckName = "";
+
+  private void initSikulixVersionInfo() {
     Properties prop = new Properties();
     String svFile = "sikulixversion.txt";
     try {
@@ -1599,10 +1591,16 @@ public class RunTime {
       SikuliVersionDefaultScript = "SikulixScript " + sversion;
       SikuliVersionBetaScript = "SikulixScript " + bversion;
 
+      // used for download of production versions
+      String dlProdLink = "https://launchpad.net/raiman/sikulix2013+/";
+      String dlProdLinkSuffix = "/+download/";
+      // used for download of development versions (nightly builds)
+      String dlDevLink = "http://nightly.sikuli.de/";
+
       if ("release".equals(svType)) {
         downloadBaseDirBase = dlProdLink;
-        downloadBaseDirWeb = downloadBaseDirBase + getVersionShortBasic() + dlProdLink1;
-        downloadBaseDir = downloadBaseDirWeb + dlProdLink2;
+        downloadBaseDirWeb = downloadBaseDirBase + getVersion();
+        downloadBaseDir = downloadBaseDirWeb + dlProdLinkSuffix;
       } else {
         SikuliVersionType = "develop";
         downloadBaseDirBase = dlDevLink;
@@ -1650,6 +1648,9 @@ public class RunTime {
       Commands.terminate(999);
     }
     tessData.put("eng", "http://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.eng.tar.gz");
+    
+    libsCheckName = String.format(libsCheckNameTemplate, 
+        getVersionShort(), javaArch, runningOn.toString().substring(0, 1));
   }
 
 //</editor-fold>

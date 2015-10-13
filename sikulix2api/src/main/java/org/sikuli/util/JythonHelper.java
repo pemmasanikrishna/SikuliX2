@@ -71,7 +71,7 @@ public class JythonHelper {
       try {
         cInterpreter = Class.forName("org.python.util.PythonInterpreter");
       } catch (Exception ex) {
-        String sJython = new File(runTime.SikulixJython).getName();
+        String sJython = new File(runTime.getSikulixJython()).getName();
         File fJython = new File(runTime.fSikulixDownloadsGeneric, sJython);
         instance.log(lvl, "trying to use setup downloaded Jython:\n%s", fJython.getAbsolutePath());
         if (fJython.exists()) {
