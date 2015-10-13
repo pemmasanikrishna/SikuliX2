@@ -57,17 +57,11 @@ public class Sikulix {
 
     Settings.CheckLastSeen = false;
     
-    Settings.UseImageFinder = false;
-    s.find("nbicons");
-
     Settings.UseImageFinder = true;
     s.find("nbicons");
 
     Settings.CheckLastSeen = true;
     
-    Settings.UseImageFinder = false;
-    s.find("nbicons");
-
     Settings.UseImageFinder = true;
     s.find("nbicons");
 
