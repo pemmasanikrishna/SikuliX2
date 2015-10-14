@@ -48,7 +48,7 @@ public class ExtensionManager {
 
 	public boolean install(String name, String url, String version) {
     if (url.startsWith("---extensions---")) {
-      url = RunTime.get().SikulixRepo + name + "-" + version + ".jar";
+      url = RunTime.get().getSikulixRepo() + name + "-" + version + ".jar";
     }
 		String extPath = Settings.getUserExtPath();
 		String tmpdir = RunTime.get().fpBaseTempPath;

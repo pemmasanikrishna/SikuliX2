@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Date;
 import org.sikuli.script.App;
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.Match;
@@ -145,7 +146,7 @@ public class Tests {
 
   public static void test02_ExtractResourcesFromClasspath() {
     rt = RunTime.get();
-    if (rt.testSwitch()) {
+    if (testSwitch()) {
       addToCP("Libswin");
     } else {
       addJarToCP("Libswin", null);
@@ -289,4 +290,11 @@ public class Tests {
       App.focus("NetBeans");
       System.exit(1);
 	}
+
+  private static boolean testSwitch() {
+    if (0 == (new Date().getTime() / 10000) % 2) {
+      return true;
+    }
+    return false;
+  }
 }

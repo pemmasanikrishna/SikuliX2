@@ -35,7 +35,7 @@ public class Env {
    */
   @Deprecated
   public static String getSikuliVersion() {
-    return RunTime.get().SikulixVersion;
+    return RunTime.get().getVersion();
   }
   
   /**

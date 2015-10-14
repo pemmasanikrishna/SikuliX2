@@ -60,15 +60,15 @@ public class OverlayCapturePrompt extends OverlayTransparentWindow implements Ev
 
   private void init(IScreen scr, EventObserver ob) {
     addObserver(ob);
-    if (RunTime.get().isOSX10()) {
-      scrOCP = scr;
-    } else {
+//    if (RunTime.get().isOSX10()) {
+//      scrOCP = scr;
+//    } else {
       if (Screen.getNumberScreens() > 1) {
         scrOCP = new ScreenUnion();
       } else {
         scrOCP = Screen.getPrimaryScreen();
       }
-    }
+//    }
     canceled = false;
     setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
     rectSelection = new Rectangle();
