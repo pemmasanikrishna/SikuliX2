@@ -290,7 +290,6 @@ public class RunTime {
 
       Settings.init(); // force Settings initialization
 
-      runTime.initSikulixVersionOptions();
       runTime.initSikulixVersionInfo();
 
       runTime.init(typ);
@@ -1174,28 +1173,10 @@ public class RunTime {
 
   public String getVersion() {
     return SikulixVersion;
+  }
+
   public String getSikulixJython() {
     return SikulixJython;
-  }
-
-//  public boolean isOSX10() {
-//    return osVersion.startsWith("10.10.");
-//  }
-
-  public boolean isVersionRelease() {
-    return SikuliVersionType.isEmpty();
-  }
-
-  public String getVersion() {
-    return SikulixVersion;
-  }
-
-  public String getVersionShort() {
-    return String.format("%d.%d", SikuliVersionMajor, SikuliVersionMinor);
-  }
-
-  public String getSystemInfo() {
-    return String.format("%s/%s/%s", SikuliVersionLong, SikuliSystemVersion, SikuliJavaVersion);
   }
 
   /**
@@ -1218,7 +1199,7 @@ public class RunTime {
     if (runningJar) {
       logp("executing jar: %s", fSxBaseJar);
     }
-    if (Debug.getDebugLevel() > minLvl - 1 || isJythonReady) {
+    if (Debug.getDebugLevel() == lvl || isJythonReady) {
       dumpClassPath("sikulix");
       if (isJythonReady) {
         int saveLvl = Debug.getDebugLevel();
