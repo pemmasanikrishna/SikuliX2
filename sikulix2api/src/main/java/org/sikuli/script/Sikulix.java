@@ -41,36 +41,37 @@ public class Sikulix {
 
   public static void main(String[] args) throws FindFailed {
 
-    rt = RunTime.get();
-    
-    System.out.println("********** Running Sikulix.main");
-
     Debug.on(3);
-    Settings.InfoLogs = false;
-    Settings.ActionLogs = false;
-    
-    
-    ImagePath.add("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
-    Screen s = new Screen();
-    
-    Image.create("nbicons");
 
-    Settings.CheckLastSeen = false;
-    
-    Settings.UseImageFinder = false;
-    s.find("nbicons");
+    rt = RunTime.get();
+        
+    if (args != null && "test".equals(args[0])) {
+      System.out.println("********** Running Sikulix.main");
 
-    Settings.UseImageFinder = true;
-    s.find("nbicons");
+      Settings.InfoLogs = false;
+      Settings.ActionLogs = false;
 
-    Settings.CheckLastSeen = true;
-    
-    Settings.UseImageFinder = false;
-    s.find("nbicons");
+      ImagePath.add("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
+      Screen s = new Screen();
 
-    Settings.UseImageFinder = true;
-    s.find("nbicons");
+      Image.create("nbicons");
 
+      Settings.CheckLastSeen = false;
+
+      Settings.UseImageFinder = false;
+      s.find("nbicons");
+
+      Settings.UseImageFinder = true;
+      s.find("nbicons");
+
+      Settings.CheckLastSeen = true;
+
+      Settings.UseImageFinder = false;
+      s.find("nbicons");
+
+      Settings.UseImageFinder = true;
+      s.find("nbicons");
+    }
 //    Commands.endNormal(1);
     System.exit(1);
 

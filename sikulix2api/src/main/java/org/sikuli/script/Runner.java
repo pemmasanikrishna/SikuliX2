@@ -1005,8 +1005,8 @@ public class Runner {
       return 0;
     }
 
-//    static File scriptProject = null;
-//    static URL uScriptProject = null;
+    static File scriptProject = null;
+    static URL uScriptProject = null;
     RunTime runTime = RunTime.get();
     boolean asTest = false;
     String[] args = new String[0];
@@ -1022,7 +1022,7 @@ public class Runner {
     boolean givenScriptExists = true;
 
     RunBox(String givenName, String[] givenArgs, boolean isTest) {
-      Object[] vars = Runner.runBoxInit(givenName, RunTime.scriptProject, RunTime.uScriptProject);
+      Object[] vars = Runner.runBoxInit(givenName, RunTime.getScriptProject(), RunTime.getScriptProjectURL());
       givenScriptHost = (String) vars[0];
       givenScriptFolder = (String) vars[1];
       givenScriptName = (String) vars[2];
@@ -1032,8 +1032,8 @@ public class Runner {
       uGivenScript = (URL) vars[6];
       uGivenScriptFile = (URL) vars[7];
       givenScriptExists = (Boolean) vars[8];
-      RunTime.scriptProject = (File) vars[9];
-      RunTime.uScriptProject = (URL) vars[10];
+      RunTime.setScriptProject((File) vars[9]);
+      RunTime.setScriptProjectURL((URL) vars[10]);
       args = givenArgs;
       asTest = isTest;
     }
@@ -1048,8 +1048,10 @@ public class Runner {
       }
       int exitCode = 0;
       log(lvl, "givenScriptName:\n%s", givenScriptName);
-      if (-1 == FileManager.slashify(givenScriptName, false).indexOf("/") && RunTime.scriptProject != null) {
-        givenScriptName = new File(RunTime.scriptProject, givenScriptName).getPath();
+      if (RunTime.getScriptProject() != null) {
+        if (-1 == FileManager.slashify(givenScriptName, false).indexOf("/")) {
+          givenScriptName = new File(RunTime.getScriptProject(), givenScriptName).getPath();
+        }
       }
       if (givenScriptName.endsWith(".skl")) {
         log(-1, "RunBox.run: .skl scripts not yet supported.");
@@ -1074,8 +1076,8 @@ public class Runner {
           return -9999;
         }
         fScript = new File(FileManager.normalizeAbsolute(fScript.getPath(), true));
-        if (null == RunTime.scriptProject) {
-          RunTime.scriptProject = fScript.getParentFile().getParentFile();
+        if (null == RunTime.getScriptProject()) {
+          RunTime.setScriptProject(fScript.getParentFile().getParentFile());
         }
         log(lvl, "Trying to run script:\n%s", fScript);
         if (fScript.getName().endsWith(EJSCRIPT)) {

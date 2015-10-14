@@ -96,7 +96,7 @@ public class Debug {
 
   public static void init() {
     if (DEBUG_LEVEL > 0) {
-      logx(DEBUG_LEVEL, "Debug.init: from sikuli.Debug: on: %d", DEBUG_LEVEL);
+      logx(DEBUG_LEVEL, "Debug.init: on: %d", DEBUG_LEVEL);
     }
   }
   
@@ -114,198 +114,200 @@ public class Debug {
     return searchHighlight;
   }
 
-	/**
-	 * A logger object that is intended, to get Sikuli's log messages per redirection
-	 * @param logger the logger object
-	 */
-	public static void setLogger(Object logger) {
-		if (!doSetLogger(logger)) return;
-		privateLoggerPrefixAll = true;
+//<editor-fold defaultstate="collapsed" desc="logger callback">
+  /**
+   * A logger object that is intended, to get Sikuli's log messages per redirection
+   * @param logger the logger object
+   */
+  public static void setLogger(Object logger) {
+    if (!doSetLogger(logger)) return;
+    privateLoggerPrefixAll = true;
     logx(3, "Debug: setLogger %s", logger);
-	}
-
-	/**
-	 * same as setLogger(), but the Sikuli prefixes are omitted in all redirected messages
-	 * @param logger the logger object
-	 */
-	public static void setLoggerNoPrefix(Object logger) {
-		if (!doSetLogger(logger)) return;
-		privateLoggerPrefixAll = false;
-	}
-
-	private static boolean doSetLogger(Object logger) {
-		String className = logger.getClass().getName();
-		isJython = className.contains("org.python");
-		isJRuby = className.contains("org.jruby");
-		if ( isJRuby ) {
-			logx(3, "Debug: setLogger: given instance's class: %s", className);
-			error("setLogger: not yet supported in JRuby script");
-			loggerRedirectSupported=false;
-			return false;
-		}
-		privateLogger = logger;
-		return true;
-	}
-
-	/**
-	 * sets the redirection for all message types user, info, action, error and debug
-	 * must be the name of an instance method of the previously defined logger and<br>
-	 * must accept exactly one string parameter, that contains the message text
-	 * @param mAll name of the method where the message should be sent
-	 * @return true if the method is available false otherwise	 */
-	public static boolean setLoggerAll(String mAll) {
-		if (!loggerRedirectSupported) {
-			logx(3, "Debug: setLoggerAll: logger redirect not supported");
-			return false;
-		}
-		if (privateLogger != null) {
+  }
+  
+  /**
+   * same as setLogger(), but the Sikuli prefixes are omitted in all redirected messages
+   * @param logger the logger object
+   */
+  public static void setLoggerNoPrefix(Object logger) {
+    if (!doSetLogger(logger)) return;
+    privateLoggerPrefixAll = false;
+  }
+  
+  private static boolean doSetLogger(Object logger) {
+    String className = logger.getClass().getName();
+    isJython = className.contains("org.python");
+    isJRuby = className.contains("org.jruby");
+    if ( isJRuby ) {
+      logx(3, "Debug: setLogger: given instance's class: %s", className);
+      error("setLogger: not yet supported in JRuby script");
+      loggerRedirectSupported=false;
+      return false;
+    }
+    privateLogger = logger;
+    return true;
+  }
+  
+  /**
+   * sets the redirection for all message types user, info, action, error and debug
+   * must be the name of an instance method of the previously defined logger and<br>
+   * must accept exactly one string parameter, that contains the message text
+   * @param mAll name of the method where the message should be sent
+   * @return true if the method is available false otherwise	 */
+  public static boolean setLoggerAll(String mAll) {
+    if (!loggerRedirectSupported) {
+      logx(3, "Debug: setLoggerAll: logger redirect not supported");
+      return false;
+    }
+    if (privateLogger != null) {
       logx(3, "Debug.setLoggerAll: %s", mAll);
-			boolean success = true;
-			success &= setLoggerUser(mAll);
-			success &= setLoggerInfo(mAll);
-			success &= setLoggerAction(mAll);
-			success &= setLoggerError(mAll);
-			success &= setLoggerDebug(mAll);
-			return success;
-		}
-		return false;
-	}
-
-	private static boolean doSetLoggerCallback(String mName, CallbackType type) {
-		if (privateLogger == null) {
-			error("Debug: setLogger: no logger specified yet");
-			return false;
-		}
-		if (!loggerRedirectSupported) {
-			logx(3, "Debug: setLogger: %s (%s) logger redirect not supported", mName, type);
-		}
-		if (isJython) {
-			Object[] args = new Object[]{privateLogger, mName, type.toString()};
-			if (!JythonHelper.get().checkCallback(args)) {
-				logx(3, "Debug: setLogger: Jython: checkCallback returned: %s", args[0]);
-				return false;
-			}
-		}
-		try {
-			if (type == CallbackType.INFO) {
-				if ( !isJython && !isJRuby ) {
-					privateLoggerInfo = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
-				}
-				privateLoggerInfoName = mName;
-				return true;
-			} else if (type == CallbackType.ACTION) {
-				if ( !isJython && !isJRuby ) {
-					privateLoggerAction = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
-				}
-				privateLoggerActionName = mName;
-				return true;
-			} else if (type == CallbackType.ERROR) {
-				if ( !isJython && !isJRuby ) {
-					privateLoggerError = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
-				}
-				privateLoggerErrorName = mName;
-				return true;
-			} else if (type == CallbackType.DEBUG) {
-				if ( !isJython && !isJRuby ) {
-					privateLoggerDebug = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
-				}
-				privateLoggerDebugName = mName;
-				return true;
-			} else if (type == CallbackType.USER) {
-				if ( !isJython && !isJRuby ) {
-					privateLoggerUser = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
-				}
-				privateLoggerUserName = mName;
-				return true;
-			} else {
-				return false;
-			}
-		} catch (Exception e) {
-			error("Debug: setLoggerInfo: redirecting to %s failed: \n%s", mName, e.getMessage());
-		}
-		return false;
-	}
-
-	/**
-	 * specify the target method for redirection of Sikuli's user log messages [user]<br>
-	 * must be the name of an instance method of the previously defined logger and<br>
-	 * must accept exactly one string parameter, that contains the info message
-	 * @param mUser name of the method where the message should be sent
-	 * <br>reset to default logging by either null or empty string
-	 * @return true if the method is available false otherwise
-	 */
-	public static boolean setLoggerUser(String mUser) {
-		if (mUser == null || mUser.isEmpty()) {
-			privateLoggerUserName = "";
-			return true;
-		}
-		return doSetLoggerCallback(mUser, CallbackType.USER);
-	}
-
-	/**
-	 * specify the target method for redirection of Sikuli's info messages [info]<br>
-	 * must be the name of an instance method of the previously defined logger and<br>
-	 * must accept exactly one string parameter, that contains the info message
-	 * @param mInfo name of the method where the message should be sent
-	 * <br>reset to default logging by either null or empty string
-	 * @return true if the method is available false otherwise
-	 */
-	public static boolean setLoggerInfo(String mInfo) {
-		if (mInfo == null || mInfo.isEmpty()) {
-			privateLoggerInfoName = "";
-			return true;
-		}
-		return doSetLoggerCallback(mInfo, CallbackType.INFO);
-	}
-
-	/**
-	 * specify the target method for redirection of Sikuli's action messages [log]<br>
-	 * must be the name of an instance method of the previously defined logger and<br>
-	 * must accept exactly one string parameter, that contains the info message
-	 * @param mAction name of the method where the message should be sent
-	 * <br>reset to default logging by either null or empty string
-	 * @return true if the method is available false otherwise
-	 */
-	public static boolean setLoggerAction(String mAction) {
-		if (mAction == null || mAction.isEmpty()) {
-			privateLoggerActionName = "";
-			return true;
-		}
-		return doSetLoggerCallback(mAction, CallbackType.ACTION);
-	}
-
-	/**
-	 * specify the target method for redirection of Sikuli's error messages [error]<br>
-	 * must be the name of an instance method of the previously defined logger and<br>
-	 * must accept exactly one string parameter, that contains the info message
-	 * @param mError name of the method where the message should be sent
-	 * <br>reset to default logging by either null or empty string
-	 * @return true if the method is available false otherwise
-	 */
-	public static boolean setLoggerError(String mError) {
-		if (mError == null || mError.isEmpty()) {
-			privateLoggerErrorName = "";
-			return true;
-		}
-		return doSetLoggerCallback(mError, CallbackType.ERROR);
-	}
-
-	/**
-	 * specify the target method for redirection of Sikuli's debug messages [debug]<br>
-	 * must be the name of an instance method of the previously defined logger and<br>
-	 * must accept exactly one string parameter, that contains the info message
-	 * @param mDebug name of the method where the message should be sent
-	 * <br>reset to default logging by either null or empty string
-	 * @return true if the method is available false otherwise
-	 */
-	public static boolean setLoggerDebug(String mDebug) {
-		if (mDebug == null || mDebug.isEmpty()) {
-			privateLoggerDebugName = "";
-			return true;
-		}
-		return doSetLoggerCallback(mDebug, CallbackType.DEBUG);
-	}
-
+      boolean success = true;
+      success &= setLoggerUser(mAll);
+      success &= setLoggerInfo(mAll);
+      success &= setLoggerAction(mAll);
+      success &= setLoggerError(mAll);
+      success &= setLoggerDebug(mAll);
+      return success;
+    }
+    return false;
+  }
+  
+  private static boolean doSetLoggerCallback(String mName, CallbackType type) {
+    if (privateLogger == null) {
+      error("Debug: setLogger: no logger specified yet");
+      return false;
+    }
+    if (!loggerRedirectSupported) {
+      logx(3, "Debug: setLogger: %s (%s) logger redirect not supported", mName, type);
+    }
+    if (isJython) {
+      Object[] args = new Object[]{privateLogger, mName, type.toString()};
+      if (!JythonHelper.get().checkCallback(args)) {
+        logx(3, "Debug: setLogger: Jython: checkCallback returned: %s", args[0]);
+        return false;
+      }
+    }
+    try {
+      if (type == CallbackType.INFO) {
+        if ( !isJython && !isJRuby ) {
+          privateLoggerInfo = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
+        }
+        privateLoggerInfoName = mName;
+        return true;
+      } else if (type == CallbackType.ACTION) {
+        if ( !isJython && !isJRuby ) {
+          privateLoggerAction = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
+        }
+        privateLoggerActionName = mName;
+        return true;
+      } else if (type == CallbackType.ERROR) {
+        if ( !isJython && !isJRuby ) {
+          privateLoggerError = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
+        }
+        privateLoggerErrorName = mName;
+        return true;
+      } else if (type == CallbackType.DEBUG) {
+        if ( !isJython && !isJRuby ) {
+          privateLoggerDebug = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
+        }
+        privateLoggerDebugName = mName;
+        return true;
+      } else if (type == CallbackType.USER) {
+        if ( !isJython && !isJRuby ) {
+          privateLoggerUser = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
+        }
+        privateLoggerUserName = mName;
+        return true;
+      } else {
+        return false;
+      }
+    } catch (Exception e) {
+      error("Debug: setLoggerInfo: redirecting to %s failed: \n%s", mName, e.getMessage());
+    }
+    return false;
+  }
+  
+  /**
+   * specify the target method for redirection of Sikuli's user log messages [user]<br>
+   * must be the name of an instance method of the previously defined logger and<br>
+   * must accept exactly one string parameter, that contains the info message
+   * @param mUser name of the method where the message should be sent
+   * <br>reset to default logging by either null or empty string
+   * @return true if the method is available false otherwise
+   */
+  public static boolean setLoggerUser(String mUser) {
+    if (mUser == null || mUser.isEmpty()) {
+      privateLoggerUserName = "";
+      return true;
+    }
+    return doSetLoggerCallback(mUser, CallbackType.USER);
+  }
+  
+  /**
+   * specify the target method for redirection of Sikuli's info messages [info]<br>
+   * must be the name of an instance method of the previously defined logger and<br>
+   * must accept exactly one string parameter, that contains the info message
+   * @param mInfo name of the method where the message should be sent
+   * <br>reset to default logging by either null or empty string
+   * @return true if the method is available false otherwise
+   */
+  public static boolean setLoggerInfo(String mInfo) {
+    if (mInfo == null || mInfo.isEmpty()) {
+      privateLoggerInfoName = "";
+      return true;
+    }
+    return doSetLoggerCallback(mInfo, CallbackType.INFO);
+  }
+  
+  /**
+   * specify the target method for redirection of Sikuli's action messages [log]<br>
+   * must be the name of an instance method of the previously defined logger and<br>
+   * must accept exactly one string parameter, that contains the info message
+   * @param mAction name of the method where the message should be sent
+   * <br>reset to default logging by either null or empty string
+   * @return true if the method is available false otherwise
+   */
+  public static boolean setLoggerAction(String mAction) {
+    if (mAction == null || mAction.isEmpty()) {
+      privateLoggerActionName = "";
+      return true;
+    }
+    return doSetLoggerCallback(mAction, CallbackType.ACTION);
+  }
+  
+  /**
+   * specify the target method for redirection of Sikuli's error messages [error]<br>
+   * must be the name of an instance method of the previously defined logger and<br>
+   * must accept exactly one string parameter, that contains the info message
+   * @param mError name of the method where the message should be sent
+   * <br>reset to default logging by either null or empty string
+   * @return true if the method is available false otherwise
+   */
+  public static boolean setLoggerError(String mError) {
+    if (mError == null || mError.isEmpty()) {
+      privateLoggerErrorName = "";
+      return true;
+    }
+    return doSetLoggerCallback(mError, CallbackType.ERROR);
+  }
+  
+  /**
+   * specify the target method for redirection of Sikuli's debug messages [debug]<br>
+   * must be the name of an instance method of the previously defined logger and<br>
+   * must accept exactly one string parameter, that contains the info message
+   * @param mDebug name of the method where the message should be sent
+   * <br>reset to default logging by either null or empty string
+   * @return true if the method is available false otherwise
+   */
+  public static boolean setLoggerDebug(String mDebug) {
+    if (mDebug == null || mDebug.isEmpty()) {
+      privateLoggerDebugName = "";
+      return true;
+    }
+    return doSetLoggerCallback(mDebug, CallbackType.DEBUG);
+  }
+//</editor-fold>
+  
 	public static void saveRedirected(PrintStream rdo, PrintStream rde) {
 		redirectedOut = rdo;
 		redirectedErr = rde;
@@ -543,7 +545,8 @@ public class Debug {
 		}
 		return success;
 	}
-	/**
+
+  /**
    * Sikuli messages from actions like click, ...<br> switch on/off: Settings.ActionLogs
    *
    * @param message String or format string (String.format)
