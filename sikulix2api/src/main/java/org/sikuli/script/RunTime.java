@@ -452,7 +452,7 @@ public class RunTime {
           isRunning.delete();
         }
         if (shouldCleanDownloads) {
-          FileManager.deleteFileOrFolder(fSikulixDownloadsBuild);
+          FileManager.deleteFileOrFolder("#" + fSikulixDownloadsBuild);
         }
         for (File f : fTempPath.listFiles(new FilenameFilter() {
           @Override
@@ -481,8 +481,8 @@ public class RunTime {
             return false;
           }
         })) {
-          Debug.log(4, "cleanTemp: " + f.getName());
-          FileManager.deleteFileOrFolder(f.getAbsolutePath());
+          log(lvl, "cleanTemp: " + f.getName());
+          FileManager.deleteFileOrFolder("#" + f.getAbsolutePath());
         }
       }
     });

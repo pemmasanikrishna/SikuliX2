@@ -19,7 +19,7 @@ import org.sikuli.natives.FindResult;
  */
 public class Match extends Region implements Comparable<Match> {
 
-  private double simScore;
+  private double simScore = 0.0;
   private Location target = null;
   private Image image = null;
   private String ocrText = null;
@@ -80,6 +80,15 @@ public class Match extends Region implements Comparable<Match> {
     simScore = sc;
   }
 
+	/**
+	 * create a Match from a region with given SimScore
+	 * @param reg Region
+	 * @param sc SimScore
+	 */
+	public Match(Region reg) {
+    init(reg.x, reg.y, reg.w, reg.h, reg.getScreen());
+  }
+  
   private Match(Match m, IScreen parent) {
     init(m.x, m.y, m.w, m.h, parent);
     copy(m);

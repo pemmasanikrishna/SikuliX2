@@ -36,7 +36,7 @@ public class ImageFind implements Iterator<Match>{
     Debug.logx(level, me + message, args);
   }
 
-  private ImageFinder owner = null;
+  private Finder owner = null;
 
   private boolean isValid = false;
   private boolean isInnerFind = false;
@@ -116,7 +116,7 @@ public class ImageFind implements Iterator<Match>{
     return matches;
   }
 
-  protected boolean checkFind(ImageFinder owner, Object pprobe, Object... args) {
+  protected boolean checkFind(Finder owner, Object pprobe, Object... args) {
     if (owner.isValid()) {
       this.owner = owner;
     } else {
