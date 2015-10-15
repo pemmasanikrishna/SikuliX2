@@ -171,11 +171,12 @@ public class Observer {
   }
 
   private boolean checkPatterns(ScreenImage simg) {
+//TODO revise the observeloop (doFind???)
     log(lvl + 1, "update: checking patterns");
     if (!observedRegion.isObserving()) {
       return false;
     }
-    AFinder finder = null;
+    Finder finder = null;
     for (String name : eventStates.keySet()) {
       if (!patternsToCheck()) {
         continue;
@@ -198,41 +199,17 @@ public class Observer {
       boolean hasMatch = false;
       long lastSearchTime;
       long now = 0;
-      if (!Settings.UseImageFinder && Settings.CheckLastSeen && null != img.getLastSeen()) {
-        Region r = Region.create(img.getLastSeen());
-        if (observedRegion.contains(r)) {
-          lastSearchTime = (new Date()).getTime();
-          Finder f = new Finder(new Screen().capture(r), r);
-          f.find(new Pattern(img).similar(Settings.CheckLastSeenSimilar));
-          if (f.hasNext()) {
-            log(lvl + 1, "checkLastSeen: still there");
-            match = new Match(new Region(img.getLastSeen()), img.getLastSeenScore());
-            match.setTimes(0, (new Date()).getTime() - lastSearchTime);
-            hasMatch = true;
-          } else {
-            log(lvl + 1, "checkLastSeen: not there");
-          }
-        }
-      }
-      if (match == null) {
-        if (finder == null) {
-          if (Settings.UseImageFinder) {
-            finder = new ImageFinder(observedRegion);
-            ((ImageFinder) finder).setIsMultiFinder();
-          } else {
-            finder = new Finder(simg, observedRegion);
-          }
-        }
-        lastSearchTime = (new Date()).getTime();
-        now = (new Date()).getTime();
-        finder.find(img);
-        if (finder.hasNext()) {
-          match = finder.next();
-          match.setTimes(0, now - lastSearchTime);
-          if (match.getScore() >= getSimiliarity(ptn)) {
-            hasMatch = true;
-            img.setLastSeen(match.getRect(), match.getScore());
-          }
+      finder = new Finder(observedRegion);
+      finder.setIsMultiFinder();
+      lastSearchTime = (new Date()).getTime();
+      now = (new Date()).getTime();
+      finder.find(img);
+      if (finder.hasNext()) {
+        match = finder.next();
+        match.setTimes(0, now - lastSearchTime);
+        if (match.getScore() >= getSimiliarity(ptn)) {
+          hasMatch = true;
+          img.setLastSeen(match.getRect(), match.getScore());
         }
       }
       if (hasMatch) {
@@ -300,6 +277,7 @@ public class Observer {
     return min;
   }
 
+//TODO observe changes
   private boolean checkChanges(ScreenImage img) {
     if (numChangeObservers == 0) {
       return false;
@@ -331,32 +309,14 @@ public class Observer {
     if (leftToDo) {
       leftToDo = false;
       log(lvl + 1, "update: checking changes");
-      if (Settings.UseImageFinder) {
-        ImageFinder f = new ImageFinder(lastImageMat);
-        f.setMinChanges(minChanges);
-        org.opencv.core.Mat current = Image.createMat(img.getImage());
-        if (f.hasChanges(current)) {
-          //TODO implement ChangeObserver: processing changes
-          log(lvl, "TODO: processing changes");
-        }
-        lastImageMat = current;
-      } else {
-        FindInput fin = new FindInput();
-        fin.setSource(lastImgMat);
-        Mat target = Image.convertBufferedImageToMat(img.getImage());
-        fin.setTarget(target);
-        fin.setSimilarity(minChanges);
-        FindResults results = Vision.findChanges(fin);
-        if (results.size() > 0) {
-          callChangeObserver(results);
-          if (shouldStopOnFirstEvent) {
-            observedRegion.stopObserver();
-          }
-        } else {
-          leftToDo = true;
-        }
-        lastImgMat = target;
+      Finder f = new Finder(lastImageMat);
+      f.setMinChanges(minChanges);
+      org.opencv.core.Mat current = Image.createMat(img.getImage());
+      if (f.hasChanges(current)) {
+        //TODO implement ChangeObserver: processing changes
+        log(lvl, "TODO: processing changes");
       }
+      lastImageMat = current;
     }
     return leftToDo |= numChangeCallBacks > 0;
   }

@@ -56,17 +56,13 @@ public class RunTime {
 
   public static boolean shouldRunServer = false;
 
-  public static void pause(int time) {
-    try {
-      Thread.sleep(time * 1000);
-    } catch (InterruptedException ex) {
-    }
-  }
-
-  public static void pause(float time) {
-    try {
-      Thread.sleep((int) (time * 1000));
-    } catch (InterruptedException ex) {
+  public static <Seconds> void pause(Seconds time) {
+    if (time instanceof Float || time instanceof Double || time instanceof Integer) {
+      try {
+        Thread.sleep((long) ((0.0 + ((Double) time)) * 1000.0));
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
     }
   }
 
@@ -87,12 +83,11 @@ public class RunTime {
   }
 
 //<editor-fold defaultstate="collapsed" desc="logging">
-  private static final String me = "RunTime%s: ";
   private static final int lvl = 3;
 //  private int minLvl = lvl;
 //  private static String preLogMessages = "";
 
-  private static final Logger logger = LogManager.getLogger("Sikulix.RunTime");
+  private static final Logger logger = LogManager.getLogger("SX.RunTime");
 
   private static void log(int level, String message, Object... args) {
     if (Debug.is(lvl)) {

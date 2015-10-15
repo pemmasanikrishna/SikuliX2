@@ -9,7 +9,10 @@ package org.sikuli.script;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -18,20 +21,39 @@ import org.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Settings;
 
-/**
- * UNDER DEVELOPMENT --- SURELY HAS BUGS ;-)
- * Intended replacement for Finder together with ImageFind
- * completely implementing the OpenCV usage on the Java level.
- */
-public class Finder extends AFinder{
+public class Finder implements Iterator<Match>{
   
   static RunTime runTime = RunTime.get();
 
-  private static String me = "ImageFinder: ";
-  private static int lvl = 3;
+  //<editor-fold defaultstate="collapsed" desc="logging">
+  private static final int lvl = 3;
+  private static final Logger logger = LogManager.getLogger("SX.Finder");
+
   private static void log(int level, String message, Object... args) {
-    Debug.logx(level, me + message, args);
+    if (Debug.is(lvl)) {
+      message = String.format(message, args).replaceFirst("\\n", "\n          ");
+      if (level == 3) {
+        logger.debug(message, args);
+      } else if (level > 3) {
+        logger.trace(message, args);
+      } else if (level == -1) {
+        logger.error(message, args);
+      } else {
+        logger.info(message, args);
+      }
+    }
   }
+
+  private void logp(String message, Object... args) {
+    System.out.println(String.format(message, args));
+  }
+
+  public void terminate(int retval, String message, Object... args) {
+    logger.fatal(String.format(" *** terminating: " + message, args));
+    System.exit(retval);
+  }
+//</editor-fold>
+
   private boolean isImageFinder = true;
   protected boolean isImage = false;
   protected Region region = null;
@@ -94,7 +116,6 @@ public class Finder extends AFinder{
     base = new Mat();
   }
 
-  @Override
   public void destroy() {
     reset();
   }
@@ -213,7 +234,6 @@ public class Finder extends AFinder{
   }
 
   private <PSI> ImageFind imageFind(PSI probe, Object... args) {
-    Debug.enter(me + ": find: %s", probe);
     ImageFind newFind = new ImageFind();
     newFind.setFindTimeout(waitingTime);
     if (!newFind.checkFind(this, probe, args)) {
@@ -228,7 +248,6 @@ public class Finder extends AFinder{
   }
 
   public <PSI> ImageFind searchAny(PSI probe, Object... args) {
-    Debug.enter(me + ": findAny: %s", probe);
     ImageFind newFind = new ImageFind();
     newFind.setFinding(ImageFind.FINDING_ANY);
     isReusable = true;
@@ -287,7 +306,6 @@ public class Finder extends AFinder{
   }
 
   private <PSI> ImageFind imageFindAll(PSI probe, int sorted, int count, Object... args) {
-    Debug.enter(me + ": findAny: %s", probe);
     ImageFind newFind = new ImageFind();
     newFind.setFinding(ImageFind.FINDING_ALL);
     newFind.setSorted(sorted);
@@ -353,6 +371,7 @@ public class Finder extends AFinder{
     minChanges = min;
   }
 
+  @Override
   public boolean hasNext() {
     if (null != firstFind) {
       return firstFind.hasNext();
@@ -360,6 +379,7 @@ public class Finder extends AFinder{
     return false;
   }
 
+  @Override
   public Match next() {
     if (firstFind != null) {
       return firstFind.next();
@@ -367,6 +387,7 @@ public class Finder extends AFinder{
     return null;
   }
 
+  @Override
   public void remove() {
   }
 }

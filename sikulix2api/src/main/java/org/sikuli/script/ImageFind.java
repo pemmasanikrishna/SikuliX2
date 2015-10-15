@@ -27,6 +27,7 @@ import org.sikuli.util.Settings;
  * Intended replacement for Finder together with ImageFinder
  * completely implementing the OpenCV usage on the Java level.
  */
+//TODO ImageFind needed???
 public class ImageFind implements Iterator<Match>{
 
   private static String me = "ImageFind: ";
@@ -206,7 +207,7 @@ public class ImageFind implements Iterator<Match>{
       lastFindTime = (new Date()).getTime();
       if (shouldCheckLastSeen && !repeating && !owner.isImage && pImage.getLastSeen() != null) {
         log(3, "checkLastSeen: trying ...");
-        ImageFinder f = new ImageFinder(new Region(pImage.getLastSeen()));
+        Finder f = new Finder(new Region(pImage.getLastSeen()));
         if (null != f.findInner(probe, pImage.getLastSeenScore() - 0.01)) {
           log(lvl, "checkLastSeen: success");
           set(f.next());
@@ -272,15 +273,15 @@ public class ImageFind implements Iterator<Match>{
 
   private Match checkFound(Core.MinMaxLocResult res) {
     Match match = null;
-    ImageFinder f;
+    Finder f;
     Rect r = null;
     if (owner.isImage()) {
       int off = ((int) resizeFactor) + 1;
       r = getSubMatRect(owner.base, (int) res.maxLoc.x, (int) res.maxLoc.y,
                             probe.width(), probe.height(), off);
-      f = new ImageFinder(owner.base.submat(r));
+      f = new Finder(owner.base.submat(r));
     } else {
-      f = new ImageFinder((new Region((int) res.maxLoc.x + owner.offX, (int) res.maxLoc.y + owner.offY,
+      f = new Finder((new Region((int) res.maxLoc.x + owner.offX, (int) res.maxLoc.y + owner.offY,
                             probe.width(), probe.height())).grow(((int) resizeFactor) + 1));
     }
     if (null != f.findInner(probe, similarity)) {

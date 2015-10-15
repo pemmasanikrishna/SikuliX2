@@ -190,6 +190,22 @@ public class Image {
   private int bsize = 0;
   private int bwidth = -1;
   private int bheight = -1;
+  
+  public int getWidth() {
+    if (isValid()) {
+      return bwidth;
+    } else {
+      return -1;
+    }
+  }
+
+  public int getHeight() {
+    if (isValid()) {
+      return bheight;
+    } else {
+      return -1;
+    }
+  }
 //</editor-fold>
 
   private ImageGroup group = null;

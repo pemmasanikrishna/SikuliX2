@@ -24,7 +24,19 @@ public class Pattern {
   private float similarity = (float) Settings.MinSimilarity;
   private Location offset = new Location(0, 0);
   private int waitAfter = 0;
+//TODO imagePattern ??? needed???
   private boolean imagePattern = false;
+  private Type type = Type.IMAGE;
+  private String text = ""; 
+  
+  /**
+   * defines the Pattern type<br>
+   * IMAGE the default 
+   * TEXT a text should be searched using OCR
+   */
+  public enum Type {
+    TEXT, IMAGE
+  }
 
   /**
    * creates empty Pattern object at least setFilename() or setBImage() must be used before the
@@ -72,6 +84,20 @@ public class Pattern {
    */
   public Pattern(String imgpath) {
     image = Image.create(imgpath);
+  }
+
+	/**
+   * create a Pattern as given type<br>
+   *
+   * @param str meaning depends on type
+   */
+  public Pattern(String str, Type ptype) {
+    if (ptype == Type.TEXT) {
+      text = str;
+      type = ptype;
+    } else {
+      image = Image.create(str);
+    };
   }
 
   /**
@@ -281,6 +307,13 @@ public class Pattern {
    */
   public int getTimeAfter() {
     return waitAfter;
+  }
+  
+  public String getText() {
+    if (Type.TEXT.equals(type)) {
+      return "T[" + text.trim() + "]";
+    }
+    return toString();
   }
 
   @Override
