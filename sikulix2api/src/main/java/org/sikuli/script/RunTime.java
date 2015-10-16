@@ -38,9 +38,9 @@ import java.util.StringTokenizer;
 import java.util.prefs.Preferences;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencv.core.Core;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Settings;
 import org.sikuli.util.FileManager;
@@ -84,9 +84,6 @@ public class RunTime {
 
 //<editor-fold defaultstate="collapsed" desc="logging">
   private static final int lvl = 3;
-//  private int minLvl = lvl;
-//  private static String preLogMessages = "";
-
   private static final Logger logger = LogManager.getLogger("SX.RunTime");
 
   private static void log(int level, String message, Object... args) {
@@ -668,6 +665,8 @@ public class RunTime {
 
     if (Type.API.equals(typ) || Type.IDE.equals(typ)) {
       libsExport(typ);
+      //preload OpenCV
+      loadLibrary();
     } 
 
     if (typ == Type.API && (shouldExport || !fSikulixLib.exists())) {
@@ -921,7 +920,7 @@ public class RunTime {
   }
 
   private boolean libsCheck(File flibsFolder) {
-    // 1.1-MadeForSikuliX64M.txt
+    // X.Y.Z-Beta_MadeForSikuliXNNS.txt
     if (!new File(flibsFolder, libsCheckName).exists()) {
       log(lvl, "libs folder empty or has wrong content");
       return false;
@@ -1023,6 +1022,14 @@ public class RunTime {
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="native libs handling">
+  public static void loadLibrary() {
+    String opencvLib = Core.NATIVE_LIBRARY_NAME;
+    if (runTime.runningWindows) {
+      opencvLib = opencvLib.replaceFirst("2412", "2411");
+    }
+    RunTime.loadLibrary(opencvLib);
+  }
+
   /**
    * INTERNAL USE: load a native library from the libs folder
    *
@@ -1537,7 +1544,7 @@ public class RunTime {
   private String SikuliSystemVersion;
   private String SikuliJavaVersion;
   
-  private String libsCheckNameTemplate = "%s-MadeForSikuliX%d%s.txt";
+  private String libsCheckNameTemplate = "%s_MadeForSikuliX%d%s.txt";
   private String libsCheckName = "";
 
   private void initSikulixVersionInfo() {

@@ -17,12 +17,14 @@ import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferInt;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -31,6 +33,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
@@ -69,11 +73,34 @@ public class Image {
 
   static RunTime runTime = RunTime.get();
 
-  private static String me = "Image: ";
-  private static int lvl = 3;
+  //<editor-fold defaultstate="collapsed" desc="logging">
+  private static final int lvl = 3;
+  private static final Logger logger = LogManager.getLogger("SX.Image");
+
   private static void log(int level, String message, Object... args) {
-    Debug.logx(level, me + message, args);
+    if (Debug.is(lvl)) {
+      message = String.format(message, args).replaceFirst("\\n", "\n          ");
+      if (level == 3) {
+        logger.debug(message, args);
+      } else if (level > 3) {
+        logger.trace(message, args);
+      } else if (level == -1) {
+        logger.error(message, args);
+      } else {
+        logger.info(message, args);
+      }
+    }
   }
+
+  private void logp(String message, Object... args) {
+    System.out.println(String.format(message, args));
+  }
+
+  public void terminate(int retval, String message, Object... args) {
+    logger.fatal(String.format(" *** terminating: " + message, args));
+    System.exit(retval);
+  }
+//</editor-fold>
 
   private static List<Image> images = Collections.synchronizedList(new ArrayList<Image>());
   private static Map<URL, Image> imageFiles = Collections.synchronizedMap(new HashMap<URL, Image>());
@@ -173,6 +200,7 @@ public class Image {
 
 //<editor-fold defaultstate="collapsed" desc="bimg">
   private BufferedImage bimg = null;
+  private Mat mat = null;
 
   protected Image setBimg(BufferedImage bimg) {
     this.bimg = bimg;
@@ -410,11 +438,6 @@ public class Image {
   private int colW = 0;
   private int rowHd = 0;
   private int colWd = 0;
-
-  public static void cvLoad(String imgName) {
-    URL imgURL = ImagePath.find(imgName);
-    Mat imgMat = Highgui.imread(imgURL.getPath());
-  }
   
   @Override
   public String toString() {
@@ -425,6 +448,20 @@ public class Image {
   }
 
   private Image() {
+  }
+  
+  public Image(String imgName) {
+    URL imgURL = ImagePath.find(imgName);
+    File imgFile = null;
+    if (imgURL != null) {
+      imgFile = new File(imgURL.getPath());
+      mat = Highgui.imread(imgFile.getAbsolutePath());
+      bwidth = mat.width();
+      bheight = mat.height();
+      imageName = imgName;
+      bsize = mat.channels() * bwidth * bheight;
+      log(lvl, "cvLoad: %s (%dx%d) KB %d", imgFile.getName(), bwidth, bheight, (int) bsize/KB);
+    }
   }
 
 	private Image(String fname, URL fURL) {
@@ -955,7 +992,7 @@ public class Image {
   public boolean isValid() {
     return fileURL != null || imageName.contains(isBImg);
   }
-
+  
 	/**
 	 * checks, wether the Image can be used with the new ImageFinder
 	 * @return true/false
@@ -1217,15 +1254,26 @@ public class Image {
    *
    * @return OpenCV Mat
    */
-  public Mat getMat() {
+  public Mat getMatOld() {
     return createMat(get());
   }
 
+  public Mat getMat() {
+    Mat aMat = null;
+    BufferedImage bimg = get();
+    int[] data = ((DataBufferInt) bimg.getRaster().getDataBuffer()).getData();
+    ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4); 
+    IntBuffer intBuffer = byteBuffer.asIntBuffer();
+    intBuffer.put(data);
+
+    aMat = new Mat(bimg.getHeight(), bimg.getWidth(), CvType.CV_8UC3);
+    aMat.put(0, 0, byteBuffer.array());
+    return aMat;
+  }
+  
   protected static Mat createMat(BufferedImage img) {
     if (img != null) {
-      Debug timer = Debug.startTimer("Mat create\t (%d x %d) from \n%s", img.getWidth(), img.getHeight(), img);
       Mat mat_ref = new Mat(img.getHeight(), img.getWidth(), CvType.CV_8UC4);
-      timer.lap("init");
       byte[] data;
       BufferedImage cvImg;
       ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_sRGB);
@@ -1235,17 +1283,13 @@ public class Image {
       DataBufferByte db = new DataBufferByte(img.getWidth() * img.getHeight() * 4);
       WritableRaster r = WritableRaster.createWritableRaster(sm, db, new Point(0, 0));
       cvImg = new BufferedImage(cm, r, false, null);
-      timer.lap("empty");
       Graphics2D g = cvImg.createGraphics();
       g.drawImage(img, 0, 0, null);
       g.dispose();
-      timer.lap("created");
       data = ((DataBufferByte) cvImg.getRaster().getDataBuffer()).getData();
       mat_ref.put(0, 0, data);
       Mat mat = new Mat();
-      timer.lap("filled");
       Imgproc.cvtColor(mat_ref, mat, Imgproc.COLOR_RGBA2BGR, 3);
-      timer.end();
       return mat;
     } else {
       return null;
@@ -1265,13 +1309,8 @@ public class Image {
 
   protected static org.sikuli.natives.Mat convertBufferedImageToMat(BufferedImage img) {
     if (img != null) {
-      long theMatTime = new Date().getTime();
       byte[] data = convertBufferedImageToByteArray(img);
       org.sikuli.natives.Mat theMat = Vision.createMat(img.getHeight(), img.getWidth(), data);
-      if (Settings.FindProfiling) {
-        Debug.logp("[FindProfiling] createCVMat [%d x %d]: %d msec", 
-                img.getWidth(), img.getHeight(), new Date().getTime() - theMatTime);
-      }
       return theMat;
     } else {
       return null;

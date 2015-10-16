@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
@@ -35,12 +37,34 @@ public class ImagePath {
 
   static RunTime runTime = RunTime.get();
 
-  private static final String me = "ImagePath: ";
+//<editor-fold defaultstate="collapsed" desc="logging">
   private static final int lvl = 3;
+  private static final Logger logger = LogManager.getLogger("SX.ImagePath");
 
   private static void log(int level, String message, Object... args) {
-    Debug.logx(level, me + message, args);
+    if (Debug.is(lvl)) {
+      message = String.format(message, args).replaceFirst("\\n", "\n          ");
+      if (level == 3) {
+        logger.debug(message, args);
+      } else if (level > 3) {
+        logger.trace(message, args);
+      } else if (level == -1) {
+        logger.error(message, args);
+      } else {
+        logger.info(message, args);
+      }
+    }
   }
+
+  private void logp(String message, Object... args) {
+    System.out.println(String.format(message, args));
+  }
+
+  public void terminate(int retval, String message, Object... args) {
+    logger.fatal(String.format(" *** terminating: " + message, args));
+    System.exit(retval);
+  }
+//</editor-fold>
 
   /**
    * represents an imagepath entry
@@ -224,6 +248,7 @@ public class ImagePath {
    * @return a valid URL or null if not found/exists
    */
   public static URL find(String fname) {
+    fname = getValidName(fname);
     URL fURL = null;
 		String proto = "";
     fname = FileManager.normalize(fname);
@@ -257,13 +282,41 @@ public class ImagePath {
           log(-1, "find: URL not supported: " + path.pathURL);
 					return fURL;
         }
+        fURL = null;
       }
       if (fURL == null) {
         log(-1, "find: not on image path: " + fname);
-        dump(lvl);
       }
 	    return fURL;
     }
+  }
+  
+  /**
+   * image file types supported by OpenCV highgui.imgread<br> 
+   * Windows bitmaps - *.bmp, *.dib (always supported) <br>
+   * JPEG files - *.jpeg, *.jpg, *.jpe (see the *Notes* section)<br> 
+   * JPEG 2000 files - *.jp2 (see the *Notes* section) <br>
+   * Portable Network Graphics - *.png (see the *Notes* section) <br> 
+   * Portable image format - *.pbm, *.pgm, *.ppm (always supported) <br>
+   * Sun rasters - *.sr, *.ras (always supported) <br>
+   * TIFF files - *.tiff, *.tif (see the *Notes* section)
+   * @param name an image file name
+   * @return the name optionally .png added if no ending
+   */
+  public static String getValidName(String name) {
+    String validEndings = ".bmp.dib.jpeg.jpg.jpe.jp2.png.pbm.pgm.ppm.sr.ras.tiff.tif";
+    String validName = name;
+    String[] parts = validName.split("\\.");
+    if (parts.length == 1) {
+      log(lvl, "getValidName: supposing PNG: %s", name);
+      validName += ".png";
+    } else {
+      String ending = "." + parts[parts.length - 1];
+      if (validEndings.indexOf(ending) == -1) {
+        log(-1, "getValidName: image file ending %s not supported: %s", ending, name);
+      }
+    }
+    return validName;
   }
 
   /**

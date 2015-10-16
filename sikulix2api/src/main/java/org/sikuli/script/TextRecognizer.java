@@ -31,9 +31,9 @@ public class TextRecognizer {
   private static boolean initSuccess = false;
 	private static int lvl = 3;
 
-  static {
-    RunTime.loadLibrary("VisionProxy");
-  }
+//  static {
+//    RunTime.loadLibrary("VisionProxy");
+//  }
 
   private TextRecognizer() {
     init();

@@ -9,7 +9,6 @@ package org.sikuli.script;
 import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.util.Date;
-import org.opencv.core.Core;
 import org.sikuli.util.Debug;
 import org.sikuli.util.EventObserver;
 import org.sikuli.util.EventSubject;
@@ -18,13 +17,13 @@ import org.sikuli.util.visual.OverlayCapturePrompt;
 import org.sikuli.util.visual.ScreenHighlighter;
 
 /**
- * A screen represents a physical monitor with its coordinates and size according to the global
- * point system: the screen areas are grouped around a point (0,0) like in a cartesian system (the
- * top left corner and the points contained in the screen area might have negative x and/or y values)
- * <br >The screens are arranged in an array (index = id) and each screen is always the same object
- * (not possible to create new objects).
- * <br>A screen inherits from class Region, so it can be used as such in all aspects. If you need
- * the region of the screen more than once, you have to create new ones based on the screen.
+ * A screen represents a physical monitor with its coordinates and size according to the global point system: the screen
+ * areas are grouped around a point (0,0) like in a cartesian system (the top left corner and the points contained in
+ * the screen area might have negative x and/or y values)
+ * <br >The screens are arranged in an array (index = id) and each screen is always the same object (not possible to
+ * create new objects).
+ * <br>A screen inherits from class Region, so it can be used as such in all aspects. If you need the region of the
+ * screen more than once, you have to create new ones based on the screen.
  * <br>The so called primary screen is the one with top left (0,0) and has id 0.
  */
 public class Screen extends Region implements EventObserver, IScreen {
@@ -34,6 +33,7 @@ public class Screen extends Region implements EventObserver, IScreen {
   private static String me = "Screen: ";
   private static int lvl = 3;
   private static Region fakeRegion;
+
   private static void log(int level, String message, Object... args) {
     Debug.logx(level, me + message, args);
   }
@@ -52,21 +52,11 @@ public class Screen extends Region implements EventObserver, IScreen {
   private ScreenImage lastScreenImage = null;
 
   //<editor-fold defaultstate="collapsed" desc="Initialization">
-
-  static {
-//    RunTime.loadLibrary("VisionProxy");
-    String opencvLib = Core.NATIVE_LIBRARY_NAME;
-    if (runTime.runningWindows) {
-      opencvLib = opencvLib.replaceFirst("2412", "2411");
-    }
-    RunTime.loadLibrary(opencvLib);
-    initScreens(false);
-  }
   private long lastCaptureTime = -1;
 
-//  private static void initScreens() {
-//    initScreens(false);
-//  }
+  static {
+    initScreens(false);
+  }
 
   public int getcurrentID() {
     return curID;
@@ -76,7 +66,7 @@ public class Screen extends Region implements EventObserver, IScreen {
     if (screens != null && !reset) {
       return;
     }
-    log(lvl+1, "initScreens: entry");
+    log(lvl + 1, "initScreens: entry");
     primaryScreen = 0;
     globalRobot = getMouseRobot();
     screens = new Screen[runTime.nMonitors];
@@ -105,7 +95,7 @@ public class Screen extends Region implements EventObserver, IScreen {
         lcn = Mouse.at();
         if (!lc.equals(lcn)) {
           log(lvl, "*** multimonitor click check: %s center: (%d, %d) --- NOT OK:  (%d, %d)",
-                  s.toStringShort(), lc.x, lc.y, lcn.x, lcn.y);
+              s.toStringShort(), lc.x, lc.y, lcn.x, lcn.y);
         } else {
           log(lvl, "*** checking: %s center: (%d, %d) --- OK", s.toStringShort(), lc.x, lc.y);
         }
@@ -126,16 +116,17 @@ public class Screen extends Region implements EventObserver, IScreen {
     }
     return globalRobot;
   }
-  
+
   protected static Region getFakeRegion() {
     if (fakeRegion == null) {
-      fakeRegion = new Region(0,0,5,5);
+      fakeRegion = new Region(0, 0, 5, 5);
     }
     return fakeRegion;
   }
-  
+
   /**
    * create a Screen (ScreenUnion) object as a united region of all available monitors
+   *
    * @return ScreenUnion
    */
 //TODO: check wether this can be a Screen object, to be tested: Region methods
@@ -155,15 +146,15 @@ public class Screen extends Region implements EventObserver, IScreen {
     curID = id;
     this.monitor = monitor;
   }
-  
+
   public static Screen as(int id) {
     if (id < 0 || id >= runTime.nMonitors) {
       Debug.error("Screen(%d) not in valid range 0 to %d - using primary %d",
-							id, runTime.nMonitors - 1, primaryScreen);
-			return screens[0];
+          id, runTime.nMonitors - 1, primaryScreen);
+      return screens[0];
     } else {
-			return screens[id];
-		}
+      return screens[id];
+    }
   }
 
   /**
@@ -175,46 +166,44 @@ public class Screen extends Region implements EventObserver, IScreen {
     super();
     if (id < 0 || id >= runTime.nMonitors) {
       Debug.error("Screen(%d) not in valid range 0 to %d - using primary %d",
-							id, runTime.nMonitors - 1, primaryScreen);
-			curID = primaryScreen;
+          id, runTime.nMonitors - 1, primaryScreen);
+      curID = primaryScreen;
     } else {
-			curID = id;
-		}
+      curID = id;
+    }
     monitor = screens[id].monitor;
     initScreen();
   }
 
-	/**
-	 * INTERNAL USE
-	 * collect all physical screens to one big region<br>
-	 * TODO: under evaluation, wether it really makes sense
-	 * @param isScreenUnion true/false
-	 */
-	public Screen(boolean isScreenUnion) {
+  /**
+   * INTERNAL USE collect all physical screens to one big region<br>
+   * TODO: under evaluation, wether it really makes sense
+   *
+   * @param isScreenUnion true/false
+   */
+  public Screen(boolean isScreenUnion) {
     super(isScreenUnion);
   }
 
-	/**
-	 * INTERNAL USE
-	 * collect all physical screens to one big region<br>
-	 * This is under evaluation, wether it really makes sense
-	 */
+  /**
+   * INTERNAL USE collect all physical screens to one big region<br>
+   * This is under evaluation, wether it really makes sense
+   */
   public void setAsScreenUnion() {
     oldID = curID;
     curID = -1;
   }
 
-	/**
-	 * INTERNAL USE
-	 * reset from being a screen union to the screen used before
-	 */
+  /**
+   * INTERNAL USE reset from being a screen union to the screen used before
+   */
   public void setAsScreen() {
     curID = oldID;
   }
 
   /**
-   * Is the screen object having the top left corner as (0,0). If such a screen does not exist it is
-   * the screen with id 0.
+   * Is the screen object having the top left corner as (0,0). If such a screen does not exist it is the screen with id
+   * 0.
    */
   public Screen() {
     super();
@@ -223,8 +212,9 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   /**
-	 * <br>TODO: remove this method if it is not needed
-	 * @param scr
+   * <br>TODO: remove this method if it is not needed
+   *
+   * @param scr
    */
   public void initScreen(Screen scr) {
     updateSelf();
@@ -248,7 +238,8 @@ public class Screen extends Region implements EventObserver, IScreen {
 
   /**
    * {@inheritDoc}
-	 * @return Screen
+   *
+   * @return Screen
    */
   @Override
   public Screen getScreen() {
@@ -257,8 +248,9 @@ public class Screen extends Region implements EventObserver, IScreen {
 
   /**
    * Should not be used - throws UnsupportedOperationException
-	 * @param s Screen
-	 * @return should not return
+   *
+   * @param s Screen
+   * @return should not return
    */
   @Override
   protected Region setScreen(IScreen s) {
@@ -296,7 +288,6 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   //</editor-fold>
-
   //<editor-fold defaultstate="collapsed" desc="getters setters">
   protected boolean useFullscreen() {
     return false;
@@ -352,9 +343,9 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   /**
-	 *
-	 * @return the screen's rectangle
-	 */
+   *
+   * @return the screen's rectangle
+   */
   @Override
   public Rectangle getBounds() {
     return new Rectangle(runTime.getMonitor(monitor));
@@ -371,8 +362,7 @@ public class Screen extends Region implements EventObserver, IScreen {
 
   /**
    * each screen has exactly one robot (internally used for screen capturing)
-   * <br>available as a convenience for those who know what they are doing. Should not be needed
-   * normally.
+   * <br>available as a convenience for those who know what they are doing. Should not be needed normally.
    *
    * @param id of the screen
    * @return the AWT.Robot of the given screen, if id invalid the primary screen
@@ -383,7 +373,7 @@ public class Screen extends Region implements EventObserver, IScreen {
 
   /**
    *
-	 * @return the id
+   * @return the id
    */
   @Override
   public int getID() {
@@ -392,6 +382,7 @@ public class Screen extends Region implements EventObserver, IScreen {
 
   /**
    * INTERNAL USE: to be compatible with ScreenUnion
+   *
    * @param x value
    * @param y value
    * @return id of the screen
@@ -412,9 +403,8 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   /**
-   * creates a region on the current screen with the given coordinate/size. The coordinate is
-   * translated to the current screen from its relative position on the screen it would have been
-   * created normally.
+   * creates a region on the current screen with the given coordinate/size. The coordinate is translated to the current
+   * screen from its relative position on the screen it would have been created normally.
    *
    * @param loc Location
    * @param width value
@@ -429,10 +419,10 @@ public class Screen extends Region implements EventObserver, IScreen {
   public ScreenImage getLastScreenImageFromScreen() {
     return lastScreenImage;
   }
+
   /**
-   * creates a location on the current screen with the given point. The coordinate is translated to
-   * the current screen from its relative position on the screen it would have been created
-   * normally.
+   * creates a location on the current screen with the given point. The coordinate is translated to the current screen
+   * from its relative position on the screen it would have been created normally.
    *
    * @param loc Location
    * @return the new location
@@ -442,7 +432,6 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   //</editor-fold>
-
   //<editor-fold defaultstate="collapsed" desc="Capture - SelectRegion">
   /**
    * create a ScreenImage with the physical bounds of this screen
@@ -484,8 +473,8 @@ public class Screen extends Region implements EventObserver, IScreen {
     lastCaptureTime = new Date().getTime();
     ScreenImage simg = robot.captureScreen(rect);
     if (Settings.FindProfiling) {
-      Debug.logp("[FindProfiling] Screen.capture [%d x %d]: %d msec", 
-              rect.width, rect.height, new Date().getTime() - lastCaptureTime);
+      Debug.logp("[FindProfiling] Screen.capture [%d x %d]: %d msec",
+          rect.width, rect.height, new Date().getTime() - lastCaptureTime);
     }
     lastScreenImage = simg;
     if (Debug.getDebugLevel() > lvl) {
@@ -493,7 +482,7 @@ public class Screen extends Region implements EventObserver, IScreen {
     }
     return simg;
   }
-  
+
   /**
    * create a ScreenImage with given region on this screen
    *
@@ -506,8 +495,8 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   /**
-   * interactive capture with predefined message: lets the user capture a screen image using the
-   * mouse to draw the rectangle
+   * interactive capture with predefined message: lets the user capture a screen image using the mouse to draw the
+   * rectangle
    *
    * @return the image
    */
@@ -522,18 +511,17 @@ public class Screen extends Region implements EventObserver, IScreen {
       Screen.getScreen(is).prompt.prompt(msg);
     }
   }
-  
+
   public static void closePrompt() {
     for (int is = 0; is < Screen.getNumberScreens(); is++) {
       Screen.getScreen(is).prompt.close();
     }
   }
-  
+
   /**
-   * interactive capture with given message: lets the user capture a screen image using the mouse to
-   * draw the rectangle
+   * interactive capture with given message: lets the user capture a screen image using the mouse to draw the rectangle
    *
-	 * @param message text
+   * @param message text
    * @return the image
    */
   @Override
@@ -577,11 +565,11 @@ public class Screen extends Region implements EventObserver, IScreen {
     }
     return simg;
   }
-  
+
   public String saveCapture(String name) {
     return saveCapture(name, null);
   }
-  
+
   public String saveCapture(String name, Region reg) {
     ScreenImage img;
     if (reg == null) {
@@ -597,8 +585,7 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   /**
-   * interactive region create with predefined message: lets the user draw the rectangle using the
-   * mouse
+   * interactive region create with predefined message: lets the user draw the rectangle using the mouse
    *
    * @return the region
    */
@@ -609,7 +596,7 @@ public class Screen extends Region implements EventObserver, IScreen {
   /**
    * interactive region create with given message: lets the user draw the rectangle using the mouse
    *
-	 * @param message text
+   * @param message text
    * @return the region
    */
   public Region selectRegion(final String message) {
@@ -619,7 +606,7 @@ public class Screen extends Region implements EventObserver, IScreen {
     }
     Rectangle r = sim.getROI();
     return Region.create((int) r.getX(), (int) r.getY(),
-            (int) r.getWidth(), (int) r.getHeight());
+        (int) r.getWidth(), (int) r.getHeight());
   }
 
   /**
@@ -651,9 +638,9 @@ public class Screen extends Region implements EventObserver, IScreen {
   public String toString() {
     Rectangle r = getBounds();
     return String.format("S(%d)[%d,%d %dx%d] E:%s, T:%.1f",
-            curID, (int) r.getX(), (int) r.getY(),
-            (int) r.getWidth(), (int) r.getHeight(),
-            getThrowException() ? "Y" : "N", getAutoWaitTimeout());
+        curID, (int) r.getX(), (int) r.getY(),
+        (int) r.getWidth(), (int) r.getHeight(),
+        getThrowException() ? "Y" : "N", getAutoWaitTimeout());
   }
 
   /**
@@ -665,13 +652,13 @@ public class Screen extends Region implements EventObserver, IScreen {
   public String toStringShort() {
     Rectangle r = getBounds();
     return String.format("S(%d)[%d,%d %dx%d]",
-            curID, (int) r.getX(), (int) r.getY(),
-            (int) r.getWidth(), (int) r.getHeight());
+        curID, (int) r.getX(), (int) r.getY(),
+        (int) r.getWidth(), (int) r.getHeight());
   }
 
-	@Override
-	public String toJSON() {
+  @Override
+  public String toJSON() {
     Rectangle r = getBounds();
-		return String.format("[\"S\", %d, %d, %d, %d, %d]", r.x, r.y, r.width, r.height, curID);
-	}
+    return String.format("[\"S\", %d, %d, %d, %d, %d]", r.x, r.y, r.width, r.height, curID);
+  }
 }

@@ -532,16 +532,23 @@ public class FileManager {
   }
 
   public static String saveTmpImage(BufferedImage img) {
-    return saveTmpImage(img, null);
+    return saveTmpImage(img, null, "png");
   }
 
-  public static String saveTmpImage(BufferedImage img, String path) {
+  public static String saveTmpImage(BufferedImage img, String typ) {
+    return saveTmpImage(img, null, typ);
+  }
+
+  public static String saveTmpImage(BufferedImage img, String path, String typ) {
     File tempFile;
+    boolean success;
     try {
-      tempFile = createTempFile("png", path);
+      tempFile = createTempFile(typ, path);
       if (tempFile != null) {
-        ImageIO.write(img, "png", tempFile);
-        return tempFile.getAbsolutePath();
+        success = ImageIO.write(img, typ, tempFile);
+        if (success) {
+          return tempFile.getAbsolutePath();
+        }
       }
     } catch (IOException e) {
       e.printStackTrace();
