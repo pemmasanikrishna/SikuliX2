@@ -19,28 +19,34 @@ public class Sikulix {
 
     rt = RunTime.get();
         
+//<editor-fold defaultstate="collapsed" desc="basic find test (arg0 test)">
     if (args != null && args.length > 0 && "test".equals(args[0])) {
       System.out.println("********** Running Sikulix.main");
-
+      
       Settings.InfoLogs = false;
       Settings.ActionLogs = false;
-
+      
       ImagePath.add("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
       Screen s = new Screen();
-
+      
       Image.create("nbicons");
-
+      
       Settings.CheckLastSeen = false;
-
+      
       Settings.UseImageFinder = true;
       s.find("nbicons");
-
+      
       Settings.CheckLastSeen = true;
-
+      
       Settings.UseImageFinder = true;
       s.find("nbicons");
     }
-//    Commands.endNormal(1);
+//</editor-fold>
+    
+    ImagePath.add("org.sikuli.script.Sikulix/ImagesAPI.sikuli");    
+    Image.cvLoad(null);
+
+//*****************************************    Commands.endNormal(1);
     System.exit(1);
 
     if (rt.runningWinApp) {

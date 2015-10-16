@@ -2,7 +2,7 @@
 //
 // This file is auto-generated. Please don't modify it!
 //
-package org.sikuli.zexternal.opencv.highgui;
+package org.opencv.highgui;
 
 import java.lang.String;
 import org.opencv.core.Mat;

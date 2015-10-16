@@ -38,6 +38,7 @@ import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
 import org.sikuli.natives.Vision;
+import org.opencv.highgui.Highgui;
 
 /**
  * This class hides the complexity behind image names given as string.
@@ -410,6 +411,11 @@ public class Image {
   private int rowHd = 0;
   private int colWd = 0;
 
+  public static void cvLoad(String imgName) {
+    URL imgURL = ImagePath.find(imgName);
+    Mat imgMat = Highgui.imread(imgURL.getPath());
+  }
+  
   @Override
   public String toString() {
     return String.format(
