@@ -111,7 +111,7 @@ public class Sikulix {
     String fnShot = "shot";
     Region reg = scr.get(Region.MIDDLE_BIG);
     
-    Debug.off();
+    Debug.on(3);
 //    App.openLink("http://sikulix.com");
 //    App.focus("Safari"); Debug.on(3);
 //    RunTime.pause(1.0);
