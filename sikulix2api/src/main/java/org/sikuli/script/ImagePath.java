@@ -448,7 +448,7 @@ public class ImagePath {
     path = makePathURL(mainPath, altPath);
     if (path != null) {
       if (hasPath(path) < 0) {
-        log(lvl, "add: %s", path);
+        log(lvl, "add:\n%s", path);
         imagePaths.add(path);
       } else {
         log(lvl, "duplicate not added: %s", path);

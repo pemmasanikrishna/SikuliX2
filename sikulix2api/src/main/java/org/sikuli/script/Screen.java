@@ -8,6 +8,7 @@ package org.sikuli.script;
 
 import java.awt.AWTException;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.util.Date;
 import org.sikuli.util.Debug;
 import org.sikuli.util.EventObserver;
@@ -472,15 +473,12 @@ public class Screen extends Region implements EventObserver, IScreen {
   public ScreenImage capture(Rectangle rect) {
     lastCaptureTime = new Date().getTime();
     ScreenImage simg = robot.captureScreen(rect);
-    if (Settings.FindProfiling) {
-      Debug.logp("[FindProfiling] Screen.capture [%d x %d]: %d msec",
-          rect.width, rect.height, new Date().getTime() - lastCaptureTime);
-    }
     lastScreenImage = simg;
-    if (Debug.getDebugLevel() > lvl) {
-      simg.saveLastScreenImage(runTime.fSikulixStore);
-    }
     return simg;
+  }
+  
+  public void setlastScreenImage(ScreenImage sImg) {
+    lastScreenImage = sImg;
   }
 
   /**

@@ -8,6 +8,9 @@ import java.io.File;
 import java.util.Date;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencv.core.Mat;
+import org.opencv.highgui.Highgui;
+import org.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
@@ -69,7 +72,8 @@ public class Sikulix {
   public static void main(String[] args) throws FindFailed {
 
     Debug.on(3);
-
+    Settings.InfoLogs = false;
+    Settings.ActionLogs = false;
     rt = RunTime.get();
 
 //<editor-fold defaultstate="collapsed" desc="basic find test (arg0 test)">
@@ -96,44 +100,60 @@ public class Sikulix {
     }
 //</editor-fold>
 
-    new Screen();
+    Screen scr = new Screen();
     ImagePath.add("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
-    Image img = null; 
+    File fTesting = new File(rt.fSikulixStore, "Testing");
+    fTesting.mkdirs();
+    ImagePath.setBundlePath(fTesting.getAbsolutePath());
+    Image img = null;
+    ScreenImage sImg = null;
+    Mat mImg = null;
+    String fnShot = "shot";
+    Region reg = scr.get(Region.MIDDLE_BIG);
     
+    Debug.off();
+//    App.openLink("http://sikulix.com");
+//    App.focus("Safari"); Debug.on(3);
+//    RunTime.pause(1.0);
+        
 //    start();
 //    img = Image.create("sxpower");
 //    img.getMatOld();
 //    log(lvl, "(%d) BufImage: %s", end(), img);
 //    
-//    start();
-//    img = new Image("sxpower");
-//    log(lvl, "(%d) MatImage: %s", end(), img);
-    
     start();
-    img = new Image(new Screen().capture());
-//    String result = FileManager.saveTmpImage(img.get(), "png");
-//    img.getMatOld();
-    log(lvl, "(%d) ScrBufImage: %s", end(), img);
-
-//    start();
-//    img = new Image(new Screen().capture());
-    logp(img.getMat().toString());
-//    log(lvl, "(%d) ScrBufImage: %s", end(), img);
+    img = new Image("sxpower");
+    log(lvl, "(%d) MatImage: %s", end(), img);
     
+    scr.find(img);
+//*****************************************    Commands.endNormal(1);
+    RunTime.pause(1.0);
+    scr.write("#M.w");
+    Debug.off(); App.focus("Brackets"); Debug.on(3);
+    System.exit(1);
+
+    start();
+    sImg = scr.capture();
+//    sImg = new ScreenImage(reg);
+    long end = end();
+    if (null != sImg.saveInBundle(fnShot)) {
+      log(lvl, "(%d) Shot: (%dx%d) to bundle::_%s.png", end, 
+              sImg.width(), sImg.height(), fnShot);
+    }
 //*****************************************    Commands.endNormal(1);
     System.exit(1);
 
-    if (rt.runningWinApp) {
-      Commands.popup("Hello World\nNot much else to do ( yet ;-)", Sikulix.rt.fSxBaseJar.getName());
-      try {
-        Screen scr = new Screen();
-        scr.find(new Image(scr.userCapture("grab something to find"))).highlight(3);
-      } catch (Exception ex) {
-        Commands.popup("Uuups :-(\n" + ex.getMessage(), Sikulix.rt.fSxBaseJar.getName());
-      }
-      Commands.popup("Hello World\nNothing else to do ( yet ;-)", Sikulix.rt.fSxBaseJar.getName());
-      System.exit(1);
-    }
+//    if (rt.runningWinApp) {
+//      Commands.popup("Hello World\nNot much else to do ( yet ;-)", Sikulix.rt.fSxBaseJar.getName());
+//      try {
+//        Screen scr = new Screen();
+//        scr.find(new Image(scr.userCapture("grab something to find"))).highlight(3);
+//      } catch (Exception ex) {
+//        Commands.popup("Uuups :-(\n" + ex.getMessage(), Sikulix.rt.fSxBaseJar.getName());
+//      }
+//      Commands.popup("Hello World\nNothing else to do ( yet ;-)", Sikulix.rt.fSxBaseJar.getName());
+//      System.exit(1);
+//    }
 
     String version = String.format("(%s-%s)", rt.getVersion(), rt.sxBuildStamp);
     File lastSession = new File(rt.fSikulixStore, "LastAPIJavaScript.js");

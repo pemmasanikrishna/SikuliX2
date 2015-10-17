@@ -9,6 +9,7 @@ package org.sikuli.script;
 import java.awt.Rectangle;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -2488,6 +2489,12 @@ public class Region {
       nobj++;
     }
     return mList;
+  }
+
+  public BufferedImage captureThis() {
+    BufferedImage bImg = null;
+    bImg = ((RobotDesktop) getScreen().getRobot()).captureRegion(this.getRect());
+    return bImg;
   }
 
   private class SubFindRun implements Runnable {

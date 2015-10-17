@@ -238,6 +238,11 @@ public class RobotDesktop extends Robot implements IRobot {
     return new ScreenImage(rect, img);
   }
 
+  public BufferedImage captureRegion(Rectangle rect) {
+    BufferedImage img = createScreenCapture(rect);
+    return img;
+  }
+
   @Override
   public Color getColorAt(int x, int y) {
     return getPixelColor(x, y);

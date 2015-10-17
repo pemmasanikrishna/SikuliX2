@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -35,8 +36,10 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfInt;
 import org.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
@@ -169,6 +172,8 @@ public class Image {
       }
     }
   }
+  
+private boolean isNewStyle = false;
 
 //<editor-fold defaultstate="collapsed" desc="imageName">
   private String imageName = null;
@@ -271,9 +276,8 @@ public class Image {
     return imageIsAbsolute;
   }
 
-  public Image setIsAbsolute(boolean val) {
+  private void setIsAbsolute(boolean val) {
     imageIsAbsolute = val;
-    return this;
   }
 
 //</editor-fold>
@@ -451,6 +455,8 @@ public class Image {
   }
   
   public Image(String imgName) {
+    isNewStyle = true;
+    init(imgName, null, false);
     URL imgURL = ImagePath.find(imgName);
     File imgFile = null;
     if (imgURL != null) {
@@ -458,8 +464,8 @@ public class Image {
       mat = Highgui.imread(imgFile.getAbsolutePath());
       bwidth = mat.width();
       bheight = mat.height();
-      imageName = imgName;
       bsize = mat.channels() * bwidth * bheight;
+      images.add(this);
       log(lvl, "cvLoad: %s (%dx%d) KB %d", imgFile.getName(), bwidth, bheight, (int) bsize/KB);
     }
   }
@@ -472,13 +478,17 @@ public class Image {
     init(fname, fURL, silent);
   }
 
-	private void init(String fileName, URL fURL, boolean silent) {
-    imageName = fileName;
-    if (imageName.isEmpty() || fURL == null) {
+	private void init(String imgName, URL imgURL, boolean silent) {
+    if (imgName == null || imgName.isEmpty()) {
       return;
     }
-    fileURL = fURL;
-		if (ImagePath.isImageBundled(fURL)) {
+    if (imgURL == null) {
+      get(this, imgName, false);
+    } else {
+      imageName = imgName;
+      fileURL = imgURL;
+    }
+		if (ImagePath.isImageBundled(fileURL)) {
 			imageIsBundled = true;
 			imageName = new File(imageName).getName();
 		}
@@ -486,10 +496,84 @@ public class Image {
     load();
   }
 
-  private BufferedImage load() {
+  /**
+   * FOR INTERNAL USE: see get(String, boolean)
+   *
+   * @param fName image filename
+   * @return this
+   */
+  protected static Image get(String fName) {
+    return get(null, fName, false);
+  }
+
+  /**
+   * FOR INTERNAL USE: tries to get the image from the cache, if not cached yet:
+   * create and load a new image
+   *
+   * @param fName image filename
+   * @param silent true: suppress some error messages
+   * @return this
+   */
+	private static Image get(Image thisImage, String fName, boolean silent) {
+    if (fName == null || fName.isEmpty()) {
+      return null;
+    }
+		fName = FileManager.slashify(fName, false);
+    Image img = null;
+    URL fURL = null;
+    String fileName = Settings.getValidImageFilename(fName);
+    if (fileName.isEmpty()) {
+      log(-1, "not a valid image type: " + fName);
+      fileName = fName;
+    }
+    File imgFile = new File(fileName);
+    if (imgFile.isAbsolute()) {
+      if (imgFile.exists()) {
+        fURL = FileManager.makeURL(fileName);
+      }
+    } else {
+      fURL = imageNames.get(fileName);
+      if (fURL == null) {
+        fURL = ImagePath.find(fileName);
+      }
+    }
+    if (fURL != null) {
+      img = imageFiles.get(fURL);
+      if (img != null && null == imageNames.get(img.imageName)) {
+        imageNames.put(img.imageName, fURL);
+      }
+    }
+    if (img == null) {
+      if (thisImage == null) {
+        img = new Image(fileName, fURL, silent);
+      } else {
+        img = thisImage;
+        img.imageName = fileName;
+        img.fileURL = fURL;
+      }
+      img.setIsAbsolute(imgFile.isAbsolute());
+    } else {
+      if (img.bimg != null || img.mat != null) {
+        log(3, "reused: %s (%s)", img.imageName, img.fileURL);
+      } else {
+        if (Settings.getImageCache() > 0) {
+          img.load();
+        }
+      }
+		}
+    return img;
+  }
+
+  protected static Image get(URL imgURL) {
+    return imageFiles.get(imgURL);
+  }
+
+  private boolean load() {
     BufferedImage bImage = null;
+    boolean success = false;
     if (fileURL != null) {
       bimg = null;
+      mat = null;
       try {
         bImage = ImageIO.read(fileURL);
       } catch (Exception e) {
@@ -497,9 +581,9 @@ public class Image {
           log(-1, "could not be loaded: %s", fileURL);
         }
 				fileURL = null;
-        return null;
+        return false;
       }
-      if (imageName != null) {
+      if (fileURL != null) {
         if (!imageFiles.containsKey(fileURL)) {
           imageFiles.put(fileURL, this);
           imageNames.put(imageName, fileURL);
@@ -522,7 +606,7 @@ public class Image {
         log(-1, "invalid! not loaded! %s", fileURL);
       }
     }
-    return bImage;
+    return success;
   }
 
   private BufferedImage loadAgain() {
@@ -590,7 +674,7 @@ public class Image {
    * @return an Image object (might not be valid - check with isValid())
    */
   public static Image create(String fName) {
-    Image img = get(fName, false);
+    Image img = get(null, fName, false);
     return createImageValidate(img, true);
   }
 
@@ -650,7 +734,7 @@ public class Image {
    * @return this
    */
   public static Image createThumbNail(String fName) {
-    Image img = get(fName, true);
+    Image img = get(null, fName, true);
     return createImageValidate(img, false);
   }
 
@@ -685,73 +769,6 @@ public class Image {
       }
     }
     return imageAsFile;
-  }
-
-
-  /**
-   * FOR INTERNAL USE: see get(String, boolean)
-   *
-   * @param fName image filename
-   * @return this
-   */
-  protected static Image get(String fName) {
-    return get(fName, false);
-  }
-
-  /**
-   * FOR INTERNAL USE: tries to get the image from the cache, if not cached yet:
-   * create and load a new image
-   *
-   * @param fName image filename
-   * @param silent true: suppress some error messages
-   * @return this
-   */
-	private static Image get(String fName, boolean silent) {
-    if (fName == null || fName.isEmpty()) {
-      return null;
-    }
-		fName = FileManager.slashify(fName, false);
-    Image img = null;
-    URL fURL = null;
-    String fileName = Settings.getValidImageFilename(fName);
-    if (fileName.isEmpty()) {
-      log(-1, "not a valid image type: " + fName);
-      fileName = fName;
-    }
-    File imgFile = new File(fileName);
-    if (imgFile.isAbsolute()) {
-      if (imgFile.exists()) {
-        fURL = FileManager.makeURL(fileName);
-      }
-    } else {
-      fURL = imageNames.get(fileName);
-      if (fURL == null) {
-        fURL = ImagePath.find(fileName);
-      }
-    }
-    if (fURL != null) {
-      img = imageFiles.get(fURL);
-      if (img != null && null == imageNames.get(img.imageName)) {
-        imageNames.put(img.imageName, fURL);
-      }
-    }
-    if (img == null) {
-      img = new Image(fileName, fURL, silent);
-      img.setIsAbsolute(imgFile.isAbsolute());
-    } else {
-      if (img.bimg != null) {
-        log(3, "reused: %s (%s)", img.imageName, img.fileURL);
-      } else {
-        if (Settings.getImageCache() > 0) {
-          img.load();
-        }
-      }
-		}
-    return img;
-  }
-
-  protected static Image get(URL imgURL) {
-    return imageFiles.get(imgURL);
   }
 
   private Image(URL fURL) {
@@ -1033,10 +1050,10 @@ public class Image {
       } else {
         log(lvl + 1, "getImage from cache: %s", imageName);
       }
-      return bimg;
     } else {
-      return load();
+      if (!load()) return null;
     }
+    return bimg;
   }
 
   /**
@@ -1254,20 +1271,38 @@ public class Image {
    *
    * @return OpenCV Mat
    */
-  public Mat getMatOld() {
-    return createMat(get());
+  public Mat getMat() {
+    if (mat != null) {
+      return mat;
+    } else {
+      return createMat(get());
+    }
   }
 
-  public Mat getMat() {
+  public static Mat makeMat(BufferedImage bImg) {
     Mat aMat = null;
-    BufferedImage bimg = get();
-    int[] data = ((DataBufferInt) bimg.getRaster().getDataBuffer()).getData();
-    ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4); 
-    IntBuffer intBuffer = byteBuffer.asIntBuffer();
-    intBuffer.put(data);
-
-    aMat = new Mat(bimg.getHeight(), bimg.getWidth(), CvType.CV_8UC3);
-    aMat.put(0, 0, byteBuffer.array());
+    if (bImg.getType() == BufferedImage.TYPE_INT_RGB) {
+      log(lvl, "makeMat: INT_RGB (%dx%d)", bImg.getWidth(), bImg.getHeight());
+      int[] data = ((DataBufferInt) bImg.getRaster().getDataBuffer()).getData();
+      ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4); 
+      IntBuffer intBuffer = byteBuffer.asIntBuffer();
+      intBuffer.put(data);
+      aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC4);
+      aMat.put(0, 0, byteBuffer.array());
+      Mat oMatBGR = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC3);
+      Mat oMatA = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC1);
+      List<Mat> mixIn = new ArrayList<Mat>(Arrays.asList(new Mat[]{aMat}));
+      List<Mat> mixOut = new ArrayList<Mat>(Arrays.asList(new Mat[]{oMatA, oMatBGR}));
+      //A 0 - R 1 - G 2 - B 3 -> A 0 - B 1 - G 2 - R 3 
+      Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 3, 2, 2, 3, 1));
+      return oMatBGR;
+    } else if (bImg.getType() == BufferedImage.TYPE_3BYTE_BGR) {
+      log(lvl, "makeMat: 3BYTE_BGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
+      log(-1, "not supported");
+    } else {
+      log(lvl, "makeMat: not supported: Type: %d (%dx%d)", 
+              bImg.getType(), bImg.getWidth(), bImg.getHeight());      
+    }
     return aMat;
   }
   
