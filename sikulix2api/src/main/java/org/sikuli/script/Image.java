@@ -8,43 +8,30 @@ package org.sikuli.script;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Transparency;
-import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.ComponentColorModel;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
-import java.awt.image.SampleModel;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.imageio.ImageIO;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfInt;
-import org.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
-import org.sikuli.natives.Vision;
 import org.opencv.highgui.Highgui;
 
 /**
@@ -1003,11 +990,48 @@ public class Image {
               images.size(), (int) (currentMemory / KB),
               (int) (100 * currentMemory / maxMemory), (int) (maxMemory / MB));
         }
+        checkProbe();
       } else {
         log(-1, "invalid! not loaded! %s", fileURL);
       }
     }
     return success;
+  }
+  
+  private int resizeMinDownSample = 12;
+  private double resizeFactor;
+  private boolean isPlainColor = false;
+  private boolean isBlack = false;
+
+  private void checkProbe() {
+    resizeFactor = Math.min(((double) mwidth) / resizeMinDownSample, ((double) mheight) / resizeMinDownSample);
+    resizeFactor = Math.max(1.0, resizeFactor);
+
+    MatOfDouble pMean = new MatOfDouble();
+    MatOfDouble pStdDev = new MatOfDouble();
+    Core.meanStdDev(mat, pMean, pStdDev);
+    double min = 1.0E-5;
+    isPlainColor = false;
+    double sum = 0.0;
+    double[] arr = pStdDev.toArray();
+    for (int i = 0; i < arr.length; i++) {
+      sum += arr[i];
+    }
+    if (sum < min) {
+      isPlainColor = true;
+    }
+    sum = 0.0;
+    arr = pMean.toArray();
+    for (int i = 0; i < arr.length; i++) {
+      sum += arr[i];
+    }
+    if (sum < min && isPlainColor) {
+      isBlack = true;
+    }
+  }
+  
+  public double getResizeFactor() {
+    return resizeFactor;
   }
 //</editor-fold>
   

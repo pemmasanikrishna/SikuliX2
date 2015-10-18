@@ -111,6 +111,12 @@ public class Match extends Region implements Comparable<Match> {
     ocrText = text;
   }
 
+  public Match(int x, int y, int w, int h, double Score) {
+    init(x, y, w, h, null);
+    simScore = Score;
+    ocrText = null;
+  }
+
   private Match(int _x, int _y, int _w, int _h, double score, IScreen _parent) {
     init(_x, _y, _w, _h, _parent);
     simScore = score;

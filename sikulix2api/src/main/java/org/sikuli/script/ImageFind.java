@@ -7,15 +7,11 @@
 package org.sikuli.script;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDouble;
 import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -28,14 +24,7 @@ import org.sikuli.util.Settings;
  * completely implementing the OpenCV usage on the Java level.
  */
 //TODO ImageFind needed???
-public class ImageFind implements Iterator<Match>{
-
-  private static String me = "ImageFind: ";
-  private static int lvl = 3;
-
-  private static void log(int level, String message, Object... args) {
-    Debug.logx(level, me + message, args);
-  }
+public class ImageFind {
 
   private Finder owner = null;
 
@@ -87,188 +76,6 @@ public class ImageFind implements Iterator<Match>{
 
   public boolean isValid() {
     return true;
-  }
-
-  public void setIsInnerFind() {
-    isInnerFind = true;
-  }
-
-  void setSimilarity(double sim) {
-    similarity = sim;
-  }
-
-  public void setFindTimeout(double t) {
-    waitingTime = t;
-  }
-
-  public void setFinding(int ftyp) {
-    finding = ftyp;
-  }
-
-  public void setSorted(int styp) {
-    sorted = styp;
-  }
-
-  public void setCount(int c) {
-    count = c;
-  }
-
-  public List<Match> getMatches() {
-    return matches;
-  }
-
-  protected boolean checkFind(Finder owner, Object pprobe, Object... args) {
-    if (owner.isValid()) {
-      this.owner = owner;
-    } else {
-      return false;
-    }
-    isValid = false;
-    shouldCheckLastSeen = Settings.CheckLastSeen;
-    if (pprobe instanceof String) {
-      pImage = new Image((String) pprobe);
-      if (pImage.isValid()) {
-        isValid = true;
-      }
-    } else if (pprobe instanceof Image) {
-      if (((Image) pprobe).isValid()) {
-        isValid = true;
-        pImage = (Image) pprobe;
-      }
-    } else if (pprobe instanceof Pattern) {
-      if (((Pattern) pprobe).getImage().isValid()) {
-        isValid = true;
-        pImage = ((Pattern) pprobe).getImage();
-        similarity = ((Pattern) pprobe).getSimilar();
-      }
-    } else if (pprobe instanceof Mat) {
-      isValid = true;
-      probe = (Mat) pprobe;
-      waitingTime = 0.0;
-      shouldCheckLastSeen = false;
-    } else {
-      log(-1, "find(... some, any, all): probe invalid (not Pattern, String nor valid Image)");
-      return false;
-    }
-    if (probe.empty()) {
-      probe = new Image(pImage.get(), "").getMat();
-    }
-    checkProbe();
-    if (!owner.inImage()) {
-      if (args.length > 0) {
-        if (args[0] instanceof Integer) {
-          waitingTime = 0.0 + (Integer) args[0];
-        } else if (args[0] instanceof Double) {
-          waitingTime = (Double) args[0];
-        }
-      }
-      if (args.length > 1) {
-        findArgs = Arrays.copyOfRange(args, 1, args.length);
-      } else {
-        findArgs = null;
-      }
-    }
-    return isValid;
-  }
-
-  private void checkProbe() {
-    MatOfDouble pMean = new MatOfDouble();
-    MatOfDouble pStdDev = new MatOfDouble();
-    Core.meanStdDev(probe, pMean, pStdDev);
-    double min = 0.00001;
-    isPlainColor = false;
-    double sum = 0.0;
-    double arr[] = pStdDev.toArray();
-    for (int i = 0; i < arr.length; i++) {
-      sum += arr[i];
-    }
-    if (sum < min) {
-      isPlainColor = true;
-    }
-    sum = 0.0;
-    arr = pMean.toArray();
-    for (int i = 0; i < arr.length; i++) {
-      sum += arr[i];
-    }
-    if (sum < min && isPlainColor) {
-      isBlack = true;
-    }
-    resizeFactor = Math.min(((double) probe.width())/resizeMinDownSample, ((double) probe.height())/resizeMinDownSample);
-    resizeFactor = Math.max(1.0, resizeFactor);
-  }
-
-  protected ImageFind doFind() {
-    Debug.enter(me + ": doFind");
-    Core.MinMaxLocResult fres = null;
-    repeating = false;
-    long begin = (new Date()).getTime();
-    long lap;
-    while (true) {
-      lastFindTime = (new Date()).getTime();
-      if (shouldCheckLastSeen && !repeating && !owner.isImage && pImage.getLastSeen() != null) {
-        log(3, "checkLastSeen: trying ...");
-        Finder f = new Finder(new Region(pImage.getLastSeen()));
-        if (null != f.findInner(probe, pImage.getLastSeenScore() - 0.01)) {
-          log(lvl, "checkLastSeen: success");
-          set(f.next());
-          if (pImage != null) {
-            pImage.setLastSeen(get().getRect(), get().getScore());
-          }
-          break;
-        }
-        log(lvl, "checkLastSeen: not found");
-      }
-      if (!owner.isMultiFinder || owner.base.empty()) {
-        if (owner.isRegion) {
-          owner.setBase(owner.region.getScreen().capture(owner.region).getImage());
-        } else if (owner.isScreen) {
-          owner.setBase(owner.screen.capture().getImage());
-        }
-      }
-      if (!isInnerFind && resizeFactor > resizeMinFactor) {
-        log(3, "downsampling: trying ...");
-        doFindDown(0, resizeFactor);
-        fres = findDownRes;
-      }
-      if (fres == null) {
-        if (!isInnerFind) {
-          log(3, "downsampling: not found with (%f) - trying original size", resizeFactor);
-        }
-        fres = doFindDown(0, 0.0);
-        if(fres != null && fres.maxVal > similarity - 0.01) {
-          set(new Match((int) fres.maxLoc.x + owner.offX, (int) fres.maxLoc.y + owner.offY,
-                  probe.width(), probe.height(), fres.maxVal, null, null));
-        }
-      } else {
-        log(lvl, "downsampling: success: adjusting match");
-        set(checkFound(fres));
-      }
-      lastFindTime = (new Date()).getTime() - lastFindTime;
-      if (hasNext()) {
-        get().setTimes(lastFindTime, lastSearchTime);
-        if (pImage != null) {
-          pImage.setLastSeen(get().getRect(), get().getScore());
-        }
-        break;
-      } else {
-        if (isInnerFind || owner.inImage()) {
-          break;
-        }
-        else {
-          if (waitingTime < 0.001 || (lap = (new Date()).getTime() - begin) > waitingTime * 1000) {
-            break;
-          }
-          if (owner.MaxTimePerScan > lap) {
-            try {
-              Thread.sleep(owner.MaxTimePerScan - lap);
-            } catch (Exception ex) {
-            }
-          }
-          repeating = true;
-        }
-      }
-    }
-    return this;
   }
 
   private Match checkFound(Core.MinMaxLocResult res) {
@@ -362,61 +169,5 @@ public class ImageFind implements Iterator<Match>{
       Core.subtract(Mat.ones(res.size(), CvType.CV_32F), res, res);
     }
     return Core.minMaxLoc(res);
-  }
-
-  @Override
-  public boolean hasNext() {
-    if (matches.size() > 0) {
-      return matches.get(0) != null;
-    }
-    return false;
-  }
-
-  @Override
-  public Match next() {
-    Match m = null;
-    if (matches.size() > 0) {
-      m = matches.get(0);
-      remove();
-    }
-    return m;
-  }
-
-  @Override
-  public void remove() {
-    if (matches.size() > 0) {
-      matches.remove(0);
-    }
-  }
-
-  public Match get() {
-    return get(0);
-  }
-
-  public Match get(int n) {
-    if (n < matches.size()) {
-      return matches.get(n);
-    }
-    return null;
-  }
-
-  private Match add(Match m) {
-    if (matches.add(m)) {
-      return m;
-    }
-    return null;
-  }
-
-  private Match set(Match m) {
-    if (matches.size() > 0) {
-      matches.set(0, m);
-    } else {
-      matches.add(m);
-    }
-    return m;
-  }
-
-  public int getSize() {
-    return matches.size();
   }
 }

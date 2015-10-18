@@ -21,7 +21,7 @@ public class Pattern {
   static RunTime runTime = RunTime.get();
 
   private Image image = null;
-  private float similarity = (float) Settings.MinSimilarity;
+  private double similarity = Settings.MinSimilarity;
   private Location offset = new Location(0, 0);
   private int waitAfter = 0;
 //TODO imagePattern ??? needed???
@@ -195,7 +195,7 @@ public class Pattern {
    * @param sim value 0 to 1
    * @return the Pattern object itself
    */
-  public Pattern similar(float sim) {
+  public Pattern similar(double sim) {
     similarity = sim;
     return this;
   }
@@ -214,7 +214,7 @@ public class Pattern {
    *
    * @return the current minimum similarity
    */
-  public float getSimilar() {
+  public double getSimilar() {
     return this.similarity;
   }
 

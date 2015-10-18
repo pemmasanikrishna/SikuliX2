@@ -10,21 +10,23 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Settings;
 
-public class Finder implements Iterator<Match>{
-  
+public class Finder implements Iterator<Match> {
+
   static RunTime runTime = RunTime.get();
 
   //<editor-fold defaultstate="collapsed" desc="logging">
@@ -93,9 +95,11 @@ public class Finder implements Iterator<Match>{
       offY = region.y;
       isRegion = true;
       init(reg);
-    } else log(-1, "init: invalid region: %s", reg);
+    } else {
+      log(-1, "init: invalid region: %s", reg);
+    }
   }
-  
+
   protected Finder(Mat base) {
     terminate(1, "TODO observe changes");
   }
@@ -140,7 +144,7 @@ public class Finder implements Iterator<Match>{
 
   public boolean find(Object target) {
     try {
-      imageFind(evalTarget(target));
+      doFind(evalTarget(target));
     } catch (IOException ex) {
       log(-1, "find: Exception: %s", ex.getMessage());
       return false;
@@ -153,32 +157,57 @@ public class Finder implements Iterator<Match>{
     return null;
   }
 
-//  protected <PSI> ImageFind findInner(PSI probe, double sim) {
-//    ImageFind newFind = new ImageFind();
-//    newFind.setIsInnerFind();
-//    newFind.setSimilarity(sim);
-//    if (!newFind.checkFind(this, probe)) {
-//      return null;
-//    }
-//    firstFind = newFind;
-//    if (newFind.isValid()) {
-//      return newFind.doFind();
-//    }
-//    return null;
-//  }
-
-  private <PSI> ImageFind imageFind(PSI probe, Object... args) {
-    ImageFind newFind = new ImageFind();
-    newFind.setFindTimeout(waitingTime);
-    if (!newFind.checkFind(this, probe, args)) {
-      return null;
+  private double resizeMinFactor = 1.5;
+  
+  protected boolean doFind(Pattern pattern) {
+    boolean success = false;
+    Image pImage = pattern.getImage();
+    double similarity = pattern.getSimilar();
+    Core.MinMaxLocResult mMinMax = null;
+    Match mFound = null;
+    if (Settings.CheckLastSeen && pImage.getLastSeen() != null) {
+      log(lvl, "doFind: checkLastSeen: trying ...");
+      Finder f = new Finder(new Region(pImage.getLastSeen()));
+      if (f.find(new Pattern(pImage).similar(pImage.getLastSeenScore() - 0.01))) {
+        log(lvl, "doFind: checkLastSeen: success");
+        mFound = f.next();
+      }
+      log(lvl, "doFind: checkLastSeen: not found");
     }
-    if (newFind.isValid() && !isReusable && firstFind == null) {
-      firstFind = newFind;
+    if (pImage.getResizeFactor() > resizeMinFactor) {
+//    if () {
+      log(lvl, "doFind: downsampling: trying ...");
+      mMinMax = doFindDown(0, pImage.getResizeFactor());
     }
-    ImageFind imgFind = newFind.doFind();
-    log(lvl, "find: success: %s", imgFind.get());
-    return imgFind;
+    if (mMinMax == null) {
+      log(lvl, "doFind: downsampling: not (%f) - trying original size", pImage.getResizeFactor());
+      mMinMax = doFindDown(0, 0.0);
+      if (mMinMax != null && mMinMax.maxVal > similarity - 0.01) {
+        mFound = new Match((int) mMinMax.maxLoc.x + offX, (int) mMinMax.maxLoc.y + offY,
+                            pImage.getWidth(), pImage.getHeight(), mMinMax.maxVal);
+        success = true;
+      }
+    } else {
+      log(lvl, "downsampling: success: adjusting match");
+      mFound = checkFound(mMinMax);
+      success = true;
+    }
+    if (success) {
+      set(mFound);
+      pImage.setLastSeen(mFound.getRect(), mFound.getScore());
+    }
+    return success;
+  }
+  
+  private List<Match> matches = Collections.synchronizedList(new ArrayList<Match>());
+  
+  private Match set(Match m) {
+    if (matches.size() > 0) {
+      matches.set(0, m);
+    } else {
+      matches.add(m);
+    }
+    return m;
   }
 
   public boolean findAll(Object target) {
@@ -192,22 +221,19 @@ public class Finder implements Iterator<Match>{
   }
 
   private ImageFind imageFindAll(Pattern probe, int sorted, int count, Object... args) {
+    terminate(1, "imageFindAll()");
     ImageFind newFind = new ImageFind();
-    newFind.setFinding(ImageFind.FINDING_ALL);
-    newFind.setSorted(sorted);
-    if (count > 0) {
-      newFind.setCount(count);
-    }
-   if (!newFind.checkFind(this, probe, args)) {
-      return null;
-    }
+//  newFind.setFinding(ImageFind.FINDING_ALL);
+//  newFind.setSorted(sorted);
+//    if (count > 0) {
+//      newFind.setCount(count);
+//    }
     if (newFind.isValid() && !isReusable && firstFind == null) {
       firstFind = newFind;
     }
-    ImageFind imgFind = newFind.doFind();
-    log(lvl, "find: success: %s", imgFind.get());
-    return imgFind;
-   }
+//    ImageFind imgFind = newFind.doFind();
+    return null;
+  }
 
   public boolean hasChanges(Mat current) {
     int PIXEL_DIFF_THRESHOLD = 5;
@@ -227,14 +253,14 @@ public class Finder implements Iterator<Match>{
 
     Imgproc.threshold(diff, diff, PIXEL_DIFF_THRESHOLD, 255, Imgproc.THRESH_BINARY);
     Imgproc.dilate(diff, diff, new Mat());
-    Mat se = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5,5));
+    Mat se = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
     Imgproc.morphologyEx(diff, diff, Imgproc.MORPH_CLOSE, se);
 
     List<MatOfPoint> points = new ArrayList<MatOfPoint>();
     Mat contours = new Mat();
     Imgproc.findContours(diff, points, contours, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
     int n = 0;
-    for (Mat pm: points) {
+    for (Mat pm : points) {
       log(lvl, "(%d) %s", n++, pm);
       printMatI(pm);
     }
@@ -249,17 +275,13 @@ public class Finder implements Iterator<Match>{
 
   @Override
   public boolean hasNext() {
-    if (null != firstFind) {
-      return firstFind.hasNext();
-    }
+    terminate(1, "hasNext");
     return false;
   }
 
   @Override
   public Match next() {
-    if (firstFind != null) {
-      return firstFind.next();
-    }
+    terminate(1, "next");
     return null;
   }
 
@@ -317,4 +339,5 @@ public class Finder implements Iterator<Match>{
       }
     }
   }
+
 }
