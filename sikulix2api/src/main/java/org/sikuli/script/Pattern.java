@@ -64,7 +64,7 @@ public class Pattern {
    * @param img Image
    */
   public Pattern(Image img) {
-		image = img.create(img);
+		image = img;
     image.setIsPattern(false);
 		imagePattern = true;
   }
@@ -83,7 +83,7 @@ public class Pattern {
    * @param imgpath image filename
    */
   public Pattern(String imgpath) {
-    image = Image.create(imgpath);
+    image = new Image(imgpath);
   }
 
 	/**
@@ -96,7 +96,7 @@ public class Pattern {
       text = str;
       type = ptype;
     } else {
-      image = Image.create(str);
+      image = new Image(str);
     };
   }
 
@@ -106,7 +106,7 @@ public class Pattern {
 	 * @param url image file URL
    */
   public Pattern(URL url) {
-    image = Image.create(url);
+    image = new Image(url);
   }
 
   /**
@@ -115,7 +115,7 @@ public class Pattern {
    * @param bimg BufferedImage
    */
   public Pattern(BufferedImage bimg) {
-    image = new Image(bimg);
+    image = new Image(bimg, "");
   }
 
   /**
@@ -124,7 +124,7 @@ public class Pattern {
    * @param simg ScreenImage
    */
   public Pattern(ScreenImage simg) {
-    image = new Image(simg.getImage());
+    image = new Image(simg, "");
   }
 
   /**
@@ -143,7 +143,7 @@ public class Pattern {
    * @return the Pattern itself
    */
   public Pattern setFilename(String fileName) {
-    image = Image.create(fileName);
+    image = new Image(fileName);
     return this;
   }
 
@@ -154,7 +154,7 @@ public class Pattern {
    * @return the Pattern itself
    */
   public Pattern setFilename(URL fileURL) {
-    image = Image.create(fileURL);
+    image = new Image(fileURL);
     return this;
   }
 
@@ -267,7 +267,7 @@ public class Pattern {
    * @return the Pattern object itself
    */
   public Pattern setBImage(BufferedImage bimg) {
-    image = new Image(bimg);
+    image = new Image(bimg, "");
     return this;
   }
 
@@ -318,13 +318,13 @@ public class Pattern {
 
   @Override
   public String toString() {
-    String ret = "P(" + image.getName()
-            + (isValid() ? "" : " -- not valid!")
-            + ")";
-    ret += " S: " + similarity;
+    String off = "";
     if (offset.x != 0 || offset.y != 0) {
-      ret += " T: " + offset.x + "," + offset.y;
+      off = " (" + offset.x + "," + offset.y + ")";
     }
+    String ret = String.format("P[%s%s %%%d%s]",
+            image.getName(), (isValid() ? "" : "???"),
+            (int) (similarity * 100), off);
     return ret;
   }
 }

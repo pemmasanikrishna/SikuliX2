@@ -139,14 +139,14 @@ public class ImageLocator {
   }
 
   /**
-   * forwarded to Image.create(filename).get()
+   * forwarded to Image.get()
    *
    * @return a BufferedImage from the given filename or null
    * @deprecated
    */
   @Deprecated
   public static BufferedImage getImage(String filename) {
-    return Image.create(filename).get();
+    return new Image(filename).get();
   }
 
   /***************************

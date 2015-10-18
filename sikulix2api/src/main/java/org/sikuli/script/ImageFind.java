@@ -126,7 +126,7 @@ public class ImageFind implements Iterator<Match>{
     isValid = false;
     shouldCheckLastSeen = Settings.CheckLastSeen;
     if (pprobe instanceof String) {
-      pImage = Image.create((String) pprobe);
+      pImage = new Image((String) pprobe);
       if (pImage.isValid()) {
         isValid = true;
       }
@@ -151,10 +151,10 @@ public class ImageFind implements Iterator<Match>{
       return false;
     }
     if (probe.empty()) {
-      probe = Image.createMat(pImage.get());
+      probe = new Image(pImage.get(), "").getMat();
     }
     checkProbe();
-    if (!owner.isImage()) {
+    if (!owner.inImage()) {
       if (args.length > 0) {
         if (args[0] instanceof Integer) {
           waitingTime = 0.0 + (Integer) args[0];
@@ -251,7 +251,7 @@ public class ImageFind implements Iterator<Match>{
         }
         break;
       } else {
-        if (isInnerFind || owner.isImage()) {
+        if (isInnerFind || owner.inImage()) {
           break;
         }
         else {
@@ -275,7 +275,7 @@ public class ImageFind implements Iterator<Match>{
     Match match = null;
     Finder f;
     Rect r = null;
-    if (owner.isImage()) {
+    if (owner.inImage()) {
       int off = ((int) resizeFactor) + 1;
       r = getSubMatRect(owner.base, (int) res.maxLoc.x, (int) res.maxLoc.y,
                             probe.width(), probe.height(), off);
@@ -287,7 +287,7 @@ public class ImageFind implements Iterator<Match>{
     if (null != f.findInner(probe, similarity)) {
       log(lvl, "check after downsampling: success");
       match = f.next();
-      if (owner.isImage()) {
+      if (owner.inImage()) {
         match.x += r.x;
         match.y += r.y;
       }

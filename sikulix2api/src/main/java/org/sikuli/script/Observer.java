@@ -284,15 +284,11 @@ public class Observer {
     }
     boolean leftToDo = false;
     if (lastImgMat == null) {
-      if (Settings.UseImageFinder) {
-        lastImageMat = new org.opencv.core.Mat();
-      } else {
-        lastImgMat = Image.convertBufferedImageToMat(img.getImage());
-      }
+      lastImageMat = new org.opencv.core.Mat();
       return true;
     }
-    if (Settings.UseImageFinder && lastImageMat.empty()) {
-      lastImageMat = Image.createMat(img.getImage());
+    if (lastImageMat.empty()) {
+      lastImageMat = new Image(img, "").getMat();
       return true;
     }
     for (String name : eventNames.keySet()) {
@@ -311,7 +307,7 @@ public class Observer {
       log(lvl + 1, "update: checking changes");
       Finder f = new Finder(lastImageMat);
       f.setMinChanges(minChanges);
-      org.opencv.core.Mat current = Image.createMat(img.getImage());
+      org.opencv.core.Mat current = new Image(img, "").getMat();
       if (f.hasChanges(current)) {
         //TODO implement ChangeObserver: processing changes
         log(lvl, "TODO: processing changes");

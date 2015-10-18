@@ -87,24 +87,24 @@ public class TextRecognizer {
     WORD, LINE, PARAGRAPH
   };
 
-  public List<Match> listText(ScreenImage simg, Region parent) {
-    return listText(simg, parent, ListTextMode.WORD);
-  }
+//  public List<Match> listText(ScreenImage simg, Region parent) {
+//    return listText(simg, parent, ListTextMode.WORD);
+//  }
 
-  //TODO: support LINE and PARAGRAPH
-  // listText only supports WORD mode now.
-  public List<Match> listText(ScreenImage simg, Region parent, ListTextMode mode) {
-    Mat mat = Image.convertBufferedImageToMat(simg.getImage());
-    OCRWords words = Vision.recognize_as_ocrtext(mat).getWords();
-    List<Match> ret = new LinkedList<Match>();
-    for (int i = 0; i < words.size(); i++) {
-      OCRWord w = words.get(i);
-      Match m = new Match(parent.x + w.getX(), parent.y + w.getY(), w.getWidth(), w.getHeight(),
-              w.getScore(), parent.getScreen(), w.getString());
-      ret.add(m);
-    }
-    return ret;
-  }
+//  //TODO: support LINE and PARAGRAPH
+//  // listText only supports WORD mode now.
+//  public List<Match> listText(ScreenImage simg, Region parent, ListTextMode mode) {
+//    Mat mat = new Image(simg, "").getMat();
+//    OCRWords words = Vision.recognize_as_ocrtext(mat).getWords();
+//    List<Match> ret = new LinkedList<Match>();
+//    for (int i = 0; i < words.size(); i++) {
+//      OCRWord w = words.get(i);
+//      Match m = new Match(parent.x + w.getX(), parent.y + w.getY(), w.getWidth(), w.getHeight(),
+//              w.getScore(), parent.getScreen(), w.getString());
+//      ret.add(m);
+//    }
+//    return ret;
+//  }
 
   public String recognize(ScreenImage simg) {
     BufferedImage img = simg.getImage();
@@ -113,7 +113,8 @@ public class TextRecognizer {
 
   public String recognize(BufferedImage img) {
     if (initSuccess) {
-      Mat mat = Image.convertBufferedImageToMat(img);
+      Mat mat = null;
+      mat.delete();
       return Vision.recognize(mat).trim();
     } else {
       return "";
@@ -127,7 +128,8 @@ public class TextRecognizer {
 
   public String recognizeWord(BufferedImage img) {
     if (initSuccess) {
-      Mat mat = Image.convertBufferedImageToMat(img);
+      Mat mat = null;
+      mat.delete();
       return Vision.recognizeWord(mat).trim();
     } else {
       return "";

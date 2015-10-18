@@ -2792,21 +2792,21 @@ public class RunTime {
 
   protected boolean doTestSetup(String testSetupSource, boolean silent) {
     Region r = Region.create(0, 0, 100, 100);
-    Image img = new Image(r.getScreen().capture(r).getImage());
+    Image img = new Image(r);
     Pattern p = new Pattern(img);
     Finder f = new Finder(img);
     boolean success = null != f.find(p);
     log(lvl, "testSetup: Finder setup with image %s", !success ? "did not work" : "worked");
     if (success &= f.hasNext()) {
-      success = (null != f.find(img.asFile()));
+      success = (null != f.find(img));
       log(lvl, "testSetup: Finder setup with image file %s", !success ? "did not work" : "worked");
       success &= f.hasNext();
       String screenFind = "Screen.find(imagefile)";
       try {
-        ((Screen) r.getScreen()).find(img.asFile());
+        ((Screen) r.getScreen()).find(img);
         log(lvl, "testSetup: %s worked", screenFind);
         screenFind = "repeated Screen.find(imagefile)";
-        ((Screen) r.getScreen()).find(img.asFile());
+        ((Screen) r.getScreen()).find(img);
         log(lvl, "testSetup: %s worked", screenFind);
       } catch (Exception ex) {
         log(lvl, "testSetup: %s did not work", screenFind);

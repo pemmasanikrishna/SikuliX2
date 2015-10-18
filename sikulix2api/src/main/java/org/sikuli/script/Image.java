@@ -795,10 +795,10 @@ public class Image {
 
   @Override
   public String toString() {
-    return String.format(
-            (imageName != null ? imageName : "__UNKNOWN__") + ": (%dx%d)", mwidth, mheight)
-            + (lastSeen == null ? ""
-            : String.format(" seen at (%d, %d) with %.2f", lastSeen.x, lastSeen.y, lastScore));
+    return String.format("I[%s (%dx%d)%s]",
+            (imageName != null ? imageName : "__UNKNOWN__"), mwidth, mheight,
+            (lastSeen == null ? "" : String.format(" at(%d,%d) %%%.2f", 
+                    lastSeen.x, lastSeen.y, (int) (lastScore*100))));
   }
 
 //<editor-fold defaultstate="collapsed" desc="Constructors">
@@ -815,12 +815,6 @@ public class Image {
   
   public Image(String imgName) {
     init(imgName, null, false);
-    URL imgURL = ImagePath.find(imgName);
-    File imgFile = null;
-    if (imgURL != null) {
-      images.add(this);
-      log(lvl, "cvLoad: %s (%dx%d) KB %d", imgFile.getName(), mwidth, mheight, (int) msize/KB);
-    }
   }
   
   public static Image get(String imgName) {
@@ -934,7 +928,6 @@ public class Image {
       imageName = new File(imageName).getName();
     }
     beSilent = silent;
-    load();
   }
   
   private boolean get(String fName, URL imgURL) {
@@ -962,21 +955,23 @@ public class Image {
       }
     }
     if (fURL != null) {
-      img = imageFiles.get(fURL);
+      fileURL = fURL;
+      imageName = fileName;
+      img = imageFiles.get(fileURL);
       if (img != null && null == imageNames.get(img.imageName)) {
-        imageNames.put(img.imageName, fURL);
+        imageNames.put(img.imageName, fileURL);
       }
     }
     if (img == null) {
-      success = img.load();
-      if (img.mat != null) {
+      success = load();
+    } else {
+      if (img.getMat() != null) {
         log(3, "reused: %s (%s)", img.imageName, img.fileURL);
       } else {
-        if (Settings.getImageCache() > 0) {
-        }
+        success = load();
       }
     }
-    img.setIsAbsolute(imgFile.isAbsolute());
+    imageIsAbsolute = imgFile.isAbsolute();
     return success;
   }
   
@@ -998,7 +993,7 @@ public class Image {
         mwidth = mat.width();
         mheight = mat.height();
         msize = mat.channels() * mwidth * mheight;;
-        log(lvl, "loaded: %s (%s)", imageName, fileURL);
+        log(lvl, "loaded: %s\n%s", imageName, fileURL);
         if (isCaching()) {
           int maxMemory = Settings.getImageCache() * MB;
           currentMemoryUp(msize);

@@ -108,7 +108,7 @@ public class ScreenImage {
   
   private void init(Rectangle roi, BufferedImage img) {
     if (img == null) {
-      _img = _reg.captureThis();
+      _img = ((RobotDesktop) _reg.getScreen().getRobot()).captureRegion(_reg.getRect());
       ((Screen) _reg.getScreen()).setlastScreenImage(this);
     } else {
       _img = img;

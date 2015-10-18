@@ -7,10 +7,12 @@
 package org.sikuli.script;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
@@ -70,143 +72,80 @@ public class Finder implements Iterator<Match>{
   private boolean isReusable = false;
   protected boolean isMultiFinder = false;
 
-  public Finder() {
-    init(null, null, null);
+  private Finder() {
   }
 
-  public Finder(Image base) {
-    init(base, null, null);
-  }
-
-  public Finder(IScreen scr) {
-    init(null, scr, null);
-  }
-
-  public Finder(Region reg) {
-    init(null, null, reg);
-  }
-
-  protected Finder(Mat base) {
-    log(3, "init");
-    reset();
-    this.base = base;
-    isImage = true;
-    log(3, "search in: \n%s", base);
-  }
-
-  private void init(Image base, IScreen scr, Region reg) {
-    log(3, "init");
-    if (base != null) {
-      setImage(base);
-    } else if (scr != null) {
-      setScreen(scr);
-    } else if (reg != null) {
-      setRegion(reg);
+  public Finder(Image img) {
+    if (img != null && img.isValid()) {
+      bImage = img;
+      base = img.getMat();
+      isImage = true;
+      init(img);
+    } else {
+      log(-1, "init: invalid image: %s", img);
     }
   }
 
-  private void reset() {
-    firstFind = null;
-    isImage = false;
-    isScreen = false;
-    isRegion = false;
-    screen = null;
-    region = null;
-    bImage = null;
-    base = new Mat();
+  public Finder(Region reg) {
+    if (reg != null) {
+      region = reg;
+      offX = region.x;
+      offY = region.y;
+      isRegion = true;
+      init(reg);
+    } else log(-1, "init: invalid region: %s", reg);
+  }
+  
+  protected Finder(Mat base) {
+    terminate(1, "TODO observe changes");
   }
 
-  public void destroy() {
-    reset();
+  private void init(Object obj) {
+    log(3, "for %s", obj);
   }
 
   public void setIsMultiFinder() {
+    terminate(1, "TODO setIsMultiFinder()");
     base = new Mat();
     isMultiFinder = true;
   }
 
-  public boolean setImage(Image base) {
-    reset();
-    if (base.isValid()) {
-      bImage = base;
-      this.base = Image.createMat(base.get());
-      isImage = true;
-      log(3, "search in: \n%s", base.get());
-    }
+  public boolean setImage(Image img) {
     return isImage;
   }
 
-  public boolean isImage() {
+  public boolean inImage() {
+    return isImage;
+  }
+
+  public boolean setRegion(Region reg) {
+    return isRegion;
+  }
+
+  public boolean inRegion() {
     return isImage;
   }
 
   protected void setBase(BufferedImage bImg) {
-    log(4, "search in: \n%s", bImg);
-    base = Image.createMat(bImg);
-  }
-
-  public boolean setScreen(IScreen scr) {
-    reset();
-    if (scr != null) {
-      screen = scr;
-      isScreen = true;
-      setScreenOrRegion(scr);
-    }
-    return isScreen;
-  }
-
-  public boolean setRegion(Region reg) {
-    reset();
-    if (reg != null) {
-      region = reg;
-      isRegion = true;
-      setScreenOrRegion(reg);
-    }
-    return isRegion;
-  }
-
-  private void setScreenOrRegion(Object reg) {
-    Region r = (Region) reg;
-    MaxTimePerScan = (int) (1000.0 / r.getWaitScanRate());
-    offX = r.x;
-    offY = r.y;
-    log(3, "search in: %s", r);
-  }
-
-  public void setFindTimeout(double t) {
-    waitingTime = t;
+    terminate(1, "TODO setBase(BufferedImage bImg)");
+//    base = new Image(bImg, "").getMat();
   }
 
   public boolean isValid() {
-    if (!isImage && !isScreen && !isRegion) {
-      log(-1, "not yet initialized (not valid Image, Screen nor Region)");
+    if (!isImage && !isRegion) {
       return false;
     }
     return true;
   }
 
-  public String find(Image img) {
-    if (null == imageFind(img)) {
-      return null;
-    } else {
-      return "--fromImageFinder--";
+  public boolean find(Object target) {
+    try {
+      imageFind(evalTarget(target));
+    } catch (IOException ex) {
+      log(-1, "find: Exception: %s", ex.getMessage());
+      return false;
     }
-  }
-
-  public String find(String filenameOrText) {
-    if (null == imageFind(filenameOrText)) {
-      return null;
-    } else {
-      return "--fromImageFinder--";
-    }
-  }
-
-  public String find(Pattern pat) {
-    if (null == imageFind(pat)) {
-      return null;
-    } else {
-      return "--fromImageFinder--";
-    }
+    return true;
   }
 
   public String findText(String text) {
@@ -214,24 +153,19 @@ public class Finder implements Iterator<Match>{
     return null;
   }
 
-  public <PSI> ImageFind search(PSI probe, Object... args) {
-    isReusable = true;
-    return imageFind(probe, args);
-  }
-
-  protected <PSI> ImageFind findInner(PSI probe, double sim) {
-    ImageFind newFind = new ImageFind();
-    newFind.setIsInnerFind();
-    newFind.setSimilarity(sim);
-    if (!newFind.checkFind(this, probe)) {
-      return null;
-    }
-    firstFind = newFind;
-    if (newFind.isValid()) {
-      return newFind.doFind();
-    }
-    return null;
-  }
+//  protected <PSI> ImageFind findInner(PSI probe, double sim) {
+//    ImageFind newFind = new ImageFind();
+//    newFind.setIsInnerFind();
+//    newFind.setSimilarity(sim);
+//    if (!newFind.checkFind(this, probe)) {
+//      return null;
+//    }
+//    firstFind = newFind;
+//    if (newFind.isValid()) {
+//      return newFind.doFind();
+//    }
+//    return null;
+//  }
 
   private <PSI> ImageFind imageFind(PSI probe, Object... args) {
     ImageFind newFind = new ImageFind();
@@ -247,65 +181,17 @@ public class Finder implements Iterator<Match>{
     return imgFind;
   }
 
-  public <PSI> ImageFind searchAny(PSI probe, Object... args) {
-    ImageFind newFind = new ImageFind();
-    newFind.setFinding(ImageFind.FINDING_ANY);
-    isReusable = true;
-    if (!newFind.checkFind(this, probe, args)) {
-      return null;
+  public boolean findAll(Object target) {
+    try {
+      imageFindAll(evalTarget(target), ImageFind.BEST_FIRST, 0);
+    } catch (IOException ex) {
+      log(-1, "findAll: Exception: %s", ex.getMessage());
+      return false;
     }
-    if (newFind.isValid() && !isReusable && firstFind == null) {
-      firstFind = newFind;
-    }
-    ImageFind imgFind = newFind.doFind();
-    log(lvl, "find: success: %s", imgFind.get());
-    return imgFind;
+    return true;
   }
 
-  public <PSI> ImageFind searchSome(PSI probe, Object... args) {
-    return searchSome(probe, ImageFind.SOME_COUNT, args);
-  }
-
-  public <PSI> ImageFind searchSome(PSI probe, int count, Object... args) {
-    isReusable = true;
-    return imageFindAll(probe, ImageFind.BEST_FIRST, count, args);
-  }
-
-  public String findAll(Image img) {
-    if (null == imageFindAll(img, ImageFind.BEST_FIRST, 0)) {
-      return null;
-    } else {
-      return "--fromImageFinder--";
-    }
-  }
-
-  public String findAll(String filenameOrText) {
-    if (null == imageFindAll(filenameOrText, ImageFind.BEST_FIRST, 0)) {
-      return null;
-    } else {
-      return "--fromImageFinder--";
-    }
-  }
-
-  public String findAll(Pattern pat) {
-    if (null == imageFindAll(pat, ImageFind.BEST_FIRST, 0)) {
-      return null;
-    } else {
-      return "--fromImageFinder--";
-    }
-  }
-
-  public <PSI> ImageFind searchAll(PSI probe, Object... args) {
-    isReusable = true;
-    return imageFindAll(probe, ImageFind.BEST_FIRST, 0, args);
-  }
-
-  public <PSI> ImageFind searchAll(PSI probe, int sorted, Object... args) {
-    isReusable = true;
-    return imageFindAll(probe, sorted, 0, args);
-  }
-
-  private <PSI> ImageFind imageFindAll(PSI probe, int sorted, int count, Object... args) {
+  private ImageFind imageFindAll(Pattern probe, int sorted, int count, Object... args) {
     ImageFind newFind = new ImageFind();
     newFind.setFinding(ImageFind.FINDING_ALL);
     newFind.setSorted(sorted);
@@ -357,16 +243,6 @@ public class Finder implements Iterator<Match>{
     return true;
   }
 
-  private static void printMatI(Mat mat) {
-    int[] data = new int[mat.channels()];
-    for (int r = 0; r < mat.rows(); r++) {
-      for (int c = 0; c < mat.cols(); c++) {
-        mat.get(r, c, data);
-        log(lvl, "(%d, %d) %s", r, c, Arrays.toString(data));
-      }
-    }
-  }
-
   public void setMinChanges(int min) {
     minChanges = min;
   }
@@ -389,5 +265,56 @@ public class Finder implements Iterator<Match>{
 
   @Override
   public void remove() {
+  }
+
+  protected Pattern evalTarget(Object target) throws IOException {
+    boolean findingText = false;
+    Image img = null;
+    Pattern pattern = null;
+    if (target instanceof String) {
+      if (((String) target).startsWith("\t") && ((String) target).endsWith("\t")) {
+        findingText = true;
+      } else {
+        img = new Image((String) target);
+        if (img.isValid()) {
+          pattern = new Pattern(img);
+        } else if (img.isText()) {
+          findingText = true;
+        } else {
+          throw new IOException("Region: doFind: Image not useable: " + target.toString());
+        }
+      }
+      if (findingText) {
+        if (TextRecognizer.getInstance() != null) {
+          pattern = new Pattern((String) target, Pattern.Type.TEXT);
+        }
+      }
+    } else if (target instanceof Pattern) {
+      if (((Pattern) target).isValid()) {
+        pattern = (Pattern) target;
+      } else {
+        throw new IOException("Region: doFind: Pattern not useable: " + target.toString());
+      }
+    } else if (target instanceof Image) {
+      if (((Image) target).isValid()) {
+        pattern = new Pattern((Image) target);
+      } else {
+        throw new IOException("Region: doFind: Image not useable: " + target.toString());
+      }
+    }
+    if (null == pattern) {
+      throw new UnsupportedOperationException("Region: doFind: invalid target: " + target.toString());
+    }
+    return pattern;
+  }
+
+  private static void printMatI(Mat mat) {
+    int[] data = new int[mat.channels()];
+    for (int r = 0; r < mat.rows(); r++) {
+      for (int c = 0; c < mat.cols(); c++) {
+        mat.get(r, c, data);
+        log(lvl, "(%d, %d) %s", r, c, Arrays.toString(data));
+      }
+    }
   }
 }

@@ -71,7 +71,7 @@ public class Sikulix {
 
   public static void main(String[] args) throws FindFailed {
 
-    Debug.on(3);
+  //  Debug.on(3);
     Settings.InfoLogs = false;
     Settings.ActionLogs = false;
     rt = RunTime.get();
@@ -86,16 +86,14 @@ public class Sikulix {
       ImagePath.add("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
       Screen s = new Screen();
 
-      Image.create("nbicons");
+      new Image("nbicons");
 
       Settings.CheckLastSeen = false;
 
-      Settings.UseImageFinder = true;
       s.find("nbicons");
 
       Settings.CheckLastSeen = true;
 
-      Settings.UseImageFinder = true;
       s.find("nbicons");
     }
 //</editor-fold>
@@ -111,7 +109,6 @@ public class Sikulix {
     String fnShot = "shot";
     Region reg = scr.get(Region.MIDDLE_BIG);
     
-    Debug.on(3);
 //    App.openLink("http://sikulix.com");
 //    App.focus("Safari"); Debug.on(3);
 //    RunTime.pause(1.0);
@@ -121,8 +118,10 @@ public class Sikulix {
 //    img.getMatOld();
 //    log(lvl, "(%d) BufImage: %s", end(), img);
 //    
+    Debug.on(3);
     start();
     img = new Image("sxpower");
+//    Image.dump(3);
     log(lvl, "(%d) MatImage: %s", end(), img);
     
     scr.find(img);
