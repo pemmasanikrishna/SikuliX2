@@ -355,7 +355,7 @@ public class Image {
   public static Mat makeMat(BufferedImage bImg) {
     Mat aMat = null;
     if (bImg.getType() == BufferedImage.TYPE_INT_RGB) {
-      log(lvl, "makeMat: INT_RGB (%dx%d)", bImg.getWidth(), bImg.getHeight());
+//      log(lvl, "makeMat: INT_RGB (%dx%d)", bImg.getWidth(), bImg.getHeight());
       int[] data = ((DataBufferInt) bImg.getRaster().getDataBuffer()).getData();
       ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4); 
       IntBuffer intBuffer = byteBuffer.asIntBuffer();
@@ -998,10 +998,18 @@ public class Image {
     return success;
   }
   
-  private int resizeMinDownSample = 12;
+  private final int resizeMinDownSample = 12;
   private double resizeFactor;
-  private boolean isPlainColor = false;
-  private boolean isBlack = false;
+  private boolean plainColor = false;
+  private boolean blackColor = false;
+  
+  public boolean isPlainColor() {
+    return plainColor;
+  }
+
+  public boolean isBlack() {
+    return blackColor;
+  }
 
   private void checkProbe() {
     resizeFactor = Math.min(((double) mwidth) / resizeMinDownSample, ((double) mheight) / resizeMinDownSample);
@@ -1011,22 +1019,22 @@ public class Image {
     MatOfDouble pStdDev = new MatOfDouble();
     Core.meanStdDev(mat, pMean, pStdDev);
     double min = 1.0E-5;
-    isPlainColor = false;
+    plainColor = false;
     double sum = 0.0;
     double[] arr = pStdDev.toArray();
     for (int i = 0; i < arr.length; i++) {
       sum += arr[i];
     }
     if (sum < min) {
-      isPlainColor = true;
+      plainColor = true;
     }
     sum = 0.0;
     arr = pMean.toArray();
     for (int i = 0; i < arr.length; i++) {
       sum += arr[i];
     }
-    if (sum < min && isPlainColor) {
-      isBlack = true;
+    if (sum < min && plainColor) {
+      blackColor = true;
     }
   }
   

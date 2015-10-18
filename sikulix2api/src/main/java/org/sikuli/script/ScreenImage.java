@@ -122,7 +122,7 @@ public class ScreenImage {
     _filename = null;
 	}
   
-  public Mat get() {
+  public Mat getMat() {
     return _mat;
   }
   

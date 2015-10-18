@@ -103,8 +103,8 @@ public class Observer {
     return eventCounts.get(name);
   }
 
-  private <PSC> float getSimiliarity(PSC ptn) {
-    float similarity = -1f;
+  private <PSC> double getSimiliarity(PSC ptn) {
+    double similarity = -1f;
     if (ptn instanceof Pattern) {
       similarity = ((Pattern) ptn).getSimilar();
     }

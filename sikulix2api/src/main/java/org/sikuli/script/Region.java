@@ -59,6 +59,26 @@ public class Region {
     logger.fatal(String.format(" *** terminating: " + message, args));
     System.exit(retval);
   }
+
+  private long started;
+
+  private void start() {
+    started = new Date().getTime();
+  }
+
+  private long end() {
+    return end("");
+  }
+
+  private long end(String message) {
+    long ended = new Date().getTime();
+    long diff = ended - started;
+    if (!message.isEmpty()) {
+      logp("[time] %s: %d msec", message, diff);
+    }
+    started = ended;
+    return diff;
+  }
 //</editor-fold>
 
   /**
@@ -180,8 +200,8 @@ public class Region {
   @Override
   public String toString() {
     return String.format("R[%d,%d %dx%d]@%s E:%s, T:%.1f",
-        x, y, w, h, (getScreen() == null ? "Screen null" : getScreen().toStringShort()),
-        throwException ? "Y" : "N", autoWaitTimeout);
+            x, y, w, h, (getScreen() == null ? "Screen null" : getScreen().toStringShort()),
+            throwException ? "Y" : "N", autoWaitTimeout);
   }
 
   /**
@@ -410,7 +430,6 @@ public class Region {
   public Region(int X, int Y, int W, int H) {
     this(X, Y, W, H, null);
     this.rows = 0;
-    log(lvl, "init: (%d, %d, %d, %d)", X, Y, W, H);
   }
 
   /**
@@ -2004,7 +2023,7 @@ public class Region {
     }
     if (!silent) {
       Debug.action("toggle highlight " + toString() + ": " + toEnable
-          + (color != null ? " color: " + color : ""));
+              + (color != null ? " color: " + color : ""));
     }
     if (toEnable) {
       overlay = new ScreenHighlighter(getScreen(), color);
@@ -2044,7 +2063,7 @@ public class Region {
       return highlight((int) secs, color);
     }
     Debug.action("highlight " + toString() + " for " + secs + " secs"
-        + (color != null ? " color: " + color : ""));
+            + (color != null ? " color: " + color : ""));
     ScreenHighlighter _overlay = new ScreenHighlighter(getScreen(), color);
     _overlay.highlight(this, secs);
     return this;
@@ -2232,7 +2251,7 @@ public class Region {
         if (result[1] != null) {
           if (findOne) {
             lastMatch = ((Iterator<Match>) result[1]).next();
-          } else if (findAll){
+          } else if (findAll) {
             lastMatches = (Iterator<Match>) result[1];
           } else {
             lastMatch = (Match) result[1];
@@ -2247,12 +2266,12 @@ public class Region {
         throw new FindFailed(ex.getMessage());
       }
       if ((findOne && lastMatch == null)
-          || (findAll && lastMatches == null)
-          || (findVanish && lastMatch != null)) {
+              || (findAll && lastMatches == null)
+              || (findVanish && lastMatch != null)) {
         if (findVanish) {
-          log(lvl, "%s: did not vanish from %s", result[0], lastMatch);
+          log(lvl, "%s(%d): did not vanish from %s", result[0], result[3], lastMatch);
         } else {
-          log(lvl, "%s: did not appear", result[0]);
+          log(lvl, "%s(%d): did not appear", result[0], result[3]);
         }
       } else {
         if (lastMatch != null) {
@@ -2263,14 +2282,15 @@ public class Region {
           }
         }
         if (findAll) {
-          log(lvl, "%s: at least one appeared", result[0]);
+          log(lvl, "%s(%d): at least one appeared", result[0], result[3]);
         } else if (findOne) {
-          log(lvl, "%s: at %s", result[0], lastMatch);
+          result[1] = lastMatch;
+          log(lvl, "%s(%d): at %s", result[0], result[3], lastMatch);
         } else {
           if (lastMatch != null) {
-            log(lvl, "%s: vanished from %s", result[0], lastMatch);
+            log(lvl, "%s(%d): vanished from %s", result[0], result[3], lastMatch);
           } else {
-            log(lvl, "%s: not seen", result[0]);
+            log(lvl, "%s(%d): not seen", result[0], result[3]);
           }
         }
         break;
@@ -2354,10 +2374,10 @@ public class Region {
   }
 
   /**
-   * finds all occurences of the given Pattern, String or Image in the region<br> 
+   * finds all occurences of the given Pattern, String or Image in the region<br>
    * the returned matches are in the sequence top row to bottom row, left to right<br>
    * only works as expected for elements in a regular grid
-   * 
+   *
    * @param <PSI> Pattern, String or Image
    * @param target to be searched for
    * @return All elements matching as an array of matches
@@ -2381,10 +2401,10 @@ public class Region {
   }
 
   /**
-   * finds all occurences of the given Pattern, String or Image in the region<br> 
+   * finds all occurences of the given Pattern, String or Image in the region<br>
    * the returned matches are in the sequence column left to column right, top to bottom<br>
    * only works as expected for elements in a regular grid
-   * 
+   *
    * @param <PSI> Pattern, String or Image
    * @param target to be searched for
    * @return All elements matching as an array of matches
@@ -2423,8 +2443,8 @@ public class Region {
   }
 
   /**
-   * try to find all given targets in parallel and return the one with the highest score<br> 
-   * 
+   * try to find all given targets in parallel and return the one with the highest score<br>
+   *
    * @param <PSI> Pattern, String or Image
    * @param args one or more of these
    * @return the best match or null if none found
@@ -2504,7 +2524,7 @@ public class Region {
     int subN;
 
     public SubFindRun(Match[] pMArray, int pSubN,
-        ScreenImage pBase, Object pTarget, Region pReg) {
+            ScreenImage pBase, Object pTarget, Region pReg) {
       subN = pSubN;
       base = new Image(pBase, "");
       target = pTarget;
@@ -2539,8 +2559,7 @@ public class Region {
   }
 
   /**
-   * check wether the region is exactly the given image, meaning
-   * same dimension and exact match
+   * check wether the region is exactly the given image, meaning same dimension and exact match
    *
    * @param img image file name
    * @return the match or null if not equal
@@ -2550,8 +2569,7 @@ public class Region {
   }
 
   /**
-   * check wether the region is exactly the given image, meaning
-   * same dimension and exact match
+   * check wether the region is exactly the given image, meaning same dimension and exact match
    *
    * @param img Image object
    * @return the match or null if not equal
@@ -2632,18 +2650,21 @@ public class Region {
 
   //<editor-fold defaultstate="collapsed" desc="find internal methods">
   private enum FindType {
+
     ONE, ALL, VANISH
   }
-  
+
   private <PSI> Object[] doFind(Image base, PSI ptn, double timeout, FindType findType) throws IOException {
     if (Debug.shouldHighlight()) {
       if (this.scr.getW() > w + 20 && this.scr.getH() > h + 20) {
         highlight(2, "#000255000");
       }
     }
+    start();
+    boolean success = false;
     boolean findAll = findType.equals(FindType.ALL);
     boolean findVanish = findType.equals(FindType.VANISH);
-    Object[] result = new Object[]{null, null, null};
+    Object[] result = new Object[]{null, null, null, null};
     Finder finder = null;
     boolean hasMatch = false;
     if (base == null) {
@@ -2660,53 +2681,58 @@ public class Region {
     String begin_s = String.format("%d", begin_t);
     result[0] = (findAll ? "findall_" : (findVanish ? "vanish_" : "appear_")) + begin_s;
     log(lvl, "%s: %.1fs %s %s",
-        result[0], timeout, pattern.getText(), this.toStringShort());
-    
+            result[0], timeout, pattern.getText(), this.toStringShort());
+
     Match matchVanish = null;
     if (findVanish) {
       finder.find(pattern);
       if (finder.hasNext()) {
         matchVanish = finder.next();
       } else {
-        return result;
+        success = true;
+//        return result;
       }
     }
-    do {
-      long before_find = (new Date()).getTime();
-      if (findAll) {
-        finder.findAll(pattern);
-      } else {
-        finder.find(pattern);
-      }
-      if (finder.hasNext()) {
-        if (findVanish) {
-          matchVanish = finder.next();
-          continue;
+    if (!success) {
+      do {
+        long before_find = (new Date()).getTime();
+        if (findAll) {
+          finder.findAll(pattern);
+        } else {
+          finder.find(pattern);
         }
-        hasMatch = true;
-        break;
-      } else if (findVanish || timeoutMilli < MaxTimePerScan) {
-        // should return after first search or if vanished
-        break;
-      }
-      long after_find = (new Date()).getTime();
-      int rest = (int) (MaxTimePerScan - (after_find - before_find));
-      if (rest > 10) {
-        getRobotForRegion().delay(rest);
-      } else {
-        getRobotForRegion().delay(10);
-      }
-    } while (begin_t + timeoutMilli > (new Date()).getTime());
-
+        if (finder.hasNext()) {
+          if (findVanish) {
+            matchVanish = finder.next();
+            continue;
+          }
+          hasMatch = true;
+          break;
+        } else if (findVanish || timeoutMilli < MaxTimePerScan) {
+          // should return after first search or if vanished
+          break;
+        }
+        long after_find = (new Date()).getTime();
+        int rest = (int) (MaxTimePerScan - (after_find - before_find));
+        if (rest > 10) {
+          getRobotForRegion().delay(rest);
+        } else {
+          getRobotForRegion().delay(10);
+        }
+      } while (begin_t + timeoutMilli > (new Date()).getTime());
+    }
     if (hasMatch) {
       result[1] = finder;
     } else if (findVanish) {
       result[1] = matchVanish;
     }
+    result[3] = end();
     return result;
   }
+
   //</editor-fold>
   //<editor-fold defaultstate="collapsed" desc="Observing">
+
   protected Observer getObserver() {
     if (regionObserver == null) {
       regionObserver = new Observer(this);
@@ -2815,12 +2841,12 @@ public class Region {
 
   private <PSIC> String onEvent(PSIC targetThreshhold, Object observer, ObserveEvent.Type obsType) {
     if (observer != null && (observer.getClass().getName().contains("org.python")
-        || observer.getClass().getName().contains("org.jruby"))) {
+            || observer.getClass().getName().contains("org.jruby"))) {
       observer = new ObserverCallBack(observer, obsType);
     }
     String name = Observing.add(this, (ObserverCallBack) observer, obsType, targetThreshhold);
     log(lvl, "%s: observer %s %s: %s with: %s", toStringShort(), obsType,
-        (observer == null ? "" : " with callback"), name, targetThreshhold);
+            (observer == null ? "" : " with callback"), name, targetThreshhold);
     return name;
   }
 
@@ -2863,7 +2889,7 @@ public class Region {
    */
   public String onChange(int threshold, Object observer) {
     return onEvent((threshold > 0 ? threshold : Settings.ObserveMinChangedPixels),
-        observer, ObserveEvent.Type.CHANGE);
+            observer, ObserveEvent.Type.CHANGE);
   }
 
   /**
@@ -2876,7 +2902,7 @@ public class Region {
    */
   public String onChange(int threshold) {
     return onEvent((threshold > 0 ? threshold : Settings.ObserveMinChangedPixels),
-        null, ObserveEvent.Type.CHANGE);
+            null, ObserveEvent.Type.CHANGE);
   }
 
   /**
@@ -2942,7 +2968,7 @@ public class Region {
   public String onChangeDo(int threshold, Object observer) {
     String name = Observing.add(this, (ObserverCallBack) observer, ObserveEvent.Type.CHANGE, threshold);
     log(lvl, "%s: onChange%s: %s minSize: %d", toStringShort(),
-        (observer == null ? "" : " with callback"), name, threshold);
+            (observer == null ? "" : " with callback"), name, threshold);
     return name;
   }
 
@@ -3025,7 +3051,7 @@ public class Region {
     if (observing) {
       observing = false;
       log(lvl, "observe: stopped due to timeout in "
-          + this.toStringShort() + " for " + secs + " seconds");
+              + this.toStringShort() + " for " + secs + " seconds");
     } else {
       log(lvl, "observe: ended successfully: " + this.toStringShort());
       observeSuccess = Observing.hasEvents(this);
@@ -3844,7 +3870,7 @@ public class Region {
   }
 
   private <PFRML> int keyin(PFRML target, String text, int modifiers)
-      throws FindFailed {
+          throws FindFailed {
     if (target != null && 0 == click(target, 0)) {
       return 0;
     }

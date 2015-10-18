@@ -46,17 +46,17 @@ public class Sikulix {
     logger.fatal(String.format(" *** terminating: " + message, args));
     System.exit(retval);
   }
-  
+
   private static long started = 0;
-  
+
   private static void start() {
     started = new Date().getTime();
   }
-    
+
   private static long end() {
     return end("");
   }
-  
+
   private static long end(String message) {
     long ended = new Date().getTime();
     long diff = ended - started;
@@ -66,12 +66,11 @@ public class Sikulix {
     started = ended;
     return diff;
   }
-  
-//</editor-fold>
 
+//</editor-fold>
   public static void main(String[] args) throws FindFailed {
 
-  //  Debug.on(3);
+    //  Debug.on(3);
     Settings.InfoLogs = false;
     Settings.ActionLogs = false;
     rt = RunTime.get();
@@ -108,27 +107,34 @@ public class Sikulix {
     Mat mImg = null;
     String fnShot = "shot";
     Region reg = scr.get(Region.MIDDLE_BIG);
-    
-//    App.openLink("http://sikulix.com");
+
+//  App.openLink("http://sikulix.com");
 //    App.focus("Safari"); Debug.on(3);
 //    RunTime.pause(1.0);
-        
-//    start();
-//    img = Image.create("sxpower");
-//    img.getMatOld();
-//    log(lvl, "(%d) BufImage: %s", end(), img);
-//    
-    Debug.on(3);
     start();
-    img = new Image("sxpower");
+    img = new Image("icon");
 //    Image.dump(3);
     log(lvl, "(%d) MatImage: %s", end(), img);
-    
-    scr.find(img);
+
+    reg = scr;
+//    reg = new Region(0,0,300,300);
+
+    Debug.on(3);
+    logp("**********************************");
+    Match m = reg.find(new Pattern(img).similar(0.995));
+    logp("**********************************");
+    m = reg.find(new Pattern(img).similar(0.995));
+    logp("**********************************");
+    m = reg.find(new Pattern(img).similar(0.995));
+
+//*****************************************    Commands.endNormal(1);
+    System.exit(1);
 //*****************************************    Commands.endNormal(1);
     RunTime.pause(1.0);
     scr.write("#M.w");
-    Debug.off(); App.focus("Brackets"); Debug.on(3);
+    Debug.off();
+    App.focus("Brackets");
+    Debug.on(3);
     System.exit(1);
 
     start();
@@ -136,7 +142,7 @@ public class Sikulix {
 //    sImg = new ScreenImage(reg);
     long end = end();
     if (null != sImg.saveInBundle(fnShot)) {
-      log(lvl, "(%d) Shot: (%dx%d) to bundle::_%s.png", end, 
+      log(lvl, "(%d) Shot: (%dx%d) to bundle::_%s.png", end,
               sImg.width(), sImg.height(), fnShot);
     }
 //*****************************************    Commands.endNormal(1);
@@ -153,7 +159,6 @@ public class Sikulix {
 //      Commands.popup("Hello World\nNothing else to do ( yet ;-)", Sikulix.rt.fSxBaseJar.getName());
 //      System.exit(1);
 //    }
-
     String version = String.format("(%s-%s)", rt.getVersion(), rt.sxBuildStamp);
     File lastSession = new File(rt.fSikulixStore, "LastAPIJavaScript.js");
     String runSomeJS = "";
@@ -161,9 +166,9 @@ public class Sikulix {
       runSomeJS = FileManager.readFileToString(lastSession);
     }
     runSomeJS = Commands.inputText("enter some JavaScript (know what you do - may silently die ;-)"
-        + "\nexample: run(\"git*\") will run the JavaScript showcase from GitHub"
-        + "\nWhat you enter now will be shown the next time.",
-        "API::JavaScriptRunner " + version, 10, 60, runSomeJS);
+            + "\nexample: run(\"git*\") will run the JavaScript showcase from GitHub"
+            + "\nWhat you enter now will be shown the next time.",
+            "API::JavaScriptRunner " + version, 10, 60, runSomeJS);
     if (runSomeJS.isEmpty()) {
       Commands.popup("Nothing to do!", version);
     } else {
@@ -171,8 +176,8 @@ public class Sikulix {
         FileManager.writeStringToFile(runSomeJS, lastSession);
         Runner.runjs(null, null, runSomeJS, null);
         runSomeJS = Commands.inputText("Edit the JavaScript and/or press OK to run it (again)\n"
-            + "Press Cancel to terminate",
-            "API::JavaScriptRunner " + version, 10, 60, runSomeJS);
+                + "Press Cancel to terminate",
+                "API::JavaScriptRunner " + version, 10, 60, runSomeJS);
       }
     }
     System.exit(0);

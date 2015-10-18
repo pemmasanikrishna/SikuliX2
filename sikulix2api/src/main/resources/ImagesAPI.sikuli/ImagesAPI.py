@@ -7,3 +7,4 @@
 "sxpower.png"
 nbicons = "nbicons.png"
 "firefox.png"
+icon = "icon.png"

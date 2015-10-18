@@ -322,9 +322,13 @@ public class Pattern {
     if (offset.x != 0 || offset.y != 0) {
       off = " (" + offset.x + "," + offset.y + ")";
     }
-    String ret = String.format("P[%s%s %%%d%s]",
-            image.getName(), (isValid() ? "" : "???"),
-            (int) (similarity * 100), off);
+    String size = "";
+    if (image != null) {
+      size = String.format("(%dx%d)", image.getWidth(), image.getHeight());
+    }
+    String ret = String.format("P[%s%s%s%%%d%s]",
+            image.getName(), (isValid() ? "" : "???"), size,
+            (int) (similarity * 10000), off);
     return ret;
   }
 }

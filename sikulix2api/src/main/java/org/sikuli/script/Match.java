@@ -284,10 +284,9 @@ public class Match extends Region implements Comparable<Match> {
     } else {
       starget = String.format("C:%d,%d", c.x, c.y);
     }
-    String findTimes = String.format("[%d msec]", lastSearchTime);
-    return String.format("M[%d,%d %dx%d]@S(%s) S:%.2f %s %s", x, y, w, h,
+    return String.format("M[%d,%d %dx%d]@S(%s) %%%d %s", x, y, w, h,
               ((getScreen()== null || !onScreen) ? "?" : getScreen().toStringShort()),
-              simScore, starget, findTimes);
+              (int) (simScore*10000), starget);
   }
 
   @Override
