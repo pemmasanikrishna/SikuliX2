@@ -120,12 +120,14 @@ public class Sikulix {
 //    reg = new Region(0,0,300,300);
 
     Debug.on(3);
+    Pattern pat = new Pattern(img).exact();
+    pat = new Pattern(img).similar(0.999);
     logp("**********************************");
-    Match m = reg.find(new Pattern(img).similar(0.995));
+    Match m = reg.find(pat);
     logp("**********************************");
-    m = reg.find(new Pattern(img).similar(0.995));
+    m = reg.find(pat);
     logp("**********************************");
-    m = reg.find(new Pattern(img).similar(0.995));
+    m = reg.find(pat);
 
 //*****************************************    Commands.endNormal(1);
     System.exit(1);

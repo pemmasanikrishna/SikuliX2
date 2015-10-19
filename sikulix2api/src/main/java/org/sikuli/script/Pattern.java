@@ -326,9 +326,9 @@ public class Pattern {
     if (image != null) {
       size = String.format("(%dx%d)", image.getWidth(), image.getHeight());
     }
-    String ret = String.format("P[%s%s%s%%%d%s]",
+    String ret = String.format("P[%s%s%s%%%.2f%s]",
             image.getName(), (isValid() ? "" : "???"), size,
-            (int) (similarity * 10000), off);
+            similarity * 100, off);
     return ret;
   }
 }
