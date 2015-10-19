@@ -19,6 +19,12 @@ import java.net.URL;
 public class Pattern {
   
   static RunTime runTime = RunTime.get();
+  
+  private static double exactAs = 0.99f;
+  
+  public static void setExactAs(double sim) {
+    exactAs = sim;
+  }
 
   private Image image = null;
   private double similarity = Settings.MinSimilarity;
@@ -206,7 +212,7 @@ public class Pattern {
    * @return the Pattern object itself
    */
   public Pattern exact() {
-    similarity = 0.99f;
+    similarity = exactAs;
     return this;
   }
 

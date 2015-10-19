@@ -210,15 +210,15 @@ public class Finder implements Iterator<Match> {
     Match mFound = null;
     Probe probe = new Probe(pattern);
     if (!useOriginal && Settings.CheckLastSeen && probe.lastSeen != null) {
-//TODO      log(lvl, "doFind: checkLastSeen: trying ...");
+      log(lvl+1, "doFind: checkLastSeen: trying ...");
       Finder lastSeenFinder = new Finder(probe.lastSeen);
       lastSeenFinder.setUseOriginal();
       if (lastSeenFinder.find(new Pattern(probe.img).similar(probe.lastSeenScore - 0.01))) {
-//TODO        log(lvl, "doFind: checkLastSeen: success");
+        log(lvl+1, "doFind: checkLastSeen: success");
         mFound = lastSeenFinder.next();
         success = true;
       } else {
-//TODO        log(lvl, "doFind: checkLastSeen: not found");
+       log(lvl+1, "doFind: checkLastSeen: not found");
       }
     } 
     if (!success) {
@@ -226,31 +226,23 @@ public class Finder implements Iterator<Match> {
         setBase();
       }
       if (!useOriginal && probe.img.getResizeFactor() > resizeMinFactor) {
-//TODO        log(lvl, "doFind: downsampling: trying ...");
         mMinMax = doFindDown(probe, 0, probe.img.getResizeFactor());
       }
       if (mMinMax == null) {
-//TODO        log(lvl, "doFind: trying original size");
         mMinMax = doFindDown(probe, 0, 0.0);
-        if (mMinMax != null && mMinMax.maxVal > probe.similarity - 0.01) {
+        if (mMinMax != null && mMinMax.maxVal > probe.similarity) {
           mFound = new Match((int) mMinMax.maxLoc.x + offX, (int) mMinMax.maxLoc.y + offY,
                   probe.img.getWidth(), probe.img.getHeight(), mMinMax.maxVal);
           success = true;
         }
       } else {
-//TODO        log(lvl, "doFindDown: success: %.2f at (%d, %d)", mMinMax.maxVal);
+        log(lvl+1, "doFindDown: success: %.2f", mMinMax.maxVal);
         Finder checkFinder;
         Rect r = null;
-        if (isImage) {
-          int off = ((int) probe.img.getResizeFactor()) + 1;
-          r = getSubMatRect(base, (int) mMinMax.maxLoc.x, (int) mMinMax.maxLoc.y,
-                  probe.img.getWidth(), probe.img.getHeight(), off);
-          checkFinder = new Finder(base.submat(r));
-        } else {
-          checkFinder = new Finder(
-                  (new Region((int) mMinMax.maxLoc.x + offX, (int) mMinMax.maxLoc.y + offY,
-                          probe.img.getWidth(), probe.img.getHeight())).grow(((int) probe.img.getResizeFactor()) + 1));
-        }
+        int off = ((int) probe.img.getResizeFactor()) + 1;
+        r = getSubMatRect(base, (int) mMinMax.maxLoc.x, (int) mMinMax.maxLoc.y,
+                probe.img.getWidth(), probe.img.getHeight(), off);
+        checkFinder = new Finder(base.submat(r));
         checkFinder.setUseOriginal();
         if (checkFinder.find(probe.pattern)) {
           mFound = checkFinder.next();
@@ -270,12 +262,12 @@ public class Finder implements Iterator<Match> {
   }
 
   private Core.MinMaxLocResult doFindDown(Probe probe, int level, double factor) {
-//    log(lvl, "doFindDown (%d - 1/%.2f)", level, factor * resizeLevels[level]);
     Mat mBase = new Mat();
     Mat mPattern = new Mat();
     Core.MinMaxLocResult mMinMax = null;
     double rfactor;
     if (factor > 0.0) {
+      log(lvl+1, "doFindDown (%d - 1/%.2f)", level, factor * resizeLevels[level]);
       rfactor = factor * resizeLevels[level];
       if (rfactor < resizeMinFactor) {
         return null;
@@ -286,10 +278,11 @@ public class Finder implements Iterator<Match> {
       Imgproc.resize(probe.mat, mPattern, sp, 0, 0, Imgproc.INTER_AREA);
       mMinMax = doFindMatch(probe, mBase, mPattern);
     } else {
+      log(lvl+1, "doFindDown (%d - original)");
       mMinMax = doFindMatch(probe, base, probe.mat);
       return mMinMax;
     }
-    if (mMinMax.maxVal < probe.similarity - 0.1) {
+    if (mMinMax.maxVal < probe.similarity - 0.15) {
       if (level == resizeMaxLevel) {
         return null;
       }

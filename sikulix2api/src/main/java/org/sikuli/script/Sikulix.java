@@ -112,7 +112,7 @@ public class Sikulix {
 //    App.focus("Safari"); Debug.on(3);
 //    RunTime.pause(1.0);
     start();
-    img = new Image("icon");
+    img = new Image("raimanlogo");
 //    Image.dump(3);
     log(lvl, "(%d) MatImage: %s", end(), img);
 
@@ -121,9 +121,13 @@ public class Sikulix {
 
     Debug.on(3);
     Pattern pat = new Pattern(img).exact();
-    pat = new Pattern(img).similar(0.999);
+    pat = new Pattern(img).similar(0.98);
     logp("**********************************");
-    Match m = reg.find(pat);
+    Match m = reg.wait(pat, 0);
+
+//*****************************************    Commands.endNormal(1);
+    System.exit(1);
+
     logp("**********************************");
     m = reg.find(pat);
     logp("**********************************");
