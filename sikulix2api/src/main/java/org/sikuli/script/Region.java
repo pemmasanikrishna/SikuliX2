@@ -9,7 +9,6 @@ package org.sikuli.script;
 import java.awt.Rectangle;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +16,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sikuli.util.Debug;
@@ -39,9 +37,9 @@ public class Region {
   private static void log(int level, String message, Object... args) {
     if (Debug.is(lvl)) {
       message = String.format(message, args).replaceFirst("\\n", "\n          ");
-      if (level == 3) {
+      if (level == lvl) {
         logger.debug(message, args);
-      } else if (level > 3) {
+      } else if (level > lvl) {
         logger.trace(message, args);
       } else if (level == -1) {
         logger.error(message, args);
@@ -200,8 +198,8 @@ public class Region {
   @Override
   public String toString() {
     return String.format("R[%d,%d %dx%d]@%s E:%s, T:%.1f",
-            x, y, w, h, (getScreen() == null ? "Screen null" : getScreen().toStringShort()),
-            throwException ? "Y" : "N", autoWaitTimeout);
+        x, y, w, h, (getScreen() == null ? "Screen null" : getScreen().toStringShort()),
+        throwException ? "Y" : "N", autoWaitTimeout);
   }
 
   /**
@@ -2023,7 +2021,7 @@ public class Region {
     }
     if (!silent) {
       Debug.action("toggle highlight " + toString() + ": " + toEnable
-              + (color != null ? " color: " + color : ""));
+          + (color != null ? " color: " + color : ""));
     }
     if (toEnable) {
       overlay = new ScreenHighlighter(getScreen(), color);
@@ -2063,7 +2061,7 @@ public class Region {
       return highlight((int) secs, color);
     }
     Debug.action("highlight " + toString() + " for " + secs + " secs"
-            + (color != null ? " color: " + color : ""));
+        + (color != null ? " color: " + color : ""));
     ScreenHighlighter _overlay = new ScreenHighlighter(getScreen(), color);
     _overlay.highlight(this, secs);
     return this;
@@ -2266,8 +2264,8 @@ public class Region {
         throw new FindFailed(ex.getMessage());
       }
       if ((findOne && lastMatch == null)
-              || (findAll && lastMatches == null)
-              || (findVanish && lastMatch != null)) {
+          || (findAll && lastMatches == null)
+          || (findVanish && lastMatch != null)) {
         if (findVanish) {
           log(lvl, "%s(%d): did not vanish from %s", result[0], result[3], lastMatch);
         } else {
@@ -2296,7 +2294,7 @@ public class Region {
         break;
       }
       if (!handleFindFailed(target)) {
-        return null;
+        return result;
       }
     }
     return result;
@@ -2524,7 +2522,7 @@ public class Region {
     int subN;
 
     public SubFindRun(Match[] pMArray, int pSubN,
-            ScreenImage pBase, Object pTarget, Region pReg) {
+        ScreenImage pBase, Object pTarget, Region pReg) {
       subN = pSubN;
       base = new Image(pBase, "");
       target = pTarget;
@@ -2681,7 +2679,7 @@ public class Region {
     String begin_s = String.format("%d", begin_t);
     result[0] = (findAll ? "findall_" : (findVanish ? "vanish_" : "appear_")) + begin_s;
     log(lvl, "%s: %.1fs %s %s",
-            result[0], timeout, pattern.getText(), this.toStringShort());
+        result[0], timeout, pattern.getText(), this.toStringShort());
 
     Match matchVanish = null;
     if (findVanish) {
@@ -2690,11 +2688,12 @@ public class Region {
         matchVanish = finder.next();
       } else {
         success = true;
-//        return result;
       }
     }
+    int loopCount = 0;
     if (!success) {
       do {
+        loopCount++;
         long before_find = (new Date()).getTime();
         if (findAll) {
           finder.findAll(pattern);
@@ -2707,20 +2706,26 @@ public class Region {
             continue;
           }
           hasMatch = true;
-          break;
+          success = true;
         } else if (findVanish || timeoutMilli < MaxTimePerScan) {
           // should return after first search or if vanished
-          break;
+          success = true;
         }
-        long after_find = (new Date()).getTime();
-        int rest = (int) (MaxTimePerScan - (after_find - before_find));
-        if (rest > 10) {
-          getRobotForRegion().delay(rest);
+        long findDuration = (new Date()).getTime() - before_find;
+        log(lvl+1, "doFind: searchLoop: %d with %d msec", loopCount, findDuration);
+        if (!success) {
+          int rest = (int) (MaxTimePerScan - (findDuration - before_find));
+          if (rest > 10) {
+            getRobotForRegion().delay(rest);
+          } else {
+            getRobotForRegion().delay(10);
+          }
         } else {
-          getRobotForRegion().delay(10);
+          break;
         }
       } while (begin_t + timeoutMilli > (new Date()).getTime());
     }
+    log(lvl + 1, "doFind: %d searchloops", loopCount);
     if (hasMatch) {
       result[1] = finder;
     } else if (findVanish) {
@@ -2732,7 +2737,6 @@ public class Region {
 
   //</editor-fold>
   //<editor-fold defaultstate="collapsed" desc="Observing">
-
   protected Observer getObserver() {
     if (regionObserver == null) {
       regionObserver = new Observer(this);
@@ -2841,12 +2845,12 @@ public class Region {
 
   private <PSIC> String onEvent(PSIC targetThreshhold, Object observer, ObserveEvent.Type obsType) {
     if (observer != null && (observer.getClass().getName().contains("org.python")
-            || observer.getClass().getName().contains("org.jruby"))) {
+        || observer.getClass().getName().contains("org.jruby"))) {
       observer = new ObserverCallBack(observer, obsType);
     }
     String name = Observing.add(this, (ObserverCallBack) observer, obsType, targetThreshhold);
     log(lvl, "%s: observer %s %s: %s with: %s", toStringShort(), obsType,
-            (observer == null ? "" : " with callback"), name, targetThreshhold);
+        (observer == null ? "" : " with callback"), name, targetThreshhold);
     return name;
   }
 
@@ -2889,7 +2893,7 @@ public class Region {
    */
   public String onChange(int threshold, Object observer) {
     return onEvent((threshold > 0 ? threshold : Settings.ObserveMinChangedPixels),
-            observer, ObserveEvent.Type.CHANGE);
+        observer, ObserveEvent.Type.CHANGE);
   }
 
   /**
@@ -2902,7 +2906,7 @@ public class Region {
    */
   public String onChange(int threshold) {
     return onEvent((threshold > 0 ? threshold : Settings.ObserveMinChangedPixels),
-            null, ObserveEvent.Type.CHANGE);
+        null, ObserveEvent.Type.CHANGE);
   }
 
   /**
@@ -2968,7 +2972,7 @@ public class Region {
   public String onChangeDo(int threshold, Object observer) {
     String name = Observing.add(this, (ObserverCallBack) observer, ObserveEvent.Type.CHANGE, threshold);
     log(lvl, "%s: onChange%s: %s minSize: %d", toStringShort(),
-            (observer == null ? "" : " with callback"), name, threshold);
+        (observer == null ? "" : " with callback"), name, threshold);
     return name;
   }
 
@@ -3051,7 +3055,7 @@ public class Region {
     if (observing) {
       observing = false;
       log(lvl, "observe: stopped due to timeout in "
-              + this.toStringShort() + " for " + secs + " seconds");
+          + this.toStringShort() + " for " + secs + " seconds");
     } else {
       log(lvl, "observe: ended successfully: " + this.toStringShort());
       observeSuccess = Observing.hasEvents(this);
@@ -3870,7 +3874,7 @@ public class Region {
   }
 
   private <PFRML> int keyin(PFRML target, String text, int modifiers)
-          throws FindFailed {
+      throws FindFailed {
     if (target != null && 0 == click(target, 0)) {
       return 0;
     }
