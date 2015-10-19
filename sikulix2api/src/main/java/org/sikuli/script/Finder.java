@@ -58,21 +58,14 @@ public class Finder implements Iterator<Match> {
   }
 //</editor-fold>
 
-  private boolean isImageFinder = true;
-  protected boolean isImage = false;
-  protected Region region = null;
-  protected boolean isRegion = false;
-  protected IScreen screen = null;
-  protected boolean isScreen = false;
-  protected int offX, offY;
-  protected long MaxTimePerScan;
-  private Image bImage = null;
-  protected Mat base = new Mat();
-  private double waitingTime = Settings.AutoWaitTimeout;
-  private int minChanges;
-  private ImageFind firstFind = null;
-  private boolean isReusable = false;
-  protected boolean isMultiFinder = false;
+  private boolean isImage = false;
+
+  private boolean isRegion = false;
+  private Region region = null;
+  private int offX = 0, offY = 0;
+
+  private boolean isMat = false;
+  private Mat base = new Mat();
 
   private static class Probe {
 
@@ -109,10 +102,8 @@ public class Finder implements Iterator<Match> {
 
   public Finder(Image img) {
     if (img != null && img.isValid()) {
-      bImage = img;
       base = img.getMat();
       isImage = true;
-      init(img);
     } else {
       log(-1, "init: invalid image: %s", img);
     }
@@ -124,24 +115,22 @@ public class Finder implements Iterator<Match> {
       offX = region.x;
       offY = region.y;
       isRegion = true;
-      init(reg);
     } else {
       log(-1, "init: invalid region: %s", reg);
     }
   }
 
   protected Finder(Mat base) {
-    terminate(1, "TODO observe changes");
-  }
-
-  private void init(Object obj) {
-//TODO    log(3, "for %s", obj);
+    if (base != null) {
+      this.base = base;
+      isMat = true;
+    } else {
+      log(-1, "init: invalid CV-Mat: %s", base);
+    }
   }
 
   public void setIsMultiFinder() {
     terminate(1, "TODO setIsMultiFinder()");
-    base = new Mat();
-    isMultiFinder = true;
   }
 
   public boolean setImage(Image img) {
@@ -171,7 +160,7 @@ public class Finder implements Iterator<Match> {
     }
     base = region.captureThis().getMat();
   }
-  
+
   public boolean isValid() {
     if (!isImage && !isRegion) {
       return false;
@@ -210,17 +199,17 @@ public class Finder implements Iterator<Match> {
     Match mFound = null;
     Probe probe = new Probe(pattern);
     if (!useOriginal && Settings.CheckLastSeen && probe.lastSeen != null) {
-      log(lvl+1, "doFind: checkLastSeen: trying ...");
+      log(lvl + 1, "doFind: checkLastSeen: trying ...");
       Finder lastSeenFinder = new Finder(probe.lastSeen);
       lastSeenFinder.setUseOriginal();
       if (lastSeenFinder.find(new Pattern(probe.img).similar(probe.lastSeenScore - 0.01))) {
-        log(lvl+1, "doFind: checkLastSeen: success");
+        log(lvl + 1, "doFind: checkLastSeen: success");
         mFound = lastSeenFinder.next();
         success = true;
       } else {
-       log(lvl+1, "doFind: checkLastSeen: not found");
+        log(lvl + 1, "doFind: checkLastSeen: not found");
       }
-    } 
+    }
     if (!success) {
       if (isRegion) {
         setBase();
@@ -228,30 +217,26 @@ public class Finder implements Iterator<Match> {
       if (!useOriginal && probe.img.getResizeFactor() > resizeMinFactor) {
         mMinMax = doFindDown(probe, 0, probe.img.getResizeFactor());
       }
-      if (mMinMax == null) {
+      if (mMinMax != null) {
+        log(lvl + 1, "doFindDown: success: %.2f - now checking", mMinMax.maxVal);
+        Rect r = null;
+        r = getSubMatRect(base, (int) mMinMax.maxLoc.x, (int) mMinMax.maxLoc.y,
+                           probe.img.getWidth(), probe.img.getHeight(), 
+                           ((int) probe.img.getResizeFactor()) + 1);
+        mMinMax = doFindMatch(probe, base.submat(r), probe.mat);
+        if (mMinMax != null && mMinMax.maxVal > probe.similarity) {
+          mFound = new Match((int) mMinMax.maxLoc.x + offX +r.x, (int) mMinMax.maxLoc.y + offY + r.y,
+                    probe.img.getWidth(), probe.img.getHeight(), mMinMax.maxVal);
+          success = true;
+        }
+      }
+      if (!success) {
         mMinMax = doFindDown(probe, 0, 0.0);
         if (mMinMax != null && mMinMax.maxVal > probe.similarity) {
           mFound = new Match((int) mMinMax.maxLoc.x + offX, (int) mMinMax.maxLoc.y + offY,
                   probe.img.getWidth(), probe.img.getHeight(), mMinMax.maxVal);
           success = true;
         }
-      } else {
-        log(lvl+1, "doFindDown: success: %.2f", mMinMax.maxVal);
-        Finder checkFinder;
-        Rect r = null;
-        int off = ((int) probe.img.getResizeFactor()) + 1;
-        r = getSubMatRect(base, (int) mMinMax.maxLoc.x, (int) mMinMax.maxLoc.y,
-                probe.img.getWidth(), probe.img.getHeight(), off);
-        checkFinder = new Finder(base.submat(r));
-        checkFinder.setUseOriginal();
-        if (checkFinder.find(probe.pattern)) {
-          mFound = checkFinder.next();
-          if (isImage) {
-            mFound.x += r.x;
-            mFound.y += r.y;
-          }
-        }
-        success = true;
       }
     }
     if (success) {
@@ -267,7 +252,7 @@ public class Finder implements Iterator<Match> {
     Core.MinMaxLocResult mMinMax = null;
     double rfactor;
     if (factor > 0.0) {
-      log(lvl+1, "doFindDown (%d - 1/%.2f)", level, factor * resizeLevels[level]);
+      log(lvl + 1, "doFindDown (%d - 1/%.2f)", level, factor * resizeLevels[level]);
       rfactor = factor * resizeLevels[level];
       if (rfactor < resizeMinFactor) {
         return null;
@@ -278,7 +263,7 @@ public class Finder implements Iterator<Match> {
       Imgproc.resize(probe.mat, mPattern, sp, 0, 0, Imgproc.INTER_AREA);
       mMinMax = doFindMatch(probe, mBase, mPattern);
     } else {
-      log(lvl+1, "doFindDown (%d - original)");
+      log(lvl + 1, "doFindDown (original)");
       mMinMax = doFindMatch(probe, base, probe.mat);
       return mMinMax;
     }
@@ -350,16 +335,6 @@ public class Finder implements Iterator<Match> {
 
   private ImageFind imageFindAll(Pattern probe, int sorted, int count, Object... args) {
     terminate(1, "imageFindAll()");
-    ImageFind newFind = new ImageFind();
-//  newFind.setFinding(ImageFind.FINDING_ALL);
-//  newFind.setSorted(sorted);
-//    if (count > 0) {
-//      newFind.setCount(count);
-//    }
-    if (newFind.isValid() && !isReusable && firstFind == null) {
-      firstFind = newFind;
-    }
-//    ImageFind imgFind = newFind.doFind();
     return null;
   }
 
@@ -398,7 +373,7 @@ public class Finder implements Iterator<Match> {
   }
 
   public void setMinChanges(int min) {
-    minChanges = min;
+    terminate(1, "setMinChanges");
   }
 
   @Override
