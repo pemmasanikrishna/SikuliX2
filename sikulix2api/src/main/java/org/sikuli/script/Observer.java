@@ -202,16 +202,17 @@ public class Observer {
       finder = new Finder(observedRegion);
       finder.setIsMultiFinder();
       lastSearchTime = (new Date()).getTime();
-      now = (new Date()).getTime();
-      finder.find(img);
-      if (finder.hasNext()) {
-        match = finder.next();
-        match.setTimes(0, now - lastSearchTime);
-        if (match.getScore() >= getSimiliarity(ptn)) {
-          hasMatch = true;
-          img.setLastSeen(match.getRect(), match.getScore());
-        }
-      }
+      now = (new Date()).getTime(); 
+      observedRegion.terminate(1, "Observer.checkPatterns");
+//      finder.find(img);
+//      if (finder.hasNext()) {
+//        match = finder.next();
+//        match.setTimes(0, now - lastSearchTime);
+//        if (match.getScore() >= getSimiliarity(ptn)) {
+//          hasMatch = true;
+//          img.setLastSeen(match.getRect(), match.getScore());
+//        }
+//      }
       if (hasMatch) {
         eventMatches.put(name, match);
         log(lvl + 1, "(%s): %s match: %s in:%s", eventTypes.get(name), ptn.toString(),

@@ -6,6 +6,7 @@
  */
 package org.sikuli.script;
 
+import java.awt.Rectangle;
 import org.sikuli.util.Settings;
 import org.sikuli.natives.FindResult;
 
@@ -89,6 +90,11 @@ public class Match extends Region implements Comparable<Match> {
     init(reg.x, reg.y, reg.w, reg.h, reg.getScreen());
   }
   
+	public Match(Rectangle reg, double score) {
+    init(reg.x, reg.y, reg.width, reg.height, null);
+    simScore = score;
+  }
+
   private Match(Match m, IScreen parent) {
     init(m.x, m.y, m.w, m.h, parent);
     copy(m);
@@ -297,17 +303,8 @@ public class Match extends Region implements Comparable<Match> {
 
 	@Override
 	public String toJSON() {
-		int tx = 0;
-		int ty = 0;
-		if (target == null) {
-			tx = getCenter().x;
-			ty = getCenter().y;
-		} else {
-			tx = target.x;
-			ty = target.y;
-		}
-		long intScore = Math.round(simScore * 100);
-		return String.format("[\"M\", %d, %d, %d, %d, %d, %d, %d]", x, y, w, h, intScore, tx, ty);
+		String strTarget = target == null ? "" : String.format(", [%d, %d]", target.x, target.y);
+		return String.format("[\"M\", [%d, %d, %d, %d], %.4f%s]", x, y, w, h, simScore, strTarget);
 	}
 
 	/**

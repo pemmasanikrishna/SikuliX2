@@ -788,6 +788,16 @@ public class Image {
                     lastSeen.x, lastSeen.y, (int) (lastScore*100))));
   }
 
+  public String toJSON(boolean withLastSeen) {
+    return String.format("[\"I\", \"%s\", %d, %d%s]",
+            (imageName != null ? imageName : "__UNKNOWN__"), mwidth, mheight,
+            (withLastSeen && lastSeen != null) ? ", " + new Match(lastSeen, lastScore).toJSON() : "");
+  }
+  
+  public String toJSON() {
+    return toJSON(true);
+  }
+
 //<editor-fold defaultstate="collapsed" desc="Constructors">
   public boolean isValid() {
     return fileURL != null || imageName.contains(isBImg);

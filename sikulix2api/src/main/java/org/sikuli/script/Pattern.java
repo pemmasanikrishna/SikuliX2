@@ -337,4 +337,19 @@ public class Pattern {
             similarity * 100, off);
     return ret;
   }
+
+  public String toJSON(boolean withLastSeen) {
+    String off = "";
+    if (offset.x != 0 || offset.y != 0) {
+      off = " (" + offset.x + "," + offset.y + ")";
+    }
+    String ret = String.format("[\"P\", %s, %.4f%s]",
+            (isValid() ? image.toJSON(withLastSeen) : "null"), similarity, off);
+    return ret;
+  }
+  
+    public String toJSON() {
+      return toJSON(true);
+    }
+
 }

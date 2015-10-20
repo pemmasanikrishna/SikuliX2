@@ -2791,16 +2791,16 @@ public class RunTime {
   }
 
   protected boolean doTestSetup(String testSetupSource, boolean silent) {
+    terminate(1, "doTestSetup");
     Region r = Region.create(0, 0, 100, 100);
     Image img = new Image(r);
     Pattern p = new Pattern(img);
     Finder f = new Finder(img);
-    boolean success = f.find(p);
+    boolean success = f.find(p, new Finder.Found(f));
     log(lvl, "testSetup: Finder setup with image %s", !success ? "did not work" : "worked");
-    if (success &= f.hasNext()) {
-      success = f.find(img);
+    if (success) {
+      success = f.find(img, new Finder.Found(f));
       log(lvl, "testSetup: Finder setup with image file %s", !success ? "did not work" : "worked");
-      success &= f.hasNext();
       String screenFind = "Screen.find(imagefile)";
       try {
         ((Screen) r.getScreen()).find(img);

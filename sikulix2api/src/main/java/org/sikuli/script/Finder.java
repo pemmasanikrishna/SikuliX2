@@ -6,11 +6,11 @@
  */
 package org.sikuli.script;
 
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -20,13 +20,15 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Range;
 import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Settings;
 
-public class Finder implements Iterator<Match> {
+public class Finder {
 
   static RunTime runTime = RunTime.get();
 
@@ -59,16 +61,18 @@ public class Finder implements Iterator<Match> {
   }
 //</editor-fold>
 
+  private static final double downSimDiff = 0.15;
+
   private boolean isImage = false;
+  private Image image = null;
 
   private boolean isRegion = false;
   private Region region = null;
   private int offX = 0, offY = 0;
 
   private boolean isMat = false;
+
   private Mat base = new Mat();
-  
-  private static final double downSimDiff = 0.15;
 
   private static class Probe {
 
@@ -79,7 +83,6 @@ public class Finder implements Iterator<Match> {
     public Mat mat = null;
     public Region lastSeen = null;
     public double lastSeenScore = 0;
-    public Core.MinMaxLocResult downResult = null;
 
     private boolean valid = false;
 
@@ -87,7 +90,7 @@ public class Finder implements Iterator<Match> {
       if (pattern.isValid()) {
         this.pattern = pattern;
         similarity = pattern.getSimilar();
-        downSim = ((int) ((similarity - downSimDiff) * 100))/100;
+        downSim = ((int) ((similarity - downSimDiff) * 100)) / 100.0;
         img = pattern.getImage();
         mat = img.getMat();
         if (null != img.getLastSeen()) {
@@ -99,6 +102,106 @@ public class Finder implements Iterator<Match> {
 
     public boolean isValid() {
       return valid;
+    }
+  }
+
+  public static class Found implements Iterator<Match> {
+
+    public String name = "";
+    public boolean success = false;
+    public Region.FindType type = Region.FindType.ONE;
+
+    public Region region = null;
+    private int baseX = 0;
+    private int baseY = 0;
+    public Image image = null;
+    public boolean inImage = false;
+
+    public Mat base = null;
+
+    public Pattern pattern = null;
+    public long timeout = 0;
+    public long elapsed = -1;
+    public Match match = null;
+
+    public Finder finder = null;
+
+    public boolean isIterator = false;
+    public Mat result;
+    private double currentScore = -1;
+    private int currentX = -1;
+    private int currentY = -1;
+    private int width = 0;
+    private int height = 0;
+    private Core.MinMaxLocResult mRes = null;
+
+    @Override
+    public synchronized boolean hasNext() {
+      return hasNext(true);
+    }
+    
+    public synchronized boolean hasNext(boolean withTrace) {
+      boolean success = false;
+      if (currentScore < 0) {
+        if (currentScore < -0.5) {
+          width = pattern.getImage().getWidth();
+          height = pattern.getImage().getHeight();
+        } else if (currentScore < 0) {
+          int newX = Math.max(currentX - width, 0);
+          int newY = Math.max(currentY - height, 0);
+          int newXX = Math.min(newX + 2 * width, result.cols());
+          int newYY = Math.min(newY + 2 * height, result.rows());
+          result.colRange(newX, newXX).rowRange(newY, newYY).setTo(new Scalar(0f));
+        }
+        mRes = Core.minMaxLoc(result);
+        currentScore = mRes.maxVal;
+        currentX = baseX + (int) mRes.maxLoc.x;
+        currentY = baseY + (int) mRes.maxLoc.y;
+      }
+      if (currentScore > pattern.getSimilar()) {
+        success = true;
+      }
+      if (withTrace) {
+        log(lvl + 1, "hasNext: %.4f (%d, %d)", currentScore, currentX, currentY);
+      }
+      return success;
+    }
+
+    @Override
+    public synchronized Match next() {
+      Match match = null;
+      if (hasNext(false)) {
+        match = new Match(new Rectangle(currentX, currentY, width, height), currentScore);
+        currentScore = -0.5;
+      }
+      log(lvl + 1, "next: %s", match == null ? "no match" : match.toJSON());
+      return match;
+    }
+
+    public Found(Finder fndr) {
+      inImage = fndr.isImage;
+      region = fndr.region;
+      image = fndr.image;
+      if (!inImage) {
+        baseX = region.x;
+        baseY = region.y;
+      }
+      finder = fndr;
+    }
+
+    public String toJSON() {
+      String template = "{name:[\"%s\", \"%s\"], elapsed:%s, pattern:%s, %s:%s, match:%s}";
+      String inWhat = inImage ? "in_image" : "in_region";
+      String inWhatJSON = inImage ? image.toJSON(false) : region.toJSON();
+      String[] nameParts = name.split("_");
+      String found = String.format(template, nameParts[0], nameParts[1], elapsed,
+          pattern.toJSON(false), inWhat, inWhatJSON, match.toJSON());
+      return found;
+    }
+
+    @Override
+    public String toString() {
+      return toJSON();
     }
   }
 
@@ -175,14 +278,23 @@ public class Finder implements Iterator<Match> {
     return true;
   }
 
-  public boolean find(Object target) {
+  public boolean find(Object target, Found found) {
     try {
-      doFind(evalTarget(target));
+      doFind(evalTarget(target), found);
     } catch (IOException ex) {
       log(-1, "find: Exception: %s", ex.getMessage());
-      return false;
     }
-    return true;
+    return found.success;
+  }
+
+  public boolean findAll(Object target, Found found) {
+    try {
+      found.type = Region.FindType.ALL;
+      doFind(evalTarget(target), found);
+    } catch (IOException ex) {
+      log(-1, "findAll: Exception: %s", ex.getMessage());
+    }
+    return found.success;
   }
 
   public String findText(String text) {
@@ -191,7 +303,7 @@ public class Finder implements Iterator<Match> {
   }
 
   private final double resizeMinFactor = 1.5;
-  private final float[] resizeLevels = new float[]{1f, 0.4f};
+  private final double[] resizeLevels = new double[]{1f, 0.4f};
   private int resizeMaxLevel = resizeLevels.length - 1;
   private double resizeMinSim = 0.8;
   private boolean useOriginal = false;
@@ -200,18 +312,23 @@ public class Finder implements Iterator<Match> {
     useOriginal = true;
   }
 
-  private boolean doFind(Pattern pattern) {
+  private void doFind(Pattern pattern, Found found) {
     boolean success = false;
     long begin_t = 0;
+    Mat result = new Mat();
     Core.MinMaxLocResult mMinMax = null;
     Match mFound = null;
     Probe probe = new Probe(pattern);
-    if (!useOriginal && Settings.CheckLastSeen && probe.lastSeen != null) {
+    found.base = base;
+    boolean isIterator = Region.FindType.ALL.equals(found.type);
+    if (!isIterator && !useOriginal && Settings.CheckLastSeen && probe.lastSeen != null) {
+      // ****************************** check last seen
       begin_t = new Date().getTime();
       Finder lastSeenFinder = new Finder(probe.lastSeen);
       lastSeenFinder.setUseOriginal();
-      if (lastSeenFinder.find(new Pattern(probe.img).similar(probe.lastSeenScore - 0.01))) {
-        mFound = lastSeenFinder.next();
+      lastSeenFinder.find(new Pattern(probe.img).similar(probe.lastSeenScore - 0.01), found);
+      if (found.match != null) {
+        mFound = found.match;
         success = true;
         log(lvl + 1, "doFind: checkLastSeen: success %d msec", new Date().getTime() - begin_t);
       } else {
@@ -220,84 +337,75 @@ public class Finder implements Iterator<Match> {
     }
     if (!success) {
       if (isRegion) {
-        log(lvl+1, "doFind: capture: %d msec", setBase());
+        log(lvl + 1, "doFind: capture: %d msec", setBase());
       }
-      if (!useOriginal && probe.img.getResizeFactor() > resizeMinFactor) {
-        mMinMax = doFindDown(probe, 0, probe.img.getResizeFactor());
-      }
-      if (mMinMax != null) {
+      double rfactor = 0;
+      if (!isIterator && !useOriginal && probe.img.getResizeFactor() > resizeMinFactor) {
+        // ************************************************* search in downsized
         begin_t = new Date().getTime();
-        Rect r = null;
-        r = getSubMatRect(base, (int) mMinMax.maxLoc.x, (int) mMinMax.maxLoc.y,
-                           probe.img.getWidth(), probe.img.getHeight(), 
-                           ((int) probe.img.getResizeFactor()) + 1);
-        mMinMax = doFindMatch(probe, base.submat(r), probe.mat);
-        if (mMinMax != null && mMinMax.maxVal > probe.similarity) {
-          mFound = new Match((int) mMinMax.maxLoc.x + offX +r.x, (int) mMinMax.maxLoc.y + offY + r.y,
-                    probe.img.getWidth(), probe.img.getHeight(), mMinMax.maxVal);
+        double imgFactor = probe.img.getResizeFactor();
+        Size sb, sp;
+        Mat mBase = new Mat(), mPattern = new Mat();
+        result = null;
+        for (double factor : resizeLevels) {
+          rfactor = factor * imgFactor;
+          sb = new Size(base.cols() / rfactor, base.rows() / rfactor);
+          sp = new Size(probe.mat.cols() / rfactor, probe.mat.rows() / rfactor);
+          Imgproc.resize(base, mBase, sb, 0, 0, Imgproc.INTER_AREA);
+          Imgproc.resize(probe.mat, mPattern, sp, 0, 0, Imgproc.INTER_AREA);
+          result = doFindMatch(probe, mBase, mPattern);
+          mMinMax = Core.minMaxLoc(result);
+          if (mMinMax.maxVal > probe.downSim) {
+            break;
+          }
+        }
+        log(lvl + 1, "doFindDown: %d msec", new Date().getTime() - begin_t);
+      }
+      if (!isIterator && mMinMax != null) {
+        // ************************************* check after downsized success
+        int maxLocX = (int) (mMinMax.maxLoc.x * rfactor);
+        int maxLocY = (int) (mMinMax.maxLoc.y * rfactor);
+        begin_t = new Date().getTime();
+        int margin = ((int) probe.img.getResizeFactor()) + 1;
+        Rect r = new Rect(Math.max(0, maxLocX - margin), Math.max(0, maxLocY - margin),
+            Math.min(probe.img.getWidth() + 2 * margin, base.width()),
+            Math.min(probe.img.getHeight() + 2 * margin, base.height()));
+        result = doFindMatch(probe, base.submat(r), probe.mat);
+        mMinMax = Core.minMaxLoc(result);
+        if (mMinMax.maxVal > probe.similarity) {
+          mFound = new Match((int) mMinMax.maxLoc.x + offX + r.x, (int) mMinMax.maxLoc.y + offY + r.y,
+              probe.img.getWidth(), probe.img.getHeight(), mMinMax.maxVal);
           success = true;
         }
-        log(lvl + 1, "doFind: check after doFindDown %%%.2f(%%%.2f) %d msec", 
-                      mMinMax.maxVal * 100, probe.similarity * 100, new Date().getTime() - begin_t);
+        log(lvl + 1, "doFind: check after doFindDown %%%.2f(%%%.2f) %d msec",
+            mMinMax.maxVal * 100, probe.similarity * 100, new Date().getTime() - begin_t);
       }
-      if (!success && useOriginal) {
+      if (isIterator || (!success && useOriginal)) {
+        // ************************************** search in original 
         begin_t = new Date().getTime();
-        mMinMax = doFindMatch(probe, base, probe.mat);
+        result = doFindMatch(probe, base, probe.mat);
+        mMinMax = Core.minMaxLoc(result);
         if (mMinMax != null && mMinMax.maxVal > probe.similarity) {
           mFound = new Match((int) mMinMax.maxLoc.x + offX, (int) mMinMax.maxLoc.y + offY,
-                  probe.img.getWidth(), probe.img.getHeight(), mMinMax.maxVal);
+              probe.img.getWidth(), probe.img.getHeight(), mMinMax.maxVal);
           success = true;
         }
         if (!useOriginal) {
-          log(lvl+1, "doFind: search in original: %d msec", new Date().getTime() - begin_t);
+          log(lvl + 1, "doFind: search in original: %d msec", new Date().getTime() - begin_t);
         }
       }
     }
     if (success) {
-      set(mFound);
       probe.img.setLastSeen(mFound.getRect(), mFound.getScore());
+      found.match = mFound;
+      if (Region.FindType.ALL.equals(found.type)) {
+        found.result = result;
+      }
     }
-    return success;
+    found.success = success;
   }
 
-  private Core.MinMaxLocResult doFindDown(Probe probe, int level, double factor) {
-    long begin_t = new Date().getTime();
-    Mat mBase = new Mat();
-    Mat mPattern = new Mat();
-    Core.MinMaxLocResult mMinMax = null;
-    double rfactor;
-    rfactor = factor * resizeLevels[level];
-    if (rfactor < resizeMinFactor) {
-      return null;
-    }
-    Size sb = new Size(base.cols() / rfactor, base.rows() / factor);
-    Size sp = new Size(probe.mat.cols() / rfactor, probe.mat.rows() / factor);
-    Imgproc.resize(base, mBase, sb, 0, 0, Imgproc.INTER_AREA);
-    Imgproc.resize(probe.mat, mPattern, sp, 0, 0, Imgproc.INTER_AREA);
-    mMinMax = doFindMatch(probe, mBase, mPattern);
-    log(lvl + 1, "doFindDown (%d - 1/%.2f - %%%.2f(%.0f))", 
-                  level, factor * resizeLevels[level], mMinMax.maxVal * 100, probe.downSim * 100);
-    if (mMinMax.maxVal < probe.downSim) {
-      if (level == resizeMaxLevel) {
-        log(lvl+1, "doFindDown: %d msec", new Date().getTime() - begin_t);
-        return null;
-      }
-      if (level == 0) {
-        probe.downResult = null;
-      }
-      level++;
-      log(lvl+1, "doFindDown: %d msec", new Date().getTime() - begin_t);
-      doFindDown(probe, level, factor);
-    } else {
-      mMinMax.maxLoc.x *= rfactor;
-      mMinMax.maxLoc.y *= rfactor;
-      log(lvl+1, "doFindDown: %d msec", new Date().getTime() - begin_t);
-      return mMinMax;
-    }
-    return null;
-  }
-
-  private Core.MinMaxLocResult doFindMatch(Probe probe, Mat base, Mat target) {
+  private Mat doFindMatch(Probe probe, Mat base, Mat target) {
     Mat res = new Mat();
     Mat bi = new Mat();
     Mat pi = new Mat();
@@ -314,7 +422,7 @@ public class Finder implements Iterator<Match> {
       Imgproc.matchTemplate(bi, pi, res, Imgproc.TM_SQDIFF_NORMED);
       Core.subtract(Mat.ones(res.size(), CvType.CV_32F), res, res);
     }
-    return Core.minMaxLoc(res);
+    return res;
   }
 
   private static Rect getSubMatRect(Mat mat, int x, int y, int w, int h, int margin) {
@@ -323,22 +431,6 @@ public class Finder implements Iterator<Match> {
     w = Math.min(w + 2 * margin, mat.width() - x);
     h = Math.min(h + 2 * margin, mat.height() - y);
     return new Rect(x, y, w, h);
-  }
-
-  private List<Match> matches = Collections.synchronizedList(new ArrayList<Match>());
-
-  private Match set(Match m) {
-    if (matches.size() > 0) {
-      matches.set(0, m);
-    } else {
-      matches.add(m);
-    }
-    return m;
-  }
-
-  public boolean findAll(Object target) {
-    terminate(1, "not implemented: findAll");
-    return true;
   }
 
   public boolean hasChanges(Mat current) {
@@ -377,23 +469,6 @@ public class Finder implements Iterator<Match> {
 
   public void setMinChanges(int min) {
     terminate(1, "setMinChanges");
-  }
-
-  @Override
-  public boolean hasNext() {
-    return matches.size() > 0;
-  }
-
-  @Override
-  public Match next() {
-    if (hasNext()) {
-      return matches.get(0);
-    }
-    return null;
-  }
-
-  @Override
-  public void remove() {
   }
 
   protected Pattern evalTarget(Object target) throws IOException {

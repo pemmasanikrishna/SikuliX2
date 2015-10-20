@@ -6,6 +6,7 @@ package org.sikuli.script;
 
 import java.io.File;
 import java.util.Date;
+import java.util.Iterator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Mat;
@@ -105,6 +106,7 @@ public class Sikulix {
     Mat mImg = null;
     String fnShot = "shot";
     Region reg = scr.get(Region.MIDDLE_BIG);
+    Match m;
 
 //  App.openLink("http://sikulix.com");
 //    App.focus("Safari"); Debug.on(3);
@@ -120,17 +122,19 @@ public class Sikulix {
 
     Debug.on(3);
     Pattern pat = new Pattern(img).exact();
-//    pat = new Pattern(img).similar(0.9709);
+    pat = new Pattern(img).similar(0.9709);
     logp("**********************************");
-    Match m = reg.wait(pat, 0);
-    m.highlight(2);
+    Iterator<Match> ms = reg.findAll(pat);
+    while (ms.hasNext()) {
+      ms.next().highlight(1);
+    }
+    ms.next();
+//*****************************************    Commands.endNormal(1);
+    System.exit(1);
 
     logp("**********************************");
     m = reg.find(pat);
     m.highlight(2);
-
-//*****************************************    Commands.endNormal(1);
-    System.exit(1);
 
     logp("**********************************");
     m = reg.find(pat);

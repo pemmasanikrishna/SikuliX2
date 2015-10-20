@@ -2229,31 +2229,29 @@ public class Region {
    * @throws FindFailed if the Find operation finally failed
    */
   public <PSI> Match wait(PSI target, double timeout) throws FindFailed {
-    Object[] result = doWait(target, timeout, FindType.ONE);
-    return (Match) result[1];
+    Finder.Found found = doWait(target, timeout, FindType.ONE);
+    return found.match;
   }
 
-  private <PSI> Object[] doWait(PSI target, double timeout, FindType findType) throws FindFailed {
+  private <PSI> Finder.Found doWait(PSI target, double timeout, FindType findType) throws FindFailed {
     boolean findAll = findType.equals(FindType.ALL);
     boolean findVanish = findType.equals(FindType.VANISH);
     boolean findOne = findType.equals(FindType.ONE);
-    Object[] result = null;
+    Finder.Found found = null;
     lastMatch = null;
     lastMatches = null;
     while (true) {
       try {
-        result = doFind(null, target, timeout, findType);
-        if (result == null) {
+        found = doFind(null, target, timeout, findType);
+        if (found == null) {
           return null;
         }
-        if (result[1] != null) {
-          if (findOne) {
-            lastMatch = ((Iterator<Match>) result[1]).next();
+        if (found.success) {
+          if (findOne || findVanish) {
+            lastMatch = found.match;
           } else if (findAll) {
-            lastMatches = (Iterator<Match>) result[1];
-          } else {
-            lastMatch = (Match) result[1];
-          }
+            lastMatches = found;
+          } 
         }
       } catch (Exception ex) {
         if (ex instanceof IOException) {
@@ -2267,9 +2265,9 @@ public class Region {
           || (findAll && lastMatches == null)
           || (findVanish && lastMatch != null)) {
         if (findVanish) {
-          log(lvl, "%s(%d): did not vanish from %s", result[0], result[3], lastMatch);
+          log(lvl, "%s(%d): did not vanish from %s", found.name, found.elapsed, lastMatch);
         } else {
-          log(lvl, "%s(%d): did not appear", result[0], result[3]);
+          log(lvl, "%s(%d): did not appear", found.name, found.elapsed);
         }
       } else {
         if (lastMatch != null) {
@@ -2280,24 +2278,24 @@ public class Region {
           }
         }
         if (findAll) {
-          log(lvl, "%s(%d): at least one appeared", result[0], result[3]);
+          log(lvl, "%s(%d): at least one appeared", found.name, found.elapsed);
         } else if (findOne) {
-          result[1] = lastMatch;
-          log(lvl, "%s(%d): at %s", result[0], result[3], lastMatch);
+          log(lvl, "%s(%d): at %s", found.name, found.elapsed, lastMatch);
         } else {
           if (lastMatch != null) {
-            log(lvl, "%s(%d): vanished from %s", result[0], result[3], lastMatch);
+            log(lvl, "%s(%d): vanished from %s", found.name, found.elapsed, lastMatch);
           } else {
-            log(lvl, "%s(%d): not seen", result[0], result[3]);
+            log(lvl, "%s(%d): not seen", found.name, found.elapsed);
           }
         }
         break;
       }
       if (!handleFindFailed(target)) {
-        return result;
+        return found;
       }
     }
-    return result;
+    log(lvl+1, found.toJSON());
+    return found;
   }
 
   /**
@@ -2335,13 +2333,13 @@ public class Region {
    * @return the match (null if not found or image file missing)
    */
   public <PSI> Match exists(PSI target, double timeout) {
-    Object[] result;
+    Finder.Found found;
     try {
-      result = doWait(target, timeout, FindType.ONE);
+      found = doWait(target, timeout, FindType.ONE);
     } catch (FindFailed ex) {
       return null;
     }
-    return (Match) result[1];
+    return found.match;
   }
 
   /**
@@ -2353,8 +2351,7 @@ public class Region {
    * @throws FindFailed if the Find operation fails or does not succeed within autoWaitTimeout
    */
   public <PSI> Iterator<Match> findAll(PSI target) throws FindFailed {
-    Object[] result = doWait(target, autoWaitTimeout, FindType.ALL);
-    return (Iterator<Match>) result[1];
+    return waitAll(target, autoWaitTimeout);
   }
 
   /**
@@ -2367,8 +2364,8 @@ public class Region {
    * @throws FindFailed if the Find operation fails or does not succeed within timeout
    */
   public <PSI> Iterator<Match> waitAll(PSI target, double timeout) throws FindFailed {
-    Object[] result = doWait(target, timeout, FindType.ALL);
-    return (Iterator<Match>) result[1];
+    Finder.Found found = doWait(target, timeout, FindType.ALL);
+    return found;
   }
 
   /**
@@ -2533,10 +2530,10 @@ public class Region {
     @Override
     public void run() {
       try {
-        Object[] result = reg.doFind(base, target, 0, FindType.ONE);
+        Finder.Found found = reg.doFind(base, target, 0, FindType.ONE);
         mArray[subN] = null;
-        if (result != null && result[1] != null) {
-          mArray[subN] = (Match) result[1];
+        if (found.success && found.match != null) {
+          mArray[subN] = found.match;
         }
       } catch (Exception ex) {
         log(-1, "findAnyCollect: image file not found:\n", target);
@@ -2636,23 +2633,23 @@ public class Region {
    * @return true if target vanishes, false otherwise and if imagefile is missing.
    */
   public <PSI> boolean waitVanish(PSI target, double timeout) {
-    Object[] result = new Object[]{null, null, null};
+    Finder.Found found = null;
     try {
-      result = doWait(target, timeout, FindType.VANISH);
+      found = doWait(target, timeout, FindType.VANISH);
     } catch (FindFailed ex) {
       return false;
     }
-    return result[1] == null;
+    return found != null && found.match == null;
   }
   //</editor-fold>
 
   //<editor-fold defaultstate="collapsed" desc="find internal methods">
-  private enum FindType {
+  public enum FindType {
 
     ONE, ALL, VANISH
   }
 
-  private <PSI> Object[] doFind(Image base, PSI ptn, double timeout, FindType findType) throws IOException {
+  private <PSI> Finder.Found doFind(Image base, PSI ptn, double timeout, FindType findType) throws IOException {
     if (Debug.shouldHighlight()) {
       if (this.scr.getW() > w + 20 && this.scr.getH() > h + 20) {
         highlight(2, "#000255000");
@@ -2671,21 +2668,23 @@ public class Region {
       finder = new Finder(base);
     }
     Pattern pattern = finder.evalTarget(ptn);
-
-    result[2] = pattern;
+    Finder.Found found = new Finder.Found(finder);
+    found.pattern = pattern;
+    
     int MaxTimePerScan = Math.max(0, (int) (1000.0 / waitScanRate));
     int timeoutMilli = Math.max(0, (int) (timeout * 1000));
+    found.timeout = timeoutMilli;
     long begin_t = (new Date()).getTime();
     String begin_s = String.format("%d", begin_t);
-    result[0] = (findAll ? "findall_" : (findVanish ? "vanish_" : "appear_")) + begin_s;
+    found.name = (findAll ? "findall_" : (findVanish ? "vanish_" : "appear_")) + begin_s;
     log(lvl, "%s: %.1fs %s %s",
-        result[0], timeout, pattern.getText(), this.toStringShort());
+        found.name, timeout, pattern.getText(), this.toStringShort());
 
     Match matchVanish = null;
     if (findVanish) {
-      finder.find(pattern);
-      if (finder.hasNext()) {
-        matchVanish = finder.next();
+      finder.find(pattern, found);
+      if (found.success) {
+        matchVanish = found.match;
       } else {
         success = true;
       }
@@ -2696,13 +2695,13 @@ public class Region {
         loopCount++;
         long before_find = (new Date()).getTime();
         if (findAll) {
-          finder.findAll(pattern);
+          finder.findAll(pattern, found);
         } else {
-          finder.find(pattern);
+          finder.find(pattern, found);
         }
-        if (finder.hasNext()) {
+        if (found.success) {
           if (findVanish) {
-            matchVanish = finder.next();
+            matchVanish = found.match;
             continue;
           }
           hasMatch = true;
@@ -2726,13 +2725,11 @@ public class Region {
       } while (begin_t + timeoutMilli > (new Date()).getTime());
     }
     log(lvl + 1, "doFind: %d searchloops", loopCount);
-    if (hasMatch) {
-      result[1] = finder;
-    } else if (findVanish) {
-      result[1] = matchVanish;
+    if (hasMatch && findVanish) {
+      found.match = matchVanish;
     }
-    result[3] = end();
-    return result;
+    found.elapsed = end();
+    return found;
   }
 
   //</editor-fold>
