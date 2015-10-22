@@ -30,8 +30,6 @@ public class Pattern {
   private double similarity = Settings.MinSimilarity;
   private Location offset = new Location(0, 0);
   private int waitAfter = 0;
-//TODO imagePattern ??? needed???
-  private boolean imagePattern = false;
   private Type type = Type.IMAGE;
   private String text = ""; 
   
@@ -61,7 +59,6 @@ public class Pattern {
     similarity = p.similarity;
     offset.x = p.offset.x;
     offset.y = p.offset.y;
-		imagePattern = image.isPattern();
   }
 
   /**
@@ -71,17 +68,7 @@ public class Pattern {
    */
   public Pattern(Image img) {
 		image = img;
-    image.setIsPattern(false);
-		imagePattern = true;
   }
-
-	/**
-	 * true if Pattern was created from Image
-	 * @return true/false
-	 */
-	public boolean isImagePattern() {
-		return imagePattern;
-	}
 
 	/**
    * create a Pattern based on an image file name<br>
@@ -121,7 +108,7 @@ public class Pattern {
    * @param bimg BufferedImage
    */
   public Pattern(BufferedImage bimg) {
-    image = new Image(bimg, "");
+    image = new Image("", bimg);
   }
 
   /**
@@ -130,7 +117,7 @@ public class Pattern {
    * @param simg ScreenImage
    */
   public Pattern(ScreenImage simg) {
-    image = new Image(simg, "");
+    image = new Image("", simg);
   }
 
   /**
@@ -139,7 +126,7 @@ public class Pattern {
    * @return true if image is useable
    */
   public boolean isValid() {
-    return image.isValid() || imagePattern;
+    return image.isUseable();
   }
 
   /**
@@ -273,7 +260,7 @@ public class Pattern {
    * @return the Pattern object itself
    */
   public Pattern setBImage(BufferedImage bimg) {
-    image = new Image(bimg, "");
+    image = new Image("", bimg);
     return this;
   }
 

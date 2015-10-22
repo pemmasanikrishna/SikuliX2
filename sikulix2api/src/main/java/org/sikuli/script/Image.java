@@ -18,6 +18,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -43,21 +44,11 @@ import org.opencv.highgui.Highgui;
  * group.<br>
  * An Image object:<br>
  * - has a name, either given or taken from the basename<br>
- * - keeps it's in memory buffered image in a configurable cache avoiding reload
- * from source<br>
+ * - keeps it's content in memory as CV-Mat in a configurable cache avoiding reload from source<br>
  * - remembers, where it was found when searched the last time<br>
  * - can be sourced from the filesystem, from jars, from the web and from other
  * in memory images <br>
- * - will have features for basic image manipulation and presentation<br>
- * - contains the stuff to communicate with the underlying OpenCV based search
- * engine <br>
- *
- * This class maintains<br>
- * - a list of all images ever loaded in this session with their source
- * reference and a ref to the image object<br>
- * - a list of all images currently having their content in memory (buffered
- * image) (managed as a configurable cache)<br>
- * The caching can be configured using {@link Settings#setImageCache(int)}
+ * - has features for basic image manipulation and presentation<br>
  */
 public class Image {
 
@@ -70,9 +61,9 @@ public class Image {
   private static void log(int level, String message, Object... args) {
     if (Debug.is(lvl)) {
       message = String.format(message, args).replaceFirst("\\n", "\n          ");
-      if (level == 3) {
+      if (level == lvl) {
         logger.debug(message, args);
-      } else if (level > 3) {
+      } else if (level > lvl) {
         logger.trace(message, args);
       } else if (level == -1) {
         logger.error(message, args);
@@ -82,23 +73,23 @@ public class Image {
     }
   }
 
-  private void logp(String message, Object... args) {
+  private static void logp(String message, Object... args) {
     System.out.println(String.format(message, args));
   }
 
-  public void terminate(int retval, String message, Object... args) {
+  public static void terminate(int retval, String message, Object... args) {
     logger.fatal(String.format(" *** terminating: " + message, args));
     System.exit(retval);
   }
 //</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="Caching">
   private static List<Image> images = Collections.synchronizedList(new ArrayList<Image>());
   private static Map<URL, Image> imageFiles = Collections.synchronizedMap(new HashMap<URL, Image>());
-  private static Map<String, URL> imageNames = Collections.synchronizedMap(new HashMap<String, URL>());
+  private static Map<String, Image> imageNames = Collections.synchronizedMap(new HashMap<String, Image>());
+
+//<editor-fold defaultstate="collapsed" desc="Caching">
   private static int KB = 1024;
   private static int MB = KB * KB;
-  private final static String isBImg = "__BufferedImage__";
   
   private static long currentMemory = 0;
   
@@ -148,41 +139,6 @@ public class Image {
   
   public static void clearCache(int maxSize) {
     currentMemoryChange(0, maxSize);
-  }
-  
-  public static void reload(String fpImage) {
-    URL imgURL = FileManager.makeURL(fpImage);
-    if (imageFiles.containsKey(imgURL)) {
-      Image image = imageFiles.get(imgURL);
-      int sizeOld = image.msize;
-      if (image.load()) {
-        currentMemoryDownUp(sizeOld, image.msize);
-      }
-    }
-  }
-  
-  /**
-   * purge the given image file's in memory image data and remove it from cache.
-   * @param imgName name of an image
-   */
-  public static void unCacheBundledImage(String imgName) {
-    URL imgURL = imageNames.get(imgName);
-    if (imgURL != null) {
-      unCacheImage(imgURL);
-    }
-  }
-
-  /**
-   * purge the given image's in memory image data and remove it from cache.
-   * @param imgURL URL of an image file
-   */
-  public static void unCacheImage(URL imgURL) {
-    Image img = imageFiles.get(imgURL);
-    if (img == null) {
-      return;
-    }
-    img.mat = null;
-    images.remove(img);
   }
   
   /**
@@ -294,23 +250,8 @@ public class Image {
   }
 //</editor-fold>
   
-//<editor-fold defaultstate="collapsed" desc="imageName">
-  private String imageName = null;
-
-  public String getName() {
-    return imageName;
-  }
-
-  public Image setImageName(String imageName) {
-    this.imageName = imageName;
-    return this;
-  }
-
-//</editor-fold>
-
 //<editor-fold defaultstate="collapsed" desc="fileURL">
   private URL fileURL = null;
-  private String imageAsFile = null;
 
   public URL getURL() {
     return fileURL;
@@ -326,18 +267,6 @@ public class Image {
     } else {
 			return null;
 		}
-  }
-  
-  private static String getNameFromURL(URL fURL) {
-    //TODO add handling for http
-    if ("jar".equals(fURL.getProtocol())) {
-      int n = fURL.getPath().lastIndexOf(".jar!/");
-      int k = fURL.getPath().substring(0, n).lastIndexOf("/");
-      if (n > -1) {
-        return "JAR:" + fURL.getPath().substring(k + 1, n) + fURL.getPath().substring(n + 5);
-      }
-    }
-    return "???:" + fURL.getPath();
   }
 //</editor-fold>
 
@@ -370,12 +299,12 @@ public class Image {
       Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 3, 2, 2, 3, 1));
       return oMatBGR;
     } else if (bImg.getType() == BufferedImage.TYPE_3BYTE_BGR) {
-      log(lvl, "makeMat: 3BYTE_BGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
-      log(-1, "not supported");
+      log(-1, "makeMat: 3BYTE_BGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
     } else {
-      log(lvl, "makeMat: not supported: Type: %d (%dx%d)", 
+      log(-1, "makeMat: not supported: Type: %d (%dx%d)", 
               bImg.getType(), bImg.getWidth(), bImg.getHeight());      
     }
+    terminate(1, "not supported for this: makeMat()");
     return aMat;
   }
     
@@ -408,12 +337,21 @@ public class Image {
 
   public BufferedImage get() {
     BufferedImage bimg = null;
+    terminate(1, "notImplemented: BufferedImage get()");
     return bimg;
   }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="ImageGroup">
   private ImageGroup group = null;
+  
+  /**
+   *
+   * @return true if image is in an ImageGroup
+   */
+  public boolean hasImageGroup() {
+    return group != null;
+  }
 
   /**
    *
@@ -433,28 +371,6 @@ public class Image {
   }
 //</editor-fold>
   
-//<editor-fold defaultstate="collapsed" desc="isText">
-  private boolean imageIsText = false;
-
-  /**
-   *
-   * @return true if the given image name did not give a valid image so it might
-   * be text to search
-   */
-  public boolean isText() {
-    return imageIsText;
-  }
-
-  /**
-   * wether this image's name should be taken as text
-   * @param val
-   */
-  public Image setIsText(boolean val) {
-    imageIsText = val;
-    return this;
-  }
-//</editor-fold>
-
 //<editor-fold defaultstate="collapsed" desc="isAbsolute">
   private boolean imageIsAbsolute = false;
   /**
@@ -464,122 +380,18 @@ public class Image {
   public boolean isAbsolute() {
     return imageIsAbsolute;
   }
-
-  private void setIsAbsolute(boolean val) {
-    imageIsAbsolute = val;
-  }
-
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="isBundled">
   private boolean imageIsBundled = false;
 
   /**
-   * mark this image as being contained in a bundle
-   * @param imageIsBundled
-   */
-  public Image setIsBundled(boolean imageIsBundled) {
-    this.imageIsBundled = imageIsBundled;
-    return this;
-  }
-
-  /**
-   * INTERNAL USE: image is contained in a bundle (.sikuli)
+   * image is contained in a bundle (.sikuli)
    * @return true/false
    */
   public boolean isBundled() {
     return imageIsBundled;
   }
-
-//</editor-fold>
-
-//<editor-fold defaultstate="collapsed" desc="isPattern">
-  private boolean imageIsPattern = false;
-
-  /**
-   * true if this image contains pattern aspects<br>
-   * only useable with the new ImageFinder
-   * @return true if yes, false otherwise
-   */
-  public boolean isPattern() {
-    return imageIsPattern;
-  }
-
-  public Image setIsPattern(boolean imageIsPattern) {
-    this.imageIsPattern = imageIsPattern;
-    return this;
-  }
-
-//</editor-fold>
-
-//<editor-fold defaultstate="collapsed" desc="waitAfter">
-  private int waitAfter;
-
-  /**
-   * Get the value of waitAfter
-   *
-   * @return the value of waitAfter
-   */
-  public int getWaitAfter() {
-    return waitAfter;
-  }
-
-  /**
-   * Set the value of waitAfter
-   *
-   * @param waitAfter new value of waitAfter
-   */
-  public Image setWaitAfter(int waitAfter) {
-    this.waitAfter = waitAfter;
-    return this;
-  }
-//</editor-fold>
-
-//<editor-fold defaultstate="collapsed" desc="offset">
-  private Location offset = new Location(0, 0);
-
-  /**
-   * Get the value of offset
-   *
-   * @return the value of offset
-   */
-  public Location getOffset() {
-    return offset;
-  }
-
-  /**
-   * Set the value of offset
-   *
-   * @param offset new value of offset
-   */
-  public Image setOffset(Location offset) {
-    this.offset = offset;
-    return this;
-  }
-//</editor-fold>
-
-//<editor-fold defaultstate="collapsed" desc="similarity">
-  private float similarity = (float) Settings.MinSimilarity;
-
-  /**
-   * Get the value of similarity
-   *
-   * @return the value of similarity
-   */
-  public float getSimilarity() {
-    return similarity;
-  }
-
-  /**
-   * Set the value of similarity
-   *
-   * @param similarity new value of similarity
-   */
-  public Image setSimilarity(float similarity) {
-    this.similarity = similarity;
-    return this;
-  }
-
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="lastSeen">
@@ -625,8 +437,16 @@ public class Image {
   private int cols = 0;
   private int rowH = 0;
   private int colW = 0;
-  private int rowHd = 0;
-  private int colWd = 0;
+  private int rowHdiff = 0;
+  private int colWdiff = 0;
+  
+  public boolean isRasterFilling() {
+    return (rowHdiff < rowH) && (colWdiff < colW);
+  }
+  
+  public Dimension getRasterMargin() {
+    return new Dimension(rowHdiff, colWdiff);
+  }
   
 /**
    * store info: this image is divided vertically into n even rows <br>
@@ -695,11 +515,11 @@ public class Image {
     cols = c;
     if (r > 0) {
       rowH = (int) (getSize().height / r);
-      rowHd = getSize().height - r * rowH;
+      rowHdiff = getSize().height - r * rowH;
     }
     if (c > 0) {
       colW = (int) (getSize().width / c);
-      colWd = getSize().width - c * colW;
+      colWdiff = getSize().width - c * colW;
     }
     return getCell(0, 0);
   }
@@ -778,8 +598,6 @@ public class Image {
   }
 //</editor-fold>
   
-  private boolean beSilent = false;
-
   @Override
   public String toString() {
     return String.format("I[%s (%dx%d)%s]",
@@ -800,28 +618,56 @@ public class Image {
 
 //<editor-fold defaultstate="collapsed" desc="Constructors">
   public boolean isValid() {
-    return fileURL != null || imageName.contains(isBImg);
+    return fileURL != null && mat != null;
   }
 
   public boolean isUseable() {
-    return isValid() || imageIsPattern;
+    return isValid() || isInMemory;
   }
 
   private Image() {
   }
   
+//<editor-fold defaultstate="collapsed" desc="from filename">
+  /**
+   * create a new image using the given name<br>
+   * file ending .png is added if missing <br>
+   * name.xxx (xxx valid img file ending) without path is used as image name<br>
+   * name (if not absolute filepath) is resolved against current ImagePath,
+   * loaded from the url and and cached<br>
+   * already loaded image with same url is reused (reference) and taken from cache
+   *
+   * @param url image file URL
+   * @return the image
+   */
   public Image(String imgName) {
-    init(imgName, null, false);
+    init(imgName, null);
+  }
+  
+  private String imageName = null;
+  
+  public String getName() {
+    return imageName;
   }
   
   public static Image get(String imgName) {
-    URL imgURL = imageNames.get(imgName);
-    if (null == imgURL) {
-      return null;
-    }
-    return imageFiles.get(imgURL);
+    return imageNames.get(imgName);
   }
   
+  public Image rename(String imageName) {
+    Image img =imageNames.get(imageName);
+    if (img != null) {
+      return null;
+    }
+    imageNames.remove(this.imageName);
+    imageNames.put(imageName, this);
+    this.imageName = imageName;
+    return this;
+  }
+  
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="from URL">
   /**
    * create a new image from the given url <br>
    * file ending .png is added if missing <br>
@@ -834,83 +680,100 @@ public class Image {
    * @return the image
    */
   public Image(URL imgURL) {
-    init(null, imgURL, false);
+    init(null, imgURL);
   }
   
   public static Image get(URL imgURL) {
     return imageFiles.get(imgURL);
   }
+//</editor-fold>
   
-  public Image(Region reg) {
-    
+//<editor-fold defaultstate="collapsed" desc="inMemory BImg, SImg, Region">
+  private boolean isInMemory = false;
+  
+  private String makeName() {
+    return String.format("%d", new Date().getTime());
   }
   
   /**
-   * create a new Image with Pattern aspects from an existing Pattern
-   * @param p a Pattern
-   * @return the new Image
-   */
-  public Image(Pattern pat) {
-    init(null, pat.getFileURL(), false);
-  }
-  
-  /**
-   * create a new Image from another Image
-   * @param img
-   */
-  public Image(Image img) {
-    init(null, img.getURL(), false);
-  }
-  
-  /**
-   * create a new image from a buffered image<br>
-   * giving it a reference name for acess, printout and logging <br>
+   * create a new image with name as timestamp from a region's captured content<br>
    *
-   * @param img BufferedImage
-   * @param name unique reference name
+   * @param reg
    */
-  public Image(BufferedImage img, String name) {
-    imageName = isBImg;
-    if (name != null) {
-      imageName += name;
-    }
-    mwidth = img.getWidth();
-    mheight = img.getHeight();
-		log(lvl, "BufferedImage: (%d, %d)%s", mwidth, mheight,
-						(name == null ? "" : " with name: " + name));
-    terminate(1, "not supported: Image(BufferedImage img, String name)");
+  public Image(Region reg) {
+    this(reg.captureThis());
   }
-
+  
   /**
-   * create a new image from a Sikuli ScreenImage (captured)<br>
-   * giving it a reference name for access, printout and logging <br>
+   * create a new image with name as timestamp from a ScreenImage (captured before)<br>
    *
    * @param img ScreenImage
-   * @param name unique reference name
    */
-  public Image(ScreenImage img, String name) {
-    this(img.getImage(), name);
+  public Image(ScreenImage img) {
+    this(img.getImage());
   }
 
   /**
-   * create a new Image from a valid object
-   * @param obj String, Pattern, Region or other Image
-   * @return Image or null
+   * create a new image with name as timestamp from a buffered image<br>
+   *
+   * @param bImg BufferedImage
    */
-  protected static Image createFromObject(Object obj) {
-    if (obj instanceof String) {
-      return new Image((String) obj);
-    } else if (obj instanceof Image) {
-      return new Image((Image) obj);
-    }  else if (obj instanceof Pattern) {
-      return new Image((Pattern) obj);
-    }  else if (obj instanceof Region) {
-      return new Image((Region) obj);
+  public Image(BufferedImage bImg) {
+    imageName = makeName();
+    mat = makeMat(bImg);
+    if (mat != null) {
+      mwidth = mat.width();
+      mheight = mat.height();
+      msize = mat.channels() * mwidth * mheight;;
+      isInMemory = true;
     }
-    return null;
+    add();
   }
   
-  private void init(String imgName, URL imgURL, boolean silent) {
+  public Image add() {
+    if (isUseable()) {
+      if (images.remove(this)) {
+        currentMemoryDown(msize);
+      }
+      images.add()
+    }
+    return this;
+  }
+
+  public Image update() {
+    if (isValid()) {
+      if (images.remove(this)) {
+        currentMemoryDown(msize);
+      }
+      if (load()) {
+        currentMemoryUp(msize);
+      }
+    }
+    return this;
+  }
+
+  public Image remove() {
+    if (isUseable()) {
+      
+    }
+    return this;
+  }
+
+  /**
+   * purge the given image's in memory image data and remove it from cache.
+   * @param imgURL URL of an image file
+   */
+  public static void unCacheImage(URL imgURL) {
+    Image img = imageFiles.get(imgURL);
+    if (img == null) {
+      return;
+    }
+    img.mat = null;
+    images.remove(img);
+  }
+//</editor-fold>
+  
+  private void init(String imgName, URL imgURL) {
     if (imgName == null || imgName.isEmpty()) {
       return;
     }
@@ -924,7 +787,6 @@ public class Image {
       imageIsBundled = true;
       imageName = new File(imageName).getName();
     }
-    beSilent = silent;
   }
   
   private boolean get(String fName, URL imgURL) {
