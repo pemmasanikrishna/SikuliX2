@@ -203,6 +203,9 @@ public class Finder {
     public String toString() {
       return toJSON();
     }
+    
+    @Override
+    public void remove() {}
   }
 
   private Finder() {
