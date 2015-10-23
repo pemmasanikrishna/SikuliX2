@@ -48,18 +48,21 @@ public class TestFindBasic {
     logger.info(message);
   }
 
-  private static long entry(Object... args) {
+  private void entry(Object... args) {
+    if (args.length == 0) {
+      start("");
+    } else {
+      start(args[0].toString());
+    }
     logger.entry(args);
-    return start();
   }
 
-  private static void exit(Object... args) {
+  private void exit(Object... args) {
+    end();
     if (args.length == 0) {
-      logger.exit();
-    } else if (args.length == 1) {
-      logger.exit(args[0]);
+      logger.exit(0);
     } else {
-      logger.exit(String.format("msec:%d return:%d", end((long) args[1]), args[0]));
+      logger.exit(String.format("msec:%d return:%d", duration, args[0]));
     }
   }
 
@@ -72,14 +75,19 @@ public class TestFindBasic {
     System.exit(retval);
   }
 
-  private static long start() {
-    return new Date().getTime();
+  private void start(String desc) {
+    startTime = new Date().getTime();
+    testdesc = desc;
   }
 
-  private static long end(long start) {
-    return new Date().getTime() - start;
+  private void end() {
+    duration = new Date().getTime() - startTime;
   }
 //</editor-fold>
+
+  private static long startTime;
+  private long duration = 0;
+  private String testdesc = "";
 
   public TestFindBasic() {
     theClass = this.getClass().toString().substring(6);
@@ -97,33 +105,42 @@ public class TestFindBasic {
     App.pause(3);
     window = App.focusedWindow();
     trace("%s", window.toJSON());
+    Debug.on(3);
   }
 
   @AfterClass
   public static void tearDownClass() {
     trace("tearDownClass:");
+    ImagePath.remove(images);
+    Debug.off();
     App.closeWindow();
   }
 
   @Before
   public void setUp() {
-    trace("setUp:");
-    Debug.on(3);
+    debug("------- setUp --------------------------------------");
     ImagePath.add(images);
   }
 
   @After
   public void tearDown() {
-    trace("tearDown:");
-    ImagePath.remove(images);
-    Debug.off();
+    debug("----- tearDown msec:%d --- %s *****", duration, testdesc);
   }
 
   @Test
-  public void aTest() {
-    long start = entry();
+  public void testFirstFind() {
+    start("first find - image loaded and cached");
     Match found = window.exists("logo");
-    exit(0, start);
+    end();
+    debug("aTest: found: %s", found.toJSON());
+    assertTrue(found != null);
+  }
+
+  @Test
+  public void testSecondFind() {
+    start("second find - cached image reused");
+    Match found = window.exists("logo");
+    end();
     debug("aTest: found: %s", found.toJSON());
     assertTrue(found != null);
   }
