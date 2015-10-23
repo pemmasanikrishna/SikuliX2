@@ -73,10 +73,10 @@ public class Pattern {
 	/**
    * create a Pattern based on an image file name<br>
    *
-   * @param imgpath image filename
+   * @param fpImg image filename
    */
-  public Pattern(String imgpath) {
-    image = new Image(imgpath);
+  public Pattern(String fpImg) {
+    image = Image.get(fpImg);
   }
 
 	/**
@@ -89,7 +89,7 @@ public class Pattern {
       text = str;
       type = ptype;
     } else {
-      image = new Image(str);
+      image = Image.get(str);
     };
   }
 
@@ -99,7 +99,7 @@ public class Pattern {
 	 * @param url image file URL
    */
   public Pattern(URL url) {
-    image = new Image(url);
+    image = Image.get(url);
   }
 
   /**
@@ -108,7 +108,7 @@ public class Pattern {
    * @param bimg BufferedImage
    */
   public Pattern(BufferedImage bimg) {
-    image = new Image("", bimg);
+    image = new Image(bimg);
   }
 
   /**
@@ -117,7 +117,7 @@ public class Pattern {
    * @param simg ScreenImage
    */
   public Pattern(ScreenImage simg) {
-    image = new Image("", simg);
+    image = new Image(simg);
   }
 
   /**
@@ -136,7 +136,7 @@ public class Pattern {
    * @return the Pattern itself
    */
   public Pattern setFilename(String fileName) {
-    image = new Image(fileName);
+    image = Image.get(fileName);
     return this;
   }
 
@@ -147,7 +147,7 @@ public class Pattern {
    * @return the Pattern itself
    */
   public Pattern setFilename(URL fileURL) {
-    image = new Image(fileURL);
+    image = Image.get(fileURL);
     return this;
   }
 
@@ -260,7 +260,7 @@ public class Pattern {
    * @return the Pattern object itself
    */
   public Pattern setBImage(BufferedImage bimg) {
-    image = new Image("", bimg);
+    image = new Image(bimg);
     return this;
   }
 
@@ -320,7 +320,7 @@ public class Pattern {
       size = String.format("(%dx%d)", image.getWidth(), image.getHeight());
     }
     String ret = String.format("P[%s%s%s%%%.2f%s]",
-            image.getName(), (isValid() ? "" : "???"), size,
+            image.getImageName(), (isValid() ? "" : "???"), size,
             similarity * 100, off);
     return ret;
   }
@@ -330,8 +330,8 @@ public class Pattern {
     if (offset.x != 0 || offset.y != 0) {
       off = " (" + offset.x + "," + offset.y + ")";
     }
-    String ret = String.format("[\"P\", %s, %.4f%s]",
-            (isValid() ? image.toJSON(withLastSeen) : "null"), similarity, off);
+    String ret = String.format("[\"P\", %s, %d%s]",
+            (isValid() ? image.toJSON(withLastSeen) : "null"), (int) (similarity * 10000), off);
     return ret;
   }
   

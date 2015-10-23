@@ -2521,7 +2521,7 @@ public class Region {
     public SubFindRun(Match[] pMArray, int pSubN,
         ScreenImage pBase, Object pTarget, Region pReg) {
       subN = pSubN;
-      base = new Image(pBase, "");
+      base = new Image(pBase);
       target = pTarget;
       reg = pReg;
       mArray = pMArray;
@@ -2556,11 +2556,11 @@ public class Region {
   /**
    * check wether the region is exactly the given image, meaning same dimension and exact match
    *
-   * @param img image file name
+   * @param fpImg image file name
    * @return the match or null if not equal
    */
-  public boolean compare(String img) {
-    return compare(new Image(img));
+  public boolean compare(String fpImg) {
+    return compare(Image.get(fpImg));
   }
 
   /**

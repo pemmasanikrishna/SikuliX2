@@ -73,6 +73,11 @@ public class Sikulix {
     Settings.InfoLogs = false;
     Settings.ActionLogs = false;
     rt = RunTime.get();
+    
+    App.openLink("sikulix.com");
+    
+//*****************************************    Commands.endNormal(1);
+    System.exit(1);
 
 //<editor-fold defaultstate="collapsed" desc="basic find test (arg0 test)">
     if (args != null && args.length > 0 && "test".equals(args[0])) {
@@ -84,7 +89,7 @@ public class Sikulix {
       ImagePath.add("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
       Screen s = new Screen();
 
-      new Image("nbicons");
+      Image.get("nbicons");
 
       Settings.CheckLastSeen = false;
 
@@ -112,8 +117,8 @@ public class Sikulix {
 //    App.focus("Safari"); Debug.on(3);
 //    RunTime.pause(1.0);
     start();
-    img = new Image("raimanlogo");
-    img = new Image("icon");
+    img = Image.get("raimanlogo");
+    img = Image.get("icon");
 //    Image.dump(3);
     log(lvl, "(%d) MatImage: %s", end(), img);
 

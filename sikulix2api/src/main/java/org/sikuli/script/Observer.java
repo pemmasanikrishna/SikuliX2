@@ -12,11 +12,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.sikuli.natives.FindInput;
 import org.sikuli.natives.FindResult;
 import org.sikuli.natives.FindResults;
 import org.sikuli.natives.Mat;
-import org.sikuli.natives.Vision;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Settings;
 
@@ -189,7 +187,7 @@ public class Observer {
         }
       }
       Object ptn = eventNames.get(name);
-      Image img = Image.createFromObject(ptn);
+      Image img = new Image(ptn);
       if (!img.isUseable()) {
         Debug.error("EventMgr: checkPatterns: Image not valid", ptn);
         eventStates.put(name, State.MISSING);
@@ -289,7 +287,7 @@ public class Observer {
       return true;
     }
     if (lastImageMat.empty()) {
-      lastImageMat = new Image(img, "").getMat();
+      lastImageMat = img.getMat();
       return true;
     }
     for (String name : eventNames.keySet()) {
@@ -308,7 +306,7 @@ public class Observer {
       log(lvl + 1, "update: checking changes");
       Finder f = new Finder(lastImageMat);
       f.setMinChanges(minChanges);
-      org.opencv.core.Mat current = new Image(img, "").getMat();
+      org.opencv.core.Mat current = img.getMat();
       if (f.hasChanges(current)) {
         //TODO implement ChangeObserver: processing changes
         log(lvl, "TODO: processing changes");

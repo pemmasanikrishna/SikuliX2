@@ -87,7 +87,6 @@ public class ImagePath {
 			} else {
 				pathURL = makePathURL(path, null).pathURL;
 			}
-			log(lvl+1, "PathEntry: %s \nas %s", path, pathURL);
     }
 
 		public String getPath() {
@@ -308,7 +307,7 @@ public class ImagePath {
     String validName = name;
     String[] parts = validName.split("\\.");
     if (parts.length == 1) {
-      log(lvl, "getValidName: supposing PNG: %s", name);
+      log(lvl +1, "getValidName: supposing PNG: %s", name);
       validName += ".png";
     } else {
       String ending = "." + parts[parts.length - 1];

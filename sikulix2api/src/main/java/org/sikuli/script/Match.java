@@ -286,25 +286,23 @@ public class Match extends Region implements Comparable<Match> {
     String starget;
     Location c = getCenter();
     if (target != null && !c.equals(target)) {
-      starget = String.format("T:%d,%d", target.x, target.y);
+      starget = String.format(" T:%d,%d", target.x, target.y);
     } else {
-      starget = String.format("C:%d,%d", c.x, c.y);
+      starget = "";
     }
-    return String.format("M[%d,%d %dx%d]@S(%s) %%%.2f %s", x, y, w, h,
-              ((getScreen()== null || !onScreen) ? "?" : getScreen().toStringShort()),
-              simScore*100, starget);
+    return String.format("M[%d,%d %dx%d %%%.2f]@S(%s)%s", x, y, w, h, simScore*100,
+              ((getScreen()== null || !onScreen) ? "?" : getScreen().getID()), starget);
   }
 
   @Override
   public String toStringShort() {
-    return String.format("M[%d,%d %dx%d]@S(%s)", x, y, w, h,
-              (getScreen()== null ? "?" : getScreen().getID()));
+    return toString();
   }
 
 	@Override
 	public String toJSON() {
 		String strTarget = target == null ? "" : String.format(", [%d, %d]", target.x, target.y);
-		return String.format("[\"M\", [%d, %d, %d, %d], %.4f%s]", x, y, w, h, simScore, strTarget);
+		return String.format("[\"M\", [%d, %d, %d, %d], %d%s]", x, y, w, h, (int) (simScore * 10000), strTarget);
 	}
 
 	/**

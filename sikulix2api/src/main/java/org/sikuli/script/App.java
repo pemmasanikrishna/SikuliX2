@@ -46,7 +46,7 @@ public class App {
 
   static {
 //TODO Sikuli hangs if App is used before Screen
-    new Screen();
+//    new Screen();
     _osUtil.checkLibAvailability();
 
     appsWindows = new HashMap<Type, String>();
@@ -149,11 +149,22 @@ public class App {
       return false;
     }
     try {
+      if (!url.startsWith("http")) {
+        url = "http://" + url;
+      }
       Desktop.getDesktop().browse(new URI(url));
     } catch (Exception ex) {
       return false;
     }
     return true;
+  }
+  
+  public static void closeWindow() {
+    if (runTime.runningMac) {
+      aRegion.type("w", Key.CMD);
+    } else {
+      aRegion.type("w", Key.CTRL);
+    }
   }
 
   private static Region asRegion(Rectangle r) {

@@ -7,7 +7,6 @@
 package org.sikuli.script;
 
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
@@ -18,7 +17,6 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -30,10 +28,13 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfInt;
+import org.opencv.core.Rect;
+import org.opencv.core.Size;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
 import org.opencv.highgui.Highgui;
+import org.opencv.imgproc.Imgproc;
 
 /**
  * This class hides the complexity behind image names given as string.
@@ -85,7 +86,6 @@ public class Image {
 
   private static List<Image> images = Collections.synchronizedList(new ArrayList<Image>());
   private static Map<URL, Image> imageFiles = Collections.synchronizedMap(new HashMap<URL, Image>());
-  private static Map<String, Image> imageNames = Collections.synchronizedMap(new HashMap<String, Image>());
 
 //<editor-fold defaultstate="collapsed" desc="Caching">
   private static int KB = 1024;
@@ -162,14 +162,6 @@ public class Image {
       entry = it.next();
       log(lvl, entry.getKey().toString());
     }
-    log(lvl, "ImageNames entries: %d", imageNames.size());
-    Iterator<Map.Entry<String, URL>> nit = imageNames.entrySet().iterator();
-    Map.Entry<String, URL> name;
-    while (nit.hasNext()) {
-      name = nit.next();
-      log(lvl, "%s %d KB (%s)", new File(name.getKey()).getName(),
-							imageFiles.get(name.getValue()).getKB(), name.getValue());
-    }
     if (Settings.getImageCache() == 0) {
       log(lvl, "Cache state: switched off!");
     } else {
@@ -185,7 +177,6 @@ public class Image {
    */
   public static void reset() {
     clearCache(0);
-    imageNames.clear();
     imageFiles.clear();
   }
   
@@ -216,20 +207,16 @@ public class Image {
 
   public static synchronized void purge(URL pathURL) {
     List<Image> imagePurgeList = new ArrayList<Image>();
-    List<String> imageNamePurgeList = new ArrayList<String>();
     URL imgURL;
     Image img;
-    log(lvl, "purge: ImagePath: %s", pathURL.getPath());
     Iterator<Map.Entry<URL, Image>> it = imageFiles.entrySet().iterator();
     Map.Entry<URL, Image> entry;
     while (it.hasNext()) {
       entry = it.next();
       imgURL = entry.getKey();
       if (imgURL.toString().startsWith(pathURL.toString())) {
-        log(lvl + 1, "purge: URL: %s", imgURL.toString());
         img = entry.getValue();
         imagePurgeList.add(img);
-        imageNamePurgeList.add(img.imageName);
         it.remove();
       }
     }
@@ -239,16 +226,29 @@ public class Image {
         img = bit.next();
         if (imagePurgeList.contains(img)) {
           bit.remove();
-          log(lvl + 1, "purge: bimg: %s", img);
           currentMemoryDown(img.msize);
         }
       }
     }
-    for (String name : imageNamePurgeList) {
-      imageNames.remove(name);
-    }
   }
 //</editor-fold>
+
+  protected static String getValidImageFilename(String fname) {
+    String validEndings = ".png.jpg.jpeg.tiff.bmp";
+    String defaultEnding = ".png";
+    int dot = fname.lastIndexOf(".");
+    String ending = defaultEnding;
+    if (dot > 0) {
+      ending = fname.substring(dot);
+      if (validEndings.contains(ending.toLowerCase())) {
+        return fname;
+      }
+    } else {
+      fname += ending;
+      return fname;
+    }
+    return "";
+  }
   
 //<editor-fold defaultstate="collapsed" desc="fileURL">
   private URL fileURL = null;
@@ -598,24 +598,34 @@ public class Image {
   }
 //</editor-fold>
   
+//<editor-fold defaultstate="collapsed" desc="toString">
+  public String getImageName() {
+    if (isInMemory) {
+      return ("isInMemory");
+    } else {
+      return new File(fileURL.getPath()).getName();
+    }
+  }
+  
   @Override
   public String toString() {
     return String.format("I[%s (%dx%d)%s]",
-            (imageName != null ? imageName : "__UNKNOWN__"), mwidth, mheight,
-            (lastSeen == null ? "" : String.format(" at(%d,%d) %%%.2f", 
+            getImageName(), mwidth, mheight,
+            (lastSeen == null ? "" : String.format(" at(%d,%d) %%%.2f",
                     lastSeen.x, lastSeen.y, (int) (lastScore*100))));
   }
-
+  
   public String toJSON(boolean withLastSeen) {
     return String.format("[\"I\", \"%s\", %d, %d%s]",
-            (imageName != null ? imageName : "__UNKNOWN__"), mwidth, mheight,
+            fileURL, mwidth, mheight,
             (withLastSeen && lastSeen != null) ? ", " + new Match(lastSeen, lastScore).toJSON() : "");
   }
   
   public String toJSON() {
     return toJSON(true);
   }
-
+//</editor-fold>
+  
 //<editor-fold defaultstate="collapsed" desc="Constructors">
   public boolean isValid() {
     return fileURL != null && mat != null;
@@ -624,77 +634,94 @@ public class Image {
   public boolean isUseable() {
     return isValid() || isInMemory;
   }
+  
+  private boolean hasText = false;
+  public boolean isText() {
+    return hasText;
+  }
 
   private Image() {
   }
   
-//<editor-fold defaultstate="collapsed" desc="from filename">
-  /**
-   * create a new image using the given name<br>
-   * file ending .png is added if missing <br>
-   * name.xxx (xxx valid img file ending) without path is used as image name<br>
-   * name (if not absolute filepath) is resolved against current ImagePath,
-   * loaded from the url and and cached<br>
-   * already loaded image with same url is reused (reference) and taken from cache
-   *
-   * @param url image file URL
-   * @return the image
-   */
-  public Image(String imgName) {
-    init(imgName, null);
+  private Image(URL fURL) {
+    fileURL = fURL;
   }
   
-  private String imageName = null;
-  
-  public String getName() {
-    return imageName;
+  public Image(Object img) {
+    terminate(1, "Image(Object)");
   }
-  
-  public static Image get(String imgName) {
-    return imageNames.get(imgName);
-  }
-  
-  public Image rename(String imageName) {
-    Image img =imageNames.get(imageName);
-    if (img != null) {
-      return null;
-    }
-    imageNames.remove(this.imageName);
-    imageNames.put(imageName, this);
-    this.imageName = imageName;
-    return this;
-  }
-  
-//</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="from URL">
-  /**
-   * create a new image from the given url <br>
-   * file ending .png is added if missing <br>
-   * filename: ...url-path.../name[.png] is loaded from the url and and cached
-   * <br>
-   * already loaded image with same url is reused (reference) and taken from
-   * cache
-   *
-   * @param url image file URL
-   * @return the image
-   */
-  public Image(URL imgURL) {
-    init(null, imgURL);
+  public static Image get(Object source) {
+    Image img = new Image();
+    if (null == source) {
+      return img;
+    }
+    URL fURL = null;
+    if (source instanceof URL) {
+      fURL = (URL) source; 
+    } else if (source instanceof String) {
+      fURL = ImagePath.find((String) source);
+    }
+    if (null != fURL) {
+      img = imageFiles.get(fURL);
+      if (img == null) {
+        img = new Image(fURL);
+        img.load();
+      } else {
+        log(lvl, "get: reused: %s (%dx%d)", img.getImageName(), img.getWidth(), img.getHeight());        
+      }
+    }
+    return img;
   }
   
-  public static Image get(URL imgURL) {
-    return imageFiles.get(imgURL);
+  private boolean load() {
+    boolean success = true;
+    if (fileURL != null) {
+      mat = null;
+      File imgFile = new File(fileURL.getPath());
+      mat = Highgui.imread(imgFile.getAbsolutePath());
+      if (mat.empty()) {
+        mat = null;
+        success = false;
+      }
+      if (success) {
+        if (!imageFiles.containsKey(fileURL)) {
+          imageFiles.put(fileURL, this);
+        }
+        mwidth = mat.width();
+        mheight = mat.height();
+        msize = mat.channels() * mwidth * mheight;;
+        String msg = String.format("load: loaded: (%dx%s)\n%s", mwidth, mheight, fileURL);
+        if (isCaching()) {
+          int maxMemory = Settings.getImageCache() * MB;
+          currentMemoryUp(msize);
+          images.add(this);
+          msg = String.format("load: cached: (%dx%d) #%d %%%d of %dMB)\n%s",
+              mwidth, mheight, images.size(),
+              (int) (100 * currentMemory / maxMemory), (int) (maxMemory / MB), fileURL);
+        }
+        log(lvl, "%s", msg);
+        checkProbe();
+      } else {
+        log(-1, "load: not loaded - taken as text:\n%s", fileURL);
+        hasText = true;
+      }
+    }
+    return success;
   }
 //</editor-fold>
   
 //<editor-fold defaultstate="collapsed" desc="inMemory BImg, SImg, Region">
   private boolean isInMemory = false;
   
-  private String makeName() {
-    return String.format("%d", new Date().getTime());
+  private Image(Mat aMat) {
+    mat = aMat;
+    mwidth = mat.width();
+    mheight = mat.height();
+    msize = mat.channels() * mwidth * mheight;;
+    isInMemory = true;
   }
-  
+    
   /**
    * create a new image with name as timestamp from a region's captured content<br>
    *
@@ -719,7 +746,6 @@ public class Image {
    * @param bImg BufferedImage
    */
   public Image(BufferedImage bImg) {
-    imageName = makeName();
     mat = makeMat(bImg);
     if (mat != null) {
       mwidth = mat.width();
@@ -727,7 +753,6 @@ public class Image {
       msize = mat.channels() * mwidth * mheight;;
       isInMemory = true;
     }
-    add();
   }
   
   public Image add() {
@@ -735,7 +760,7 @@ public class Image {
       if (images.remove(this)) {
         currentMemoryDown(msize);
       }
-      images.add()
+      images.add(this);
     }
     return this;
   }
@@ -772,104 +797,8 @@ public class Image {
     images.remove(img);
   }
 //</editor-fold>
-  
-  private void init(String imgName, URL imgURL) {
-    if (imgName == null || imgName.isEmpty()) {
-      return;
-    }
-    if (imgURL == null) {
-      get(imgName, imgURL);
-    } else {
-      imageName = imgName;
-      fileURL= imgURL;
-    }
-    if (ImagePath.isImageBundled(fileURL)) {
-      imageIsBundled = true;
-      imageName = new File(imageName).getName();
-    }
-  }
-  
-  private boolean get(String fName, URL imgURL) {
-    boolean success = true;
-    if (fName == null || fName.isEmpty()) {
-      return success;
-    }
-    fName = FileManager.slashify(fName, false);
-    Image img = null;
-    URL fURL = null;
-    String fileName = Settings.getValidImageFilename(fName);
-    if (fileName.isEmpty()) {
-      log(-1, "not a valid image type: " + fName);
-      fileName = fName;
-    }
-    File imgFile = new File(fileName);
-    if (imgFile.isAbsolute()) {
-      if (imgFile.exists()) {
-        fURL = FileManager.makeURL(fileName);
-      }
-    } else {
-      fURL = imageNames.get(fileName);
-      if (fURL == null) {
-        fURL = ImagePath.find(fileName);
-      }
-    }
-    if (fURL != null) {
-      fileURL = fURL;
-      imageName = fileName;
-      img = imageFiles.get(fileURL);
-      if (img != null && null == imageNames.get(img.imageName)) {
-        imageNames.put(img.imageName, fileURL);
-      }
-    }
-    if (img == null) {
-      success = load();
-    } else {
-      if (img.getMat() != null) {
-        log(3, "reused: %s (%s)", img.imageName, img.fileURL);
-      } else {
-        success = load();
-      }
-    }
-    imageIsAbsolute = imgFile.isAbsolute();
-    return success;
-  }
-  
-  private boolean load() {
-    boolean success = true;
-    if (fileURL != null) {
-      mat = null;
-      File imgFile = new File(fileURL.getPath());
-      mat = Highgui.imread(imgFile.getAbsolutePath());
-      if (mat.empty()) {
-        mat = null;
-        success = false;
-      }
-      if (success) {
-        if (!imageFiles.containsKey(fileURL)) {
-          imageFiles.put(fileURL, this);
-          imageNames.put(imageName, fileURL);
-        }
-        mwidth = mat.width();
-        mheight = mat.height();
-        msize = mat.channels() * mwidth * mheight;;
-        log(lvl, "loaded: %s\n%s", imageName, fileURL);
-        if (isCaching()) {
-          int maxMemory = Settings.getImageCache() * MB;
-          currentMemoryUp(msize);
-          images.add(this);
-          log(lvl, "cached: %s (%d KB) (# %d KB %d -- %d %% of %d MB)",
-              imageName, getKB(),
-              images.size(), (int) (currentMemory / KB),
-              (int) (100 * currentMemory / maxMemory), (int) (maxMemory / MB));
-        }
-        checkProbe();
-      } else {
-        log(-1, "invalid! not loaded! %s", fileURL);
-      }
-    }
-    return success;
-  }
-  
+ 
+//<editor-fold defaultstate="collapsed" desc="inMemory features">
   private final int resizeMinDownSample = 12;
   private double resizeFactor;
   private boolean plainColor = false;
@@ -878,15 +807,15 @@ public class Image {
   public boolean isPlainColor() {
     return plainColor;
   }
-
+  
   public boolean isBlack() {
     return blackColor;
   }
-
+  
   private void checkProbe() {
     resizeFactor = Math.min(((double) mwidth) / resizeMinDownSample, ((double) mheight) / resizeMinDownSample);
     resizeFactor = Math.max(1.0, resizeFactor);
-
+    
     MatOfDouble pMean = new MatOfDouble();
     MatOfDouble pStdDev = new MatOfDouble();
     Core.meanStdDev(mat, pMean, pStdDev);
@@ -913,26 +842,22 @@ public class Image {
   public double getResizeFactor() {
     return resizeFactor;
   }
-//</editor-fold>
   
   /**
-   * resize the loaded image with factor using Graphics2D.drawImage
+   * resize the image's CV-Mat by factor 
    * @param factor resize factor
-   * @return a new BufferedImage resized (width*factor, height*factor)
+   * @return a new inMemory Image
    */
   public Image resize(float factor) {
-    int type;
-    BufferedImage bufimg = get();
-    type = bufimg.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : bufimg.getType();
-    int width = (int) (getSize().getWidth() * factor);
-    int height = (int) (getSize().getHeight() * factor);
-    BufferedImage resizedImage = new BufferedImage(width, height, type);
-    Graphics2D g = resizedImage.createGraphics();
-    g.drawImage(bufimg, 0, 0, width, height, null);
-    g.dispose();
-    return new Image(this, "resized_" + getName());
+    Image img = new Image();
+    if (isUseable()) {
+      Mat newMat = new Mat();
+      Size newS = new Size(mwidth * factor, mheight * factor);
+      Imgproc.resize(mat, newMat, newS, 0, 0, Imgproc.INTER_AREA);
+    }
+    return img;
   }
-
+  
   /**
    * create a sub image from this image
    *
@@ -943,9 +868,13 @@ public class Image {
    * @return the new image
    */
   public Image getSub(int x, int y, int w, int h) {
-    return new Image(this, "sub_" + getName());
+    Image img = new Image();
+    if (isUseable()) {
+      img = new Image(this.getMat().submat(new Rect(x, y, w, h)));
+    }
+    return img;
   }
-
+  
   /**
    * create a sub image from this image
    *
@@ -956,8 +885,5 @@ public class Image {
     Rectangle r = Region.getRectangle(new Rectangle(0, 0, getSize().width, getSize().height), part);
     return getSub(r.x, r.y, r.width, r.height);
   }
-  
-  private Image(Image img, String imgName) {
-    terminate(1, "not supported: new Image(Image, name)");
-  }
+//</editor-fold>
 }

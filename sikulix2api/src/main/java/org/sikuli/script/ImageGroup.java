@@ -107,14 +107,7 @@ public class ImageGroup {
 
   // triggered when lastSeen is stored
   protected int[] addImageFacts(Image img, Rectangle r, double score) {
-    int[] facts = new int[5];
-    facts[0] = r.x;
-    facts[1] = r.y;
-    facts[2] = r.width;
-    facts[3] = r.height;
-    facts[4] = (int) (score*100);
-    images.put(img.getName(), facts);
-    return facts;
+    return null;
   }
 
   public boolean loadImageFacts() {

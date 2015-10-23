@@ -166,6 +166,7 @@
     <module>sikulix2api</module>
     <!--    <module>sikulix</module>-->
     <!--    <module>sikulixtensions</module>-->
+    <module>sikulixapitest</module>
   </modules>
 
   <build>
