@@ -10,6 +10,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.sikuli.script.App;
+import org.sikuli.script.Image;
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.Match;
 import org.sikuli.script.Region;
@@ -20,10 +21,13 @@ import org.sikuli.util.Settings;
 public class TestFindBasic {
 
   private static final String logname = "TestFindBasic";
-  private static RunTime sxRuntime = RunTime.get();
+  private static final RunTime sxRuntime = RunTime.get();
   private static Region window = null;
   private static String theClass = "";
   private static String images = "";
+
+  private static Image anImage = null;
+  private static String anImageFile = "";
 
 //<editor-fold defaultstate="collapsed" desc="logging">
   private static final Logger logger = LogManager.getLogger("SX." + logname);
@@ -119,7 +123,7 @@ public class TestFindBasic {
   @Before
   public void setUp() {
     debug("------- setUp --------------------------------------");
-    ImagePath.add(images);
+    ImagePath.setBundlePath(images);
   }
 
   @After
@@ -132,6 +136,7 @@ public class TestFindBasic {
     start("first find - image loaded and cached");
     Match found = window.exists("logo");
     end();
+    anImageFile = window.save("testFirstFind");
     debug("aTest: found: %s", found.toJSON());
     assertTrue(found != null);
   }
@@ -140,6 +145,16 @@ public class TestFindBasic {
   public void testSecondFind() {
     start("second find - cached image reused");
     Match found = window.exists("logo");
+    end();
+    debug("aTest: found: %s", found.toJSON());
+    assertTrue(found != null);
+  }
+
+  @Test
+  public void testFindInImage() {
+    start("find in an image loaded from filesystem");
+    anImage = Image.get(anImageFile);
+    Match found = anImage.find("logo");
     end();
     debug("aTest: found: %s", found.toJSON());
     assertTrue(found != null);

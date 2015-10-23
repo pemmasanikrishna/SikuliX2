@@ -439,12 +439,10 @@ public class ImagePath {
    * @return true if successful otherwise false
    */
   public static boolean add(String mainPath, String altPath) {
-    PathEntry path = null;
-    File fPath = new File(mainPath);
-    if (!fPath.isAbsolute() && mainPath.contains(":")) {
+    if (mainPath.contains(":")) {
       return addHTTP(mainPath);
     }
-    path = makePathURL(mainPath, altPath);
+    PathEntry path = getPath(mainPath, altPath);
     if (path != null) {
       if (hasPath(path) < 0) {
         log(lvl, "add:\n%s", path);
@@ -460,13 +458,29 @@ public class ImagePath {
     return false;
   }
   
-  public static boolean addJar(String fpJar, String fpImage) {
+  private static PathEntry getPath(String mainPath, String altPath) {
+    return makePathURL(mainPath, altPath);
+  }
+  
+  public static URL get(String mainPath) {
+    return get(mainPath, null);
+  }
+  
+  public static URL get(String mainPath, String altPath) {
+    PathEntry path = getPath(mainPath, altPath);
+    if (path != null) {
+      return path.pathURL;
+    }
+    return null;
+  }
+  
+  public static boolean addJar(String fpJar, String fpImages) {
     URL pathURL = null;
     if (new File(fpJar).exists()) {
-      if (fpImage == null) {
-        fpImage = "";
+      if (fpImages == null) {
+        fpImages = "";
       }
-      pathURL = FileManager.makeURL(fpJar + "!/" + fpImage, "jar");
+      pathURL = FileManager.makeURL(fpJar + "!/" + fpImages, "jar");
       add(pathURL);
     }
     return true;
@@ -587,12 +601,7 @@ public class ImagePath {
    */
   public static boolean setBundlePath(String bPath) {
 		PathEntry path = null;
-		if (bPath == null) {
-			// called on first find, if bundlepath still null
-			path = makePathURL(FileManager.normalizeAbsolute(Settings.BundlePath, false), null);
-		} else {
-			path = makePathURL(FileManager.normalizeAbsolute(bPath, false), null);
-		}
+		path = getPath(bPath, null);
 		if (path != null && path.isFile()) {
       if (bundleEquals(path)) {
 				return true;
@@ -600,16 +609,14 @@ public class ImagePath {
       Image.purge(bundlePath);
 			if (path.exists()) {
 				imagePaths.set(0, path);
-				Settings.BundlePath = path.getPath();
 				bundlePath = path;
-				log(lvl, "new BundlePath:\n%s", path);
+				log(lvl, "setBundlePath: \n%s", path);
 				return true;
 			}
 		}
     if (getCount() ==0) {
       String wf = System.getProperty("user.dir");
-      log(-1, "setBundlePath: invalid BundlePath: %s \nusing working folder: %s",
-              bPath, wf);
+      log(-1, "setBundlePath: invalid BundlePath:\n%s \nusing working folder: %s", bPath, wf);
       if (!new File(wf).exists()) {
         log(-1, "setBundlePath: Fatal error: working folder does not exist --- terminating");
         System.exit(1);

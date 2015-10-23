@@ -11,6 +11,7 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
@@ -431,6 +433,22 @@ public class Image {
     return this;
   }
 //</editor-fold>
+  
+public Match find(Object target) {
+  Finder finder = new Finder(this);
+  Pattern pattern = null;
+  Finder.Found found = new Finder.Found(finder);
+  try {
+    pattern = finder.evalTarget(target);
+  } catch (IOException ex) {
+    log(-1, "find: file not found: %s", target);
+  }
+  if (null != pattern) {
+    found.pattern = pattern;
+    finder.find(pattern, found);
+  }
+  return found.match;
+}
 
 //<editor-fold defaultstate="collapsed" desc="Raster">
   private int rows = 0;
@@ -884,6 +902,13 @@ public class Image {
   public Image getSub(int part) {
     Rectangle r = Region.getRectangle(new Rectangle(0, 0, getSize().width, getSize().height), part);
     return getSub(r.x, r.y, r.width, r.height);
+  }
+  
+  public String save(String name) {
+    String fpName = getValidImageFilename("_" + name);
+    File fName = new File(ImagePath.getBundlePath(), fpName);
+    Highgui.imwrite(fName.getAbsolutePath(), mat);
+    return fpName;
   }
 //</editor-fold>
 }

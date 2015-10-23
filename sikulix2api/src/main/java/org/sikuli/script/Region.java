@@ -4030,4 +4030,8 @@ public class Region {
   public String saveScreenCapture(String path, String name) {
     return getScreen().capture(this).save(path, name);
   }
+  
+  public String save(String name) {
+    return new Image(captureThis()).save(name);
+  }
 }
