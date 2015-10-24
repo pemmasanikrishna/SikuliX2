@@ -448,27 +448,15 @@ public class Location implements Comparable<Location>{
    */
   @Override
   public String toString() {
-    IScreen s = getScreen();
-
-    if(s instanceof Screen){
-    	return "L(" + x + "," + y + ")" + "@" + ((Screen) s).toStringShort();
+    String sScreen = "";
+    if (getScreen().getID() != 0) {
+      String.format("@S(%s)",(getScreen()== null) ? "?" : getScreen().getID());
     }
-    else{
-    	return "L(" + x + "," + y + ")" +
-                ((s == null) ? "" : "@" + s.toString());
-    }
-  }
-
-  /**
-   *
-   * @return a shorter description
-   */
-  public String toStringShort() {
-    return "L(" + x + "," + y + ")";
+    return String.format("L[%d,%d]%s", x, y, sScreen);
   }
 
 	public String toJSON() {
-		return String.format("[\"L\", %d, %d]", x, y);
+		return String.format("[\"L\", [%d, %d]]", x, y);
 	}
 
   // to avoid NPE for points outside any screen

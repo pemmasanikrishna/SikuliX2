@@ -92,10 +92,6 @@ public class ScreenRemote extends Screen implements IScreen {
   }
 
   @Override
-  public String toStringShort() {
-    return toString();
-  }
-
   public boolean isValid() {
     return (socketValid && socket != null);
   }

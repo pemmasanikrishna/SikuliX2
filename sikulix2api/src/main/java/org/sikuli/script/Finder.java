@@ -114,7 +114,7 @@ public class Finder {
     private int baseX = 0;
     private int baseY = 0;
     public Image image = null;
-    public boolean inImage = false;
+    public boolean inRegion = true;
 
     public Mat base = null;
 
@@ -178,10 +178,10 @@ public class Finder {
     }
 
     public Found(Finder fndr) {
-      inImage = fndr.isImage;
+      inRegion = fndr.isRegion;
       region = fndr.region;
       image = fndr.image;
-      if (!inImage) {
+      if (inRegion) {
         baseX = region.x;
         baseY = region.y;
       }
@@ -190,8 +190,8 @@ public class Finder {
 
     public String toJSON() {
       String template = "{name:[\"%s\", \"%s\"], elapsed:%s, pattern:%s, %s:%s, match:%s}";
-      String inWhat = inImage ? "in_image" : "in_region";
-      String inWhatJSON = inImage ? image.toJSON(false) : region.toJSON();
+      String inWhat = !inRegion ? "in_image" : "in_region";
+      String inWhatJSON = !inRegion ? image.toJSON(false) : region.toJSON();
       String[] nameParts = name.split("_");
       String found = String.format(template, nameParts[0], nameParts[1], elapsed,
           pattern.toJSON(false), inWhat, inWhatJSON, match.toJSON());
@@ -213,7 +213,6 @@ public class Finder {
   public Finder(Image img) {
     if (img != null && img.isValid()) {
       base = img.getMat();
-      isImage = true;
     } else {
       log(-1, "init: invalid image: %s", img);
     }
@@ -233,7 +232,6 @@ public class Finder {
   protected Finder(Mat base) {
     if (base != null) {
       this.base = base;
-      isMat = true;
     } else {
       log(-1, "init: invalid CV-Mat: %s", base);
     }
@@ -241,22 +239,6 @@ public class Finder {
 
   public void setIsMultiFinder() {
     terminate(1, "TODO setIsMultiFinder()");
-  }
-
-  public boolean setImage(Image img) {
-    return isImage;
-  }
-
-  public boolean inImage() {
-    return isImage;
-  }
-
-  public boolean setRegion(Region reg) {
-    return isRegion;
-  }
-
-  public boolean inRegion() {
-    return isImage;
   }
 
   protected void setBase(BufferedImage bImg) {
@@ -323,7 +305,7 @@ public class Finder {
     Probe probe = new Probe(pattern);
     found.base = base;
     boolean isIterator = Region.FindType.ALL.equals(found.type);
-    if (!isIterator && !useOriginal && Settings.CheckLastSeen && probe.lastSeen != null) {
+    if (isRegion && !isIterator && !useOriginal && Settings.CheckLastSeen && probe.lastSeen != null) {
       // ****************************** check last seen
       begin_t = new Date().getTime();
       Finder lastSeenFinder = new Finder(probe.lastSeen);

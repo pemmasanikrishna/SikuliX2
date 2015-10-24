@@ -151,9 +151,18 @@ public class TestFindBasic {
   }
 
   @Test
-  public void testFindInImage() {
+  public void testFindInImageLoaded() {
     start("find in an image loaded from filesystem");
     anImage = Image.get(anImageFile);
+    Match found = anImage.find("logo");
+    end();
+    debug("aTest: found: %s", found.toJSON());
+    assertTrue(found != null);
+  }
+
+  @Test
+  public void testFindInImageInMemory() {
+    start("find in an image in cache");
     Match found = anImage.find("logo");
     end();
     debug("aTest: found: %s", found.toJSON());
