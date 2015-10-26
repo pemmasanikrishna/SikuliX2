@@ -28,9 +28,7 @@ public class TestFindBasic {
   private static Region window = null;
   private static String theClass = "";
   private static String images = "";
-
-  private static Image anImage = null;
-  private static String anImageFile = "";
+  private static final String testImg = "testImg";
 
 //<editor-fold defaultstate="collapsed" desc="logging">
   private static final Logger logger = LogManager.getLogger("SX." + logname);
@@ -140,7 +138,6 @@ public class TestFindBasic {
     start("first find - image loaded and cached");
     Match found = window.exists("logo");
     end();
-    anImageFile = window.save("testFirstFind");
     debug("aTest: found: %s", found.toJSON());
     assertTrue(found != null);
   }
@@ -170,8 +167,9 @@ public class TestFindBasic {
   @Test
   public void test_4_FindInImageLoaded() {
     debug("------- 4 testFindInImageLoaded");
+    String anImageFile = window.save(testImg + "4");
     start("find in an image loaded from filesystem");
-    anImage = Image.get(anImageFile);
+    Image anImage = Image.get(anImageFile);
     Match found = anImage.find("logo");
     end();
     debug("aTest: found: %s", found.toJSON());
@@ -181,6 +179,7 @@ public class TestFindBasic {
   @Test
   public void test_5_FindInImageInMemory() {
     debug("------- 5 testFindInImageInMemory");
+    Image anImage = Image.get(window.save(testImg));
     start("find in an image in cache");
     Match found = anImage.find("logo");
     end();
@@ -191,6 +190,7 @@ public class TestFindBasic {
   @Test
   public void test_6_Compare2ImagesInMemory() {
     debug("------- 6 testCompare2ImagesInMemory");
+    Image anImage = Image.get(window.save(testImg));
     start("compare 2 cached images ");
     Match found = anImage.find(anImage);
     end();
@@ -202,8 +202,8 @@ public class TestFindBasic {
   public void test_7_Compare2ImagesLoaded() {
     debug("------- 7 testCompare2ImagesLoaded");
     start("");
-    String anImageFile1 = window.save("image1");
-    String anImageFile2 = window.save("image2");
+    String anImageFile1 = window.save(testImg + "7");
+    String anImageFile2 = window.save(testImg + "71");
     end();
     debug("capture and store 2 images: %d msec", duration);    
     start("compare 2 images loaded from filesystem");
