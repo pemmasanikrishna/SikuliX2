@@ -8,7 +8,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
 import static org.junit.Assert.*;
+import org.junit.runners.MethodSorters;
 import org.sikuli.script.App;
 import org.sikuli.script.Image;
 import org.sikuli.script.ImagePath;
@@ -18,6 +20,7 @@ import org.sikuli.script.RunTime;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Settings;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestFindBasic {
 
   private static final String logname = "TestFindBasic";
@@ -132,8 +135,8 @@ public class TestFindBasic {
   }
 
   @Test
-  public void testFirstFind() {
-    debug("------- testFirstFind");
+  public void test_1_FirstFind() {
+    debug("------- 1 testFirstFind");
     start("first find - image loaded and cached");
     Match found = window.exists("logo");
     end();
@@ -143,8 +146,8 @@ public class TestFindBasic {
   }
 
   @Test
-  public void testSecondFind() {
-    debug("------- testSecondFind");
+  public void test_2_SecondFind() {
+    debug("------- 2 testSecondFind");
     start("second find - cached image reused - no check last seen");
     Settings.CheckLastSeen = false;
     Match found = window.exists("logo");
@@ -154,8 +157,8 @@ public class TestFindBasic {
   }
   
   @Test
-  public void testSecondFindLastSeen() {
-    debug("------- testSecondFindLastSeen");
+  public void test_3_SecondFindLastSeen() {
+    debug("------- 3 testSecondFindLastSeen");
     start("second find - cached image reused - check last seen");
     Settings.CheckLastSeen = true;
     Match found = window.exists("logo");
@@ -165,8 +168,8 @@ public class TestFindBasic {
   }
   
   @Test
-  public void testFindInImageLoaded() {
-    debug("------- testFindInImageLoaded");
+  public void test_4_FindInImageLoaded() {
+    debug("------- 4 testFindInImageLoaded");
     start("find in an image loaded from filesystem");
     anImage = Image.get(anImageFile);
     Match found = anImage.find("logo");
@@ -176,8 +179,8 @@ public class TestFindBasic {
   }
   
   @Test
-  public void testFindInImageInMemory() {
-    debug("------- testFindInImageInMemory");
+  public void test_5_FindInImageInMemory() {
+    debug("------- 5 testFindInImageInMemory");
     start("find in an image in cache");
     Match found = anImage.find("logo");
     end();
@@ -186,8 +189,8 @@ public class TestFindBasic {
   }
 
   @Test
-  public void testCompare2ImagesInMemory() {
-    debug("------- testCompare2ImagesInMemory");
+  public void test_6_Compare2ImagesInMemory() {
+    debug("------- 6 testCompare2ImagesInMemory");
     start("compare 2 cached images ");
     Match found = anImage.find(anImage);
     end();
@@ -196,8 +199,8 @@ public class TestFindBasic {
   }
 
   @Test
-  public void testCompare2ImagesLoaded() {
-    debug("------- testCompare2ImagesLoaded");
+  public void test_7_Compare2ImagesLoaded() {
+    debug("------- 7 testCompare2ImagesLoaded");
     start("");
     String anImageFile1 = window.save("image1");
     String anImageFile2 = window.save("image2");
