@@ -197,21 +197,12 @@ public class Region {
    */
   @Override
   public String toString() {
-    return String.format("R[%d,%d %dx%d]@%s E:%s, T:%.1f",
-        x, y, w, h, (getScreen() == null ? "Screen null" : getScreen().toStringShort()),
-        throwException ? "Y" : "N", autoWaitTimeout);
-  }
-
-  /**
-   *
-   * @return a compact description
-   */
-  public String toStringShort() {
-    return String.format("R[%d,%d %dx%d]@S(%s)", x, y, w, h, (getScreen() == null ? "?" : getScreen().getID()));
+    return String.format("R[%d,%d %dx%d]@S(%s)", x, y, w, h, 
+            (getScreen() == null ? "?" : getScreen().getID()));
   }
 
   public String toJSON() {
-    return String.format("[\"R\", %d, %d, %d, %d]", x, y, w, h);
+    return String.format("[\"R\", [%d, %d, %d, %d]]", x, y, w, h);
   }
 
   //<editor-fold defaultstate="collapsed" desc="OFF: Specials for scripting environment">
@@ -2185,7 +2176,7 @@ public class Region {
       if (target instanceof String) {
         targetStr = targetStr.trim();
       }
-      throw new FindFailed(String.format("%s not in %s", targetStr, this.toStringShort()));
+      throw new FindFailed(String.format("%s not in %s", targetStr, this.toString()));
     }
     return false;
   }
@@ -2678,7 +2669,7 @@ public class Region {
     String begin_s = String.format("%d", begin_t);
     found.name = (findAll ? "findall_" : (findVanish ? "vanish_" : "appear_")) + begin_s;
     log(lvl, "%s: %.1fs %s %s",
-        found.name, timeout, pattern.getText(), this.toStringShort());
+        found.name, timeout, pattern.getText(), this.toString());
 
     Match matchVanish = null;
     if (findVanish) {
@@ -2846,7 +2837,7 @@ public class Region {
       observer = new ObserverCallBack(observer, obsType);
     }
     String name = Observing.add(this, (ObserverCallBack) observer, obsType, targetThreshhold);
-    log(lvl, "%s: observer %s %s: %s with: %s", toStringShort(), obsType,
+    log(lvl, "%s: observer %s %s: %s with: %s", toString(), obsType,
         (observer == null ? "" : " with callback"), name, targetThreshhold);
     return name;
   }
@@ -2968,7 +2959,7 @@ public class Region {
 //</editor-fold>
   public String onChangeDo(int threshold, Object observer) {
     String name = Observing.add(this, (ObserverCallBack) observer, ObserveEvent.Type.CHANGE, threshold);
-    log(lvl, "%s: onChange%s: %s minSize: %d", toStringShort(),
+    log(lvl, "%s: onChange%s: %s minSize: %d", toString(),
         (observer == null ? "" : " with callback"), name, threshold);
     return name;
   }
@@ -3011,14 +3002,14 @@ public class Region {
 
   private boolean observeDo(double secs) {
     if (regionObserver == null) {
-      Debug.error("Region: observe: Nothing to observe (Region might be invalid): " + this.toStringShort());
+      Debug.error("Region: observe: Nothing to observe (Region might be invalid): " + this.toString());
       return false;
     }
     if (observing) {
       Debug.error("Region: observe: already running for this region. Only one allowed!");
       return false;
     }
-    log(lvl, "observe: starting in " + this.toStringShort() + " for " + secs + " seconds");
+    log(lvl, "observe: starting in " + this.toString() + " for " + secs + " seconds");
     int MaxTimePerScan = (int) (1000.0 / observeScanRate);
     long begin_t = (new Date()).getTime();
     long stop_t;
@@ -3052,9 +3043,9 @@ public class Region {
     if (observing) {
       observing = false;
       log(lvl, "observe: stopped due to timeout in "
-          + this.toStringShort() + " for " + secs + " seconds");
+          + this.toString() + " for " + secs + " seconds");
     } else {
-      log(lvl, "observe: ended successfully: " + this.toStringShort());
+      log(lvl, "observe: ended successfully: " + this.toString());
       observeSuccess = Observing.hasEvents(this);
     }
     return observeSuccess;
@@ -3097,7 +3088,7 @@ public class Region {
    * stops a running observer
    */
   public void stopObserver() {
-    log(lvl, "observe: request to stop observer for " + this.toStringShort());
+    log(lvl, "observe: request to stop observer for " + this.toString());
     observing = false;
   }
 

@@ -32,6 +32,10 @@ public class Match extends Region implements Comparable<Match> {
   public void setOnScreen(boolean state) {
     onScreen = state;
   }
+  
+  public boolean isOnScreen() {
+    return onScreen;
+  }
 
   public int getIndex() {
     return index;
@@ -283,26 +287,28 @@ public class Match extends Region implements Comparable<Match> {
 
   @Override
   public String toString() {
-    String starget;
+    String starget = "";
     Location c = getCenter();
-    if (target != null && !c.equals(target)) {
-      starget = String.format(" T:%d,%d", target.x, target.y);
+    if (target != null) {
+      if (!c.equals(target)) {
+        starget = String.format(" [%d,%d]", target.x, target.y);
+      }
     } else {
       starget = "";
     }
-    return String.format("M[%d,%d %dx%d %%%.2f]@S(%s)%s", x, y, w, h, simScore*100,
-              ((getScreen()== null || !onScreen) ? "?" : getScreen().getID()), starget);
-  }
-
-  @Override
-  public String toStringShort() {
-    return toString();
+    String sScreen = "";
+    if (getScreen().getID() != 0) {
+      String.format("@S(%s)",(getScreen()== null || !onScreen) ? "?" : getScreen().getID());
+    }
+    String sScore = String.format("%%%.4f", simScore*100).replace(",", ".");
+    return String.format("M[%d,%d %dx%d %s%s]%s", x, y, w, h, sScore, starget, sScreen);
   }
 
 	@Override
 	public String toJSON() {
-		String strTarget = target == null ? "" : String.format(", [%d, %d]", target.x, target.y);
-		return String.format("[\"M\", [%d, %d, %d, %d], %d%s]", x, y, w, h, (int) (simScore * 10000), strTarget);
+    String sScore = String.format("%f", simScore).replace(",", ".");
+		String strTarget = target == null ? ", []" : String.format(", [%d, %d]", target.x, target.y);
+		return String.format("[\"M\", [%d, %d, %d, %d], %s%s]", x, y, w, h, sScore, strTarget);
 	}
 
 	/**

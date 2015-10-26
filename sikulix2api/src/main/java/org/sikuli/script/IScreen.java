@@ -50,6 +50,4 @@ public interface IScreen {
 	public ScreenImage userCapture(String string);
 
 	public int getIdFromPoint(int srcx, int srcy);
-	
-	public String toStringShort();
 }

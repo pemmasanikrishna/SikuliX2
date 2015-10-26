@@ -97,7 +97,7 @@ public class OverlayCapturePrompt extends OverlayTransparentWindow implements Ev
         srcScreenId = scrOCP.getIdFromPoint(srcx, srcy);
         srcScreenLocation = new Location(srcx + scrOCP.getX(), srcy + scrOCP.getY());
         Debug.log(4, "CapturePrompt: started at (%d,%d) as %s on %d", srcx, srcy,
-                srcScreenLocation.toStringShort(), srcScreenId);
+                srcScreenLocation.toString(), srcScreenId);
         repaint();
       }
 
@@ -116,7 +116,7 @@ public class OverlayCapturePrompt extends OverlayTransparentWindow implements Ev
         } else {
           destScreenLocation = new Location(destx + scrOCP.getX(), desty + scrOCP.getY());
           Debug.log(4, "CapturePrompt: finished at (%d,%d) as %s on %d", destx, desty,
-                  destScreenLocation.toStringShort(), srcScreenId);
+                  destScreenLocation.toString(), srcScreenId);
         }
         setVisible(false);
         notifyObserver();

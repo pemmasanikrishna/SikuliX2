@@ -64,7 +64,7 @@ public class Observer {
   }
 
   protected void initialize() {
-    log(3, "resetting observe states for " + observedRegion.toStringShort());
+    log(3, "resetting observe states for " + observedRegion.toString());
     synchronized (eventNames) {
       for (String name : eventNames.keySet()) {
         eventStates.put(name, State.FIRST);
@@ -214,10 +214,10 @@ public class Observer {
       if (hasMatch) {
         eventMatches.put(name, match);
         log(lvl + 1, "(%s): %s match: %s in:%s", eventTypes.get(name), ptn.toString(),
-                match.toStringShort(), observedRegion.toStringShort());
+                match.toString(), observedRegion.toString());
       } else if (eventStates.get(ptn) == State.FIRST) {
         log(lvl + 1, "(%s): %s match: %s in:%s", eventTypes.get(name), ptn.toString(),
-                match.toStringShort(), observedRegion.toStringShort());
+                match.toString(), observedRegion.toString());
         eventStates.put(name, State.UNKNOWN);
       }
       if (eventStates.get(name) != State.HAPPENED) {

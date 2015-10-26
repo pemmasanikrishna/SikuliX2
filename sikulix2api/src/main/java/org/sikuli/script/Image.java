@@ -86,6 +86,34 @@ public class Image {
   }
 //</editor-fold>
 
+//<editor-fold defaultstate="collapsed" desc="toString">
+  public String getImageName() {
+    if (isInMemory) {
+      return ("isInMemory");
+    } else {
+      return new File(fileURL.getPath()).getName();
+    }
+  }
+  
+  @Override
+  public String toString() {
+    return String.format("I[%s (%dx%d)%s]",
+            getImageName(), mwidth, mheight,
+            (lastSeen == null ? "" : String.format(" at(%d,%d) %%%.2f",
+                    lastSeen.x, lastSeen.y, (int) (lastScore*100))));
+  }
+  
+  public String toJSON(boolean withLastSeen) {
+    return String.format("[\"I\", \"%s\", %d, %d%s]",
+            fileURL, mwidth, mheight,
+            (withLastSeen && lastSeen != null) ? ", " + new Match(lastSeen, lastScore).toJSON() : "");
+  }
+  
+  public String toJSON() {
+    return toJSON(true);
+  }
+//</editor-fold>
+  
   private static List<Image> images = Collections.synchronizedList(new ArrayList<Image>());
   private static Map<URL, Image> imageFiles = Collections.synchronizedMap(new HashMap<URL, Image>());
 
@@ -616,34 +644,6 @@ public Match find(Object target) {
   }
 //</editor-fold>
   
-//<editor-fold defaultstate="collapsed" desc="toString">
-  public String getImageName() {
-    if (isInMemory) {
-      return ("isInMemory");
-    } else {
-      return new File(fileURL.getPath()).getName();
-    }
-  }
-  
-  @Override
-  public String toString() {
-    return String.format("I[%s (%dx%d)%s]",
-            getImageName(), mwidth, mheight,
-            (lastSeen == null ? "" : String.format(" at(%d,%d) %%%.2f",
-                    lastSeen.x, lastSeen.y, (int) (lastScore*100))));
-  }
-  
-  public String toJSON(boolean withLastSeen) {
-    return String.format("[\"I\", \"%s\", %d, %d%s]",
-            fileURL, mwidth, mheight,
-            (withLastSeen && lastSeen != null) ? ", " + new Match(lastSeen, lastScore).toJSON() : "");
-  }
-  
-  public String toJSON() {
-    return toJSON(true);
-  }
-//</editor-fold>
-  
 //<editor-fold defaultstate="collapsed" desc="Constructors">
   public boolean isValid() {
     return fileURL != null && mat != null;
@@ -714,7 +714,7 @@ public Match find(Object target) {
           int maxMemory = Settings.getImageCache() * MB;
           currentMemoryUp(msize);
           images.add(this);
-          msg = String.format("load: cached: (%dx%d) #%d %%%d of %dMB)\n%s",
+          msg = String.format("load: cached: (%dx%d) #%d %%%d of %dMB\n%s",
               mwidth, mheight, images.size(),
               (int) (100 * currentMemory / maxMemory), (int) (maxMemory / MB), fileURL);
         }

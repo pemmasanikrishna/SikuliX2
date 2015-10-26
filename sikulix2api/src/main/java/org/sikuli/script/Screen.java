@@ -96,9 +96,9 @@ public class Screen extends Region implements EventObserver, IScreen {
         lcn = Mouse.at();
         if (!lc.equals(lcn)) {
           log(lvl, "*** multimonitor click check: %s center: (%d, %d) --- NOT OK:  (%d, %d)",
-              s.toStringShort(), lc.x, lc.y, lcn.x, lcn.y);
+              s.toString(), lc.x, lc.y, lcn.x, lcn.y);
         } else {
-          log(lvl, "*** checking: %s center: (%d, %d) --- OK", s.toStringShort(), lc.x, lc.y);
+          log(lvl, "*** checking: %s center: (%d, %d) --- OK", s.toString(), lc.x, lc.y);
         }
       }
       Mouse.move(lnow);
@@ -266,7 +266,7 @@ public class Screen extends Region implements EventObserver, IScreen {
     Debug.logp("*** monitor configuration [ %s Screen(s)] ***", Screen.getNumberScreens());
     Debug.logp("*** Primary is Screen %d", primaryScreen);
     for (int i = 0; i < runTime.nMonitors; i++) {
-      Debug.logp("Screen %d: %s", i, Screen.getScreen(i).toStringShort());
+      Debug.logp("Screen %d: %s", i, Screen.getScreen(i).toString());
     }
     Debug.logp("*** end monitor configuration ***");
   }
@@ -283,7 +283,7 @@ public class Screen extends Region implements EventObserver, IScreen {
     Debug.logp("*** new monitor configuration [ %s Screen(s)] ***", Screen.getNumberScreens());
     Debug.logp("*** Primary is Screen %d", primaryScreen);
     for (int i = 0; i < runTime.nMonitors; i++) {
-      Debug.logp("Screen %d: %s", i, Screen.getScreen(i).toStringShort());
+      Debug.logp("Screen %d: %s", i, Screen.getScreen(i).toString());
     }
     Debug.error("*** end new monitor configuration ***");
   }
@@ -633,30 +633,8 @@ public class Screen extends Region implements EventObserver, IScreen {
   //</editor-fold>
 
   @Override
-  public String toString() {
-    Rectangle r = getBounds();
-    return String.format("S[(%d) %d,%d %dx%d] E:%s, T:%.1f",
-        curID, (int) r.getX(), (int) r.getY(),
-        (int) r.getWidth(), (int) r.getHeight(),
-        getThrowException() ? "Y" : "N", getAutoWaitTimeout());
-  }
-
-  /**
-   * only a short version of toString()
-   *
-   * @return like S(0) [0,0, 1440x900]
-   */
-  @Override
-  public String toStringShort() {
-    Rectangle r = getBounds();
-    return String.format("S[(%d) %d,%d %dx%d]",
-        curID, (int) r.getX(), (int) r.getY(),
-        (int) r.getWidth(), (int) r.getHeight());
-  }
-
-  @Override
   public String toJSON() {
     Rectangle r = getBounds();
-    return String.format("[\"S\", %d, %d, %d, %d, %d]", r.x, r.y, r.width, r.height, curID);
+    return String.format("[\"R\", %d, %d, %d, %d]", r.x, r.y, r.width, r.height, curID);
   }
 }
