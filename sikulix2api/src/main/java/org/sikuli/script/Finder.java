@@ -65,7 +65,7 @@ public class Finder {
   private boolean isImage = false;
   private Image image = null;
 
-  private boolean isRegion = false;
+  private boolean isRegion = true;
   private Region region = null;
   private int offX = 0, offY = 0;
 
@@ -178,14 +178,15 @@ public class Finder {
     }
 
     public Found(Finder fndr) {
-      inRegion = fndr.isRegion;
-      region = fndr.region;
-      image = fndr.image;
+      finder = fndr;
+      inRegion = finder.inRegion();
       if (inRegion) {
+        region = finder.getRegion();
         baseX = region.x;
         baseY = region.y;
+      } else {
+        image = finder.getImage();
       }
-      finder = fndr;
     }
 
     public String toJSON() {
@@ -212,7 +213,9 @@ public class Finder {
 
   public Finder(Image img) {
     if (img != null && img.isValid()) {
+      image = img;
       base = img.getMat();
+      isRegion = false;
     } else {
       log(-1, "init: invalid image: %s", img);
     }
@@ -223,7 +226,6 @@ public class Finder {
       region = reg;
       offX = region.x;
       offY = region.y;
-      isRegion = true;
     } else {
       log(-1, "init: invalid region: %s", reg);
     }
@@ -231,6 +233,7 @@ public class Finder {
 
   protected Finder(Mat base) {
     if (base != null) {
+      image = new Image(base);
       this.base = base;
     } else {
       log(-1, "init: invalid CV-Mat: %s", base);
@@ -260,6 +263,18 @@ public class Finder {
       return false;
     }
     return true;
+  }
+  
+  public boolean inRegion() {
+    return isRegion;
+  }
+  
+  public Region getRegion() {
+    return region;
+  }
+
+  public Image getImage() {
+    return image;
   }
 
   public boolean find(Object target, Found found) {
@@ -347,22 +362,29 @@ public class Finder {
       }
       if (!isIterator && mMinMax != null) {
         // ************************************* check after downsized success
-        int maxLocX = (int) (mMinMax.maxLoc.x * rfactor);
-        int maxLocY = (int) (mMinMax.maxLoc.y * rfactor);
-        begin_t = new Date().getTime();
-        int margin = ((int) probe.img.getResizeFactor()) + 1;
-        Rect r = new Rect(Math.max(0, maxLocX - margin), Math.max(0, maxLocY - margin),
-            Math.min(probe.img.getWidth() + 2 * margin, base.width()),
-            Math.min(probe.img.getHeight() + 2 * margin, base.height()));
-        result = doFindMatch(probe, base.submat(r), probe.mat);
-        mMinMax = Core.minMaxLoc(result);
-        if (mMinMax.maxVal > probe.similarity) {
-          mFound = new Match((int) mMinMax.maxLoc.x + offX + r.x, (int) mMinMax.maxLoc.y + offY + r.y,
-              probe.img.getWidth(), probe.img.getHeight(), mMinMax.maxVal);
+        if (base.size().equals(probe.mat.size())) {
+          // trust downsized result, if images have same size
+          mFound = new Match((int) offX, (int) offY,
+              base.width(), base.height(), mMinMax.maxVal);
           success = true;
+        } else {
+          int maxLocX = (int) (mMinMax.maxLoc.x * rfactor);
+          int maxLocY = (int) (mMinMax.maxLoc.y * rfactor);
+          begin_t = new Date().getTime();
+          int margin = ((int) probe.img.getResizeFactor()) + 1;
+          Rect r = new Rect(Math.max(0, maxLocX - margin), Math.max(0, maxLocY - margin),
+              Math.min(probe.img.getWidth() + 2 * margin, base.width()),
+              Math.min(probe.img.getHeight() + 2 * margin, base.height()));
+          result = doFindMatch(probe, base.submat(r), probe.mat);
+          mMinMax = Core.minMaxLoc(result);
+          if (mMinMax.maxVal > probe.similarity) {
+            mFound = new Match((int) mMinMax.maxLoc.x + offX + r.x, (int) mMinMax.maxLoc.y + offY + r.y,
+                probe.img.getWidth(), probe.img.getHeight(), mMinMax.maxVal);
+            success = true;
+          }
+          log(lvl + 1, "doFind: check after doFindDown %%%.2f(%%%.2f) %d msec",
+              mMinMax.maxVal * 100, probe.similarity * 100, new Date().getTime() - begin_t);
         }
-        log(lvl + 1, "doFind: check after doFindDown %%%.2f(%%%.2f) %d msec",
-            mMinMax.maxVal * 100, probe.similarity * 100, new Date().getTime() - begin_t);
       }
       if (isIterator || (!success && useOriginal)) {
         // ************************************** search in original 
