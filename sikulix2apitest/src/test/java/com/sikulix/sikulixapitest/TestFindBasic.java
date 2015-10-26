@@ -108,7 +108,7 @@ public class TestFindBasic {
     App.openLink("http://www.sikulix.com/uploads/1/4/2/8/14281286/1389697664.png");
     App.pause(3);
     window = App.focusedWindow();
-    trace("%s", window.toJSON());
+    trace("searching in region %s", window.toJSON());
     Debug.on(3);
   }
 
@@ -133,6 +133,7 @@ public class TestFindBasic {
 
   @Test
   public void testFirstFind() {
+    debug("------- testFirstFind");
     start("first find - image loaded and cached");
     Match found = window.exists("logo");
     end();
@@ -143,15 +144,29 @@ public class TestFindBasic {
 
   @Test
   public void testSecondFind() {
-    start("second find - cached image reused");
+    debug("------- testSecondFind");
+    start("second find - cached image reused - no check last seen");
+    Settings.CheckLastSeen = false;
     Match found = window.exists("logo");
     end();
     debug("aTest: found: %s", found.toJSON());
     assertTrue(found != null);
   }
-
+  
+  @Test
+  public void testSecondFindLastSeen() {
+    debug("------- testSecondFindLastSeen");
+    start("second find - cached image reused - check last seen");
+    Settings.CheckLastSeen = true;
+    Match found = window.exists("logo");
+    end();
+    debug("aTest: found: %s", found.toJSON());
+    assertTrue(found != null);
+  }
+  
   @Test
   public void testFindInImageLoaded() {
+    debug("------- testFindInImageLoaded");
     start("find in an image loaded from filesystem");
     anImage = Image.get(anImageFile);
     Match found = anImage.find("logo");
@@ -159,11 +174,37 @@ public class TestFindBasic {
     debug("aTest: found: %s", found.toJSON());
     assertTrue(found != null);
   }
-
+  
   @Test
   public void testFindInImageInMemory() {
+    debug("------- testFindInImageInMemory");
     start("find in an image in cache");
     Match found = anImage.find("logo");
+    end();
+    debug("aTest: found: %s", found.toJSON());
+    assertTrue(found != null);
+  }
+
+  @Test
+  public void testCompare2ImagesInMemory() {
+    debug("------- testCompare2ImagesInMemory");
+    start("compare 2 cached images ");
+    Match found = anImage.find(anImage);
+    end();
+    debug("aTest: found: %s", found.toJSON());
+    assertTrue(found != null);
+  }
+
+  @Test
+  public void testCompare2ImagesLoaded() {
+    debug("------- testCompare2ImagesLoaded");
+    start("");
+    String anImageFile1 = window.save("image1");
+    String anImageFile2 = window.save("image2");
+    end();
+    debug("capture and store 2 images: %d msec", duration);    
+    start("compare 2 images loaded from filesystem");
+    Match found = Image.get(anImageFile1).find(anImageFile2);
     end();
     debug("aTest: found: %s", found.toJSON());
     assertTrue(found != null);

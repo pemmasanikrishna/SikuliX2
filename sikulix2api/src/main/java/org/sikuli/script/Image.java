@@ -18,11 +18,11 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
@@ -83,6 +83,26 @@ public class Image {
   public static void terminate(int retval, String message, Object... args) {
     logger.fatal(String.format(" *** terminating: " + message, args));
     System.exit(retval);
+  }
+  
+  private long started = 0;
+  
+  private void start() {
+    started = new Date().getTime();
+  }
+
+  private long end() {
+    return end("");
+  }
+
+  private long end(String message) {
+    long ended = new Date().getTime();
+    long diff = ended - started;
+    if (!message.isEmpty()) {
+      logp("[time] %s: %d msec", message, diff);
+    }
+    started = ended;
+    return diff;
   }
 //</editor-fold>
 
@@ -463,6 +483,7 @@ public class Image {
 //</editor-fold>
   
 public Match find(Object target) {
+  start();
   Finder finder = new Finder(this);
   Pattern pattern = null;
   Finder.Found found = new Finder.Found(finder);
@@ -473,8 +494,11 @@ public Match find(Object target) {
   }
   if (null != pattern) {
     found.pattern = pattern;
+    found.name = String.format("inImage_%s", new Date().getTime());
     finder.find(pattern, found);
   }
+  found.elapsed = end();
+  log(lvl+1, found.toJSON());
   return found.match;
 }
 
