@@ -10,8 +10,10 @@ import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -23,11 +25,17 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.Rect;
@@ -62,7 +70,7 @@ public class Image {
   private static final Logger logger = LogManager.getLogger("SX.Image");
 
   private static void log(int level, String message, Object... args) {
-    if (Debug.is(lvl)) {
+    if (Debug.is(lvl) || level < 0) {
       message = String.format(message, args).replaceFirst("\\n", "\n          ");
       if (level == lvl) {
         logger.debug(message, args);
@@ -134,10 +142,132 @@ public class Image {
   }
 //</editor-fold>
   
+//<editor-fold defaultstate="collapsed" desc="Constructors">
+  public boolean isValid() {
+    return fileURL != null && mat != null;
+  }
+
+  public boolean isUseable() {
+    return isValid() || isInMemory;
+  }
+  
+  private boolean hasText = false;
+  public boolean isText() {
+    return hasText;
+  }
+
+  private Image() {
+  }
+  
+  private Image(URL fURL) {
+    fileURL = fURL;
+  }
+  
+  public Image(Object img) {
+    terminate(1, "Image(Object)");
+  }
+
+  public static Image get(Object source) {
+    Image img = new Image();
+    if (null == source) {
+      return img;
+    }
+    URL fURL = null;
+    if (source instanceof URL) {
+      fURL = (URL) source; 
+    } else if (source instanceof String) {
+      fURL = ImagePath.find((String) source);
+    }
+    if (null != fURL) {
+      img = imageFiles.get(fURL);
+      if (img == null) {
+        img = new Image(fURL);
+        img.load();
+      } else {
+        log(lvl, "get: reused: %s (%dx%d)", img.getImageName(), img.getWidth(), img.getHeight());        
+      }
+    } else {
+      log(-1, "get: not loadable: %s", source);
+    }
+    return img;
+  }
+  
+  private boolean load() {
+    boolean success = true;
+    if (fileURL != null) {
+      mat = null;
+      File imgFile = new File(fileURL.getPath());
+      mat = Highgui.imread(imgFile.getAbsolutePath());
+      if (mat.empty()) {
+        mat = null;
+        success = false;
+      }
+      if (success) {
+        mwidth = mat.width();
+        mheight = mat.height();
+        msize = mat.channels() * mwidth * mheight;;
+        log(lvl, "load: loaded: (%dx%s)\n%s", mwidth, mheight, fileURL);
+        add();
+      } else {
+        log(-1, "load: not loaded - taken as text:\n%s", fileURL);
+        hasText = true;
+      }
+    }
+    return success;
+  }
+//</editor-fold>
+  
+//<editor-fold defaultstate="collapsed" desc="inMemory BImg, SImg, Region">
+  private boolean isInMemory = false;
+  
+  private Image(Mat aMat) {
+    mat = aMat;
+    mwidth = mat.width();
+    mheight = mat.height();
+    msize = mat.channels() * mwidth * mheight;;
+    isInMemory = true;
+    this.add();
+  }
+    
+  /**
+   * create a new image with name as timestamp from a region's captured content<br>
+   *
+   * @param reg
+   */
+  public Image(Region reg) {
+    this(reg.captureThis());
+  }
+  
+  /**
+   * create a new image with name as timestamp from a ScreenImage (captured before)<br>
+   *
+   * @param img ScreenImage
+   */
+  public Image(ScreenImage img) {
+    this(img.getImage());
+  }
+
+  /**
+   * create a new image with name as timestamp from a buffered image<br>
+   *
+   * @param bImg BufferedImage
+   */
+  public Image(BufferedImage bImg) {
+    mat = makeMat(bImg);
+    if (mat != null) {
+      mwidth = mat.width();
+      mheight = mat.height();
+      msize = mat.channels() * mwidth * mheight;;
+      isInMemory = true;
+      this.add();
+    }
+  }
+//</editor-fold>
+  
+//<editor-fold defaultstate="collapsed" desc="Caching">
   private static List<Image> images = Collections.synchronizedList(new ArrayList<Image>());
   private static Map<URL, Image> imageFiles = Collections.synchronizedMap(new HashMap<URL, Image>());
 
-//<editor-fold defaultstate="collapsed" desc="Caching">
   private static int KB = 1024;
   private static int MB = KB * KB;
   
@@ -176,11 +306,6 @@ public class Image {
     currentMemory -= size;
     currentMemory = Math.max(0, currentMemory);
     return currentMemoryChange(-size, -1);
-  }
-  
-  private static long currentMemoryDownUp(int sizeOld, int sizeNew) {
-    currentMemoryDown(sizeOld);
-    return currentMemoryUp(sizeNew);
   }
   
   private static boolean isCaching() {
@@ -281,25 +406,53 @@ public class Image {
       }
     }
   }
-//</editor-fold>
-
-  protected static String getValidImageFilename(String fname) {
-    String validEndings = ".png.jpg.jpeg.tiff.bmp";
-    String defaultEnding = ".png";
-    int dot = fname.lastIndexOf(".");
-    String ending = defaultEnding;
-    if (dot > 0) {
-      ending = fname.substring(dot);
-      if (validEndings.contains(ending.toLowerCase())) {
-        return fname;
+  
+  public Image add() {
+    if (isCaching() && isUseable()) {
+      remove();
+      if (!isInMemory) {
+        imageFiles.put(fileURL, this);
       }
-    } else {
-      fname += ending;
-      return fname;
+      images.add(this);
+      currentMemoryUp(msize);
+      cacheLog("add");
     }
-    return "";
+    checkProbe();
+    return this;
   }
   
+  public Image update() {
+    if (isCaching() && isValid()) {
+      if (images.remove(this)) {
+        currentMemoryDown(msize);
+      }
+      load();
+      cacheLog("update");
+    }
+    return this;
+  }
+  
+  public Image remove() {
+    if (isCaching() && isUseable()) {
+      if (!isInMemory) {
+        imageFiles.remove(fileURL);
+      }
+      if (images.remove(this)) {
+        currentMemoryDown(msize);
+      }
+      cacheLog("remove");
+    }
+    mat = null;
+    return this;
+  }
+  
+  private void cacheLog(String type) {
+    int maxMemory = Settings.getImageCache() * MB;
+    log(lvl + 1, "cache %s: (%dx%d) #%d %%%d of %dMB", type, mwidth, mheight, images.size(),
+        (int) (100 * currentMemory / maxMemory), (int) (maxMemory / MB));
+  }
+//</editor-fold>
+
 //<editor-fold defaultstate="collapsed" desc="fileURL">
   private URL fileURL = null;
 
@@ -384,6 +537,8 @@ public class Image {
     }
 		return (int) msize / KB;
 	}
+  
+  private JFrame frImg = null;
 
   public BufferedImage get() {
     BufferedImage bimg = null;
@@ -482,69 +637,71 @@ public class Image {
   }
 //</editor-fold>
   
-public Match find(Object target) {
-  start();
-  Finder finder = new Finder(this);
-  Pattern pattern = null;
-  Finder.Found found = new Finder.Found(finder);
-  try {
-    pattern = finder.evalTarget(target);
-  } catch (IOException ex) {
-    log(-1, "find: file not found: %s", target);
-  }
-  if (null != pattern) {
-    found.pattern = pattern;
-    found.name = String.format("inImage_%s", new Date().getTime());
-    finder.find(found);
-  }
-  found.elapsed = end();
-  log(lvl+1, found.toJSON());
-  return found.match;
-}
-
-public Finder.Found findAny(Object[] targets) {
-  Finder.Found found = dofindAny(targets, Region.FindType.ANY);
-  return found;
-}
-
-public Finder.Found findBest(Object[] targets) {
-  Finder.Found found = dofindAny(targets, Region.FindType.BEST);
-  return found;
-}
-
-public Finder.Found dofindAny(Object[] targets, Region.FindType type) {
-  String sType = (type.equals(Region.FindType.ANY) ? "findAny" : "findBest");
-  if (targets.length == 0) {
-    log(-1, sType + ": no targets");
-    return null;
-  }
-  start();
-  Finder finder = new Finder(this);
-  Finder.Found found = new Finder.Found(finder);
-  evalTargets(targets, found);
-  found.name = String.format("inImage_%s_%s", sType, new Date().getTime());
-  found.type = type;
-  finder.find(found);
-  found.elapsed = end();
-  log(lvl+1, found.toJSON());
-  return found;
-}
-
-private void evalTargets(Object[] targets, Finder.Found found) {
-  Pattern[] patterns = new Pattern[targets.length];
-  int nP = 0;
-  for (Object target : targets) {
+//<editor-fold defaultstate="collapsed" desc="find">
+  public Match find(Object target) {
+    start();
+    Finder finder = new Finder(this);
     Pattern pattern = null;
+    Finder.Found found = new Finder.Found(finder);
     try {
-      pattern = Finder.evalTarget(target);
+      pattern = finder.evalTarget(target);
     } catch (IOException ex) {
       log(-1, "find: file not found: %s", target);
     }
-    patterns[nP++] = pattern; 
+    if (null != pattern) {
+      found.pattern = pattern;
+      found.name = String.format("inImage_%s", new Date().getTime());
+      finder.find(found);
+    }
+    found.elapsed = end();
+    log(lvl+1, found.toJSON());
+    return found.match;
   }
-  found.patterns = patterns;
-}
-
+  
+  public Finder.Found findAny(Object[] targets) {
+    Finder.Found found = dofindAny(targets, Region.FindType.ANY);
+    return found;
+  }
+  
+  public Finder.Found findBest(Object[] targets) {
+    Finder.Found found = dofindAny(targets, Region.FindType.BEST);
+    return found;
+  }
+  
+  public Finder.Found dofindAny(Object[] targets, Region.FindType type) {
+    String sType = (type.equals(Region.FindType.ANY) ? "findAny" : "findBest");
+    if (targets.length == 0) {
+      log(-1, sType + ": no targets");
+      return null;
+    }
+    start();
+    Finder finder = new Finder(this);
+    Finder.Found found = new Finder.Found(finder);
+    evalTargets(targets, found);
+    found.name = String.format("inImage_%s_%s", sType, new Date().getTime());
+    found.type = type;
+    finder.find(found);
+    found.elapsed = end();
+    log(lvl+1, found.toJSON());
+    return found;
+  }
+  
+  private void evalTargets(Object[] targets, Finder.Found found) {
+    Pattern[] patterns = new Pattern[targets.length];
+    int nP = 0;
+    for (Object target : targets) {
+      Pattern pattern = null;
+      try {
+        pattern = Finder.evalTarget(target);
+      } catch (IOException ex) {
+        log(-1, "find: file not found: %s", target);
+      }
+      patterns[nP++] = pattern;
+    }
+    found.patterns = patterns;
+  }
+//</editor-fold>
+  
 //<editor-fold defaultstate="collapsed" desc="Raster">
   private int rows = 0;
   private int cols = 0;
@@ -711,179 +868,7 @@ private void evalTargets(Object[] targets, Finder.Found found) {
   }
 //</editor-fold>
   
-//<editor-fold defaultstate="collapsed" desc="Constructors">
-  public boolean isValid() {
-    return fileURL != null && mat != null;
-  }
-
-  public boolean isUseable() {
-    return isValid() || isInMemory;
-  }
-  
-  private boolean hasText = false;
-  public boolean isText() {
-    return hasText;
-  }
-
-  private Image() {
-  }
-  
-  private Image(URL fURL) {
-    fileURL = fURL;
-  }
-  
-  public Image(Object img) {
-    terminate(1, "Image(Object)");
-  }
-
-  public static Image get(Object source) {
-    Image img = new Image();
-    if (null == source) {
-      return img;
-    }
-    URL fURL = null;
-    if (source instanceof URL) {
-      fURL = (URL) source; 
-    } else if (source instanceof String) {
-      fURL = ImagePath.find((String) source);
-    }
-    if (null != fURL) {
-      img = imageFiles.get(fURL);
-      if (img == null) {
-        img = new Image(fURL);
-        img.load();
-      } else {
-        log(lvl, "get: reused: %s (%dx%d)", img.getImageName(), img.getWidth(), img.getHeight());        
-      }
-    }
-    return img;
-  }
-  
-  private boolean load() {
-    boolean success = true;
-    if (fileURL != null) {
-      mat = null;
-      File imgFile = new File(fileURL.getPath());
-      mat = Highgui.imread(imgFile.getAbsolutePath());
-      if (mat.empty()) {
-        mat = null;
-        success = false;
-      }
-      if (success) {
-        if (!imageFiles.containsKey(fileURL)) {
-          imageFiles.put(fileURL, this);
-        }
-        mwidth = mat.width();
-        mheight = mat.height();
-        msize = mat.channels() * mwidth * mheight;;
-        String msg = String.format("load: loaded: (%dx%s)\n%s", mwidth, mheight, fileURL);
-        if (isCaching()) {
-          int maxMemory = Settings.getImageCache() * MB;
-          currentMemoryUp(msize);
-          images.add(this);
-          msg = String.format("load: cached: (%dx%d) #%d %%%d of %dMB\n%s",
-              mwidth, mheight, images.size(),
-              (int) (100 * currentMemory / maxMemory), (int) (maxMemory / MB), fileURL);
-        }
-        log(lvl, "%s", msg);
-        checkProbe();
-      } else {
-        log(-1, "load: not loaded - taken as text:\n%s", fileURL);
-        hasText = true;
-      }
-    }
-    return success;
-  }
-//</editor-fold>
-  
-//<editor-fold defaultstate="collapsed" desc="inMemory BImg, SImg, Region">
-  private boolean isInMemory = false;
-  
-  private Image(Mat aMat) {
-    mat = aMat;
-    mwidth = mat.width();
-    mheight = mat.height();
-    msize = mat.channels() * mwidth * mheight;;
-    isInMemory = true;
-  }
-    
-  /**
-   * create a new image with name as timestamp from a region's captured content<br>
-   *
-   * @param reg
-   */
-  public Image(Region reg) {
-    this(reg.captureThis());
-  }
-  
-  /**
-   * create a new image with name as timestamp from a ScreenImage (captured before)<br>
-   *
-   * @param img ScreenImage
-   */
-  public Image(ScreenImage img) {
-    this(img.getImage());
-  }
-
-  /**
-   * create a new image with name as timestamp from a buffered image<br>
-   *
-   * @param bImg BufferedImage
-   */
-  public Image(BufferedImage bImg) {
-    mat = makeMat(bImg);
-    if (mat != null) {
-      mwidth = mat.width();
-      mheight = mat.height();
-      msize = mat.channels() * mwidth * mheight;;
-      isInMemory = true;
-    }
-  }
-  
-  public Image add() {
-    if (isUseable()) {
-      if (images.remove(this)) {
-        currentMemoryDown(msize);
-      }
-      images.add(this);
-    }
-    return this;
-  }
-
-  public Image update() {
-    if (isValid()) {
-      if (images.remove(this)) {
-        currentMemoryDown(msize);
-      }
-      if (load()) {
-        currentMemoryUp(msize);
-      }
-    }
-    return this;
-  }
-
-  public Image remove() {
-    if (isUseable()) {
-      
-    }
-    return this;
-  }
-
-  /**
-   * purge the given image's in memory image data and remove it from cache.
-   * @param imgURL URL of an image file
-   */
-  public static void unCacheImage(URL imgURL) {
-    Image img = imageFiles.get(imgURL);
-    if (img == null) {
-      return;
-    }
-    img.mat = null;
-    images.remove(img);
-  }
-//</editor-fold>
- 
-//<editor-fold defaultstate="collapsed" desc="inMemory features">
+//<editor-fold defaultstate="collapsed" desc="image helpers">
   private final int resizeMinDownSample = 12;
   private double resizeFactor;
   private boolean plainColor = false;
@@ -971,6 +956,23 @@ private void evalTargets(Object[] targets, Finder.Found found) {
     return getSub(r.x, r.y, r.width, r.height);
   }
   
+  protected static String getValidImageFilename(String fname) {
+    String validEndings = ".png.jpg.jpeg.tiff.bmp";
+    String defaultEnding = ".png";
+    int dot = fname.lastIndexOf(".");
+    String ending = defaultEnding;
+    if (dot > 0) {
+      ending = fname.substring(dot);
+      if (validEndings.contains(ending.toLowerCase())) {
+        return fname;
+      }
+    } else {
+      fname += ending;
+      return fname;
+    }
+    return "";
+  }
+  
   public String save(String name) {
     String fpName = getValidImageFilename("_" + name);
     File fName = new File(ImagePath.getBundlePath(), fpName);
@@ -978,4 +980,58 @@ private void evalTargets(Object[] targets, Finder.Found found) {
     return fpName;
   }
 //</editor-fold>
+  
+//<editor-fold defaultstate="collapsed" desc="show">
+  public Image show(int x, int y, int time) {
+    frImg = new JFrame();
+    frImg.setAlwaysOnTop(true);
+    frImg.setResizable(false);
+    frImg.setUndecorated(true);
+    frImg.setLocation(x, y);
+    frImg.setSize(mwidth, mheight);
+    frImg.add(new JLabel(new ImageIcon(getImageBytes())));
+    frImg.setVisible(true);
+    if (time > 0) {
+      App.pause(time);
+      show();
+    }
+    return this;
+  }
+  
+  public Image show(int x, int y) {
+    return show(x, y, 0);
+  }
+  
+  public Image show() {
+    if (null != frImg) {
+      frImg.setVisible(false);
+      frImg.dispose();
+      frImg = null;
+    }
+    return this;
+  }
+  
+  public BufferedImage getBufferedImage() {
+    return getBufferedImage("png");
+  }
+  
+  public BufferedImage getBufferedImage(String type) {
+    BufferedImage bImg = null;
+    byte[] bytes = getImageBytes();
+    InputStream in = new ByteArrayInputStream(bytes);
+    try {
+      bImg = ImageIO.read(in);
+    } catch (IOException ex) {
+      log(-1, "getBufferedImage: not working: %s\n%s", toJSON(false), ex.getMessage());
+    }
+    return bImg;
+  }
+  
+  public byte[] getImageBytes() {
+    MatOfByte bytemat = new MatOfByte();
+    Highgui.imencode(".png", mat, bytemat);
+    return bytemat.toArray();
+  }
+//</editor-fold>
+  
 }

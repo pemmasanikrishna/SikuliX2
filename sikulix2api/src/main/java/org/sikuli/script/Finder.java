@@ -38,7 +38,7 @@ public class Finder {
   private static final Logger logger = LogManager.getLogger("SX.Finder");
 
   private static void log(int level, String message, Object... args) {
-    if (Debug.is(lvl)) {
+    if (Debug.is(lvl) || level < 0) {
       message = String.format(message, args).replaceFirst("\\n", "\n          ");
       if (level == lvl) {
         logger.debug(message, args);
@@ -52,13 +52,33 @@ public class Finder {
     }
   }
 
-  private void logp(String message, Object... args) {
+  private static void logp(String message, Object... args) {
     System.out.println(String.format(message, args));
   }
 
-  public void terminate(int retval, String message, Object... args) {
+  public static void terminate(int retval, String message, Object... args) {
     logger.fatal(String.format(" *** terminating: " + message, args));
     System.exit(retval);
+  }
+  
+  private long started = 0;
+  
+  private void start() {
+    started = new Date().getTime();
+  }
+
+  private long end() {
+    return end("");
+  }
+
+  private long end(String message) {
+    long ended = new Date().getTime();
+    long diff = ended - started;
+    if (!message.isEmpty()) {
+      logp("[time] %s: %d msec", message, diff);
+    }
+    started = ended;
+    return diff;
   }
 //</editor-fold>
 

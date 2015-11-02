@@ -35,7 +35,7 @@ public class Region {
   private static final Logger logger = LogManager.getLogger("SX.Region");
 
   private static void log(int level, String message, Object... args) {
-    if (Debug.is(lvl)) {
+    if (Debug.is(lvl) || level < 0) {
       message = String.format(message, args).replaceFirst("\\n", "\n          ");
       if (level == lvl) {
         logger.debug(message, args);
@@ -49,17 +49,17 @@ public class Region {
     }
   }
 
-  private void logp(String message, Object... args) {
+  private static void logp(String message, Object... args) {
     System.out.println(String.format(message, args));
   }
 
-  public void terminate(int retval, String message, Object... args) {
+  public static void terminate(int retval, String message, Object... args) {
     logger.fatal(String.format(" *** terminating: " + message, args));
     System.exit(retval);
   }
-
-  private long started;
-
+  
+  private long started = 0;
+  
   private void start() {
     started = new Date().getTime();
   }
@@ -125,7 +125,7 @@ public class Region {
   private float observeScanRate = Settings.ObserveScanRate;
   private int repeatWaitTime = Settings.RepeatWaitTime;
   /**
-   * The {@link Observer} Singleton instance
+   * The {@link Observer11} Singleton instance
    */
   private Observer regionObserver = null;
 
@@ -2051,7 +2051,7 @@ public class Region {
     if (secs < 0.1) {
       return highlight((int) secs, color);
     }
-    Debug.action("highlight " + toString() + " for " + secs + " secs"
+    Debug.action("highlight " + toString().replaceAll("%", "%%") + " for " + secs + " secs"
         + (color != null ? " color: " + color : ""));
     ScreenHighlighter _overlay = new ScreenHighlighter(getScreen(), color);
     _overlay.highlight(this, secs);
@@ -2614,8 +2614,9 @@ public class Region {
   }
 
   //</editor-fold>
+  
   //<editor-fold defaultstate="collapsed" desc="Observing">
-  protected Observer getObserver() {
+  public Observer getObserver() {
     if (regionObserver == null) {
       regionObserver = new Observer(this);
     }
@@ -2627,7 +2628,7 @@ public class Region {
    *
    * @return true, if the region has an observer with event observers
    */
-  public boolean hasObserver() {
+  public boolean hasObservers() {
     if (regionObserver != null) {
       return regionObserver.hasObservers();
     }
@@ -2636,10 +2637,13 @@ public class Region {
 
   /**
    *
-   * @return true if an observer is running for this region
+   * @return true if an observer is running for this region observing at least one event
    */
   public boolean isObserving() {
-    return observing;
+    if (regionObserver != null) {
+      return regionObserver.isObserving();
+    }
+    return false;
   }
 
   /**
@@ -2647,7 +2651,22 @@ public class Region {
    * @return true if any events have happened for this region, false otherwise
    */
   public boolean hasEvents() {
-    return Observing.hasEvents(this);
+    if (regionObserver != null) {
+      return regionObserver.hasEvents();
+    }
+    return false;
+  }
+
+  /**
+   * the next event on the timeline is returned removed from the list
+   *
+   * @return the removed event if happened otherwise null
+   */
+  public ObserveEvent getEvent() {
+    if (regionObserver != null && regionObserver.hasEvents()) {
+      return regionObserver.getEvent();
+    }
+    return null;
   }
 
   /**
@@ -2656,41 +2675,10 @@ public class Region {
    * @return the region's happened events as array if any (size might be 0)
    */
   public ObserveEvent[] getEvents() {
-    return Observing.getEvents(this);
-  }
-
-  /**
-   * the event is removed from the list
-   *
-   * @param name event's name
-   * @return the named event if happened otherwise null
-   */
-  public ObserveEvent getEvent(String name) {
-    return Observing.getEvent(name);
-  }
-
-  /**
-   * set the observer with the given name inactive (not checked while observing)
-   *
-   * @param name observers name
-   */
-  public void setInactive(String name) {
-    if (!hasObserver()) {
-      return;
+    if (regionObserver != null && regionObserver.hasEvents()) {
+      return regionObserver.getEvents();
     }
-    Observing.setActive(name, false);
-  }
-
-  /**
-   * set the observer with the given name active (not checked while observing)
-   *
-   * @param name observers name
-   */
-  public void setActive(String name) {
-    if (!hasObserver()) {
-      return;
-    }
-    Observing.setActive(name, true);
+    return new ObserveEvent[0];
   }
 
   /**
@@ -2704,7 +2692,7 @@ public class Region {
    * @param observer ObserverCallBack
    * @return the event's name
    */
-  public <PSI> String onAppear(PSI target, Object observer) {
+  public <PSI> ObserveEvent onAppear(PSI target, Object observer) {
     return onEvent(target, observer, ObserveEvent.Type.APPEAR);
   }
 
@@ -2717,19 +2705,19 @@ public class Region {
    * @param target Pattern, String or Image
    * @return the event's name
    */
-  public <PSI> String onAppear(PSI target) {
+  public <PSI> ObserveEvent onAppear(PSI target) {
     return onEvent(target, null, ObserveEvent.Type.APPEAR);
   }
 
-  private <PSIC> String onEvent(PSIC targetThreshhold, Object observer, ObserveEvent.Type obsType) {
-    if (observer != null && (observer.getClass().getName().contains("org.python")
-        || observer.getClass().getName().contains("org.jruby"))) {
-      observer = new ObserverCallBack(observer, obsType);
+  private <PSIC> ObserveEvent onEvent(PSIC targetOrMinChanges, Object callback, ObserveEvent.Type obsType) {
+    if (callback != null && (callback.getClass().getName().contains("org.python")
+        || callback.getClass().getName().contains("org.jruby"))) {
+      callback = new ObserverCallBack(callback, obsType);
     }
-    String name = Observing.add(this, (ObserverCallBack) observer, obsType, targetThreshhold);
-    log(lvl, "%s: observer %s %s: %s with: %s", toString(), obsType,
-        (observer == null ? "" : " with callback"), name, targetThreshhold);
-    return name;
+    ObserveEvent event = new ObserveEvent(this, obsType, targetOrMinChanges, (ObserverCallBack) callback);
+    log(lvl, "%s: ON-%s %s: %s", toString(), obsType,
+        (callback == null ? "" : " with callback"), targetOrMinChanges);
+    return event;
   }
 
   /**
@@ -2743,7 +2731,7 @@ public class Region {
    * @param observer ObserverCallBack
    * @return the event's name
    */
-  public <PSI> String onVanish(PSI target, Object observer) {
+  public <PSI> ObserveEvent onVanish(PSI target, Object observer) {
     return onEvent(target, observer, ObserveEvent.Type.VANISH);
   }
 
@@ -2756,7 +2744,7 @@ public class Region {
    * @param target Pattern, String or Image
    * @return the event's name
    */
-  public <PSI> String onVanish(PSI target) {
+  public <PSI> ObserveEvent onVanish(PSI target) {
     return onEvent(target, null, ObserveEvent.Type.VANISH);
   }
 
@@ -2769,7 +2757,7 @@ public class Region {
    * @param observer ObserverCallBack
    * @return the event's name
    */
-  public String onChange(int threshold, Object observer) {
+  public ObserveEvent onChange(int threshold, Object observer) {
     return onEvent((threshold > 0 ? threshold : Settings.ObserveMinChangedPixels),
         observer, ObserveEvent.Type.CHANGE);
   }
@@ -2782,7 +2770,7 @@ public class Region {
    * @param threshold minimum size of changes (rectangle threshhold x threshold)
    * @return the event's name
    */
-  public String onChange(int threshold) {
+  public ObserveEvent onChange(int threshold) {
     return onEvent((threshold > 0 ? threshold : Settings.ObserveMinChangedPixels),
         null, ObserveEvent.Type.CHANGE);
   }
@@ -2796,7 +2784,7 @@ public class Region {
    * @param observer ObserverCallBack
    * @return the event's name
    */
-  public String onChange(Object observer) {
+  public ObserveEvent onChange(Object observer) {
     return onEvent(Settings.ObserveMinChangedPixels, observer, ObserveEvent.Type.CHANGE);
   }
 
@@ -2808,51 +2796,10 @@ public class Region {
    *
    * @return the event's name
    */
-  public String onChange() {
+  public ObserveEvent onChange() {
     return onEvent(Settings.ObserveMinChangedPixels, null, ObserveEvent.Type.CHANGE);
   }
 
-//<editor-fold defaultstate="collapsed" desc="obsolete">
-//	/**
-//	 *INTERNAL USE ONLY: for use with scripting API bridges
-//	 * @param <PSI> Pattern, String or Image
-//	 * @param target Pattern, String or Image
-//	 * @param observer ObserverCallBack
-//	 * @return the event's name
-//	 */
-//	public <PSI> String onAppearJ(PSI target, Object observer) {
-//		return onEvent(target, observer, ObserveEvent.Type.APPEAR);
-//	}
-//
-//	/**
-//	 *INTERNAL USE ONLY: for use with scripting API bridges
-//	 * @param <PSI> Pattern, String or Image
-//	 * @param target Pattern, String or Image
-//	 * @param observer ObserverCallBack
-//	 * @return the event's name
-//	 */
-//	public <PSI> String onVanishJ(PSI target, Object observer) {
-//		return onEvent(target, observer, ObserveEvent.Type.VANISH);
-//	}
-//
-//	/**
-//	 *INTERNAL USE ONLY: for use with scripting API bridges
-//	 * @param threshold min pixel size - 0 = ObserveMinChangedPixels
-//	 * @param observer ObserverCallBack
-//	 * @return the event's name
-//	 */
-//	public String onChangeJ(int threshold, Object observer) {
-//		return onEvent( (threshold > 0 ? threshold : Settings.ObserveMinChangedPixels),
-//						observer, ObserveEvent.Type.CHANGE);
-//	}
-//
-//</editor-fold>
-  public String onChangeDo(int threshold, Object observer) {
-    String name = Observing.add(this, (ObserverCallBack) observer, ObserveEvent.Type.CHANGE, threshold);
-    log(lvl, "%s: onChange%s: %s minSize: %d", toString(),
-        (observer == null ? "" : " with callback"), name, threshold);
-    return name;
-  }
 
   /**
    * start an observer in this region that runs forever (use stopObserving() in handler) for details about the observe

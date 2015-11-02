@@ -23,11 +23,11 @@ public class Sikulix {
   private static final Logger logger = LogManager.getLogger("SX.Main");
 
   private static void log(int level, String message, Object... args) {
-    if (Debug.is(lvl)) {
+    if (Debug.is(lvl) || level < 0) {
       message = String.format(message, args).replaceFirst("\\n", "\n          ");
-      if (level == 3) {
+      if (level == lvl) {
         logger.debug(message, args);
-      } else if (level > 3) {
+      } else if (level > lvl) {
         logger.trace(message, args);
       } else if (level == -1) {
         logger.error(message, args);
@@ -41,13 +41,13 @@ public class Sikulix {
     System.out.println(String.format(message, args));
   }
 
-  private static void terminate(int retval, String message, Object... args) {
+  public static void terminate(int retval, String message, Object... args) {
     logger.fatal(String.format(" *** terminating: " + message, args));
     System.exit(retval);
   }
-
+  
   private static long started = 0;
-
+  
   private static void start() {
     started = new Date().getTime();
   }
@@ -65,7 +65,6 @@ public class Sikulix {
     started = ended;
     return diff;
   }
-
 //</editor-fold>
   public static void main(String[] args) throws FindFailed {
 
@@ -76,16 +75,27 @@ public class Sikulix {
     Screen scr = new Screen();
     ImagePath.setBundlePath("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
     
+    Image img = Image.get("github");
+    img.show(100, 100);
+    App.pause(3);
+    img.show();
+    
+//*****************************************    Commands.endNormal(1);
+    System.exit(1);
+    
     String link = "sikulix.com";
     link = "github.com/RaiMan/SikuliX2";
-    Pattern pImg = new Pattern("github").similar(0.95);
+    Pattern pImg = new Pattern("github").similar(0.7);
 
     App.openLink(link);
-    scr.wait(pImg, 10);
-    scr.highlight(-2);
+    if (null != scr.exists(pImg, 10)) {
+      scr.highlight(-2);
+    } else {
+      App.pause(3);
+    }
     Region win = App.focusedWindow();
     
-    win.write("#M.w");
+    win.write("#C.w");
 //*****************************************    Commands.endNormal(1);
     System.exit(1);
 
@@ -114,7 +124,7 @@ public class Sikulix {
     File fTesting = new File(rt.fSikulixStore, "Testing");
     fTesting.mkdirs();
     ImagePath.setBundlePath(fTesting.getAbsolutePath());
-    Image img = null;
+    img = null;
     ScreenImage sImg = null;
     Mat mImg = null;
     String fnShot = "shot";

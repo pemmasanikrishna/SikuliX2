@@ -8,7 +8,6 @@ package org.sikuli.script;
 
 import java.awt.Rectangle;
 import org.sikuli.util.Settings;
-import org.sikuli.natives.FindResult;
 
 /**
  * holds the result of a find operation, is itself the region on the screen,
@@ -132,16 +131,16 @@ public class Match extends Region implements Comparable<Match> {
     simScore = score;
   }
 
-  /**
-   * internally used constructor used by findX image
-   *
-   * @param f
-   * @param _parent
-   */
-  protected Match(FindResult f, IScreen _parent) {
-    init(f.getX(), f.getY(), f.getW(), f.getH(), _parent);
-    simScore = f.getScore();
-  }
+//  /**
+//   * internally used constructor used by findX image
+//   *
+//   * @param f
+//   * @param _parent
+//   */
+//  protected Match(FindResult f, IScreen _parent) {
+//    init(f.getX(), f.getY(), f.getW(), f.getH(), _parent);
+//    simScore = f.getScore();
+//  }
 
   private void init(int X, int Y, int W, int H, IScreen parent) {
     x = X;

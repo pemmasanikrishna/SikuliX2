@@ -14,6 +14,10 @@ import java.util.List;
  */
 public class ObserveEvent {
 
+  void setActive(boolean b) {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
   public enum Type {
     APPEAR, VANISH, CHANGE, GENERIC
   }
@@ -35,6 +39,10 @@ public class ObserveEvent {
   protected ObserveEvent() {
   }
 
+  public ObserveEvent(Region reg, Type type, Object targetOrMinChanges, ObserverCallBack callback) {
+    
+  }
+  
   /**
    * INTERNAL USE ONLY: creates an observed event
    */
