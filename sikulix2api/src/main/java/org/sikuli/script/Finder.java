@@ -11,6 +11,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -119,9 +121,11 @@ public class Finder {
     public Mat base = null;
 
     public Pattern pattern = null;
+    public Pattern[] patterns = null;
     public long timeout = 0;
     public long elapsed = -1;
     public Match match = null;
+    private Match[] matches = null;
 
     public Finder finder = null;
 
@@ -175,6 +179,19 @@ public class Finder {
       }
       log(lvl + 1, "next: %s", match == null ? "no match" : match.toJSON());
       return match;
+    }
+    
+    public Match[] getMatches() {
+      if (matches == null) {
+        if (hasNext()) {
+          List<Match> listMatches = new ArrayList<Match>();
+          while (hasNext(false)) {
+            listMatches.add(next());
+          }
+          return (Match[]) listMatches.toArray();
+        }
+      }
+      return matches;
     }
 
     public Found(Finder fndr) {
@@ -277,21 +294,11 @@ public class Finder {
     return image;
   }
 
-  public boolean find(Object target, Found found) {
-    try {
-      doFind(evalTarget(target), found);
-    } catch (IOException ex) {
-      log(-1, "find: Exception: %s", ex.getMessage());
-    }
-    return found.success;
-  }
-
-  public boolean findAll(Object target, Found found) {
-    try {
-      found.type = Region.FindType.ALL;
-      doFind(evalTarget(target), found);
-    } catch (IOException ex) {
-      log(-1, "findAll: Exception: %s", ex.getMessage());
+  protected boolean find(Found found) {
+    if (found.type.equals(Region.FindType.ANY) || found.type.equals(Region.FindType.BEST)) {
+      findAny(found);
+    } else {
+      doFind(found);
     }
     return found.success;
   }
@@ -311,13 +318,13 @@ public class Finder {
     useOriginal = true;
   }
 
-  private void doFind(Pattern pattern, Found found) {
+  private void doFind(Found found) {
     boolean success = false;
     long begin_t = 0;
     Mat result = new Mat();
     Core.MinMaxLocResult mMinMax = null;
     Match mFound = null;
-    Probe probe = new Probe(pattern);
+    Probe probe = new Probe(found.pattern);
     found.base = base;
     boolean isIterator = Region.FindType.ALL.equals(found.type);
     if (isRegion && !isIterator && !useOriginal && Settings.CheckLastSeen && probe.lastSeen != null) {
@@ -325,7 +332,8 @@ public class Finder {
       begin_t = new Date().getTime();
       Finder lastSeenFinder = new Finder(probe.lastSeen);
       lastSeenFinder.setUseOriginal();
-      lastSeenFinder.find(new Pattern(probe.img).similar(probe.lastSeenScore - 0.01), found);
+      found.pattern = new Pattern(probe.img).similar(probe.lastSeenScore - 0.01);
+      lastSeenFinder.find(found);
       if (found.match != null) {
         mFound = found.match;
         success = true;
@@ -333,6 +341,7 @@ public class Finder {
       } else {
         log(lvl + 1, "doFind: checkLastSeen: not found %d msec", new Date().getTime() - begin_t);
       }
+      found.pattern = probe.pattern;
     }
     if (!success) {
       if (isRegion) {
@@ -430,6 +439,114 @@ public class Finder {
     }
     return res;
   }
+    
+  private void findAny(Found found) {
+    log(lvl, "findBest: enter");
+    findAnyCollect(found);
+    if (found.type.equals(Region.FindType.BEST)) {
+      List<Match> mList = Arrays.asList(found.getMatches());
+      if (mList != null) {
+        Collections.sort(mList, new Comparator<Match>() {
+          @Override
+          public int compare(Match m1, Match m2) {
+            double ms = m2.getScore() - m1.getScore();
+            if (ms < 0) {
+              return -1;
+            } else if (ms > 0) {
+              return 1;
+            }
+            return 0;
+          }
+        });
+        found.match = mList.get(0);
+      }
+    }
+  }
+
+  private void findAnyCollect(Found found) {
+    Pattern[] patterns = found.patterns;
+    if (patterns == null) {
+      return;
+    }
+    Match[] mArray = new Match[patterns.length];
+    SubFindRun[] theSubs = new SubFindRun[patterns.length];
+    int nobj = 0;
+    Found subFound = null;
+    for (Pattern pattern  : patterns) {
+      mArray[nobj] = null;
+      theSubs[nobj] = null;
+      if (pattern != null) {
+        subFound = new Found(this);
+        subFound.pattern = pattern;
+        theSubs[nobj] = new SubFindRun(mArray, nobj, subFound);
+        new Thread(theSubs[nobj]).start();
+      }
+      nobj++;
+    }
+    log(lvl, "findAnyCollect: waiting for SubFindRuns");
+    nobj = 0;
+    boolean all = false;
+    while (!all) {
+      all = true;
+      for (SubFindRun sub : theSubs) {
+        all &= sub.hasFinished();
+      }
+    }
+    log(lvl, "findAnyCollect: SubFindRuns finished");
+    nobj = 0;
+    boolean anyMatch = false;
+    for (Match match : mArray) {
+      if (match != null) {
+        match.setIndex(nobj);
+        anyMatch = true;
+      }
+      nobj++;
+    }
+    found.matches = mArray;
+    found.success = anyMatch;
+  }
+
+  private class SubFindRun implements Runnable {
+
+    Match[] mArray;
+    Image base;
+    Object target;
+    Region reg;
+    boolean finished = false;
+    int subN;
+    Found subFound;
+
+    public SubFindRun(Match[] pMArray, int pSubN, Found found) {
+      subN = pSubN;
+      mArray = pMArray;
+      subFound = found;
+    }
+
+    @Override
+    public void run() {
+      try {
+        doFind(subFound);
+        mArray[subN] = null;
+        if (subFound.success && subFound.match != null) {
+          mArray[subN] = subFound.match;
+        }
+      } catch (Exception ex) {
+        log(-1, "findAnyCollect: image file not found:\n", target);
+      }
+      hasFinished(true);
+    }
+
+    public boolean hasFinished() {
+      return hasFinished(false);
+    }
+
+    public synchronized boolean hasFinished(boolean state) {
+      if (state) {
+        finished = true;
+      }
+      return finished;
+    }
+  }
 
   private static Rect getSubMatRect(Mat mat, int x, int y, int w, int h, int margin) {
     x = Math.max(0, x - margin);
@@ -477,7 +594,7 @@ public class Finder {
     terminate(1, "setMinChanges");
   }
 
-  protected Pattern evalTarget(Object target) throws IOException {
+  protected static Pattern evalTarget(Object target) throws IOException {
     boolean findingText = false;
     Image img = null;
     Pattern pattern = null;

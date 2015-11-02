@@ -2796,10 +2796,13 @@ public class RunTime {
     Image img = new Image(r);
     Pattern p = new Pattern(img);
     Finder f = new Finder(img);
-    boolean success = f.find(p, new Finder.Found(f));
+    Finder.Found found = new Finder.Found(f);
+    found.pattern = p;
+    boolean success = f.find(found);
     log(lvl, "testSetup: Finder setup with image %s", !success ? "did not work" : "worked");
     if (success) {
-      success = f.find(img, new Finder.Found(f));
+      found.pattern = new Pattern(img);
+      success = f.find(found);
       log(lvl, "testSetup: Finder setup with image file %s", !success ? "did not work" : "worked");
       String screenFind = "Screen.find(imagefile)";
       try {
