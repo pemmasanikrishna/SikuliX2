@@ -495,11 +495,54 @@ public Match find(Object target) {
   if (null != pattern) {
     found.pattern = pattern;
     found.name = String.format("inImage_%s", new Date().getTime());
-    finder.find(pattern, found);
+    finder.find(found);
   }
   found.elapsed = end();
   log(lvl+1, found.toJSON());
   return found.match;
+}
+
+public Finder.Found findAny(Object[] targets) {
+  Finder.Found found = dofindAny(targets, Region.FindType.ANY);
+  return found;
+}
+
+public Finder.Found findBest(Object[] targets) {
+  Finder.Found found = dofindAny(targets, Region.FindType.BEST);
+  return found;
+}
+
+public Finder.Found dofindAny(Object[] targets, Region.FindType type) {
+  String sType = (type.equals(Region.FindType.ANY) ? "findAny" : "findBest");
+  if (targets.length == 0) {
+    log(-1, sType + ": no targets");
+    return null;
+  }
+  start();
+  Finder finder = new Finder(this);
+  Finder.Found found = new Finder.Found(finder);
+  evalTargets(targets, found);
+  found.name = String.format("inImage_%s_%s", sType, new Date().getTime());
+  found.type = type;
+  finder.find(found);
+  found.elapsed = end();
+  log(lvl+1, found.toJSON());
+  return found;
+}
+
+private void evalTargets(Object[] targets, Finder.Found found) {
+  Pattern[] patterns = new Pattern[targets.length];
+  int nP = 0;
+  for (Object target : targets) {
+    Pattern pattern = null;
+    try {
+      pattern = Finder.evalTarget(target);
+    } catch (IOException ex) {
+      log(-1, "find: file not found: %s", target);
+    }
+    patterns[nP++] = pattern; 
+  }
+  found.patterns = patterns;
 }
 
 //<editor-fold defaultstate="collapsed" desc="Raster">

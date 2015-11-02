@@ -69,13 +69,23 @@ public class Sikulix {
 //</editor-fold>
   public static void main(String[] args) throws FindFailed {
 
-    //  Debug.on(3);
+//    Debug.on(3);
     Settings.InfoLogs = false;
-    Settings.ActionLogs = false;
+    Settings.ActionLogs = true;
     rt = RunTime.get();
+    Screen scr = new Screen();
+    ImagePath.setBundlePath("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
     
-    App.openLink("sikulix.com");
+    String link = "sikulix.com";
+    link = "github.com/RaiMan/SikuliX2";
+    Pattern pImg = new Pattern("github").similar(0.95);
+
+    App.openLink(link);
+    scr.wait(pImg, 10);
+    scr.highlight(-2);
+    Region win = App.focusedWindow();
     
+    win.write("#M.w");
 //*****************************************    Commands.endNormal(1);
     System.exit(1);
 
@@ -101,8 +111,6 @@ public class Sikulix {
     }
 //</editor-fold>
 
-    Screen scr = new Screen();
-    ImagePath.add("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
     File fTesting = new File(rt.fSikulixStore, "Testing");
     fTesting.mkdirs();
     ImagePath.setBundlePath(fTesting.getAbsolutePath());

@@ -2428,120 +2428,9 @@ public class Region {
     return mList;
   }
 
-  /**
-   * try to find all given targets in parallel and return the one with the highest score<br>
-   *
-   * @param <PSI> Pattern, String or Image
-   * @param args one or more of these
-   * @return the best match or null if none found
-   */
-  public <PSI> Match findBest(PSI... args) {
-    log(lvl, "findBest: enter");
-    Match mResult = null;
-    List<Match> mList = findAnyCollect(args);
-    if (mList != null) {
-      Collections.sort(mList, new Comparator<Match>() {
-        @Override
-        public int compare(Match m1, Match m2) {
-          double ms = m2.getScore() - m1.getScore();
-          if (ms < 0) {
-            return -1;
-          } else if (ms > 0) {
-            return 1;
-          }
-          return 0;
-        }
-      });
-      mResult = mList.get(0);
-    }
-    return mResult;
-  }
-
-  private List<Match> findAnyCollect(Object... args) {
-    if (args == null) {
-      return null;
-    }
-    List<Match> mList = new ArrayList<Match>();
-    Match[] mArray = new Match[args.length];
-    SubFindRun[] theSubs = new SubFindRun[args.length];
-    int nobj = 0;
-    ScreenImage base = getScreen().capture(this);
-    for (Object obj : args) {
-      mArray[nobj] = null;
-      if (obj instanceof Pattern || obj instanceof String || obj instanceof Image) {
-        theSubs[nobj] = new SubFindRun(mArray, nobj, base, obj, this);
-        new Thread(theSubs[nobj]).start();
-      }
-      nobj++;
-    }
-    Debug.log(lvl, "findAnyCollect: waiting for SubFindRuns");
-    nobj = 0;
-    boolean all = false;
-    while (!all) {
-      all = true;
-      for (SubFindRun sub : theSubs) {
-        all &= sub.hasFinished();
-      }
-    }
-    Debug.log(lvl, "findAnyCollect: SubFindRuns finished");
-    nobj = 0;
-    for (Match match : mArray) {
-      if (match != null) {
-        match.setIndex(nobj);
-        mList.add(match);
-      } else {
-      }
-      nobj++;
-    }
-    return mList;
-  }
 
   public ScreenImage captureThis() {
     return new ScreenImage(this);
-  }
-
-  private class SubFindRun implements Runnable {
-
-    Match[] mArray;
-    Image base;
-    Object target;
-    Region reg;
-    boolean finished = false;
-    int subN;
-
-    public SubFindRun(Match[] pMArray, int pSubN,
-        ScreenImage pBase, Object pTarget, Region pReg) {
-      subN = pSubN;
-      base = new Image(pBase);
-      target = pTarget;
-      reg = pReg;
-      mArray = pMArray;
-    }
-
-    @Override
-    public void run() {
-      try {
-        Finder.Found found = reg.doFind(base, target, 0, FindType.ONE);
-        mArray[subN] = null;
-        if (found.success && found.match != null) {
-          mArray[subN] = found.match;
-        }
-      } catch (Exception ex) {
-        log(-1, "findAnyCollect: image file not found:\n", target);
-      }
-      hasFinished(true);
-    }
-
-    public boolean hasFinished() {
-      return hasFinished(false);
-    }
-
-    public synchronized boolean hasFinished(boolean state) {
-      if (state) {
-        finished = true;
-      }
-      return finished;
-    }
   }
 
   /**
@@ -2637,7 +2526,7 @@ public class Region {
   //<editor-fold defaultstate="collapsed" desc="find internal methods">
   public enum FindType {
 
-    ONE, ALL, VANISH
+    ONE, ALL, VANISH, ANY, BEST
   }
 
   private <PSI> Finder.Found doFind(Image base, PSI ptn, double timeout, FindType findType) throws IOException {
@@ -2667,13 +2556,18 @@ public class Region {
     found.timeout = timeoutMilli;
     long begin_t = (new Date()).getTime();
     String begin_s = String.format("%d", begin_t);
-    found.name = (findAll ? "findall_" : (findVanish ? "vanish_" : "appear_")) + begin_s;
+    if (findAll) {
+      found.name = "findall_" + begin_s;
+      found.type = FindType.ALL;
+    } else {
+      found.name = (findVanish ? "vanish_" : "appear_") + begin_s;
+    }
     log(lvl, "%s: %.1fs %s %s",
         found.name, timeout, pattern.getText(), this.toString());
 
     Match matchVanish = null;
     if (findVanish) {
-      finder.find(pattern, found);
+      finder.find(found);
       if (found.success) {
         matchVanish = found.match;
       } else {
@@ -2685,11 +2579,7 @@ public class Region {
       do {
         loopCount++;
         long before_find = (new Date()).getTime();
-        if (findAll) {
-          finder.findAll(pattern, found);
-        } else {
-          finder.find(pattern, found);
-        }
+        finder.find(found);
         if (found.success) {
           if (findVanish) {
             matchVanish = found.match;
