@@ -19,7 +19,7 @@
 
   <packaging>pom</packaging>
 
-  <name>SikuliX version 2</name>
+  <name>sikulix2</name>
   <description>... for visual testing and automation</description>
   <url>http://www.sikulix.com</url>
 
@@ -109,20 +109,6 @@
       <name>com-sikulix-snapshots</name>
       <url>https://oss.sonatype.org/content/groups/public</url>
       <layout>default</layout>
-    </repository>
-    <repository>  <!-- com.sikulix.sikulixapi: jxgrabkey -->
-      <id>uni-due.de</id>
-      <name>uni-due.de</name>
-      <url>http://mvn.is.inf.uni-due.de:8081/nexus/content/repositories/atunes-dependencies/</url>
-      <layout>default</layout>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-        <updatePolicy>never</updatePolicy>
-      </snapshots>
     </repository>
   </repositories>
 

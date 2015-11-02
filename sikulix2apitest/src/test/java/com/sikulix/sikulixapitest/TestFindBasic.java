@@ -1,6 +1,8 @@
 package com.sikulix.sikulixapitest;
 
+import java.io.File;
 import java.util.Date;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.After;
@@ -18,61 +20,45 @@ import org.sikuli.script.Match;
 import org.sikuli.script.Region;
 import org.sikuli.script.RunTime;
 import org.sikuli.util.Debug;
+import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestFindBasic {
 
-  private static final String logname = "TestFindBasic";
-  private static final RunTime sxRuntime = RunTime.get();
-  private static Region window = null;
-  private static String theClass = "";
-  private static String images = "";
-  private static final String testImg = "testImg";
+  private static final RunTime sxRT = RunTime.get();
+
+  private static final String loggerName = "TestFindBasic";
 
 //<editor-fold defaultstate="collapsed" desc="logging">
-  private static final Logger logger = LogManager.getLogger("SX." + logname);
-
-  private static void debug(String message, Object... args) {
-    message = String.format(message, args).replaceFirst("\\n", "\n          ");
-    logger.debug(message);
-  }
+  private static final Logger logger = LogManager.getLogger("SX." + loggerName);
 
   private static void trace(String message, Object... args) {
-    message = String.format(message, args).replaceFirst("\\n", "\n          ");
-    logger.trace(message, args);
+    if (logger.getLevel().isLessSpecificThan(Level.TRACE)) {
+      message = String.format(message, args).replaceFirst("\\n", "\n          ");
+      logger.trace(message, args);
+    }
   }
 
-  private static void error(String message, Object... args) {
-    message = String.format(message, args).replaceFirst("\\n", "\n          ");
-    logger.error(message);
+  private static void debug(String message, Object... args) {
+    if (logger.getLevel().isLessSpecificThan(Level.DEBUG)) {
+      message = String.format(message, args).replaceFirst("\\n", "\n          ");
+      logger.debug(message);
+    }
   }
 
   private static void info(String message, Object... args) {
-    message = String.format(message, args).replaceFirst("\\n", "\n          ");
-    logger.info(message);
-  }
-
-  private void entry(Object... args) {
-    if (args.length == 0) {
-      start("");
-    } else {
-      start(args[0].toString());
-    }
-    logger.entry(args);
-  }
-
-  private void exit(Object... args) {
-    end();
-    if (args.length == 0) {
-      logger.exit(0);
-    } else {
-      logger.exit(String.format("msec:%d return:%d", duration, args[0]));
+    if (logger.getLevel().isLessSpecificThan(Level.INFO)) {
+      message = String.format(message, args).replaceFirst("\\n", "\n          ");
+      logger.info(message);
     }
   }
 
-  private static void print(String message, Object... args) {
-    System.out.println(String.format(message, args));
+  private static void error(String message, Object... args) {
+    if (logger.getLevel().isLessSpecificThan(Level.OFF)) {
+      message = String.format(message, args).replaceFirst("\\n", "\n          ");
+      logger.error(message);
+    }
   }
 
   private static void terminate(int retval, String message, Object... args) {
@@ -80,28 +66,84 @@ public class TestFindBasic {
     System.exit(retval);
   }
 
-  private void start(String desc) {
-    startTime = new Date().getTime();
-    testdesc = desc;
+  private Timer entry(Object... args) {
+    Timer start = null;
+    if (args.length == 0) {
+      start = new Timer("");
+    } else {
+      start = new Timer(args[0].toString());
+    }
+    logger.entry(args);
+    return start;
   }
 
-  private void end() {
-    duration = new Date().getTime() - startTime;
+  private void exit(Timer start, Object... args) {
+    String msg = "";
+    if (args.length > 0) {
+      msg = String.format(" return: %s", args[0].toString());
+    }
+    logger.exit(String.format("%s%s", ((Timer) args[0]).end(), msg));
+  }
+
+  private static void print(String message, Object... args) {
+    System.out.println(String.format(message, args));
+  }
+
+  protected class Timer {
+
+    private long start;
+    private String desc = "";
+
+    protected Timer(String desc) {
+      start = new Date().getTime();
+      this.desc = desc;
+    }
+
+    protected long lap(boolean restart) {
+      long duration = new Date().getTime() - start;
+      if (restart) {
+        start = new Date().getTime();
+      }
+      return duration;
+    }
+
+    private String end(Object... args) {
+      if (args.length > 0 && args[0] != null) {
+        desc = args[0].toString();
+      }
+      long duration = new Date().getTime() - start;
+      return String.format("(msec: %d) %s", duration, desc);
+    }
   }
 //</editor-fold>
 
-  private static long startTime;
-  private long duration = 0;
-  private String testdesc = "";
+  private static Region window = null;
+  private static String theClass = "";
+  private static String images = "";
+  private static final String testImages = "_testImages";
+  private static String testImg = "testImages/testImg";
+  private static File fTestImages = null;
+  private static String bImage = "";
+  private static String sImage = "";
 
   public TestFindBasic() {
     theClass = this.getClass().toString().substring(6);
     images = theClass + "/images.sikuli";
-    trace("TestRun: %s", theClass);
+    trace("--- Test class: %s", theClass);
+    ImagePath.setBundlePath(images);
+    fTestImages = new File(ImagePath.getBundlePath(), testImages);
+    fTestImages.mkdir();
+    if (bImage.isEmpty()) {
+      Image img = Image.get("logo");
+      sImage = String.format("(%d x %d)", img.getWidth(), img.getHeight());
+      bImage = String.format("(%d x %d)", window.w, window.h);
+      ImagePath.reset();
+    }
   }
 
   @BeforeClass
   public static void setUpClass() {
+    trace("--- Class setup:");
     Settings.InfoLogs = false;
     Settings.ActionLogs = false;
     Settings.DebugLogs = false;
@@ -115,101 +157,103 @@ public class TestFindBasic {
 
   @AfterClass
   public static void tearDownClass() {
-    trace("tearDownClass:");
-    ImagePath.remove(images);
+    trace("--- Class teardown:");
+    FileManager.deleteFileOrFolder(fTestImages);
     Debug.off();
     App.closeWindow();
   }
 
   @Before
   public void setUp() {
-    debug("------- setUp --------------------------------------");
+    trace("--- setup:");
     ImagePath.setBundlePath(images);
   }
 
   @After
   public void tearDown() {
-    debug("----- tearDown msec:%d --- %s *****", duration, testdesc);
+    trace("--- teardown:");
+    ImagePath.reset();
   }
 
   @Test
   public void test_1_FirstFind() {
-    debug("------- 1 testFirstFind");
-    start("first find - image loaded and cached");
+    Timer timer = new Timer("first find - image loaded and cached");
     Match found = window.exists("logo");
-    end();
-    debug("aTest: found: %s", found.toJSON());
+    String msg = timer.end();
+    debug("found: %s", found.toJSON());
+    info("--- 1 testFirstFind: %s %s in %s", msg, sImage, bImage);
     assertTrue(found != null);
   }
 
   @Test
   public void test_2_SecondFind() {
-    debug("------- 2 testSecondFind");
-    start("second find - cached image reused - no check last seen");
+    Image.get("logo");
+    Timer timer = new Timer("second find - cached image reused - no check last seen");
     Settings.CheckLastSeen = false;
     Match found = window.exists("logo");
-    end();
-    debug("aTest: found: %s", found.toJSON());
+    String msg = timer.end();
+    debug("found: %s", found.toJSON());
+    info("--- 2 testSecondFind: %s  %s in %s", msg, sImage, bImage);
     assertTrue(found != null);
   }
-  
+
   @Test
   public void test_3_SecondFindLastSeen() {
-    debug("------- 3 testSecondFindLastSeen");
-    start("second find - cached image reused - check last seen");
-    Settings.CheckLastSeen = true;
+    Image.get("logo");
     Match found = window.exists("logo");
-    end();
-    debug("aTest: found: %s", found.toJSON());
+    Settings.CheckLastSeen = true;
+    Timer timer = new Timer("second find - cached image reused - check last seen");
+    found = window.exists("logo");
+    String msg = timer.end();
+    debug("found: %s", found.toJSON());
+    info("--- 3 testSecondFindLastSeen: %s %s in %s", msg, sImage, bImage);
     assertTrue(found != null);
   }
-  
+
   @Test
   public void test_4_FindInImageLoaded() {
-    debug("------- 4 testFindInImageLoaded");
     String anImageFile = window.save(testImg + "4");
-    start("find in an image loaded from filesystem");
+    Timer timer = new Timer("find in an image loaded from filesystem");
     Image anImage = Image.get(anImageFile);
     Match found = anImage.find("logo");
-    end();
-    debug("aTest: found: %s", found.toJSON());
+    String msg = timer.end();
+    debug("found: %s", found.toJSON());
+    info("--- 4 testFindInImageLoaded: %s %s in %s", msg, sImage, bImage);
     assertTrue(found != null);
   }
-  
+
   @Test
   public void test_5_FindInImageInMemory() {
-    debug("------- 5 testFindInImageInMemory");
     Image anImage = Image.get(window.save(testImg));
-    start("find in an image in cache");
+    Timer timer = new Timer("find in an image in cache");
     Match found = anImage.find("logo");
-    end();
-    debug("aTest: found: %s", found.toJSON());
+    String msg = timer.end();
+    debug("found: %s", found.toJSON());
+    info("--- 5 testFindInImageInMemory: %s %s in %s", msg, sImage, bImage);
     assertTrue(found != null);
   }
 
   @Test
   public void test_6_Compare2ImagesInMemory() {
-    debug("------- 6 testCompare2ImagesInMemory");
     Image anImage = Image.get(window.save(testImg));
-    start("compare 2 cached images ");
+    Timer timer = new Timer("compare 2 cached images ");
     Match found = anImage.find(anImage);
-    end();
-    debug("aTest: found: %s", found.toJSON());
+    String msg = timer.end();
+    debug("found: %s", found.toJSON());
+    info("--- 6 testCompare2ImagesInMemory: %s %s in %s", msg, bImage, bImage);
     assertTrue(found != null);
   }
 
   @Test
   public void test_7_Compare2ImagesLoaded() {
-    debug("------- 7 testCompare2ImagesLoaded");
-    start("");
+    Timer timer = new Timer("compare 2 images loaded from filesystem");
     String anImageFile1 = window.save(testImg + "7");
     String anImageFile2 = window.save(testImg + "71");
-    end();
-    debug("capture and store 2 images: %d msec", duration);    
-    start("compare 2 images loaded from filesystem");
+    debug("capture and store 2 images: %d msec", timer.lap(true));
     Match found = Image.get(anImageFile1).find(anImageFile2);
-    end();
-    debug("aTest: found: %s", found.toJSON());
+    String msg = timer.end();
+    debug("found: %s", found.toJSON());
+    info("--- 7 testCompare2ImagesLoaded: %s %s in %s", msg, bImage, bImage);
     assertTrue(found != null);
   }
 }
