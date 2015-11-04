@@ -2658,18 +2658,6 @@ public class Region {
   }
 
   /**
-   * the next event on the timeline is returned removed from the list
-   *
-   * @return the removed event if happened otherwise null
-   */
-  public ObserveEvent getEvent() {
-    if (regionObserver != null && regionObserver.hasEvents()) {
-      return regionObserver.getEvent();
-    }
-    return null;
-  }
-
-  /**
    * the region's events are removed from the list
    *
    * @return the region's happened events as array if any (size might be 0)

@@ -152,6 +152,10 @@ public class ObserveEvent {
     active = state;
   }
 
+  protected boolean isActiveFind() {
+    return isActive() && (isAppear() || isVanish());
+  }
+
   /**
    * check the observe event type
    * @return true if it is APPEAR, false otherwise
@@ -183,6 +187,14 @@ public class ObserveEvent {
    public boolean isGeneric() {
     return type == Type.GENERIC;
   }
+   
+  public boolean hasCallback() {
+    return callback != null;
+  }
+  
+  public ObserverCallBack getCallback() {
+    return callback;
+  } 
 
   /**
    *
@@ -193,7 +205,13 @@ public class ObserveEvent {
   }
 
   public boolean hasHappened() {
-    return matchOrChanges.size() > 0;
+    if (matchOrChanges.size() > 0) { 
+      if (isChange()) {
+        return matchOrChanges.get(0) == null;
+      }
+      return true;
+    };
+    return false;
   }
 
   /**

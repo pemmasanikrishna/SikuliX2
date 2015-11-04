@@ -11,8 +11,11 @@ public class Observer {
   private static List<Observer> observers = Collections.synchronizedList(new ArrayList<Observer>());
   
   private Region region = null;
+  private Finder finder = new Finder();
+  private Finder.Found found = new Finder.Found(finder);
   
   private List<ObserveEvent> events = Collections.synchronizedList(new ArrayList<ObserveEvent>());
+  private List<ObserveEvent> eventsActive = Collections.synchronizedList(new ArrayList<ObserveEvent>());
   
   public Observer(Region reg) {
     region = reg;
@@ -37,11 +40,22 @@ public class Observer {
   }
   
   public boolean run() {
+    eventsActive.clear();
     for (int i = 0; i < events.size(); i++) {
-      events.get(i).reset();
+      ObserveEvent evt = events.get(i);
+      if (evt.isActiveFind()) {
+        evt.reset();
+        eventsActive.add(evt);
+      }
     }
-    Finder finder = new Finder(new Image(region.captureThis()));
-    finder.
+    finder.setBase(region);
+    found.events = eventsActive.toArray(new ObserveEvent[0]);
+    finder.findAny(found);
+    for (ObserveEvent evt : eventsActive) {
+      if (evt.hasHappened() && evt.hasCallback()) {
+        evt.getCallback().happened(evt);
+      }
+    }
     return true;
   }
   

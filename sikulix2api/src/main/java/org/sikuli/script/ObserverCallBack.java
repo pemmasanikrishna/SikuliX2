@@ -14,12 +14,13 @@ import org.sikuli.util.JythonHelper;
 /**
  * Use this class to implement call back methods for the Region observers
  * onAppear, onVanish and onChange. <br>
- * by overriding the contained empty methods appeared, vanished and changed
+ * by overriding the contained empty method happened(ObserveEvent e)<br>
+ * (deprecated: appeared, vanished and changed)
  * <pre>
  * example:
  * aRegion.onAppear(anImage,
  *   new ObserverCallBack() {
- *     appeared(ObserveEvent e) {
+ *     happened(ObserveEvent e) {
  *       // do something
  *     }
  *   }

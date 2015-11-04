@@ -140,6 +140,7 @@ public class Finder {
 
     public Mat base = null;
 
+    public ObserveEvent[] events = null;
     public Pattern pattern = null;
     public Pattern[] patterns = null;
     public long timeout = 0;
@@ -245,7 +246,7 @@ public class Finder {
     public void remove() {}
   }
 
-  private Finder() {
+  protected Finder() {
   }
 
   public Finder(Image img) {
@@ -284,6 +285,14 @@ public class Finder {
   protected void setBase(BufferedImage bImg) {
     terminate(1, "TODO setBase(BufferedImage bImg)");
 //    base = new Image(bImg, "").getMat();
+  }
+
+  protected void setBase(Region reg) {
+    isRegion = true;
+    region = reg;
+    offX = region.x;
+    offY = region.y;
+    base = region.captureThis().getMat();
   }
 
   protected long setBase() {
@@ -460,7 +469,7 @@ public class Finder {
     return res;
   }
     
-  private void findAny(Found found) {
+  public void findAny(Found found) {
     log(lvl, "findBest: enter");
     findAnyCollect(found);
     if (found.type.equals(Region.FindType.BEST)) {
@@ -484,12 +493,27 @@ public class Finder {
   }
 
   private void findAnyCollect(Found found) {
-    Pattern[] patterns = found.patterns;
-    if (patterns == null) {
+    int targetCount = 0;
+    Pattern[] patterns = null;
+    ObserveEvent[] events = null;
+    boolean isEvents = false;
+    if (found.patterns != null) {
+      patterns = found.patterns;
+      targetCount = patterns.length;
+    } else if (found.events != null) {
+      isEvents = true;
+      events = found.events;
+      targetCount = events.length;
+      patterns = new Pattern[targetCount];
+      for (int np = 0; np < targetCount; np++) {
+        patterns[np] = events[np].getPattern();
+      }
+    } else {
+      log(-1, "findAnyCollect: found structure invalid");
       return;
     }
-    Match[] mArray = new Match[patterns.length];
-    SubFindRun[] theSubs = new SubFindRun[patterns.length];
+    Match[] mArray = new Match[targetCount];
+    SubFindRun[] theSubs = new SubFindRun[targetCount];
     int nobj = 0;
     Found subFound = null;
     for (Pattern pattern  : patterns) {
@@ -516,14 +540,20 @@ public class Finder {
     nobj = 0;
     boolean anyMatch = false;
     for (Match match : mArray) {
-      if (match != null) {
+      if (isEvents) {
+        ObserveEvent evt = events[nobj];
+        evt.setMatch(match);
+        evt.setActive(false);
+      } else if (match != null) {
         match.setIndex(nobj);
         anyMatch = true;
       }
       nobj++;
     }
-    found.matches = mArray;
-    found.success = anyMatch;
+    if (!isEvents) {
+      found.matches = mArray;
+      found.success = anyMatch;
+    }
   }
 
   private class SubFindRun implements Runnable {
