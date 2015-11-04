@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class Observer {
-  
+
   private Observer() {}
   
   private static List<Observer> observers = Collections.synchronizedList(new ArrayList<Observer>());
@@ -13,6 +13,7 @@ public class Observer {
   private Region region = null;
   private Finder finder = new Finder();
   private Finder.Found found = new Finder.Found(finder);
+  private boolean stopped = true;
   
   private List<ObserveEvent> events = Collections.synchronizedList(new ArrayList<ObserveEvent>());
   private List<ObserveEvent> eventsActive = Collections.synchronizedList(new ArrayList<ObserveEvent>());
@@ -26,6 +27,29 @@ public class Observer {
     return true;
   }
 
+  protected void stop() {
+    stopped = true;
+  }
+  
+  protected boolean isStopped() {
+    return stopped;
+  }
+
+  protected static void cleanUp() {
+    for (Observer observer : observers) {
+      if (!observer.isStopped()) {
+        observer.region.stopObserver();
+      }
+    }
+    boolean allStopped = false;
+    while (!allStopped) {
+      allStopped = true;
+      for (Observer observer : observers) {
+        allStopped &= observer.isStopped();
+      }
+    }
+  }
+  
   public boolean hasObservers() {
     return events.size() > 0;
   }
@@ -41,6 +65,7 @@ public class Observer {
   
   public boolean run() {
     eventsActive.clear();
+    stopped = false;
     for (int i = 0; i < events.size(); i++) {
       ObserveEvent evt = events.get(i);
       if (evt.isActiveFind()) {
@@ -56,13 +81,13 @@ public class Observer {
         evt.getCallback().happened(evt);
       }
     }
+    if (stopped) {
+      return false;
+    }
+    stopped = true;
     return true;
   }
   
-  public void stop() {
-    
-  }
-
   public boolean hasEvents() {
     for (ObserveEvent evt : events) {
       if (evt.hasHappened()) {

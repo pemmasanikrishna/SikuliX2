@@ -22,7 +22,6 @@ import org.sikuli.script.ImagePath;
 import org.sikuli.script.Location;
 import org.sikuli.script.Match;
 import org.sikuli.script.Mouse;
-import org.sikuli.script.Observing;
 import org.sikuli.script.Pattern;
 import org.sikuli.script.Region;
 import org.sikuli.script.RunTime;
@@ -409,7 +408,7 @@ public class Commands {
   public static void cleanUp(int n) {
     log(lvl, "cleanUp: %d", n);
     ScreenHighlighter.closeAll();
-    Observing.cleanUp();
+    Observer.cleanUp();
     Mouse.reset();
     Screen.getPrimaryScreen().getRobot().keyUp();
     HotkeyManager.reset();
