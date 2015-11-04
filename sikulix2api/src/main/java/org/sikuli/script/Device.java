@@ -273,8 +273,7 @@ public class Device {
       if (mouseMovedResponse == MouseMovedAction) {
 //TODO implement 3
         if (mouseMovedCallback != null) {
-          mouseMovedCallback.happened(new ObserveEvent("MouseMoved", ObserveEvent.Type.GENERIC,
-                  lastPos, new Location(pos), null, (new Date()).getTime()));
+          mouseMovedCallback.happened(new ObserveEvent(ObserveEvent.Type.GENERIC, lastPos, new Location(pos)));
 					if (shouldTerminate) {
 						shouldTerminate = false;
 						throw new AssertionError("aborted by Sikulix.MouseMovedCallBack");
@@ -286,8 +285,7 @@ public class Device {
 
   private void checkShouldRunCallback() {
     if (shouldRunCallback && callback != null) {
-      callback.happened(new ObserveEvent("DeviceGeneric", ObserveEvent.Type.GENERIC,
-              null, null, null, (new Date()).getTime()));
+      callback.happened(new ObserveEvent(ObserveEvent.Type.GENERIC));
 			if (shouldTerminate) {
 				shouldTerminate = false;
 				throw new AssertionError("aborted by Sikulix.GenericDeviceCallBack");

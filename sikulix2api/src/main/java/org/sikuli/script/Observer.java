@@ -13,12 +13,14 @@ public class Observer {
   private Region region = null;
   
   private List<ObserveEvent> events = Collections.synchronizedList(new ArrayList<ObserveEvent>());
-  private List<ObserveEvent> eventsHappend = Collections.synchronizedList(new ArrayList<ObserveEvent>());
-  private List<ObserveEvent> eventsActive = Collections.synchronizedList(new ArrayList<ObserveEvent>());
   
   public Observer(Region reg) {
     region = reg;
     observers.add(this);
+  }
+  
+  public boolean init() {
+    return true;
   }
 
   public boolean hasObservers() {
@@ -26,40 +28,44 @@ public class Observer {
   }
 
   public boolean isObserving() {
-    return eventsActive.size() > 0;
+    for (ObserveEvent evt : events) {
+      if (evt.isActive()) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  public boolean run() {
+    for (int i = 0; i < events.size(); i++) {
+      events.get(i).reset();
+    }
+    Finder finder = new Finder(new Image(region.captureThis()));
+    finder.
+    return true;
+  }
+  
+  public void stop() {
+    
   }
 
   public boolean hasEvents() {
-    return eventsHappend.size() > 0;
-  }
-
-  public ObserveEvent getEvent() {
-    if (hasEvents()) {
-      return events.remove(0);
+    for (ObserveEvent evt : events) {
+      if (evt.hasHappened()) {
+        return true;
+      }
     }
-    return null;
+    return false;
   }
 
   public ObserveEvent[] getEvents() {
-    ObserveEvent[] evnts = new ObserveEvent[0];
-    if (hasEvents()) {
-       evnts = eventsHappend.toArray(new ObserveEvent[0]);
-       eventsHappend.clear();
+    List<ObserveEvent> evnts = new ArrayList<ObserveEvent>(0);
+    for (int i = 0; i < events.size(); i++) {
+      ObserveEvent evt = events.get(i);
+      if (evt.hasHappened()) {
+       evnts.add(evt);
+      }
     }
-    return evnts;
-  }
-  
-  public void pause(ObserveEvent event) {
-    eventsActive.remove(event);
-    event.setActive(false);
-  }  
-
-  public boolean restart(ObserveEvent event) {
-    eventsActive.remove(event);
-    if (eventsActive.add(event)) {
-      event.setActive(true);
-      return true;
-    }
-    return false;
+    return evnts.toArray(new ObserveEvent[0]);
   }
 }

@@ -644,7 +644,7 @@ public class Image {
     Pattern pattern = null;
     Finder.Found found = new Finder.Found(finder);
     try {
-      pattern = finder.evalTarget(target);
+      pattern = Finder.evalTarget(target);
     } catch (IOException ex) {
       log(-1, "find: file not found: %s", target);
     }

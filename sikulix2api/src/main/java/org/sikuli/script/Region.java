@@ -2839,14 +2839,14 @@ public class Region {
 
   private boolean observeDo(double secs) {
     if (regionObserver == null) {
-      Debug.error("Region: observe: Nothing to observe (Region might be invalid): " + this.toString());
+      log(-1, "observe: Nothing to observe (Region might be invalid): %s", this);
       return false;
     }
     if (observing) {
-      Debug.error("Region: observe: already running for this region. Only one allowed!");
+      log(-1, "observe: already running for this region. Only one allowed!");
       return false;
     }
-    log(lvl, "observe: starting in " + this.toString() + " for " + secs + " seconds");
+    log(lvl, "observe: starting in %s (%.1f secs)", this, secs);
     int MaxTimePerScan = (int) (1000.0 / observeScanRate);
     long begin_t = (new Date()).getTime();
     long stop_t;
@@ -2855,37 +2855,37 @@ public class Region {
     } else {
       stop_t = begin_t + (long) (secs * 1000);
     }
-    regionObserver.initialize();
-    observing = true;
-    Observing.addRunningObserver(this);
+    
+    // prepare observing in this region
+    observing = regionObserver.init();
+    if (!observing) {
+      log(-1, "observe: init not possible for %s", this);
+      return false;
+    }
+
+    // run observing for this region for the given time
     while (observing && stop_t > (new Date()).getTime()) {
       long before_find = (new Date()).getTime();
-      ScreenImage simg = getScreen().capture(x, y, w, h);
-      if (!regionObserver.update(simg)) {
-        observing = false;
-        break;
-      }
-      if (!observing) {
-        break;
-      }
-      long after_find = (new Date()).getTime();
-      try {
-        if (after_find - before_find < MaxTimePerScan) {
-          Thread.sleep((int) (MaxTimePerScan - (after_find - before_find)));
+      observing = regionObserver.run();
+      if (observing) {
+        long after_find = (new Date()).getTime();
+        try {
+          if (after_find - before_find < MaxTimePerScan) {
+            Thread.sleep((int) (MaxTimePerScan - (after_find - before_find)));
+          }
+        } catch (Exception e) {
         }
-      } catch (Exception e) {
       }
     }
-    boolean observeSuccess = false;
+    
+    // observing ended
     if (observing) {
       observing = false;
-      log(lvl, "observe: stopped due to timeout in "
-          + this.toString() + " for " + secs + " seconds");
+      log(lvl, "observe: stopped due to timeout in %s (%.1f secs)", this, secs );
     } else {
-      log(lvl, "observe: ended successfully: " + this.toString());
-      observeSuccess = Observing.hasEvents(this);
+      log(lvl, "observe: ended for: %s", this);
     }
-    return observeSuccess;
+    return true;
   }
 
   /**
@@ -2901,17 +2901,21 @@ public class Region {
       return false;
     }
     log(lvl, "entering observeInBackground for %f secs", secs);
-    Thread observeThread = new Thread(new ObserverThread(secs));
+    Thread observeThread = new Thread(new ObserveThread(secs));
     observeThread.start();
     log(lvl, "observeInBackground now running");
     return true;
   }
+  
+    public boolean observeInBackground() {
+      return observeInBackground(Float.POSITIVE_INFINITY);
+    }
 
-  private class ObserverThread implements Runnable {
+  private class ObserveThread implements Runnable {
 
     private double time;
 
-    ObserverThread(double time) {
+    ObserveThread(double time) {
       this.time = time;
     }
 
@@ -2927,6 +2931,7 @@ public class Region {
   public void stopObserver() {
     log(lvl, "observe: request to stop observer for " + this.toString());
     observing = false;
+    regionObserver.stop();
   }
 
   /**

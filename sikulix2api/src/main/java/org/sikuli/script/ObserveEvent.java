@@ -6,17 +6,67 @@
  */
 package org.sikuli.script;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.sikuli.util.Debug;
+import org.sikuli.util.Settings;
 
 /**
  * provides information about the observed event being in the {@link ObserverCallBack}
  */
 public class ObserveEvent {
 
-  void setActive(boolean b) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  //<editor-fold defaultstate="collapsed" desc="logging">
+  private static final int lvl = 3;
+  private static final org.apache.logging.log4j.Logger logger = LogManager.getLogger("SX.ObserveEvent");
+
+  private static void log(int level, String message, Object... args) {
+    if (Debug.is(lvl) || level < 0) {
+      message = String.format(message, args).replaceFirst("\\n", "\n          ");
+      if (level == lvl) {
+        logger.debug(message, args);
+      } else if (level > lvl) {
+        logger.trace(message, args);
+      } else if (level == -1) {
+        logger.error(message, args);
+      } else {
+        logger.info(message, args);
+      }
+    }
   }
+
+  private static void logp(String message, Object... args) {
+    System.out.println(String.format(message, args));
+  }
+
+  public static void terminate(int retval, String message, Object... args) {
+    logger.fatal(String.format(" *** terminating: " + message, args));
+    System.exit(retval);
+  }
+  
+  private long started = 0;
+  
+  private void start() {
+    started = new Date().getTime();
+  }
+
+  private long end() {
+    return end("");
+  }
+
+  private long end(String message) {
+    long ended = new Date().getTime();
+    long diff = ended - started;
+    if (!message.isEmpty()) {
+      logp("[time] %s: %d msec", message, diff);
+    }
+    started = ended;
+    return diff;
+  }
+//</editor-fold>
 
   public enum Type {
     APPEAR, VANISH, CHANGE, GENERIC
@@ -26,42 +76,57 @@ public class ObserveEvent {
    * the event's type as ObserveEvent.APPEAR, .VANISH, .CHANGE
    */
   private Type type;
-
-  private Region region = null;
-  private Object pattern = null;
-  private Match match = null;
-  private int index = -1;
-  private List<Match> changes = null;
   private long time;
-  private String name;
-  private Object[] vals = new Object[] {null, null, null};
+  private Region region = null;
+  private Pattern pattern = null;
+  private ObserverCallBack callback = null;
+  private Object[] vals = null;
+  private int minChanged = Settings.ObserveMinChangedPixels;
+  
+  private long repeatAfter = 0;
+  private int count = 0;
+  private boolean active = true;
+ 
+  private List<Match> matchOrChanges = new ArrayList<Match>();
 
-  protected ObserveEvent() {
+  private ObserveEvent() {
   }
 
   public ObserveEvent(Region reg, Type type, Object targetOrMinChanges, ObserverCallBack callback) {
-    
+    region = reg;
+    this.type = type;
+    time = new Date().getTime();
+    init(type, callback, targetOrMinChanges);
   }
   
-  /**
-   * INTERNAL USE ONLY: creates an observed event
-   */
-  protected ObserveEvent(String name, Type type, Object ptn, Object m, Object r, long now) {
-    init(name, type, ptn, m, r, now);
+  public ObserveEvent(Type type, ObserverCallBack callback, Object... args) {
+    this.type = type;
+    this.callback = callback;
+    init(args);
   }
 
-	private void init(String name, Type type, Object ptn, Object m, Object r, long now) {
-    this.name = name;
+  public ObserveEvent(Type type, Object... args) {
     this.type = type;
-    time = now;
+    init(args);
+  }
+  
+  private void init(Object... args) {
     if (type == Type.GENERIC) {
-      setVals(ptn, m, r);
+      vals = args;
+    } else if (type == Type.CHANGE) {
+      if (args.length > 0) {
+        minChanged = (int) args[0];
+      }
     } else {
-      setRegion(r);
-      setMatch(m);
-      setPattern(ptn);
+      if (args.length > 0) {
+        try {
+          pattern = Finder.evalTarget(args[0]);
+        } catch (IOException ex) {
+          log(-1, "init: file not found: %s", args[0]);
+        }
+      }
     }
-	}
+  }
   
   /**
    * get the observe event type
@@ -71,6 +136,22 @@ public class ObserveEvent {
     return type.toString();
   }
   
+  /**
+   *
+   * @return wether this event is currently ready to be observed
+   */
+  public boolean isActive() {
+    return active;
+  }
+  
+  /**
+   *
+   * @param state the intended active state
+   */
+  public void setActive(boolean state) {
+    active = state;
+  }
+
   /**
    * check the observe event type
    * @return true if it is APPEAR, false otherwise
@@ -104,35 +185,6 @@ public class ObserveEvent {
   }
 
   /**
-   * for type GENERIC: 3 values can be stored in the event
-   * (the value's type is known by creator and user of getVals as some private protocol)
-   * @param v1
-   * @param v2
-   * @param v3
-   */
-  protected void setVals(Object v1, Object v2, Object v3) {
-    vals[0] = v1;
-    vals[1] = v2;
-    vals[2] = v3;
-  }
-
-  /**
-   * for type GENERIC: (the value's type is known by creator and user of getVals as some private protocol)
-   * @return an array with the 3 stored values (might be null)
-   */
-  public Object[] getVals() {
-    return vals;
-  }
-
-  /**
-   *
-   * @return the observer name of this event
-   */
-  public String getName() {
-    return name;
-  }
-
-  /**
    *
    * @return this event's observer's region
    */
@@ -140,10 +192,8 @@ public class ObserveEvent {
     return region;
   }
 
-  protected void setRegion(Object r) {
-    if (r instanceof Region) {
-      region = (Region) r;
-    }
+  public boolean hasHappened() {
+    return matchOrChanges.size() > 0;
   }
 
   /**
@@ -151,31 +201,41 @@ public class ObserveEvent {
    * @return the observed match (APEAR, VANISH)
    */
   public Match getMatch() {
-    return match;
-  }
-
-  protected void setMatch(Object m) {
-    if (null != m && m instanceof Match) {
-      match = new Match((Match) m);
+    if ((isAppear() || isVanish()) && hasHappened()) {
+      return matchOrChanges.get(0);
     }
+    return null;
   }
 
-  protected void setIndex(int index) {
-    this.index = index;
+  protected void setMatch(Match m) {
+    matchOrChanges.clear();
+    matchOrChanges.add(0, m);
+  }
+  
+  protected void setHappened() {
+    matchOrChanges.clear();
+    matchOrChanges.add(0, new Match());    
   }
 
+  public void reset() {
+    matchOrChanges.clear();
+  }
+    
   /**
    *
    * @return a list of observed changes as matches (CHANGE)
    */
   public List<Match> getChanges() {
-    return changes;
+    if (isChange() && hasHappened()) {
+      return matchOrChanges;
+    }
+    return null;
   }
 
   protected void setChanges(List<Match> c) {
     if (c != null) {
-      changes = new ArrayList<Match>();
-      changes.addAll(c);
+      matchOrChanges.clear();
+      matchOrChanges.addAll(c);
     }
   }
 
@@ -184,38 +244,18 @@ public class ObserveEvent {
    * @return the used pattern for this event's observing
    */
   public Pattern getPattern() {
-    if (null != pattern) {
-      if (pattern.getClass().isInstance("")) {
-        return (new Pattern((String) pattern));
-      } else {
-        return (new Pattern((Pattern) pattern));
-      }
-    }
-    return null;
-  }
-
-  protected void setPattern(Object p) {
-    if (null != p) {
-      if (p.getClass().isInstance("")) {
-        pattern = new Pattern((String) p);
-      } else {
-        if (p instanceof Pattern) {
-          pattern = new Pattern((Pattern) p);
-        }
-      }
-    }
+    return pattern;
   }
 
   public long getTime() {
     return time;
   }
 
-  /**
-   * tell the observer to repeat this event's observe action immediately
-   * after returning from this handler (APPEAR, VANISH)
-   */
-  public void repeat() {
-    repeat(0);
+  // get and reset
+  protected long repeat() {
+    long ra = repeatAfter;
+    repeatAfter = 0;
+    return ra;
   }
 
   /**
@@ -224,14 +264,18 @@ public class ObserveEvent {
    * @param secs seconds
    */
   public void repeat(long secs) {
-    region.getObserver().repeat(name, secs);
+    repeatAfter = secs;
   }
 
   /**
    * @return the number how often this event has already been triggered until now
    */
   public int getCount() {
-    return region.getObserver().getCount(name);
+    return count;
+  }
+
+  protected int setCount() {
+    return count++;
   }
 
   /**
@@ -251,12 +295,18 @@ public class ObserveEvent {
 
   @Override
   public String toString() {
+    String sCB = "";
+    if (null != callback) {
+      sCB = "(withCallback)";
+    }
     if (type == Type.CHANGE) {
-      return String.format("Event(%s) %s on: %s with: %d count: %d",
-            type, name, region, index, getCount());
+      return String.format("Event(%s) on: %s min: %s (#%d) count: %d %s", 
+          type, region, minChanged, matchOrChanges.size(), getCount());
+    } else if (type == Type.GENERIC) {
+      return String.format("Event(%s) happened: %s %s", type, (hasHappened() ? "yes" : "no"), sCB);
     } else {
-      return String.format("Event(%s) %s on: %s with: %s\nmatch: %s count: %d",
-            type, name, region, pattern, match, getCount());
+      return String.format("Event(%s) on: %s with: %s\nmatch: %s count: %d %s", 
+          type, region, pattern, (matchOrChanges.size() > 0 ? matchOrChanges.get(0) : "none"), getCount());
     }
   }
 }

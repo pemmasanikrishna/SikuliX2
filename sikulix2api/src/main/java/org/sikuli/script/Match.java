@@ -64,6 +64,11 @@ public class Match extends Region implements Comparable<Match> {
 	}
 
   /**
+   * INTERNAL USE
+   */
+  protected Match() {}
+  
+  /**
    * create a copy of Match object<br>
    * to e.g. set another TargetOffset for same match
    *
