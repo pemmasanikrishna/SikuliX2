@@ -6,6 +6,8 @@
  */
 package org.sikuli.script;
 
+import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
@@ -25,7 +27,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -40,11 +41,11 @@ import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.Rect;
 import org.opencv.core.Size;
+import org.opencv.highgui.Highgui;
+import org.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
-import org.opencv.highgui.Highgui;
-import org.opencv.imgproc.Imgproc;
 
 /**
  * This class hides the complexity behind image names given as string.
@@ -983,14 +984,16 @@ public class Image {
 //</editor-fold>
   
 //<editor-fold defaultstate="collapsed" desc="show">
-  public Image show(int x, int y, int time) {
+  protected Image show(int x, int y, int time) {
     frImg = new JFrame();
     frImg.setAlwaysOnTop(true);
     frImg.setResizable(false);
     frImg.setUndecorated(true);
     frImg.setLocation(x, y);
     frImg.setSize(mwidth, mheight);
-    frImg.add(new JLabel(new ImageIcon(getImageBytes())));
+    Container cp = frImg.getContentPane();
+    cp.add(new JLabel(new ImageIcon(getImageBytes())), BorderLayout.CENTER);
+    frImg.pack();
     frImg.setVisible(true);
     if (time > 0) {
       App.pause(time);
@@ -998,7 +1001,7 @@ public class Image {
     }
     return this;
   }
-  
+    
   public Image show(int x, int y) {
     return show(x, y, 0);
   }

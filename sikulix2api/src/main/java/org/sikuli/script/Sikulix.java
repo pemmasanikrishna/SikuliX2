@@ -6,10 +6,8 @@ package org.sikuli.script;
 
 import java.io.File;
 import java.util.Date;
-import java.util.Iterator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opencv.core.Mat;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
@@ -68,17 +66,17 @@ public class Sikulix {
 //</editor-fold>
   public static void main(String[] args) throws FindFailed {
 
-//    Debug.on(3);
+    Debug.on(3);
     Settings.InfoLogs = false;
-    Settings.ActionLogs = true;
+    Settings.ActionLogs = false;
     rt = RunTime.get();
     Screen scr = new Screen();
     ImagePath.setBundlePath("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
     
-    Image img = Image.get("github");
+    Image img = Image.get("_testlogo");
     img.show(100, 100);
     App.pause(3);
-    img.show();
+//    img.show();
     
 //*****************************************    Commands.endNormal(1);
     System.exit(1);
