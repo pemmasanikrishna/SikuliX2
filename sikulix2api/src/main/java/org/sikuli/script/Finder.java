@@ -158,6 +158,10 @@ public class Finder {
     private int width = 0;
     private int height = 0;
     private Core.MinMaxLocResult mRes = null;
+    int margin = 2;
+    double givenScore = 0;
+    double firstScore = 0;
+    double scoreMaxDiff = 0.05;
 
     @Override
     public synchronized boolean hasNext() {
@@ -167,26 +171,31 @@ public class Finder {
     public synchronized boolean hasNext(boolean withTrace) {
       boolean success = false;
       if (currentScore < 0) {
-        if (currentScore < -0.5) {
-          width = pattern.getImage().getWidth();
-          height = pattern.getImage().getHeight();
-        } else if (currentScore < 0) {
-          int newX = Math.max(currentX - width, 0);
-          int newY = Math.max(currentY - height, 0);
-          int newXX = Math.min(newX + 2 * width, result.cols());
-          int newYY = Math.min(newY + 2 * height, result.rows());
-          result.colRange(newX, newXX).rowRange(newY, newYY).setTo(new Scalar(0f));
+        width = pattern.getImage().getWidth();
+        height = pattern.getImage().getHeight();
+        givenScore = pattern.getSimilar();
+        if (givenScore < 0.95) {
+          margin = 4;
+        } else if (givenScore < 0.85) {
+          margin = 8;
+        } else if (givenScore < 0.71) {
+          margin = 16;
         }
+      }
+      if (mRes == null) {
         mRes = Core.minMaxLoc(result);
         currentScore = mRes.maxVal;
-        currentX = baseX + (int) mRes.maxLoc.x;
-        currentY = baseY + (int) mRes.maxLoc.y;
+        currentX = (int) mRes.maxLoc.x;
+        currentY = (int) mRes.maxLoc.y;
+        if (firstScore == 0) {
+          firstScore = currentScore;
+        }
       }
-      if (currentScore > pattern.getSimilar()) {
+      if (currentScore > pattern.getSimilar() && currentScore  > firstScore - scoreMaxDiff) {
         success = true;
       }
       if (withTrace) {
-        log(lvl + 1, "hasNext: %.4f (%d, %d)", currentScore, currentX, currentY);
+        log(lvl + 1, "hasNext: %.4f (%d, %d)", currentScore, baseX + currentX, baseY + currentY);
       }
       return success;
     }
@@ -195,8 +204,13 @@ public class Finder {
     public synchronized Match next() {
       Match match = null;
       if (hasNext(false)) {
-        match = new Match(new Rectangle(currentX, currentY, width, height), currentScore);
-        currentScore = -0.5;
+        match = new Match(new Rectangle(baseX + currentX, baseY + currentY, width, height), currentScore);
+        int newX = Math.max(currentX - margin, 0);
+        int newY = Math.max(currentY - margin, 0);
+        int newXX = Math.min(newX + 2 * margin, result.cols());
+        int newYY = Math.min(newY + 2 * margin, result.rows());
+        result.colRange(newX, newXX).rowRange(newY, newYY).setTo(new Scalar(0f));
+        mRes = null;
       }
       log(lvl + 1, "next: %s", match == null ? "no match" : match.toJSON());
       return match;

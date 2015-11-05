@@ -6,6 +6,7 @@ package org.sikuli.script;
 
 import java.io.File;
 import java.util.Date;
+import java.util.Iterator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sikuli.util.Debug;
@@ -65,6 +66,10 @@ public class Sikulix {
   }
 //</editor-fold>
   public static void main(String[] args) throws FindFailed {
+    
+    Region win;
+    Pattern pImg;
+    Match mImg;
 
     Debug.on(3);
     Settings.InfoLogs = false;
@@ -74,16 +79,27 @@ public class Sikulix {
     ImagePath.setBundlePath("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
     
     Image img = Image.get("_testlogo");
-    img.show(100, 100);
-    App.pause(3);
-//    img.show();
+    win = img.show(0, 100);
+    win.wait("raimanlogo");
+    pImg = new Pattern("raimanlogo").similar(0.7);
+    Iterator<Match> matches = win.findAll(pImg);
+    while (matches.hasNext()) {
+      mImg = matches.next();
+      mImg.highlight(1);
+//      mImg.grow(10).highlight(1);
+    }
+//    Match[] matches = win.findAllByRow("raimanlogo");
+//    for (Match match : matches) {
+//      match.highlight(1);
+//    }
+    img.show();
     
 //*****************************************    Commands.endNormal(1);
     System.exit(1);
     
     String link = "sikulix.com";
     link = "github.com/RaiMan/SikuliX2";
-    Pattern pImg = new Pattern("github").similar(0.7);
+    pImg = new Pattern("github").similar(0.7);
 
     App.openLink(link);
     if (null != scr.exists(pImg, 10)) {
@@ -91,7 +107,7 @@ public class Sikulix {
     } else {
       App.pause(3);
     }
-    Region win = App.focusedWindow();
+    win = App.focusedWindow();
     
     win.write("#C.w");
 //*****************************************    Commands.endNormal(1);

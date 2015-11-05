@@ -984,7 +984,7 @@ public class Image {
 //</editor-fold>
   
 //<editor-fold defaultstate="collapsed" desc="show">
-  protected Image show(int x, int y, int time) {
+  protected Region show(int x, int y, int time) {
     frImg = new JFrame();
     frImg.setAlwaysOnTop(true);
     frImg.setResizable(false);
@@ -998,11 +998,12 @@ public class Image {
     if (time > 0) {
       App.pause(time);
       show();
+      return null;
     }
-    return this;
+    return App.focusedWindow();
   }
     
-  public Image show(int x, int y) {
+  public Region show(int x, int y) {
     return show(x, y, 0);
   }
   
