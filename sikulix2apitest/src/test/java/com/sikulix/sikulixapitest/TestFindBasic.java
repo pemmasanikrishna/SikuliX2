@@ -97,6 +97,7 @@ public class TestFindBasic {
     protected Timer(String desc) {
       start = new Date().getTime();
       this.desc = desc;
+      trace("Timer start (%d) %s", start, desc);
     }
 
     protected long lap(boolean restart) {

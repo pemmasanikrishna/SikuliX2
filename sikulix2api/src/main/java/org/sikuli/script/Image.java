@@ -409,11 +409,12 @@ public class Image {
   
   public Image add() {
     if (isCaching() && isUseable()) {
-      remove();
       if (!isInMemory) {
         imageFiles.put(fileURL, this);
       }
-      images.add(this);
+      if (!images.contains(this)) {
+        images.add(this);
+      }
       currentMemoryUp(msize);
       cacheLog("add");
     }
