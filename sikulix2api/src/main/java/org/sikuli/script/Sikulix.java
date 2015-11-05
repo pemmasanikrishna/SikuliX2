@@ -70,6 +70,8 @@ public class Sikulix {
     Region win;
     Pattern pImg;
     Match mImg;
+    Image img = null;
+    Region fake = null;
 
     Debug.on(3);
     Settings.InfoLogs = false;
@@ -78,20 +80,30 @@ public class Sikulix {
     Screen scr = new Screen();
     ImagePath.setBundlePath("org.sikuli.script.Sikulix/ImagesAPI.sikuli");
     
-    Image img = Image.get("_testlogo");
+    img = Image.get("_testlogo");
     win = img.show(0, 100);
-    win.wait("raimanlogo");
-    pImg = new Pattern("raimanlogo").similar(0.7);
-    Iterator<Match> matches = win.findAll(pImg);
-    while (matches.hasNext()) {
-      mImg = matches.next();
+ 
+//    fake.wait(0.0);
+    String sImg = "raimanlogo";
+    win.wait(sImg, 5);
+    win.highlight(1);
+    pImg = new Pattern(sImg).similar(0.7);
+    Iterator<Match> iMatches = win.findAll(pImg);
+    while (iMatches.hasNext()) {
+      mImg = iMatches.next();
       mImg.highlight(1);
-//      mImg.grow(10).highlight(1);
     }
-//    Match[] matches = win.findAllByRow("raimanlogo");
-//    for (Match match : matches) {
-//      match.highlight(1);
-//    }
+    win.highlight(1);
+    Match[] matches = win.findAllByRow("raimanlogo");
+    for (Match match : matches) {
+      match.highlight(1);
+    }
+    win.highlight(1);
+    matches = win.findAllByColumn("raimanlogo");
+    for (Match match : matches) {
+      match.highlight(1);
+    }
+
     img.show();
     
 //*****************************************    Commands.endNormal(1);
