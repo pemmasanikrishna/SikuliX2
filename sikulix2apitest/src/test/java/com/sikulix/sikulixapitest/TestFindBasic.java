@@ -2,6 +2,7 @@ package com.sikulix.sikulixapitest;
 
 import java.io.File;
 import java.util.Date;
+import java.util.Iterator;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,9 +15,11 @@ import org.junit.FixMethodOrder;
 import static org.junit.Assert.*;
 import org.junit.runners.MethodSorters;
 import org.sikuli.script.App;
+import org.sikuli.script.FindFailed;
 import org.sikuli.script.Image;
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.Match;
+import org.sikuli.script.Pattern;
 import org.sikuli.script.Region;
 import org.sikuli.script.RunTime;
 import org.sikuli.util.Debug;
@@ -119,8 +122,10 @@ public class TestFindBasic {
 //</editor-fold>
 
   private static Region window = null;
+  private static Image imgWindow = null;
   private static String theClass = "";
-  private static String images = "";
+  private static String images = new File(sxRT.fWorkDir, 
+          "target/classes/test-classes/images.sikuli").getAbsolutePath();
   private static final String testImages = "_testImages";
   private static String testImg = "testImages/testImg";
   private static File fTestImages = null;
@@ -129,7 +134,6 @@ public class TestFindBasic {
 
   public TestFindBasic() {
     theClass = this.getClass().toString().substring(6);
-    images = theClass + "/images.sikuli";
     trace("--- Test class: %s", theClass);
     ImagePath.setBundlePath(images);
     fTestImages = new File(ImagePath.getBundlePath(), testImages);
@@ -149,9 +153,15 @@ public class TestFindBasic {
     Settings.ActionLogs = false;
     Settings.DebugLogs = false;
     trace("setUpClass:");
-    App.openLink("http://www.sikulix.com/uploads/1/4/2/8/14281286/1389697664.png");
-    App.pause(3);
-    window = App.focusedWindow();
+//    App.openLink("http://www.sikulix.com/uploads/1/4/2/8/14281286/1389697664.png");
+//    App.pause(3);
+//    window = App.focusedWindow();
+    ImagePath.setBundlePath(images);
+    imgWindow = Image.get("_testlogo");
+    if (!imgWindow.isValid()) {
+      throw new NullPointerException("Image not found: _testlogo");
+    }
+    window = imgWindow.show(0, 100);
     trace("searching in region %s", window.toJSON());
     Debug.on(3);
   }
@@ -161,7 +171,8 @@ public class TestFindBasic {
     trace("--- Class teardown:");
     FileManager.deleteFileOrFolder(fTestImages);
     Debug.off();
-    App.closeWindow();
+//    App.closeWindow();
+    imgWindow.show();
   }
 
   @Before
@@ -256,5 +267,24 @@ public class TestFindBasic {
     debug("found: %s", found.toJSON());
     info("--- 7 testCompare2ImagesLoaded: %s %s in %s", msg, bImage, bImage);
     assertTrue(found != null);
+  }
+
+  @Test
+  public void test_8_findAll() throws FindFailed {
+    Timer timer = new Timer("basic findAll");
+    String sImg = "raimanlogo";
+    window.wait(sImg, 5);
+    window.highlight(1);
+    Pattern pImg = new Pattern(sImg).similar(0.7);
+    Iterator<Match> iMatches = window.findAll(pImg);
+    boolean success = false;
+    while (iMatches.hasNext()) {
+      success = true;
+      Match mImg = iMatches.next();
+      mImg.highlight(1);
+    }
+    String msg = timer.end();
+    info("--- 8 : %s", msg);
+    assertTrue(success);
   }
 }

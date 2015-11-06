@@ -985,7 +985,6 @@ public class Image {
   
 //<editor-fold defaultstate="collapsed" desc="show">
   protected Region show(int x, int y, int time) {
-    Region win = null;
     frImg = new JFrame();
     frImg.setAlwaysOnTop(true);
     frImg.setResizable(false);
