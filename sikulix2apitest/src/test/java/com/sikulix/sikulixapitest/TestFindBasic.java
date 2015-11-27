@@ -125,7 +125,7 @@ public class TestFindBasic {
   private static Image imgWindow = null;
   private static String theClass = "";
   private static String images = new File(sxRT.fWorkDir, 
-          "target/classes/test-classes/images.sikuli").getAbsolutePath();
+          "target/test-classes/images.sikuli").getAbsolutePath();
   private static final String testImages = "_testImages";
   private static String testImg = "testImages/testImg";
   private static File fTestImages = null;
