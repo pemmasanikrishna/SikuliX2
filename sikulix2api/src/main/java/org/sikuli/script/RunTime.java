@@ -38,6 +38,7 @@ import java.util.StringTokenizer;
 import java.util.prefs.Preferences;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
@@ -66,23 +67,28 @@ public class RunTime {
     }
   }
 
-//TODO RunTime: handling of script projects
+  //TODO RunTime: handling of script projects
   private File fScriptProject = null;
+
   public static File getScriptProject() {
     return get().fScriptProject;
   }
+
   public static void setScriptProject(File fsp) {
     get().fScriptProject = fsp;
   }
+
   private URL urlScriptProject = null;
+
   public static URL getScriptProjectURL() {
     return get().urlScriptProject;
   }
+
   public static void setScriptProjectURL(URL usp) {
     get().urlScriptProject = usp;
   }
 
-//<editor-fold defaultstate="collapsed" desc="logging">
+  //<editor-fold defaultstate="collapsed" desc="logging">
   private static final int lvl = 3;
   private static final Logger logger = LogManager.getLogger("SX.RunTime");
 
@@ -112,6 +118,7 @@ public class RunTime {
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="instance">
+
   /**
    * INTERNAL USE
    */
@@ -291,7 +298,7 @@ public class RunTime {
 
 //</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="variables">
+  //<editor-fold defaultstate="collapsed" desc="variables">
   public enum Type {
 
     IDE, API, SETUP, INIT
@@ -403,9 +410,9 @@ public class RunTime {
   private boolean shouldExport = false;
 //</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="global init">
+  //<editor-fold defaultstate="collapsed" desc="global init">
   private void init(Type typ) {
-    
+
     if (typ == null) {
       typ = Type.API;
     }
@@ -667,7 +674,7 @@ public class RunTime {
       libsExport(typ);
       //preload OpenCV
       loadLibrary();
-    } 
+    }
 
     if (typ == Type.API && (shouldExport || !fSikulixLib.exists())) {
       fSikulixLib.mkdir();
@@ -765,7 +772,7 @@ public class RunTime {
 
     log(lvl, "initIDEbefore: leaving");
   }
-  
+
   private void initSetup() {
     if (!Type.SETUP.equals(runTime.runType)) {
       return;
@@ -792,7 +799,7 @@ public class RunTime {
 //</editor-fold>
 
 
-//<editor-fold defaultstate="collapsed" desc="libs export">
+  //<editor-fold defaultstate="collapsed" desc="libs export">
   class LibsFilter implements FilenameFilter {
 
     String sAccept = "";
@@ -878,34 +885,35 @@ public class RunTime {
     } else if (runningLinux) {
       libName = "lib" + libName + ".so";
     }
-    File fLib = new File(fLibsFolder, libName);
-    Boolean vLib = libsLoaded.get(libName);
-    if (vLib == null || !fLib.exists()) {
-      terminate(1, String.format("loadlib: %s not available in %s", libName, fLibsFolder));
-    }
-    String msg = "loadLib: %s";
-    int level = lvl;
-    if (vLib) {
-      level++;
-      msg += " already loaded";
-    }
-    if (vLib) {
-      log(level, msg, libName);
-      return true;
-    }
-    boolean shouldTerminate = false;
     Error loadError = null;
-    while (!shouldTerminate) {
-      shouldTerminate = true;
-      loadError = null;
-      try {
-        System.load(new File(fLibsFolder, libName).getAbsolutePath());
-      } catch (Error e) {
-        loadError = e;
-        if (runningLinux) {
-          log(-1, msg + " not usable: \n%s", libName, loadError);
-          shouldTerminate = !LinuxSupport.checkAllLibs();
+    File fLib = null;
+    String msg = "loadLib: %s";
+    if (!libName.contains("opencv")) {
+      fLib = new File(fLibsFolder, libName);
+      if (!fLib.exists()) {
+        terminate(1, String.format("loadlib: %s not available in %s", libName, fLibsFolder));
+      }
+      libName = fLib.getAbsolutePath();
+      boolean shouldTerminate = false;
+      while (!shouldTerminate) {
+        shouldTerminate = true;
+        loadError = null;
+        try {
+          System.load(libName);
+        } catch (Error e) {
+          loadError = e;
+          if (runningLinux) {
+            log(-1, msg + " not usable: \n%s", libName, loadError);
+            shouldTerminate = !LinuxSupport.checkAllLibs();
+          }
         }
+      }
+    } else {
+      try {
+        System.loadLibrary(libName.substring(3, libName.length() - 6));
+      }
+      catch (Error ex) {
+        loadError = ex;
       }
     }
     if (loadError != null) {
@@ -915,7 +923,7 @@ public class RunTime {
       terminate(1, "problem with native library: " + libName);
     }
     libsLoaded.put(libName, true);
-    log(level, msg, libName);
+    log(lvl, msg, libName);
     return true;
   }
 
@@ -1021,7 +1029,7 @@ public class RunTime {
   }
 //</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="native libs handling">
+  //<editor-fold defaultstate="collapsed" desc="native libs handling">
   public static void loadLibrary() {
     String opencvLib = Core.NATIVE_LIBRARY_NAME;
     if (runTime.runningWindows) {
@@ -1113,6 +1121,7 @@ public class RunTime {
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="helpers">
+
   /**
    * INTERNAL USE: to check whether we are running in compiled classes context
    *
@@ -1123,7 +1132,6 @@ public class RunTime {
   }
 
   /**
-   *
    * @return return true if Java version > 7
    */
   public boolean isJava8() {
@@ -1131,13 +1139,12 @@ public class RunTime {
   }
 
   /**
-   *
    * @return return true if Java version > 6
    */
   public boolean isJava7() {
     return javaVersion > 6;
   }
-  
+
   public String getSikulixRepo() {
     return SikulixRepo;
   }
@@ -1232,7 +1239,7 @@ public class RunTime {
   }
 //</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="options handling">
+  //<editor-fold defaultstate="collapsed" desc="options handling">
   private void loadOptions(Type typ) {
     for (File aFile : new File[]{fWorkDir, fUserDir, fSikulixStore}) {
       log(lvl + 1, "loadOptions: check: %s", aFile);
@@ -1340,7 +1347,7 @@ public class RunTime {
   /**
    * CONVENIENCE: look into the option file if any (if no option file is found, the option is taken as not existing)
    *
-   * @param pName the option key (case-sensitive)
+   * @param pName    the option key (case-sensitive)
    * @param bDefault the default to be returned if option absent or empty
    * @return true if option has yes or no, false for no or false (not case-sensitive)
    */
@@ -1379,7 +1386,7 @@ public class RunTime {
    * in this case and when the option is absent or empty, the given default will be stored<br>
    * you might later save the options store to a file with storeOptions()
    *
-   * @param pName the option key (case-sensitive)
+   * @param pName    the option key (case-sensitive)
    * @param sDefault the default to be returned if option absent or empty
    * @return the associated value, the default value if absent or empty
    */
@@ -1435,7 +1442,7 @@ public class RunTime {
    * CONVENIENCE: look into the option file if any (if no option file is found, the option is taken as not existing)<br>
    * tries to convert the stored string value into an integer number (gives 0 if not possible)<br>
    *
-   * @param pName the option key (case-sensitive)
+   * @param pName    the option key (case-sensitive)
    * @param nDefault the default to be returned if option absent, empty or not convertable
    * @return the converted integer number, default if absent, empty or not possible
    */
@@ -1493,7 +1500,7 @@ public class RunTime {
   }
 //</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="Sikulix version handling">
+  //<editor-fold defaultstate="collapsed" desc="Sikulix version handling">
   private String SikulixRepo = "";
 
   private String SikulixVersion;
@@ -1524,7 +1531,7 @@ public class RunTime {
   private String SikuliJythonMaven;
   private String SikuliJythonMaven25;
   private String SikuliJython25;
-  
+
   private String SikuliJRubyVersion;
   private String SikuliJRuby;
   private String SikuliJRubyMaven;
@@ -1543,7 +1550,7 @@ public class RunTime {
   private String SikuliVersionLong;
   private String SikuliSystemVersion;
   private String SikuliJavaVersion;
-  
+
   private String libsCheckNameTemplate = "%s_MadeForSikuliX%d%s.txt";
   private String libsCheckName = "";
 
@@ -1646,14 +1653,14 @@ public class RunTime {
       Commands.terminate(999);
     }
     tessData.put("eng", "http://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.eng.tar.gz");
-    
-    libsCheckName = String.format(libsCheckNameTemplate, 
-        getVersionShort(), javaArch, runningOn.toString().substring(0, 1));
+
+    libsCheckName = String.format(libsCheckNameTemplate,
+            getVersionShort(), javaArch, runningOn.toString().substring(0, 1));
   }
 
 //</editor-fold>
-  
-//<editor-fold defaultstate="collapsed" desc="handling resources from classpath">
+
+  //<editor-fold defaultstate="collapsed" desc="handling resources from classpath">
   protected List<String> extractTessData(File folder) {
     List<String> files = new ArrayList<String>();
     String tessdata = "/sikulixtessdata";
@@ -1674,8 +1681,8 @@ public class RunTime {
    * to export a specific file from classpath use extractResourceToFile or extractResourceToString
    *
    * @param fpRessources path of the subtree relative to root
-   * @param fFolder folder where to export (if null, only list - no export)
-   * @param filter implementation of interface FilenameFilter or null for no filtering
+   * @param fFolder      folder where to export (if null, only list - no export)
+   * @param filter       implementation of interface FilenameFilter or null for no filtering
    * @return the filtered list of files (compact sikulixcontent format)
    */
   public List<String> extractResourcesToFolder(String fpRessources, File fFolder, FilenameFilter filter) {
@@ -1725,10 +1732,10 @@ public class RunTime {
   /**
    * export all resource files from the given subtree in given jar to the given folder retaining the subtree
    *
-   * @param aJar absolute path to an existing jar or a string identifying the jar on classpath (no leading /)
+   * @param aJar         absolute path to an existing jar or a string identifying the jar on classpath (no leading /)
    * @param fpRessources path of the subtree or file relative to root
-   * @param fFolder folder where to export (if null, only list - no export)
-   * @param filter implementation of interface FilenameFilter or null for no filtering
+   * @param fFolder      folder where to export (if null, only list - no export)
+   * @param filter       implementation of interface FilenameFilter or null for no filtering
    * @return the filtered list of files (compact sikulixcontent format)
    */
   public List<String> extractResourcesToFolderFromJar(String aJar, String fpRessources, File fFolder, FilenameFilter filter) {
@@ -1774,8 +1781,8 @@ public class RunTime {
    * store a resource found on classpath to a file in the given folder with same filename
    *
    * @param inPrefix a subtree found in classpath
-   * @param inFile the filename combined with the prefix on classpath
-   * @param outDir a folder where to export
+   * @param inFile   the filename combined with the prefix on classpath
+   * @param outDir   a folder where to export
    * @return success
    */
   public boolean extractResourceToFile(String inPrefix, String inFile, File outDir) {
@@ -1786,9 +1793,9 @@ public class RunTime {
    * store a resource found on classpath to a file in the given folder
    *
    * @param inPrefix a subtree found in classpath
-   * @param inFile the filename combined with the prefix on classpath
-   * @param outDir a folder where to export
-   * @param outFile the filename for export
+   * @param inFile   the filename combined with the prefix on classpath
+   * @param outDir   a folder where to export
+   * @param outFile  the filename for export
    * @return success
    */
   public boolean extractResourceToFile(String inPrefix, String inFile, File outDir, String outFile) {
@@ -1823,7 +1830,7 @@ public class RunTime {
    * store the content of a resource found on classpath in the returned string
    *
    * @param inPrefix a subtree from root found in classpath (leading /)
-   * @param inFile the filename combined with the prefix on classpath
+   * @param inFile   the filename combined with the prefix on classpath
    * @param encoding
    * @return file content
    */
@@ -1954,9 +1961,9 @@ public class RunTime {
    * separator<br>
    * compact sikulixcontent format
    *
-   * @param folder path of the subtree relative to root with leading /
+   * @param folder       path of the subtree relative to root with leading /
    * @param targetFolder the folder where to store the file sikulixcontent (if null, only list - no export)
-   * @param filter implementation of interface FilenameFilter or null for no filtering
+   * @param filter       implementation of interface FilenameFilter or null for no filtering
    * @return success
    */
   public String[] resourceListAsSikulixContent(String folder, File targetFolder, FilenameFilter filter) {
@@ -1996,10 +2003,10 @@ public class RunTime {
    * separator<br>
    * compact sikulixcontent format
    *
-   * @param aJar absolute path to an existing jar or a string identifying the jar on classpath (no leading /)
-   * @param folder path of the subtree relative to root with leading /
+   * @param aJar         absolute path to an existing jar or a string identifying the jar on classpath (no leading /)
+   * @param folder       path of the subtree relative to root with leading /
    * @param targetFolder the folder where to store the file sikulixcontent (if null, only list - no export)
-   * @param filter implementation of interface FilenameFilter or null for no filtering
+   * @param filter       implementation of interface FilenameFilter or null for no filtering
    * @return success
    */
   public String[] resourceListAsSikulixContentFromJar(String aJar, String folder, File targetFolder, FilenameFilter filter) {
@@ -2050,8 +2057,8 @@ public class RunTime {
    * write the list produced by calling extractResourcesToFolder to the returned string with given separator<br>
    * non-compact format: every file with full path
    *
-   * @param folder path of the subtree relative to root with leading /
-   * @param filter implementation of interface FilenameFilter or null for no filtering
+   * @param folder    path of the subtree relative to root with leading /
+   * @param filter    implementation of interface FilenameFilter or null for no filtering
    * @param separator to be used to separate the entries
    * @return the resulting string
    */
@@ -2317,7 +2324,7 @@ public class RunTime {
 
 //</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="classpath handling">
+  //<editor-fold defaultstate="collapsed" desc="classpath handling">
   private void storeClassPath() {
     URLClassLoader sysLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
     classPath = Arrays.asList(sysLoader.getURLs());
@@ -2495,6 +2502,7 @@ public class RunTime {
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="system enviroment">
+
   /**
    * print the current java system properties key-value pairs sorted by key
    */
@@ -2584,6 +2592,7 @@ public class RunTime {
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="runcmd">
+
   /**
    * run a system command finally using Java::Runtime.getRuntime().exec(args) and waiting for completion
    *
@@ -2599,7 +2608,7 @@ public class RunTime {
    * run a system command finally using Java::Runtime.getRuntime().exec(args) and waiting for completion
    *
    * @param cmd the command as it would be given on command line splitted into the space devided parts, first part is
-   * the command, the rest are parameters and their values
+   *            the command, the rest are parameters and their values
    * @return the output produced by the command (sysout [+ "*** error ***" + syserr] if the syserr part is present, the
    * command might have failed
    */
@@ -2695,7 +2704,7 @@ public class RunTime {
   }
 //</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="args handling for scriptrunner">
+  //<editor-fold defaultstate="collapsed" desc="args handling for scriptrunner">
   private String[] args = new String[0];
   private String[] sargs = new String[0];
 
@@ -2781,7 +2790,7 @@ public class RunTime {
   }
 //</editor-fold>
 
-//<editor-fold defaultstate="collapsed" desc="testSetup">
+  //<editor-fold defaultstate="collapsed" desc="testSetup">
   public static boolean canRun() {
     return !RunTime.get().isHeadless();
   }

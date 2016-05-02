@@ -125,7 +125,7 @@ public class Region {
   private float observeScanRate = Settings.ObserveScanRate;
   private int repeatWaitTime = Settings.RepeatWaitTime;
   /**
-   * The {@link Observer11} Singleton instance
+   * The {@link Observer} Singleton instance
    */
   private Observer regionObserver = null;
 

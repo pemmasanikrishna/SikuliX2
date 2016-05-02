@@ -18,7 +18,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.core.TermCriteria;
-import org.sikuli.zexternal.opencv.utils.Converters;
+import org.opencv.utils.Converters;
 
 public class Imgproc {
 
@@ -6537,7 +6537,6 @@ public class Imgproc {
  * destination image.
  *
  * @see <a href="http://docs.opencv.org/modules/imgproc/doc/geometric_transformations.html#getperspectivetransform">org.opencv.imgproc.Imgproc.getPerspectiveTransform</a>
- * @see org.opencv.calib3d.Calib3d#findHomography
  * @see org.opencv.core.Core#perspectiveTransform
  * @see org.opencv.imgproc.Imgproc#warpPerspective
  */
@@ -6814,9 +6813,7 @@ public class Imgproc {
  *
  * @see <a href="http://docs.opencv.org/modules/imgproc/doc/feature_detection.html#goodfeaturestotrack">org.opencv.imgproc.Imgproc.goodFeaturesToTrack</a>
  * @see org.opencv.imgproc.Imgproc#cornerHarris
- * @see org.opencv.video.Video#estimateRigidTransform
  * @see org.opencv.imgproc.Imgproc#cornerMinEigenVal
- * @see org.opencv.video.Video#calcOpticalFlowPyrLK
  */
     public static void goodFeaturesToTrack(Mat image, MatOfPoint corners, int maxCorners, double qualityLevel, double minDistance, Mat mask, int blockSize, boolean useHarrisDetector, double k)
     {
@@ -6867,9 +6864,7 @@ public class Imgproc {
  *
  * @see <a href="http://docs.opencv.org/modules/imgproc/doc/feature_detection.html#goodfeaturestotrack">org.opencv.imgproc.Imgproc.goodFeaturesToTrack</a>
  * @see org.opencv.imgproc.Imgproc#cornerHarris
- * @see org.opencv.video.Video#estimateRigidTransform
  * @see org.opencv.imgproc.Imgproc#cornerMinEigenVal
- * @see org.opencv.video.Video#calcOpticalFlowPyrLK
  */
     public static void goodFeaturesToTrack(Mat image, MatOfPoint corners, int maxCorners, double qualityLevel, double minDistance)
     {

@@ -7,7 +7,7 @@ package org.opencv.core;
 import java.lang.String;
 import java.util.ArrayList;
 import java.util.List;
-import org.sikuli.zexternal.opencv.utils.Converters;
+import org.opencv.utils.Converters;
 
 // C++: class Algorithm
 /**

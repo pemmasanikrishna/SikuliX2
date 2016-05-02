@@ -12,7 +12,7 @@ import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
-import org.sikuli.zexternal.opencv.utils.Converters;
+import org.opencv.utils.Converters;
 
 // C++: class Subdiv2D
 public class Subdiv2D {

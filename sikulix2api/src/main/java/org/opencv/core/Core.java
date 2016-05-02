@@ -7,7 +7,7 @@ package org.opencv.core;
 import java.lang.String;
 import java.util.ArrayList;
 import java.util.List;
-import org.sikuli.zexternal.opencv.utils.Converters;
+import org.opencv.utils.Converters;
 
 public class Core {
 
@@ -6055,7 +6055,6 @@ public class Core {
  * matrix.
  *
  * @see <a href="http://docs.opencv.org/modules/core/doc/operations_on_arrays.html#perspectivetransform">org.opencv.core.Core.perspectiveTransform</a>
- * @see org.opencv.calib3d.Calib3d#findHomography
  * @see org.opencv.imgproc.Imgproc#warpPerspective
  * @see org.opencv.core.Core#transform
  * @see org.opencv.imgproc.Imgproc#getPerspectiveTransform
@@ -7818,7 +7817,6 @@ public class Core {
  * @see org.opencv.core.Core#perspectiveTransform
  * @see org.opencv.imgproc.Imgproc#warpPerspective
  * @see org.opencv.imgproc.Imgproc#getAffineTransform
- * @see org.opencv.video.Video#estimateRigidTransform
  */
     public static void transform(Mat src, Mat dst, Mat m)
     {
