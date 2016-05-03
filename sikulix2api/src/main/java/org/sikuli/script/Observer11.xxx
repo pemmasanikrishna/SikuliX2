@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.opencv.core.Mat;
+import org.opencv3.core.Mat;
 //import org.sikuli.natives.FindResult;
 //import org.sikuli.natives.FindResults;
 //import org.sikuli.natives.Mat;
@@ -36,7 +36,7 @@ public class Observer11 {
     FIRST, UNKNOWN, MISSING, REPEAT, HAPPENED, INACTIVE
   }
   private Region observedRegion = null;
-  private org.opencv.core.Mat lastImageMat = null;
+  private org.opencv3.core.Mat lastImageMat = null;
   private Map<String, State> eventStates = null;
   private Map<String, Long> eventRepeatWaitTimes = null;
   private Map<String, Match> eventMatches = null;
@@ -283,7 +283,7 @@ public class Observer11 {
     }
     boolean leftToDo = false;
     if (lastImageMat == null) {
-      lastImageMat = new org.opencv.core.Mat();
+      lastImageMat = new org.opencv3.core.Mat();
       return true;
     }
     if (lastImageMat.empty()) {
@@ -306,7 +306,7 @@ public class Observer11 {
       log(lvl + 1, "update: checking changes");
       Finder f = new Finder(lastImageMat);
       f.setMinChanges(minChanges);
-      org.opencv.core.Mat current = img.getMat();
+      org.opencv3.core.Mat current = img.getMat();
       if (f.hasChanges(current)) {
         //TODO implement ChangeObserver: processing changes
         log(lvl, "TODO: processing changes");

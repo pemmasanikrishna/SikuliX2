@@ -1,8 +1,1 @@
-sikulixvmaj=${sikulixvmaj}
-sikulixvmin=${sikulixvmin}
-sikulixvsub=${sikulixvsub}
-sikulixbeta=${sikulixbeta}
-sikulixbuild=${timestamp}
-sikulixlocalrepo=${sikulixlocalrepo}
-sikulixvjython=${sikulixjythonversion}
-sikulixvjruby=${sikulixjrubyversion}
+version=2.0.0.SNAPSHOT

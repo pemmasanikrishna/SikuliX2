@@ -6,8 +6,6 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.util.Settings;
-import org.sikuli.util.FileManager;
 import org.sikuli.util.Debug;
 import java.awt.*;
 import java.awt.image.*;
@@ -16,8 +14,8 @@ import java.util.Date;
 import javax.imageio.ImageIO;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opencv.core.Mat;
-import org.opencv.highgui.Highgui;
+import org.opencv3.core.Mat;
+import org.opencv3.highgui.Highgui;
 
 /**
  * stores a BufferedImage usually ceated by screen capture,

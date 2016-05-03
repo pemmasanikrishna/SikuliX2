@@ -33,16 +33,16 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfDouble;
-import org.opencv.core.MatOfInt;
-import org.opencv.core.Rect;
-import org.opencv.core.Size;
-import org.opencv.highgui.Highgui;
-import org.opencv.imgproc.Imgproc;
+import org.opencv3.core.Core;
+import org.opencv3.core.CvType;
+import org.opencv3.core.Mat;
+import org.opencv3.core.MatOfByte;
+import org.opencv3.core.MatOfDouble;
+import org.opencv3.core.MatOfInt;
+import org.opencv3.core.Rect;
+import org.opencv3.core.Size;
+import org.opencv3.imgcodecs.Imgcodecs;
+import org.opencv3.imgproc.Imgproc;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
@@ -198,7 +198,7 @@ public class Image {
     if (fileURL != null) {
       mat = null;
       File imgFile = new File(fileURL.getPath());
-      mat = Highgui.imread(imgFile.getAbsolutePath());
+      mat = Imgcodecs.imread(imgFile.getAbsolutePath());
       if (mat.empty()) {
         mat = null;
         success = false;
@@ -978,7 +978,7 @@ public class Image {
   public String save(String name) {
     String fpName = getValidImageFilename("_" + name);
     File fName = new File(ImagePath.getBundlePath(), fpName);
-    Highgui.imwrite(fName.getAbsolutePath(), mat);
+    Imgcodecs.imwrite(fName.getAbsolutePath(), mat);
     return fpName;
   }
 //</editor-fold>
@@ -1034,7 +1034,7 @@ public class Image {
   
   public byte[] getImageBytes() {
     MatOfByte bytemat = new MatOfByte();
-    Highgui.imencode(".png", mat, bytemat);
+    Imgcodecs.imencode(".png", mat, bytemat);
     return bytemat.toArray();
   }
 //</editor-fold>

@@ -41,7 +41,6 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opencv.core.Core;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Settings;
 import org.sikuli.util.FileManager;
@@ -55,42 +54,9 @@ import org.sikuli.util.SysJNA;
  */
 public class RunTime {
 
-  public static boolean shouldRunServer = false;
-
-  public static <Seconds> void pause(Seconds time) {
-    if (time instanceof Float || time instanceof Double || time instanceof Integer) {
-      try {
-        Thread.sleep((long) ((0.0 + ((Double) time)) * 1000.0));
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-  }
-
-  //TODO RunTime: handling of script projects
-  private File fScriptProject = null;
-
-  public static File getScriptProject() {
-    return get().fScriptProject;
-  }
-
-  public static void setScriptProject(File fsp) {
-    get().fScriptProject = fsp;
-  }
-
-  private URL urlScriptProject = null;
-
-  public static URL getScriptProjectURL() {
-    return get().urlScriptProject;
-  }
-
-  public static void setScriptProjectURL(URL usp) {
-    get().urlScriptProject = usp;
-  }
-
-  //<editor-fold defaultstate="collapsed" desc="logging">
   private static final int lvl = 3;
-  private static final Logger logger = LogManager.getLogger("SX.RunTime");
+  private static final String logStamp = "SX.RunTime";
+  private static final Logger logger = LogManager.getLogger(logStamp);
 
   private static void log(int level, String message, Object... args) {
     if (Debug.is(lvl)) {
@@ -115,12 +81,9 @@ public class RunTime {
     logger.fatal(String.format(" *** terminating: " + message, args));
     System.exit(retval);
   }
-//</editor-fold>
-
-//<editor-fold defaultstate="collapsed" desc="instance">
 
   /**
-   * INTERNAL USE
+   * make it a singleton class
    */
   private RunTime() {
   }
@@ -130,11 +93,16 @@ public class RunTime {
    *
    * @return
    */
-  public static synchronized RunTime get() {
+  public static synchronized RunTime get(Object... args) {
     if (runTime == null) {
-      return get(null);
+      return getRunTime();
     }
+    runTime.initArgs(args);
     return runTime;
+  }
+
+  private void initArgs(Object... args) {
+    logp("[%s] initArgs: processing", logStamp);
   }
 
   /**
@@ -142,31 +110,31 @@ public class RunTime {
    *
    * @return
    */
-  public static synchronized RunTime reset() {
+  public static synchronized RunTime reset(Object... args) {
     if (runTime != null) {
       log(lvl, "request to reset RunTime");
-      Debug.setDebugLevel(debugLevelSaved);
-      Debug.setLogFile(debugLogfileSaved);
       runTime = null;
     }
     return get();
   }
 
-  /**
-   * INTERNAL USE to initialize the runtime environment for SikuliX<br>
-   * for public use: use RunTime.get() to get the existing instance
-   *
-   * @param typ IDE or API
-   * @return the RunTime singleton instance
-   */
-  private static synchronized RunTime get(Type typ) {
+  public static <Seconds> void pause(Seconds time) {
+    if (time instanceof Float || time instanceof Double || time instanceof Integer) {
+      try {
+        Thread.sleep((long) ((0.0 + ((Double) time)) * 1000.0));
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  private static synchronized RunTime getRunTime() {
     if (runTime == null) {
       runTime = new RunTime();
 //      int debugLevel = 0;
 
       Debug.init();
 
-//<editor-fold defaultstate="collapsed" desc="versions">
       String vJava = System.getProperty("java.runtime.version");
       String vVM = System.getProperty("java.vm.version");
       String vClass = System.getProperty("java.class.version");
@@ -257,7 +225,6 @@ public class RunTime {
       }
       runTime.fSikulixStore = new File(runTime.fSikulixAppPath, "SikulixStore");
       runTime.fSikulixStore.mkdirs();
-//</editor-fold>
 
       debugLevelSaved = Debug.getDebugLevel();
       debugLogfileSaved = Debug.logfile;
@@ -294,14 +261,6 @@ public class RunTime {
       runTime.init(typ);
     }
     return runTime;
-  }
-
-//</editor-fold>
-
-  //<editor-fold defaultstate="collapsed" desc="variables">
-  public enum Type {
-
-    IDE, API, SETUP, INIT
   }
 
   private enum theSystem {
@@ -408,16 +367,12 @@ public class RunTime {
   public boolean shouldCleanDownloads = false;
   public boolean isJythonReady = false;
   private boolean shouldExport = false;
-//</editor-fold>
 
-  //<editor-fold defaultstate="collapsed" desc="global init">
-  private void init(Type typ) {
+  private boolean isIDE() {
+    return false;
+  }
 
-    if (typ == null) {
-      typ = Type.API;
-    }
-
-//<editor-fold defaultstate="collapsed" desc="general">        
+  private void init() {
     sxBuild = SikuliVersionBuild;
     sxBuildStamp = sxBuild.replace("_", "").replace("-", "").replace(":", "").substring(0, 12);
 
@@ -486,7 +441,7 @@ public class RunTime {
       }
     });
 
-    if (Type.IDE.equals(typ) && !runningScripts) {
+    if (isIDE() && !runningScripts) {
       isRunning = new File(fTempPath, isRunningFilename);
       boolean shouldTerminate = false;
       try {
@@ -729,7 +684,7 @@ public class RunTime {
   String isRunningFilename = "s_i_k_u_l_i-ide-isrunning";
 
   private void initIDE() {
-    if (!Type.IDE.equals(runTime.runType)) {
+    if (!isIDE()) {
       return;
     }
     optionsIDE = Preferences.userNodeForPackage(Sikulix.class);
@@ -773,33 +728,6 @@ public class RunTime {
     log(lvl, "initIDEbefore: leaving");
   }
 
-  private void initSetup() {
-    if (!Type.SETUP.equals(runTime.runType)) {
-      return;
-    }
-    fSikulixDownloadsBuild = new File(fSikulixAppPath, "SikulixDownloads_" + sxBuildStamp);
-    if (!fSikulixDownloadsBuild.exists()) {
-      String[] fpList = fSikulixAppPath.list(new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-          if (name.contains("SikulixDownloads_")) {
-            return true;
-          }
-          return false;
-        }
-      });
-      if (fpList.length > 0) {
-        log(lvl, "renaming versioned downloads folder in AppPath (%s)", fSikulixDownloadsBuild.getName());
-        for (String entry : fpList) {
-          new File(fSikulixAppPath, entry).renameTo(fSikulixDownloadsBuild);
-        }
-      }
-    }
-  }
-//</editor-fold>
-
-
-  //<editor-fold defaultstate="collapsed" desc="libs export">
   class LibsFilter implements FilenameFilter {
 
     String sAccept = "";
@@ -888,7 +816,7 @@ public class RunTime {
     Error loadError = null;
     File fLib = null;
     String msg = "loadLib: %s";
-    if (!libName.contains("opencv")) {
+    if (!libName.contains("opencv3")) {
       fLib = new File(fLibsFolder, libName);
       if (!fLib.exists()) {
         terminate(1, String.format("loadlib: %s not available in %s", libName, fLibsFolder));

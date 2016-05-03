@@ -269,7 +269,7 @@ public class LinuxSupport {
 
     String inclLib = "opencv2";
     if (!new File(inclUsr, inclLib).exists() && !new File(inclUsrLocal, inclLib).exists()) {
-      log(lvl, "buildVision: opencv-include: not found - using the bundled include files");
+      log(lvl, "buildVision: opencv3-include: not found - using the bundled include files");
       exportIncludeOpenCV = true;
     }
 
