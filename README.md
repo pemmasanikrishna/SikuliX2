@@ -5,7 +5,7 @@
 
 <hr>
 **Version 2.0.0-Beta under developement**<br> 
-built on [TravisCI](https://travis-ci.org/RaiMan/SikuliX2) (coming soon)
+built on **[TravisCI](https://travis-ci.org/RaiMan/SikuliX2)** (coming soon)
 <hr>
 **[latest working version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
 <hr>
@@ -27,7 +27,7 @@ the API to be used in Java and Java aware scripting languages
 
 **sikulix** 
 
-the SikuliX IDE (internally using [jEdit 5.3.0](http://www.jedit.org))
+the SikuliX IDE (internally using **[jEdit 5.3.0](http://www.jedit.org))**
  
  - full featured multi-purpose editor
  - SikuliX image handling added via jEdit plugin
