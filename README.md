@@ -21,7 +21,7 @@ built on **[TravisCI](https://travis-ci.org/RaiMan/SikuliX2)** (coming soon)
 Maven module structure for developement
 ---
 
-**sikulix2api**
+**sikulixapi**
 
 the API to be used in Java and Java aware scripting languages
 
@@ -34,11 +34,7 @@ the SikuliX IDE (internally using **[jEdit 5.3.0](http://www.jedit.org))**
  - run scripts (scripting supported internally: JavaScript, (J)Python, (J)Ruby, RobotFramework)
  - everyone may simply add whatever feature needed based on the possibilities of jEdit
 
-**sikulixrun** 
-
-run SikuliX scripts locally or remote (used by SikuliX IDE to run supported scripts)
-
-**sikulix2apitest**
+**sikulixapitest**
 
 basic api tests for developement (later there will be a seperate regression test package)
 
