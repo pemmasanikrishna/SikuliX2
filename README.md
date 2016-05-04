@@ -51,4 +51,4 @@ Prerequisites for development
  - Maven 3+
  - only 64-Bit Systems supported
 
-I use **IntelliJ IDEA CE** for developement.
+I use **[IntelliJ IDEA CE](https://www.jetbrains.com/idea/)** for developement.
