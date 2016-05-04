@@ -22,3 +22,4 @@ stuff/
 .exe
 original/
 *.versionsBackup
+*.iml
