@@ -16,8 +16,6 @@ built on [TravisCI](https://travis-ci.org/RaiMan/SikuliX2) (coming soon)
  - if you want to create your own packages containing Sikuli features
  - if you want to contribute.
 
-**In any case: be sure you know the content of the [SikuliX Quickstart](http://www.sikulix.com/quickstart.html)**
-
 <hr>
 
 Maven module structure for developement
@@ -27,14 +25,22 @@ Maven module structure for developement
 
 the API to be used in Java and Java aware scripting languages
 
-**sikulix2** (inactive as module currently)
+**sikulix** 
 
-the Sikuli IDE and the support for running scripts in a supported scripting language.
+the SikuliX IDE (internally using [jEdit 5.3.0](http://www.jedit.org))
+ 
+ - full featured multi-purpose editor
+ - SikuliX image handling added via jEdit plugin
+ - run scripts (scripting supported internally: JavaScript, (J)Python, (J)Ruby, RobotFramework)
+ - everyone may simply add whatever feature needed based on the possibilities of jEdit
 
-**sikulixtensions** (inactive as module currently)
+**sikulixrun** 
 
-Packages that extend the SikuliX features in various ways.<br>
-On the usage and/or developement level they depend on the core features of sikulixapi or sikulix.
+run SikuliX scripts locally or remote (used by SikuliX IDE to run supported scripts)
+
+**sikulix2apitest**
+
+basic api tests for developement (later there will be a seperate regression test package)
 
 ---
 
@@ -43,5 +49,6 @@ Prerequisites for development
 
  - a Java JDK 1.7+
  - Maven 3+
+ - only 64-Bit Systems supported
 
-I use **NetBeans 8+** for developement.
+I use **IntelliJ IDEA CE** for developement.
