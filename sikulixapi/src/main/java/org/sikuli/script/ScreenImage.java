@@ -14,8 +14,8 @@ import java.util.Date;
 import javax.imageio.ImageIO;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opencv3.core.Mat;
-import org.opencv3.highgui.Highgui;
+import org.opencv.core.Mat;
+import org.opencv.highgui.Highgui;
 
 /**
  * stores a BufferedImage usually ceated by screen capture,

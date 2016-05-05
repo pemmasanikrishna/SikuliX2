@@ -1,56 +1,34 @@
 /*
- * Copyright 2010-2016, Sikuli.org, sikulix.com
- * Released under the MIT License.
+ * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package org.sikuli.util;
+package org.sikuli.core;
 
+import org.sikuli.script.Commands;
+import org.sikuli.script.ImagePath;
 import org.sikuli.script.RunTime;
-import java.awt.Desktop;
+import org.sikuli.util.Debug;
+import org.sikuli.util.PreferencesUser;
+import org.sikuli.util.Settings;
+import org.sikuli.util.visual.SplashFrame;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.net.UnknownHostException;
+import java.io.*;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.security.CodeSource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-import javax.imageio.ImageIO;
-import javax.swing.JFrame;
-import org.sikuli.script.Image;
-import org.sikuli.script.ImagePath;
-import org.sikuli.script.Commands;
-import org.sikuli.util.visual.SplashFrame;
 
 /**
  * INTERNAL USE: Support for accessing files and other ressources
  */
-public class FileManager {
+public class ContentManager {
 
   private static String me = "ContentManager";
   private static int lvl = 3;
@@ -383,7 +361,7 @@ public class FileManager {
     if (!fTempDir.exists()) {
       fTempDir.mkdirs();
     } else {
-      FileManager.resetFolder(fTempDir);
+      ContentManager.resetFolder(fTempDir);
     }
     if (!fTempDir.exists()) {
       log(-1, "createTempDir: not possible: %s", fTempDir);
@@ -752,7 +730,7 @@ public class FileManager {
 	 * @param src source file
 	 * @param dest destination path
 	 * @return the destination file if ok, null otherwise
-	 * @throws java.io.IOException on failure
+	 * @throws IOException on failure
    */
   public static File smartCopy(String src, String dest) throws IOException {
     File fSrc = new File(src);
@@ -1129,13 +1107,13 @@ public class FileManager {
 //  }
 //
   public static String getJarParentFolder() {
-    CodeSource src = FileManager.class.getProtectionDomain().getCodeSource();
+    CodeSource src = ContentManager.class.getProtectionDomain().getCodeSource();
     String jarParentPath = "--- not known ---";
     String RunningFromJar = "Y";
     if (src.getLocation() != null) {
       String jarPath = src.getLocation().getPath();
       if (!jarPath.endsWith(".jar")) RunningFromJar = "N";
-      jarParentPath = FileManager.slashify((new File(jarPath)).getParent(), true);
+      jarParentPath = ContentManager.slashify((new File(jarPath)).getParent(), true);
     } else {
       log(-1, "Fatal Error 101: Not possible to access the jar files!");
       Commands.terminate(101);
@@ -1185,7 +1163,7 @@ public class FileManager {
       return "";
     }
   }
-  
+
   private static String doRreadFileToString(File fPath) throws IOException {
     StringBuilder result = new StringBuilder();
     BufferedReader reader = null;
@@ -1205,11 +1183,11 @@ public class FileManager {
   }
 
   public static boolean packJar(String folderName, String jarName, String prefix) {
-    jarName = FileManager.slashify(jarName, false);
+    jarName = ContentManager.slashify(jarName, false);
     if (!jarName.endsWith(".jar")) {
       jarName += ".jar";
     }
-    folderName = FileManager.slashify(folderName, true);
+    folderName = ContentManager.slashify(folderName, true);
     if (!(new File(folderName)).isDirectory()) {
       log(-1, "packJar: not a directory or does not exist: " + folderName);
       return false;
@@ -1240,7 +1218,7 @@ public class FileManager {
   }
 
   public static boolean buildJar(String targetJar, String[] jars,
-          String[] files, String[] prefixs, FileManager.JarFileFilter filter) {
+          String[] files, String[] prefixs, ContentManager.JarFileFilter filter) {
     boolean logShort = false;
     if (targetJar.startsWith("#")) {
       logShort = true;
@@ -1310,8 +1288,8 @@ public class FileManager {
    * @return true if success,  false otherwise
    */
   public static boolean unpackJar(String jarName, String folderName, boolean del, boolean strip,
-          FileManager.JarFileFilter filter) {
-    jarName = FileManager.slashify(jarName, false);
+          ContentManager.JarFileFilter filter) {
+    jarName = ContentManager.slashify(jarName, false);
     if (!jarName.endsWith(".jar")) {
       jarName += ".jar";
     }
@@ -1325,12 +1303,12 @@ public class FileManager {
       log(-1, "unpackJar: folder path not absolute");
       return false;
     }
-    folderName = FileManager.slashify(folderName, true);
+    folderName = ContentManager.slashify(folderName, true);
     ZipInputStream in;
     BufferedOutputStream out;
     try {
       if (del) {
-        FileManager.deleteFileOrFolder(folderName);
+        ContentManager.deleteFileOrFolder(folderName);
       }
       in = new ZipInputStream(new BufferedInputStream(new FileInputStream(jarName)));
       log(lvl, "unpackJar: %s to %s", jarName, folderName);
@@ -1416,7 +1394,7 @@ public class FileManager {
     File[] content = null;
 
     if (fScriptFolder.getName().endsWith(".skl") || fScriptFolder.getName().endsWith(".zip")) {
-      fpUnzippedSkl = FileManager.unzipSKL(fScriptFolder.getAbsolutePath());
+      fpUnzippedSkl = ContentManager.unzipSKL(fScriptFolder.getAbsolutePath());
       if (fpUnzippedSkl == null) {
         return null;
       }
@@ -1480,10 +1458,10 @@ public class FileManager {
     }
     String name = fSkl.getName();
     name = name.substring(0, name.lastIndexOf('.'));
-    File fSikuliDir = FileManager.createTempDir(name + ".sikuli");
+    File fSikuliDir = ContentManager.createTempDir(name + ".sikuli");
     if (null != fSikuliDir) {
       fSikuliDir.deleteOnExit();
-      FileManager.unzip(fSkl, fSikuliDir);
+      ContentManager.unzip(fSkl, fSikuliDir);
     }
     if (null == fSikuliDir) {
       log(-1, "unzipSKL: not possible for:\n%s", fpSkl);
@@ -1502,7 +1480,7 @@ public class FileManager {
 
   public static String extractResourceAsLines(String src) {
     String res = null;
-    ClassLoader cl = FileManager.class.getClassLoader();
+    ClassLoader cl = ContentManager.class.getClassLoader();
     InputStream isContent = cl.getResourceAsStream(src);
     if (isContent != null) {
       res = "";
@@ -1523,7 +1501,7 @@ public class FileManager {
   }
 
   public static boolean extractResource(String src, File tgt) {
-    ClassLoader cl = FileManager.class.getClassLoader();
+    ClassLoader cl = ContentManager.class.getClassLoader();
     InputStream isContent = cl.getResourceAsStream(src);
     if (isContent != null) {
       try {

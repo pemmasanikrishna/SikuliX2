@@ -197,8 +197,8 @@ public class OverlayCapturePrompt extends OverlayTransparentWindow implements Ev
     promptMsg = msg;
     Debug.log(4, "CapturePrompt: [%d,%d (%d, %d)] %s", rect.x, rect.y, rect.width, rect.height, promptMsg);
     this.setVisible(true);
-    if (!Settings.isJava7()) {
-      if (Settings.isMac()) {
+    if (!RunTime.get().isJava7()) {
+      if (RunTime.get().runningMac) {
         SysUtil.getOSUtil().bringWindowToFront(this, false);
       }
     }

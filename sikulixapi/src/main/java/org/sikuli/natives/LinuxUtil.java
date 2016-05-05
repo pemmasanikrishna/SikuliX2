@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.sikuli.script.App;
+import org.sikuli.script.Commands;
 import org.sikuli.script.RunTime;
 
 public class LinuxUtil implements OSUtil {
@@ -52,7 +53,7 @@ public class LinuxUtil implements OSUtil {
       }
       if (!msg.isEmpty()) {
         msg += "please check the Availability!";
-        RunTime.get().terminate (1, msg);
+        Commands.terminate (1, msg);
       }
     }
 

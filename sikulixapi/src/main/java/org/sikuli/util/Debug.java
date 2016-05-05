@@ -7,13 +7,16 @@
 package org.sikuli.util;
 
 import org.sikuli.util.FileManager;
+
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import org.sikuli.util.JythonHelper;
+
+import org.sikuli.core.JythonHelper;
 
 /**
  * Debug is a utility class that wraps println statements and allows more or less command line
@@ -26,16 +29,16 @@ import org.sikuli.util.JythonHelper;
  * class to a file:<br>-Dsikuli.Logfile=pathname (no path given: SikuliLog.txt in working
  * folder)<br> This can be restricted to Debug.user only (others go to System.out):<br>
  * -Dsikuli.LogfileUser=pathname (no path given: UserLog.txt in working folder)<br>
- *
+ * <p>
  * You might redirect info, action, error and debug messages to your own logger object<br>
  * Start with setLogger() and then define with setLoggerXyz() the redirection targets
- *
+ * <p>
  * This solution is NOT threadsafe !!!
  */
 public class Debug {
 
   private static int DEBUG_LEVEL = 0;
-	private static boolean loggerRedirectSupported = true;
+  private static boolean loggerRedirectSupported = true;
   private long _beginTime = 0;
   private String _message;
   private String _title = null;
@@ -45,34 +48,34 @@ public class Debug {
           DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
   public static String logfile;
 
-	private static Object privateLogger = null;
-	private static boolean privateLoggerPrefixAll = true;
-	private static Method privateLoggerUser = null;
-	private static String privateLoggerUserName = "";
-	private static String privateLoggerUserPrefix = "";
-	private static Method privateLoggerInfo = null;
-	private static String privateLoggerInfoName = "";
-	private static final String infoPrefix = "info";
-	private static String privateLoggerInfoPrefix = "[" + infoPrefix + "] ";
-	private static Method privateLoggerAction = null;
-	private static String privateLoggerActionName = "";
-	private static final String actionPrefix = "log";
-	private static String privateLoggerActionPrefix = "[" + actionPrefix + "] ";
-	private static Method privateLoggerError = null;
-	private static String privateLoggerErrorName = "";
-	private static final String errorPrefix = "error";
-	private static String privateLoggerErrorPrefix = "[" + errorPrefix + "] ";
-	private static Method privateLoggerDebug = null;
-	private static String privateLoggerDebugName = "";
-	private static final String debugPrefix = "debug";
-	private static String privateLoggerDebugPrefix = "";
-	private static boolean isJython;
-	private static boolean isJRuby;
+  private static Object privateLogger = null;
+  private static boolean privateLoggerPrefixAll = true;
+  private static Method privateLoggerUser = null;
+  private static String privateLoggerUserName = "";
+  private static String privateLoggerUserPrefix = "";
+  private static Method privateLoggerInfo = null;
+  private static String privateLoggerInfoName = "";
+  private static final String infoPrefix = "info";
+  private static String privateLoggerInfoPrefix = "[" + infoPrefix + "] ";
+  private static Method privateLoggerAction = null;
+  private static String privateLoggerActionName = "";
+  private static final String actionPrefix = "log";
+  private static String privateLoggerActionPrefix = "[" + actionPrefix + "] ";
+  private static Method privateLoggerError = null;
+  private static String privateLoggerErrorName = "";
+  private static final String errorPrefix = "error";
+  private static String privateLoggerErrorPrefix = "[" + errorPrefix + "] ";
+  private static Method privateLoggerDebug = null;
+  private static String privateLoggerDebugName = "";
+  private static final String debugPrefix = "debug";
+  private static String privateLoggerDebugPrefix = "";
+  private static boolean isJython;
+  private static boolean isJRuby;
   private static Object scriptRunner = null;
-  
+
   private static boolean searchHighlight = false;
 
-	private static PrintStream redirectedOut = null, redirectedErr = null;
+  private static PrintStream redirectedOut = null, redirectedErr = null;
 
   static {
     String debug = System.getProperty("sikuli.Debug");
@@ -99,7 +102,7 @@ public class Debug {
       logx(DEBUG_LEVEL, "Debug.init: on: %d", DEBUG_LEVEL);
     }
   }
-  
+
   public static void highlightOn() {
     searchHighlight = true;
     Settings.Highlight = true;
@@ -109,14 +112,16 @@ public class Debug {
     searchHighlight = false;
     Settings.Highlight = false;
   }
-  
+
   public static boolean shouldHighlight() {
     return searchHighlight;
   }
 
 //<editor-fold defaultstate="collapsed" desc="logger callback">
+
   /**
    * A logger object that is intended, to get Sikuli's log messages per redirection
+   *
    * @param logger the logger object
    */
   public static void setLogger(Object logger) {
@@ -124,36 +129,39 @@ public class Debug {
     privateLoggerPrefixAll = true;
     logx(3, "Debug: setLogger %s", logger);
   }
-  
+
   /**
    * same as setLogger(), but the Sikuli prefixes are omitted in all redirected messages
+   *
    * @param logger the logger object
    */
   public static void setLoggerNoPrefix(Object logger) {
     if (!doSetLogger(logger)) return;
     privateLoggerPrefixAll = false;
   }
-  
+
   private static boolean doSetLogger(Object logger) {
     String className = logger.getClass().getName();
     isJython = className.contains("org.python");
     isJRuby = className.contains("org.jruby");
-    if ( isJRuby ) {
+    if (isJRuby) {
       logx(3, "Debug: setLogger: given instance's class: %s", className);
       error("setLogger: not yet supported in JRuby script");
-      loggerRedirectSupported=false;
+      loggerRedirectSupported = false;
       return false;
     }
     privateLogger = logger;
     return true;
   }
-  
+
   /**
    * sets the redirection for all message types user, info, action, error and debug
    * must be the name of an instance method of the previously defined logger and<br>
    * must accept exactly one string parameter, that contains the message text
+   *
    * @param mAll name of the method where the message should be sent
-   * @return true if the method is available false otherwise	 */
+   * @return true if the method is available false otherwise
+   */
   public static boolean setLoggerAll(String mAll) {
     if (!loggerRedirectSupported) {
       logx(3, "Debug: setLoggerAll: logger redirect not supported");
@@ -171,7 +179,7 @@ public class Debug {
     }
     return false;
   }
-  
+
   private static boolean doSetLoggerCallback(String mName, CallbackType type) {
     if (privateLogger == null) {
       error("Debug: setLogger: no logger specified yet");
@@ -189,31 +197,31 @@ public class Debug {
     }
     try {
       if (type == CallbackType.INFO) {
-        if ( !isJython && !isJRuby ) {
+        if (!isJython && !isJRuby) {
           privateLoggerInfo = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
         }
         privateLoggerInfoName = mName;
         return true;
       } else if (type == CallbackType.ACTION) {
-        if ( !isJython && !isJRuby ) {
+        if (!isJython && !isJRuby) {
           privateLoggerAction = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
         }
         privateLoggerActionName = mName;
         return true;
       } else if (type == CallbackType.ERROR) {
-        if ( !isJython && !isJRuby ) {
+        if (!isJython && !isJRuby) {
           privateLoggerError = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
         }
         privateLoggerErrorName = mName;
         return true;
       } else if (type == CallbackType.DEBUG) {
-        if ( !isJython && !isJRuby ) {
+        if (!isJython && !isJRuby) {
           privateLoggerDebug = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
         }
         privateLoggerDebugName = mName;
         return true;
       } else if (type == CallbackType.USER) {
-        if ( !isJython && !isJRuby ) {
+        if (!isJython && !isJRuby) {
           privateLoggerUser = privateLogger.getClass().getMethod(mName, new Class[]{String.class});
         }
         privateLoggerUserName = mName;
@@ -226,13 +234,14 @@ public class Debug {
     }
     return false;
   }
-  
+
   /**
    * specify the target method for redirection of Sikuli's user log messages [user]<br>
    * must be the name of an instance method of the previously defined logger and<br>
    * must accept exactly one string parameter, that contains the info message
+   *
    * @param mUser name of the method where the message should be sent
-   * <br>reset to default logging by either null or empty string
+   *              <br>reset to default logging by either null or empty string
    * @return true if the method is available false otherwise
    */
   public static boolean setLoggerUser(String mUser) {
@@ -242,13 +251,14 @@ public class Debug {
     }
     return doSetLoggerCallback(mUser, CallbackType.USER);
   }
-  
+
   /**
    * specify the target method for redirection of Sikuli's info messages [info]<br>
    * must be the name of an instance method of the previously defined logger and<br>
    * must accept exactly one string parameter, that contains the info message
+   *
    * @param mInfo name of the method where the message should be sent
-   * <br>reset to default logging by either null or empty string
+   *              <br>reset to default logging by either null or empty string
    * @return true if the method is available false otherwise
    */
   public static boolean setLoggerInfo(String mInfo) {
@@ -258,13 +268,14 @@ public class Debug {
     }
     return doSetLoggerCallback(mInfo, CallbackType.INFO);
   }
-  
+
   /**
    * specify the target method for redirection of Sikuli's action messages [log]<br>
    * must be the name of an instance method of the previously defined logger and<br>
    * must accept exactly one string parameter, that contains the info message
+   *
    * @param mAction name of the method where the message should be sent
-   * <br>reset to default logging by either null or empty string
+   *                <br>reset to default logging by either null or empty string
    * @return true if the method is available false otherwise
    */
   public static boolean setLoggerAction(String mAction) {
@@ -274,13 +285,14 @@ public class Debug {
     }
     return doSetLoggerCallback(mAction, CallbackType.ACTION);
   }
-  
+
   /**
    * specify the target method for redirection of Sikuli's error messages [error]<br>
    * must be the name of an instance method of the previously defined logger and<br>
    * must accept exactly one string parameter, that contains the info message
+   *
    * @param mError name of the method where the message should be sent
-   * <br>reset to default logging by either null or empty string
+   *               <br>reset to default logging by either null or empty string
    * @return true if the method is available false otherwise
    */
   public static boolean setLoggerError(String mError) {
@@ -290,13 +302,14 @@ public class Debug {
     }
     return doSetLoggerCallback(mError, CallbackType.ERROR);
   }
-  
+
   /**
    * specify the target method for redirection of Sikuli's debug messages [debug]<br>
    * must be the name of an instance method of the previously defined logger and<br>
    * must accept exactly one string parameter, that contains the info message
+   *
    * @param mDebug name of the method where the message should be sent
-   * <br>reset to default logging by either null or empty string
+   *               <br>reset to default logging by either null or empty string
    * @return true if the method is available false otherwise
    */
   public static boolean setLoggerDebug(String mDebug) {
@@ -307,37 +320,34 @@ public class Debug {
     return doSetLoggerCallback(mDebug, CallbackType.DEBUG);
   }
 //</editor-fold>
-  
-	public static void saveRedirected(PrintStream rdo, PrintStream rde) {
-		redirectedOut = rdo;
-		redirectedErr = rde;
-	}
 
-	public static void out(String msg) {
-		if (redirectedOut != null && DEBUG_LEVEL > 2) {
-			redirectedOut.println(msg);
-		}
-	}
+  public static void saveRedirected(PrintStream rdo, PrintStream rde) {
+    redirectedOut = rdo;
+    redirectedErr = rde;
+  }
 
-	/**
-	 * specify, where the logs should be written:<br>
-	 * null - use from property sikuli.Logfile
-	 * empty - use SikuliLog.txt in working folder
-	 * not empty - use given filename
-	 * @param fileName null, empty or absolute filename
-	 * @return success
-	 */
-	public static boolean setLogFile(String fileName) {
+  public static void out(String msg) {
+    if (redirectedOut != null && DEBUG_LEVEL > 2) {
+      redirectedOut.println(msg);
+    }
+  }
+
+  /**
+   * specify, where the logs should be written:<br>
+   * null - use from property sikuli.Logfile
+   * empty - use SikuliLog.txt in working folder
+   * not empty - use given filename
+   *
+   * @param fileName null, empty or absolute filename
+   * @return success
+   */
+  public static boolean setLogFile(String fileName) {
     if (fileName == null) {
       fileName = System.getProperty("sikuli.Logfile");
     }
     if (fileName != null) {
       if ("".equals(fileName)) {
-        if (Settings.isMacApp) {
-          fileName = "SikulixLog.txt";
-        } else {
-          fileName = FileManager.slashify(System.getProperty("user.dir"), true) + "SikulixLog.txt";
-        }
+        fileName = new File(System.getProperty("user.dir"), "SikulixLog.txt").getAbsolutePath();
       }
       try {
         logfile = fileName;
@@ -356,33 +366,31 @@ public class Debug {
     return false;
   }
 
-	/**
-	 * does Sikuli log go to a file?
-	 * @return true if yes, false otherwise
-	 */
-	public static boolean isLogToFile() {
+  /**
+   * does Sikuli log go to a file?
+   *
+   * @return true if yes, false otherwise
+   */
+  public static boolean isLogToFile() {
     return (printout != null);
   }
 
-	/**
-	 * specify, where the user logs (Debug.user) should be written:<br>
-	 * null - use from property sikuli.LogfileUser
-	 * empty - use UserLog.txt in working folder
-	 * not empty - use given filename
-	 * @param fileName null, empty or absolute filename
-	 * @return success
-	 */
-	public static boolean setUserLogFile(String fileName) {
+  /**
+   * specify, where the user logs (Debug.user) should be written:<br>
+   * null - use from property sikuli.LogfileUser
+   * empty - use UserLog.txt in working folder
+   * not empty - use given filename
+   *
+   * @param fileName null, empty or absolute filename
+   * @return success
+   */
+  public static boolean setUserLogFile(String fileName) {
     if (fileName == null) {
       fileName = System.getProperty("sikuli.LogfileUser");
     }
     if (fileName != null) {
       if ("".equals(fileName)) {
-        if (Settings.isMacApp) {
-          fileName = "UserLog.txt";
-        } else {
-          fileName = FileManager.slashify(System.getProperty("user.dir"), true) + "UserLog.txt";
-        }
+        fileName = new File(System.getProperty("user.dir"), "SikulixLog.txt").getAbsolutePath();
       }
       try {
         if (printoutuser != null) {
@@ -400,16 +408,16 @@ public class Debug {
     return false;
   }
 
-	/**
-	 * does user log go to a file?
-	 * @return true if yes, false otherwise
-	 */
+  /**
+   * does user log go to a file?
+   *
+   * @return true if yes, false otherwise
+   */
   public static boolean isUserLogToFile() {
     return (printoutuser != null);
   }
 
   /**
-   *
    * @return current debug level
    */
   public static int getDebugLevel() {
@@ -477,80 +485,80 @@ public class Debug {
     }
   }
 
-	private static boolean doRedirect(CallbackType type, String pre, String message, Object... args) {
-		boolean success = false;
-		String error = "";
-		if (privateLogger != null) {
-			String prefix = "", pln = "";
-			Method plf = null;
-			if (type == CallbackType.INFO && !privateLoggerInfoName.isEmpty()) {
-				prefix = privateLoggerPrefixAll ? privateLoggerInfoPrefix : "";
-				plf = privateLoggerInfo;
-				pln = privateLoggerInfoName;
-			} else if (type == CallbackType.ACTION && !privateLoggerActionName.isEmpty()) {
-				prefix = privateLoggerPrefixAll ? privateLoggerActionPrefix : "";
-				plf = privateLoggerAction;
-				pln = privateLoggerActionName;
-			} else if (type == CallbackType.ERROR && !privateLoggerErrorName.isEmpty()) {
-				prefix = privateLoggerPrefixAll ? privateLoggerErrorPrefix : "";
-				plf = privateLoggerError;
-				pln = privateLoggerErrorName;
-			} else if (type == CallbackType.DEBUG && !privateLoggerDebugName.isEmpty()) {
-				prefix = privateLoggerPrefixAll ?
-								(privateLoggerDebugPrefix.isEmpty() ? pre : privateLoggerDebugPrefix) : "";
-				plf = privateLoggerDebug;
-				pln = privateLoggerDebugName;
-			} else if (type == CallbackType.USER && !privateLoggerUserName.isEmpty()) {
-				prefix = privateLoggerPrefixAll ?
-									(privateLoggerUserPrefix.isEmpty() ? pre : privateLoggerUserPrefix) : "";
-				plf = privateLoggerUser;
-				pln = privateLoggerUserName;
-			}
-			if (!pln.isEmpty()) {
-				String msg = null;
-				if (args == null) {
-					msg = prefix + message;
-				} else {
-					msg = String.format(prefix + message, args);
-				}
-				if (isJython) {
-					success = JythonHelper.get().runLoggerCallback(new Object[]{privateLogger, pln, msg});
-				} else if (isJRuby) {
-					success = false;
-				} else {
-					try {
-						plf.invoke(privateLogger,
-										new Object[]{msg});
-						return true;
-					} catch (Exception e) {
-						error = ": " + e.getMessage();
-						success = false;
-					}
-				}
-				if (!success) {
-					Debug.error("calling (%s) logger.%s failed - resetting to default%s", type, pln, error);
-					if (type == CallbackType.INFO) {
-						privateLoggerInfoName = "";
-					} else if (type == CallbackType.ACTION) {
-						privateLoggerActionName = "";
-					} else if (type == CallbackType.ERROR) {
-						privateLoggerErrorName = "";
-					} else if (type == CallbackType.DEBUG) {
-						privateLoggerDebugName = "";
-					} else if (type == CallbackType.USER) {
-						privateLoggerUserName = "";
-					}
-				}
-			}
-		}
-		return success;
-	}
+  private static boolean doRedirect(CallbackType type, String pre, String message, Object... args) {
+    boolean success = false;
+    String error = "";
+    if (privateLogger != null) {
+      String prefix = "", pln = "";
+      Method plf = null;
+      if (type == CallbackType.INFO && !privateLoggerInfoName.isEmpty()) {
+        prefix = privateLoggerPrefixAll ? privateLoggerInfoPrefix : "";
+        plf = privateLoggerInfo;
+        pln = privateLoggerInfoName;
+      } else if (type == CallbackType.ACTION && !privateLoggerActionName.isEmpty()) {
+        prefix = privateLoggerPrefixAll ? privateLoggerActionPrefix : "";
+        plf = privateLoggerAction;
+        pln = privateLoggerActionName;
+      } else if (type == CallbackType.ERROR && !privateLoggerErrorName.isEmpty()) {
+        prefix = privateLoggerPrefixAll ? privateLoggerErrorPrefix : "";
+        plf = privateLoggerError;
+        pln = privateLoggerErrorName;
+      } else if (type == CallbackType.DEBUG && !privateLoggerDebugName.isEmpty()) {
+        prefix = privateLoggerPrefixAll ?
+                (privateLoggerDebugPrefix.isEmpty() ? pre : privateLoggerDebugPrefix) : "";
+        plf = privateLoggerDebug;
+        pln = privateLoggerDebugName;
+      } else if (type == CallbackType.USER && !privateLoggerUserName.isEmpty()) {
+        prefix = privateLoggerPrefixAll ?
+                (privateLoggerUserPrefix.isEmpty() ? pre : privateLoggerUserPrefix) : "";
+        plf = privateLoggerUser;
+        pln = privateLoggerUserName;
+      }
+      if (!pln.isEmpty()) {
+        String msg = null;
+        if (args == null) {
+          msg = prefix + message;
+        } else {
+          msg = String.format(prefix + message, args);
+        }
+        if (isJython) {
+          success = JythonHelper.get().runLoggerCallback(new Object[]{privateLogger, pln, msg});
+        } else if (isJRuby) {
+          success = false;
+        } else {
+          try {
+            plf.invoke(privateLogger,
+                    new Object[]{msg});
+            return true;
+          } catch (Exception e) {
+            error = ": " + e.getMessage();
+            success = false;
+          }
+        }
+        if (!success) {
+          Debug.error("calling (%s) logger.%s failed - resetting to default%s", type, pln, error);
+          if (type == CallbackType.INFO) {
+            privateLoggerInfoName = "";
+          } else if (type == CallbackType.ACTION) {
+            privateLoggerActionName = "";
+          } else if (type == CallbackType.ERROR) {
+            privateLoggerErrorName = "";
+          } else if (type == CallbackType.DEBUG) {
+            privateLoggerDebugName = "";
+          } else if (type == CallbackType.USER) {
+            privateLoggerUserName = "";
+          }
+        }
+      }
+    }
+    return success;
+  }
 
   /**
    * Sikuli messages from actions like click, ...<br> switch on/off: Settings.ActionLogs
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args    to use with format string
    */
   public static void action(String message, Object... args) {
     if (Settings.ActionLogs) {
@@ -567,8 +575,9 @@ public class Debug {
 
   /**
    * use Debug.action() instead
+   *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args    to use with format string
    * @deprecated
    */
   @Deprecated
@@ -580,13 +589,13 @@ public class Debug {
    * informative Sikuli messages <br> switch on/off: Settings.InfoLogs
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args    to use with format string
    */
   public static void info(String message, Object... args) {
     if (Settings.InfoLogs) {
-			if (doRedirect(CallbackType.INFO, "", message, args)) {
-				return;
-			}
+      if (doRedirect(CallbackType.INFO, "", message, args)) {
+        return;
+      }
       log(-1, infoPrefix, message, args);
     }
     if (is(3)) {
@@ -598,27 +607,27 @@ public class Debug {
    * Sikuli error messages<br> switch on/off: always on
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args    to use with format string
    */
-	public static void error(String message, Object... args) {
-		if (doRedirect(CallbackType.ERROR, "", message, args)) {
-			return;
-		}
-		log(-1, errorPrefix, message, args);
-	}
+  public static void error(String message, Object... args) {
+    if (doRedirect(CallbackType.ERROR, "", message, args)) {
+      return;
+    }
+    log(-1, errorPrefix, message, args);
+  }
 
   /**
    * Sikuli messages to use in tests<br> switch on/off: always on
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args    to use with format string
    */
   public static void test(String message, Object... args) {
-		if (message.contains("#returned#")) {
-			message = message.replace("#returned#", "returned: " +
-							((Boolean) args[0] ? "true" : "false"));
-			args = Arrays.copyOfRange(args, 1, args.length);
-		}
+    if (message.contains("#returned#")) {
+      message = message.replace("#returned#", "returned: " +
+              ((Boolean) args[0] ? "true" : "false"));
+      args = Arrays.copyOfRange(args, 1, args.length);
+    }
     log(-1, "test", message, args);
   }
 
@@ -627,7 +636,7 @@ public class Debug {
    * -Dsikuli.Debug
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args    to use with format string
    */
   public static void log(String message, Object... args) {
     log(0, message, args);
@@ -639,7 +648,7 @@ public class Debug {
    * can be set: Settings,UserLogPrefix
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args    to use with format string
    */
   public static void user(String message, Object... args) {
     if (Settings.UserLogs) {
@@ -657,9 +666,9 @@ public class Debug {
    * Sikuli debug messages with level<br> switch on/off: Settings.DebugLogs (off) and/or
    * -Dsikuli.Debug
    *
-   * @param level value
+   * @param level   value
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args    to use with format string
    */
   public static void log(int level, String message, Object... args) {
     if (Settings.DebugLogs) {
@@ -667,13 +676,14 @@ public class Debug {
     }
   }
 
-	/**
-	 * INTERNAL USE: special debug messages
-	 * @param level value
-	 * @param message text or format string
-	 * @param args for use with format string
-	 */
-	public static String logx(int level, String message, Object... args) {
+  /**
+   * INTERNAL USE: special debug messages
+   *
+   * @param level   value
+   * @param message text or format string
+   * @param args    for use with format string
+   */
+  public static String logx(int level, String message, Object... args) {
     String sout = "";
     if (level == -1 || level == -100) {
       sout = log(level, errorPrefix, message, args);
@@ -686,7 +696,7 @@ public class Debug {
     }
     return sout;
   }
-  
+
   public static String logp(String msg, Object... args) {
     String out = String.format(msg, args);
     System.out.println(out);
@@ -701,16 +711,16 @@ public class Debug {
       if (Settings.LogTime && level != -99) {
         stime = String.format(" (%s)", df.format(new Date()));
       }
-			if (!prefix.isEmpty()) {
+      if (!prefix.isEmpty()) {
         prefix = "[" + prefix + stime + "] ";
       }
       sout = String.format(message, args);
       boolean isRedirected = false;
-			if (level > -99) {
-				isRedirected = doRedirect(CallbackType.DEBUG, prefix, sout, null);
-			} else if (level == -99) {
-				isRedirected = doRedirect(CallbackType.USER, prefix, sout, null);
-			}
+      if (level > -99) {
+        isRedirected = doRedirect(CallbackType.DEBUG, prefix, sout, (Object) null);
+      } else if (level == -99) {
+        isRedirected = doRedirect(CallbackType.USER, prefix, sout, (Object) null);
+      }
       if (!isRedirected) {
         if (level == -99 && printoutuser != null) {
           printoutuser.print(prefix + sout);
@@ -734,7 +744,7 @@ public class Debug {
    * Sikuli profiling messages<br> switch on/off: Settings.ProfileLogs, default off
    *
    * @param message String or format string
-   * @param args to use with format string
+   * @param args    to use with format string
    */
   public static void profile(String message, Object... args) {
     if (Settings.ProfileLogs) {
@@ -742,40 +752,44 @@ public class Debug {
     }
   }
 
-	/**
-	 * profile convenience: entering a method
+  /**
+   * profile convenience: entering a method
+   *
    * @param message String or format string
-   * @param args to use with format string
-	 */
-	public static void enter(String message, Object... args) {
+   * @param args    to use with format string
+   */
+  public static void enter(String message, Object... args) {
     profile("entering: " + message, args);
   }
 
-	/**
-	 * profile convenience: exiting a method
+  /**
+   * profile convenience: exiting a method
+   *
    * @param message String or format string
-   * @param args to use with format string
-	 */
-	public static void exit(String message, Object... args) {
+   * @param args    to use with format string
+   */
+  public static void exit(String message, Object... args) {
     profile("exiting: " + message, args);
   }
 
-	/**
-	 * start timer
-	 * <br>log output depends on Settings.ProfileLogs
-	 * @return timer
-	 */
-	public static Debug startTimer() {
+  /**
+   * start timer
+   * <br>log output depends on Settings.ProfileLogs
+   *
+   * @return timer
+   */
+  public static Debug startTimer() {
     return startTimer("");
   }
 
-	/**
-	 * start timer with a message
-	 * <br>log output depends on Settings.ProfileLogs
+  /**
+   * start timer with a message
+   * <br>log output depends on Settings.ProfileLogs
+   *
    * @param message String or format string
-   * @param args to use with format string
-	 * @return timer
-	 */
+   * @param args    to use with format string
+   * @return timer
+   */
   public static Debug startTimer(String message, Object... args) {
     Debug timer = new Debug();
     timer.startTiming(message, args);
@@ -784,8 +798,8 @@ public class Debug {
 
   /**
    * stop timer and print timer message
- 	 * <br>log output depends on Settings.ProfileLogs
-  *
+   * <br>log output depends on Settings.ProfileLogs
+   *
    * @return the time in msec
    */
   public long end() {
@@ -798,9 +812,9 @@ public class Debug {
 
   /**
    * lap timer and print message with timer message
-	 * <br>log output depends on Settings.ProfileLogs
+   * <br>log output depends on Settings.ProfileLogs
    *
-	 * @param message String or format string
+   * @param message String or format string
    * @return the time in msec
    */
   public long lap(String message) {
@@ -811,7 +825,7 @@ public class Debug {
     }
   }
 
-	private void startTiming(String message, Object... args) {
+  private void startTiming(String message, Object... args) {
     int pos;
     if ((pos = message.indexOf("\t")) < 0) {
       _title = null;
@@ -843,7 +857,7 @@ public class Debug {
     return dt;
   }
 
-	private static enum CallbackType {
-		INFO, ACTION, ERROR, DEBUG, USER;
-	}
+  private static enum CallbackType {
+    INFO, ACTION, ERROR, DEBUG, USER;
+  }
 }

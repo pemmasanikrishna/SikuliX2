@@ -10,6 +10,8 @@ import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.Date;
+
+import org.sikuli.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.EventObserver;
 import org.sikuli.util.EventSubject;
@@ -349,7 +351,7 @@ public class Screen extends Region implements EventObserver, IScreen {
    */
   @Override
   public Rectangle getBounds() {
-    return new Rectangle(runTime.getMonitor(monitor));
+    return new Rectangle(SX.getMonitor(monitor).getRectangle());
   }
 
   /**
@@ -358,7 +360,7 @@ public class Screen extends Region implements EventObserver, IScreen {
    * @return the physical coordinate/size <br>as AWT.Rectangle to avoid mix up with getROI
    */
   public static Rectangle getBounds(int id) {
-    return new Rectangle(runTime.getMonitor(getValidMonitor(id)));
+    return new Rectangle(SX.getMonitor(getValidMonitor(id)).getRectangle());
   }
 
   /**

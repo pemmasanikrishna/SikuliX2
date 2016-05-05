@@ -398,7 +398,7 @@ public class RunServer {
       File aFolder = new File(path);
       if (path.toLowerCase().startsWith("/home/")) {
         path = path.substring(6);
-        aFolder = new File(RunTime.get().fUserDir, path);
+        aFolder = new File(RunTime.get().fUserHome, path);
       } else if (path.toLowerCase().startsWith("/net/")) {
         path = "__NET/" + path.substring(5);
         aFolder = new File(path);

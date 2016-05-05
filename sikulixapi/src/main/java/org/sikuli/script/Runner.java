@@ -15,7 +15,9 @@ import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
 import org.sikuli.util.CommandArgs;
 import org.sikuli.util.CommandArgsEnum;
-import org.sikuli.util.JythonHelper;
+import org.sikuli.core.JythonHelper;
+
+import static org.sikuli.core.SX.isIDE;
 
 public class Runner {
 
@@ -259,9 +261,9 @@ public class Runner {
     if (jsr != null) {
       log(lvl, "ScriptingEngine started: JavaScript (ending .js)");
     } else {
-      runTime.terminate(1, "ScriptingEngine for JavaScript not available");
+      Commands.terminate(1, "ScriptingEngine for JavaScript not available");
     }
-    if (RunTime.Type.IDE.equals(runTime.runType)) {
+    if (isIDE()) {
       try {
         cIDE = Class.forName("org.sikuli.ide.SikuliIDE");
         mHide = cIDE.getMethod("hideIDE", new Class[0]);
@@ -361,7 +363,7 @@ public class Runner {
         if (givenScriptName.endsWith(".zip")) {
           scriptLocation = givenScriptHost + givenScriptFolder + givenScriptName;
           if (0 < FileManager.isUrlUseabel(scriptLocation)) {
-            runTime.terminate(1, ".zip from net not yet supported\n%s", scriptLocation);
+            Commands.terminate(1, ".zip from net not yet supported\n%s", scriptLocation);
           }
         } else {
           for (String suffix : endingTypes.keySet()) {
@@ -951,13 +953,13 @@ public class Runner {
           @Override
           public void run() {
             try {
-              Runner.mHide.invoke(null, new Class[0]);
+              Runner.mHide.invoke(null, (Object[]) new Class[0]);
               Runner.jsRunner.eval(jsScript);
-              Runner.mShow.invoke(null, new Class[0]);
+              Runner.mShow.invoke(null, (Object[]) new Class[0]);
             } catch (Exception ex) {
               Runner.log(-1, "not possible:\n%s", ex);
               try {
-                Runner.mShow.invoke(null, new Class[0]);
+                Runner.mShow.invoke(null, (Object[]) new Class[0]);
               } catch (Exception e) {
                 Commands.terminate(901);
               }
@@ -1022,7 +1024,7 @@ public class Runner {
     boolean givenScriptExists = true;
 
     RunBox(String givenName, String[] givenArgs, boolean isTest) {
-      Object[] vars = Runner.runBoxInit(givenName, RunTime.getScriptProject(), RunTime.getScriptProjectURL());
+      Object[] vars = Runner.runBoxInit(givenName, null, null);
       givenScriptHost = (String) vars[0];
       givenScriptFolder = (String) vars[1];
       givenScriptName = (String) vars[2];
@@ -1032,8 +1034,6 @@ public class Runner {
       uGivenScript = (URL) vars[6];
       uGivenScriptFile = (URL) vars[7];
       givenScriptExists = (Boolean) vars[8];
-      RunTime.setScriptProject((File) vars[9]);
-      RunTime.setScriptProjectURL((URL) vars[10]);
       args = givenArgs;
       asTest = isTest;
     }
@@ -1048,15 +1048,10 @@ public class Runner {
       }
       int exitCode = 0;
       log(lvl, "givenScriptName:\n%s", givenScriptName);
-      if (RunTime.getScriptProject() != null) {
-        if (-1 == FileManager.slashify(givenScriptName, false).indexOf("/")) {
-          givenScriptName = new File(RunTime.getScriptProject(), givenScriptName).getPath();
-        }
-      }
       if (givenScriptName.endsWith(".skl")) {
         log(-1, "RunBox.run: .skl scripts not yet supported.");
         return -9999;
-//        givenScriptName = FileManager.unzipSKL(givenScriptName);
+//        givenScriptName = ContentManager.unzipSKL(givenScriptName);
 //        if (givenScriptName == null) {
 //          log(-1, "not possible to make .skl runnable");
 //          return -9999;
@@ -1076,9 +1071,6 @@ public class Runner {
           return -9999;
         }
         fScript = new File(FileManager.normalizeAbsolute(fScript.getPath(), true));
-        if (null == RunTime.getScriptProject()) {
-          RunTime.setScriptProject(fScript.getParentFile().getParentFile());
-        }
         log(lvl, "Trying to run script:\n%s", fScript);
         if (fScript.getName().endsWith(EJSCRIPT)) {
           exitCode = runjs(fScript, null, givenScriptScript, args);

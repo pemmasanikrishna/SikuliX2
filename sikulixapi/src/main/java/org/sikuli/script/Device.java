@@ -268,7 +268,7 @@ public class Device {
 					return;
 				}
 				log(-1, "Terminating in MouseMovedResponse = Pause");
-				Commands.endError(1);
+				Commands.terminate(1);
       }
       if (mouseMovedResponse == MouseMovedAction) {
 //TODO implement 3

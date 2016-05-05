@@ -6,23 +6,23 @@ License MIT -->
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>com.sikulix</groupId>
-        <artifactId>sikulix2</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
-    </parent>
+  <parent>
+    <groupId>com.sikulix</groupId>
+    <artifactId>sikulix2</artifactId>
+    <version>2.0.0-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
 
-    <artifactId>sikulixapitest</artifactId>
+  <artifactId>sikulixapitest</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.sikulix</groupId>
-            <artifactId>sikulixapi</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>com.sikulix</groupId>
+      <artifactId>sikulixapi</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 </project>

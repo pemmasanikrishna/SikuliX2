@@ -51,7 +51,6 @@ class SikuliImporter:
             if _debug(): print "SikuliLoader.load_module", module_name, self.path
             module_name = _stripPackagePrefix(module_name)
             p = ImageLocator.addImagePath(self.path)
-            #if _debug(): print "SikuliLoader.load_module: ImageLocator returned path:", p
             if not p: return None
             Sikuli.addModPath(p)
             return self._load_module(module_name)

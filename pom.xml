@@ -66,6 +66,7 @@
     <module>sikulixapi</module>
     <module>sikulixapitest</module>
     <module>sikulix</module>
+    <module>test</module>
   </modules>
 
   <build>

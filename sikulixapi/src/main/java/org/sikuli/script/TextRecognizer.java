@@ -11,12 +11,6 @@ import org.sikuli.util.Settings;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Debug;
 import java.io.*;
-import java.util.LinkedList;
-import java.util.List;
-import org.sikuli.natives.Mat;
-import org.sikuli.natives.OCRWord;
-import org.sikuli.natives.OCRWords;
-import org.sikuli.natives.Vision;
 
 /**
  * INTERNAL USE
@@ -47,7 +41,7 @@ public class TextRecognizer {
       initSuccess = fTessdataPath.exists();
     }
     if(!initSuccess) {
-      fTessdataPath = new File(runTime.fSikulixAppPath, "SikulixTesseract/tessdata");
+      fTessdataPath = new File(runTime.fSXAppPath, "SikulixTesseract/tessdata");
       if (!(initSuccess = fTessdataPath.exists())) {
         if (!(initSuccess = (null != runTime.extractTessData(fTessdataPath)))) {
           Debug.error("TextRecognizer: init: export tessdata not possible - run setup with option 3");
@@ -63,7 +57,7 @@ public class TextRecognizer {
       Settings.OcrTextSearch = false;
     } else {
       Settings.OcrDataPath = fTessdataPath.getParent();
-      Vision.initOCR(FileManager.slashify(Settings.OcrDataPath, true));
+//      Vision.initOCR(ContentManager.slashify(Settings.OcrDataPath, true));
       Debug.log(lvl, "TextRecognizer: init OK: using as data folder:\n%s", Settings.OcrDataPath);
     }
   }
@@ -80,7 +74,7 @@ public class TextRecognizer {
 
 	public static void reset() {
 		_instance = null;
-		Vision.setSParameter("OCRLang", Settings.OcrLanguage);
+//		Vision.setSParameter("OCRLang", Settings.OcrLanguage);
 	}
 
   public enum ListTextMode {
@@ -113,12 +107,13 @@ public class TextRecognizer {
 
   public String recognize(BufferedImage img) {
     if (initSuccess) {
-      Mat mat = null;
-      mat.delete();
-      return Vision.recognize(mat).trim();
+//      Mat mat = null;
+//      mat.delete();
+//      return Vision.recognize(mat).trim();
     } else {
       return "";
     }
+    return "";
   }
 
   public String recognizeWord(ScreenImage simg) {
@@ -128,11 +123,12 @@ public class TextRecognizer {
 
   public String recognizeWord(BufferedImage img) {
     if (initSuccess) {
-      Mat mat = null;
-      mat.delete();
-      return Vision.recognizeWord(mat).trim();
+//      Mat mat = null;
+//      mat.delete();
+//      return Vision.recognizeWord(mat).trim();
     } else {
       return "";
     }
+    return "";
   }
 }
