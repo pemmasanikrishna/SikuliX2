@@ -6,6 +6,7 @@
  */
 package org.sikuli.util.visual;
 
+import org.sikuli.core.SX;
 import org.sikuli.util.EventObserver;
 import org.sikuli.util.EventSubject;
 import org.sikuli.util.Settings;
@@ -48,13 +49,13 @@ public class OverlayTransparentWindow extends JFrame implements EventSubject {
   private void init(Color col, EventObserver o) {
     setUndecorated(true);
     setAlwaysOnTop(true);
-    if (Settings.JavaVersion < 7) {
+    if (SX.javaVersion < 7) {
       dynGetMethod();
     }
     if (col != null) {
       _obs = o;
       _win = this;
-      if (Settings.JavaVersion < 7) {
+      if (Settings.javaVersion < 7) {
         _col = col;
         try {
           if (__setWindowOpaque != null) {
@@ -78,7 +79,7 @@ public class OverlayTransparentWindow extends JFrame implements EventSubject {
           if (g instanceof Graphics2D) {
             Graphics2D g2d = (Graphics2D) g;
             _currG2D = g2d;
-            if (Settings.JavaVersion < 7) {
+            if (SX.javaVersion < 7) {
               g2d.setColor(_col);
               g2d.fillRect(0, 0, getWidth(), getHeight());
             }
@@ -114,7 +115,7 @@ public class OverlayTransparentWindow extends JFrame implements EventSubject {
   }
 
   public void setOpacity(float alpha) {
-    if (Settings.JavaVersion > 6) {
+    if (SX.javaVersion > 6) {
       try {
         Class<?> c = Class.forName("javax.swing.JFrame");
         Method m = c.getMethod("setOpacity", float.class);

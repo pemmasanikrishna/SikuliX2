@@ -6,6 +6,7 @@
  */
 package org.sikuli.natives;
 
+import org.sikuli.core.SX;
 import org.sikuli.script.App;
 import org.sikuli.script.RunTime;
 import org.sikuli.script.Runner;
@@ -22,8 +23,6 @@ public class MacUtil implements OSUtil {
   
 	@Override
   public void checkLibAvailability() {
-    runTime = RunTime.get();
-    RunTime.loadLibrary("MacUtil");
   }
 
   /*
@@ -131,7 +130,7 @@ public class MacUtil implements OSUtil {
   public int open(App.AppEntry app) {
     String appName = app.execName.startsWith(app.name) ? app.name : app.execName;
     int retval = 0;
-    if (runTime.osVersion.startsWith("10.10.")) {
+    if (SX.isOSX10()) {
       if (Runner.runas(String.format("tell app \"%s\" to activate", appName), true) != 0) {
         retval = -1;
       }
@@ -164,7 +163,7 @@ public class MacUtil implements OSUtil {
   public int switchto(App.AppEntry app, int num) {
     String appName = app.execName.startsWith(app.name) ? app.name : app.execName;
     int retval = 0;
-    if (runTime.osVersion.startsWith("10.10.")) {
+    if (SX.isOSX10()) {
       if (Runner.runas(String.format("tell app \"%s\" to activate", appName), true) < 0) {
         retval = -1;
       }

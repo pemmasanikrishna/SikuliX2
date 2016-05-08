@@ -4,27 +4,57 @@
 
 package org.sikuli.core;
 
-import java.awt.*;
+import java.awt.Rectangle;
+import java.awt.Point;
 
 public class Region extends Visual{
-  private static String logStamp = "Region";
 
-  public Region() { init(logStamp); }
+  static {
+    clazz = clazzType.REGION;
+  }
+
+  public Region() {
+    super(clazzType.REGION);
+    init(0, 0, 0, 0);
+  }
 
   public Region(int x, int y, int w, int h) {
-    init(logStamp, x, y, w, h);
+    super(clazzType.REGION);
+    init(x, y, w, h);
   }
 
   public Region(int x, int y, int wh) {
-    init(logStamp, x, y, wh, wh);
+    super(clazzType.REGION);
+    init(x, y, wh, wh);
   }
 
   public Region(int x, int y) {
-    init(logStamp, x - stdW, y - stdH, 2 * stdW , 2 * stdH);
+    super(clazzType.REGION);
+    int[] margin = getMargin();
+    init(x - margin[0], y - margin[1], 2 * margin[0] , 2 * margin[1]);
   }
 
   public Region(Rectangle rect) {
-    init(logStamp, rect);
+    super(clazzType.REGION);
+    init(rect);
+  }
+
+  public Region(Point p) {
+    super(clazzType.REGION);
+    init(p);
+  }
+
+  public Region(Visual vis) {
+    super(clazzType.REGION);
+    init(vis);
+  }
+
+  public Region at(int x, int y) {
+    return (Region) vAt(x, y);
+  }
+
+  public Region translate(int xoff, int yoff) {
+    return (Region) vTranslate(xoff, yoff);
   }
 
   public Region union(Visual vis) {
@@ -33,9 +63,5 @@ public class Region extends Visual{
 
   public boolean contains(Visual vis) {
     return this.vContains(vis);
-  }
-
-  public Rectangle getRectangle() {
-    return new Rectangle(x, y, w, h);
   }
 }

@@ -4,29 +4,34 @@
  */
 package org.sikuli.script;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.sikuli.core.ContentManager;
 import org.sikuli.core.SX;
 
 import java.io.File;
-import java.util.Date;
 
 public class Sikulix extends SX {
 
-  static {
-    new Sikulix();
-  }
-
-  private Sikulix() {
+  private Sikulix(String[] args) {
+    logOnGlobal(3);
+    //logOffError();
+    sxinit(args);
     setLogger("Sikulix");
   }
 
-  public static void main(String[] args) throws FindFailed {
+  public static void main(String[] args) {
+    new Sikulix(args).run(args);
+  }
 
-    ImagePath.setBundlePath("org.sikuli.script.Sikulix/ImagesAPI");
+  private void run(String[] args) {
+
+    logOn(3);
+    logp("Sikulix starting");
+    show();
+    setBundlePath("org.sikuli.script.Sikulix/ImagesAPI");
 
     addImagePath("");
+
+    terminate(1, "stopped intentionally");
     
     File lastSession = new File(SX.fSXStore, "LastAPIJavaScript.js");
     String runSomeJS = "";

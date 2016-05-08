@@ -4,32 +4,30 @@
 
 package org.sikuli.core;
 
-import org.sikuli.script.*;
-
 import java.awt.*;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.Field;
+import java.net.URL;
+import java.security.CodeSource;
 import java.util.Date;
+import java.util.Properties;
 
-public class SXGlobal extends SX {
-
-  private static SXGlobal instance = null;
+class SXGlobal extends SX {
 
   private SXGlobal() {
   }
 
-  protected static SXGlobal getInstance() {
-    if (instance == null) {
-      instance = new SXGlobal();
-      instance.setLogger("Global");
-      instance.doGlobalInit();
+  protected static void getInstance() {
+    if (sxGlobal == null) {
+      sxGlobal = new SXGlobal();
+      sxGlobal.setLogger("Global");
+      sxGlobal.doGlobalInit();
     }
-    return instance;
   }
 
   private boolean doGlobalInit() {
+    log(lvl, "doGlobalInit: starting");
+    sxGlobalClassReference = sxGlobal.getClass();
     String tmpdir = System.getProperty("java.io.tmpdir");
     if (tmpdir != null && !tmpdir.isEmpty()) {
       fTempPath = new File(tmpdir);
@@ -123,7 +121,11 @@ public class SXGlobal extends SX {
 
     globalGetSystem();
     globalGetSupport();
+    loadOptionsSX();
+    initSXVersionInfo();
     globalGetMonitors();
+    extractResourcesToFolder("Lib", fSXLib, null);
+    exportNativeLibraries();
 
     return true;
   }
@@ -155,17 +157,20 @@ public class SXGlobal extends SX {
       sysName = "windows";
       osName = "Windows";
       runningWindows = true;
+      fpJarLibs = "/Native/windows";
       NL = "\r\n";
     } else if (os.startsWith("mac")) {
       runningOn = theSystem.MAC;
       sysName = "mac";
       osName = "Mac OSX";
       runningMac = true;
+      fpJarLibs = "/Native/mac";
     } else if (os.startsWith("linux")) {
       runningOn = theSystem.LUX;
       sysName = "linux";
       osName = "Linux";
       runningLinux = true;
+      fpJarLibs = "/Native/linux";
       String result = "*** error ***";
 //    result = runcmd("lsb_release -i -r -s");
 //TODO apache commons exec
@@ -177,9 +182,12 @@ public class SXGlobal extends SX {
     } else {
       terminate(-1, "running on not supported System: %s (%s)", os, osVersion);
     }
+    osShow = String.format("%s (%s)", osName, osVersion);
+    log(lvl, "running on: %s", osShow);
+    log(lvl, "running: %s", javaShow);
   }
-  private void globalGetSupport() {
 
+  private void globalGetSupport() {
     if (runningWindows) {
       appDataMsg = "init: Windows: %APPDATA% not valid (null or empty) or is not accessible:\n%s";
       String tmpdir = System.getenv("APPDATA");
@@ -208,14 +216,59 @@ public class SXGlobal extends SX {
     fSXLib = new File(fSXAppPath, "Lib");
     fSXLib.mkdir();
     fSXNative = new File(fSXAppPath, "Native");
-    fSXNative.mkdir();
     fSXTesseract = new File(fSXAppPath, "Tesseract");
     fSXTesseract.mkdir();
-    if (!(fSXEditor.exists() && fSXExtensions.exists() && fSXDownloads.exists() && fSXNative.exists()
-            && fSXLib.exists() && fSXNative.exists() && fSXTesseract.exists() && fSXStore.exists())) {
-      terminate(1, "SikuliX AppDataPath: should be checked - not completely available\n%s", fSXAppPath);
+    if (!(fSXEditor.exists() && fSXExtensions.exists() && fSXDownloads.exists()
+            && fSXLib.exists() && fSXTesseract.exists() && fSXStore.exists())) {
+      terminate(1, "AppDataPath: not completely available: %s", fSXAppPath);
+    }
+    log(lvl, "AppDataPath: %s", fSXAppPath);
+
+    CodeSource codeSrc = sxGlobalClassReference.getProtectionDomain().getCodeSource();
+    String base = null;
+    if (codeSrc != null && codeSrc.getLocation() != null) {
+      base = ContentManager.slashify(codeSrc.getLocation().getPath(), false);
+    }
+    appType = "from a jar";
+    if (base != null) {
+      fSxBaseJar = new File(base);
+      String jn = fSxBaseJar.getName();
+      fSxBase = fSxBaseJar.getParentFile();
+      log(lvl, "runs as %s in:\n%s", jn, fSxBase.getAbsolutePath());
+      if (jn.contains("classes")) {
+        runningJar = false;
+        fSxProject = fSxBase.getParentFile().getParentFile();
+        log(lvl, "not jar - supposing Maven project:\n%s", fSxProject);
+        appType = "in Maven project from classes";
+        runningInProject = true;
+      } else if ("target".equals(fSxBase.getName())) {
+        fSxProject = fSxBase.getParentFile().getParentFile();
+        log(lvl, "folder target detected - supposing Maven project:\n%s", fSxProject);
+        appType = "in Maven project from some jar";
+        runningInProject = true;
+      } else {
+        if (runningWindows) {
+          if (jn.endsWith(".exe")) {
+            runningWinApp = true;
+            runningJar = false;
+            appType = "as application .exe";
+          }
+        } else if (runningMac) {
+          if (fSxBase.getAbsolutePath().contains("SikuliX.app/Content")) {
+            runningMacApp = true;
+            appType = "as application .app";
+            if (!fSxBase.getAbsolutePath().startsWith("/Applications")) {
+              appType += " (not from /Applications folder)";
+            }
+          }
+        }
+      }
+    } else {
+      terminate(1, "no valid Java context for SikuliX available "
+              + "(java.security.CodeSource.getLocation() is null)");
     }
   }
+
   private void globalGetMonitors() {
     if (!isHeadless()) {
       genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -255,4 +308,212 @@ public class SXGlobal extends SX {
     }
   }
 
+  private void loadOptionsSX() {
+    for (File aFile : new File[]{fWorkDir, fUserHome, fSXStore}) {
+      log(lvl + 1, "loadOptions: check: %s", aFile);
+      fOptions = new File(aFile, fnOptions);
+      if (fOptions.exists()) {
+        break;
+      } else {
+        fOptions = null;
+      }
+    }
+    if (fOptions != null) {
+      options = new Properties();
+      try {
+        InputStream is;
+        is = new FileInputStream(fOptions);
+        options.load(is);
+        is.close();
+      } catch (Exception ex) {
+        log(-1, "while checking Options file:\n%s", fOptions);
+        fOptions = null;
+        options = null;
+      }
+      testing = isOption("testing", false);
+      if (testing) {
+        //TODO Global Log Level
+        logOn(3);
+      }
+      log(lvl, "found Options file at: %s", fOptions);
+    }
+    if (hasOptions()) {
+      for (Object oKey : options.keySet()) {
+        String sKey = (String) oKey;
+        String[] parts = sKey.split("\\.");
+        if (parts.length == 1) {
+          continue;
+        }
+        String sClass = parts[0];
+        String sAttr = parts[1];
+        Class cClass = null;
+        Field cField = null;
+        Class ccField = null;
+        if (sClass.contains("Settings")) {
+          try {
+            cClass = Class.forName("org.sikuli.basics.Settings");
+            cField = cClass.getField(sAttr);
+            ccField = cField.getType();
+            if (ccField.getName() == "boolean") {
+              cField.setBoolean(null, isOption(sKey));
+            } else if (ccField.getName() == "int") {
+              cField.setInt(null, getOptionNumber(sKey));
+            } else if (ccField.getName() == "float") {
+              cField.setInt(null, getOptionNumber(sKey));
+            } else if (ccField.getName() == "double") {
+              cField.setInt(null, getOptionNumber(sKey));
+            } else if (ccField.getName() == "String") {
+              cField.set(null, getOption(sKey));
+            }
+          } catch (Exception ex) {
+            log(-1, "loadOptions: not possible: %s = %s", sKey, options.getProperty(sKey));
+          }
+        }
+      }
+    }
+  }
+
+  private void initSXVersionInfo() {
+    Properties prop = new Properties();
+    String sVersionFile = "sikulixversion.txt";
+    log(lvl, "initSXVersionInfo: reading from %s", sVersionFile);
+    try {
+      InputStream is;
+      is = sxGlobalClassReference.getClassLoader().getResourceAsStream("Settings/" + sVersionFile);
+      if (is == null) {
+        terminate(1, "initSXVersionInfo: not found on classpath: %s", "Settings/" + sVersionFile);
+      }
+      prop.load(is);
+      is.close();
+
+      sxVersion = prop.getProperty("sxversion");
+      sxBuild = prop.getProperty("sxbuild");
+      sxBuild = sxBuild.replaceAll("\\-", "");
+      sxBuild = sxBuild.replaceAll("_", "");
+      sxBuild = sxBuild.replaceAll("\\:", "");
+      String sxlocalrepo = ContentManager.slashify(prop.getProperty("sxlocalrepo"), true);
+      String sxJythonVersion = prop.getProperty("sxjython");
+      String SikuliJRubyVersion = prop.getProperty("sxjruby");
+
+      log(lvl, "version: %s build: %s", sxVersion, sxBuild);
+      sxVersionShow = String.format("%s (%s)", sxVersion, sxBuild);
+      sxStamp = String.format("%s_%s", sxVersion, sxBuild);
+
+      // used for download of production versions
+      String dlProdLink = "https://launchpad.net/raiman/sikulix2013+/";
+      String dlProdLinkSuffix = "/+download/";
+      // used for download of development versions (nightly builds)
+      String dlDevLink = "http://nightly.sikuli.de/";
+
+      String osn = "UnKnown";
+      String os = System.getProperty("os.name").toLowerCase();
+      if (os.startsWith("mac")) {
+        osn = "Mac";
+      } else if (os.startsWith("windows")) {
+        osn = "Windows";
+      } else if (os.startsWith("linux")) {
+        osn = "Linux";
+      }
+
+      sxJythonMaven = "org/python/jython-standalone/"
+              + sxJythonVersion + "/jython-standalone-" + sxJythonVersion + ".jar";
+      sxJython = sxlocalrepo + sxJythonMaven;
+      sxJRubyMaven = "org/jruby/jruby-complete/"
+              + SikuliJRubyVersion + "/jruby-complete-" + SikuliJRubyVersion + ".jar";
+      sxJRuby = sxlocalrepo + sxJRubyMaven;
+    } catch (Exception e) {
+      terminate(1, "initSXVersionInfo: load failed for %s error(%s)", sVersionFile, e.getMessage());
+    }
+    tessData.put("eng", "http://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.eng.tar.gz");
+
+    sxLibsCheckName = String.format(sfLibsCheckFileLoaded, sxStamp);
+  }
+
+  void exportNativeLibraries() {
+    if (areLibsExported) {
+      return;
+    }
+    if (!new File(fSXNative, sxLibsCheckName).exists()) {
+      log(lvl, "exportNativeLibraries: folder empty or has wrong content");
+      ContentManager.deleteFileOrFolder(fSXNative);
+    }
+    if (fSXNative.exists()) {
+      log(lvl, "exportNativeLibraries: folder exists: %s", fSXNative);
+    } else {
+      fSXNative.mkdirs();
+      if (!fSXNative.exists()) {
+        terminate(1, "exportNativeLibraries: folder not available: %s", fSXNative);
+      }
+      log(lvl, "exportNativeLibraries: new folder: %s", fSXNative);
+      URL uLibsFrom = null;
+      uLibsFrom = sxGlobalClassReference.getResource(fpJarLibs);
+      if (testing || uLibsFrom == null) {
+        dumpClassPath("sikulix");
+      }
+      if (uLibsFrom == null) {
+        terminate(1, "exportNativeLibraries: libs not on classpath: " + fpJarLibs);
+      }
+      log(lvl, "exportNativeLibraries: from: %s", uLibsFrom);
+      extractResourcesToFolder(fpJarLibs, fSXNative, null);
+      if (!new File(fSXNative, sflibsCheckFileStored).exists()) {
+        terminate(1, "exportNativeLibraries: did not work");
+      }
+      new File(fSXNative, sflibsCheckFileStored).renameTo(new File(fSXNative, sxLibsCheckName));
+      if (!new File(fSXNative, sxLibsCheckName).exists()) {
+        terminate(1, "exportNativeLibraries: did not work");
+      }
+    }
+    for (String aFile : fSXNative.list()) {
+      if (aFile.contains("opencv_java")) {
+        sfLibOpencvJava = aFile;
+      } else if (aFile.contains("JXGrabKey")) {
+        sfLibJXGrabKey = aFile;
+      } else if (aFile.contains("JIntellitype")) {
+        sfLibJIntellitype = aFile;
+      } else if (aFile.contains("WinUtil")) {
+        sfLibWinUtil = aFile;
+      } else if (aFile.contains("MacUtil")) {
+        sfLibMacUtil = aFile;
+      } else if (aFile.contains("MacHotkey")) {
+        sfLibMacHotkey = aFile;
+      }
+      libsLoaded.put(aFile, false);
+    }
+    loadNativeLibrary(sfLibOpencvJava);
+    if (isWindows()) {
+      addToWindowsSystemPath(fSXNative);
+      if (!checkJavaUsrPath(fSXNative)) {
+        log(-1, "exportNativeLibraries: JavaUserPath: see errors - might not work and crash later");
+      }
+      String lib = "jawt.dll";
+      File fJawtDll = new File(fSXNative, lib);
+      ContentManager.deleteFileOrFolder(fJawtDll);
+      ContentManager.xcopy(new File(javahome + "/bin/" + lib), fJawtDll);
+      if (!fJawtDll.exists()) {
+        terminate(1, "exportNativeLibraries: problem copying %s", fJawtDll);
+      }
+      loadNativeLibrary(sfLibJIntellitype);
+      loadNativeLibrary(sfLibWinUtil);
+    } else if (isMac()) {
+      loadNativeLibrary(sfLibMacUtil);
+      loadNativeLibrary(sfLibMacHotkey);
+    } else if (isLinux()) {
+      loadNativeLibrary(sfLibJXGrabKey);
+    }
+    areLibsExported = true;
+  }
+
+  void loadNativeLibrary(String aLib) {
+    try {
+      if (aLib.startsWith("_ext_")) {
+        terminate(1, "loadNativeLibrary: loading external library not implemented: %s", aLib);
+      } else {
+        String sf_aLib = new File(fSXNative, aLib).getAbsolutePath();
+        System.load(sf_aLib);
+        log(lvl, "loadNativeLibrary: bundled: %s", aLib);
+      }
+    } catch (UnsatisfiedLinkError ex) {
+      terminate(1, "loadNativeLibrary: loading library error: %s (%s)", aLib, ex.getMessage());
+    }
+  }
 }

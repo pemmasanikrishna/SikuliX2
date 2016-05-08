@@ -4,6 +4,7 @@
  */
 package org.sikuli.util;
 
+import org.sikuli.core.ContentManager;
 import org.sikuli.script.RunTime;
 import java.awt.Desktop;
 import java.awt.image.BufferedImage;
@@ -66,8 +67,8 @@ public class FileManager {
   public static int tryGetFileSize(URL aUrl) {
     HttpURLConnection conn = null;
     try {
-      if (getProxy() != null) {
-        conn = (HttpURLConnection) aUrl.openConnection(getProxy());
+      if (ContentManager.getProxy() != null) {
+        conn = (HttpURLConnection) aUrl.openConnection(ContentManager.getProxy());
       } else {
         conn = (HttpURLConnection) aUrl.openConnection();
       }
@@ -97,8 +98,8 @@ public class FileManager {
     HttpURLConnection conn = null;
 		try {
 //			HttpURLConnection.setFollowRedirects(false);
-	    if (getProxy() != null) {
-    		conn = (HttpURLConnection) aURL.openConnection(getProxy());
+	    if (ContentManager.getProxy() != null) {
+    		conn = (HttpURLConnection) aURL.openConnection(ContentManager.getProxy());
       } else {
     		conn = (HttpURLConnection) aURL.openConnection();
       }
@@ -124,68 +125,6 @@ public class FileManager {
       }
     }
 	}
-
-  public static Proxy getProxy() {
-    Proxy proxy = Settings.proxy;
-    if (!Settings.proxyChecked) {
-      String phost = Settings.proxyName;
-      String padr = Settings.proxyIP;
-      String pport = Settings.proxyPort;
-      InetAddress a = null;
-      int p = -1;
-      if (phost != null) {
-        a = getProxyAddress(phost);
-      }
-      if (a == null && padr != null) {
-        a = getProxyAddress(padr);
-      }
-      if (a != null && pport != null) {
-        p = getProxyPort(pport);
-      }
-      if (a != null && p > 1024) {
-        proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(a, p));
-        log(lvl, "Proxy defined: %s : %d", a.getHostAddress(), p);
-      }
-      Settings.proxyChecked = true;
-      Settings.proxy = proxy;
-    }
-    return proxy;
-  }
-
-  public static boolean setProxy(String pName, String pPort) {
-    InetAddress a = null;
-    String host = null;
-    String adr = null;
-    int p = -1;
-    if (pName != null) {
-      a = getProxyAddress(pName);
-      if (a == null) {
-        a = getProxyAddress(pName);
-        if (a != null) {
-          adr = pName;
-        }
-      } else {
-        host = pName;
-      }
-    }
-    if (a != null && pPort != null) {
-      p = getProxyPort(pPort);
-    }
-    if (a != null && p > 1024) {
-      log(lvl, "Proxy stored: %s : %d", a.getHostAddress(), p);
-      Settings.proxyChecked = true;
-      Settings.proxyName = host;
-      Settings.proxyIP = adr;
-      Settings.proxyPort = pPort;
-      Settings.proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(a, p));
-      PreferencesUser prefs = PreferencesUser.getInstance();
-      prefs.put("ProxyName", (host == null ? "" : host));
-      prefs.put("ProxyIP", (adr == null ? "" : adr));
-      prefs.put("ProxyPort", ""+p);
-      return true;
-    }
-    return false;
-  }
 
   /**
    * download a file at the given url to a local folder
@@ -235,8 +174,8 @@ public class FileManager {
       FileOutputStream writer = null;
 			try {
 				writer = new FileOutputStream(fullpath);
-				if (getProxy() != null) {
-					reader = url.openConnection(getProxy()).getInputStream();
+				if (ContentManager.getProxy() != null) {
+					reader = url.openConnection(ContentManager.getProxy()).getInputStream();
 				} else {
 					reader = url.openConnection().getInputStream();
 				}
@@ -337,8 +276,8 @@ public class FileManager {
     InputStream reader = null;
     log(lvl, "download to string from:\n%s,", uSrc);
     try {
-      if (getProxy() != null) {
-        reader = uSrc.openConnection(getProxy()).getInputStream();
+      if (ContentManager.getProxy() != null) {
+        reader = uSrc.openConnection(ContentManager.getProxy()).getInputStream();
       } else {
         reader = uSrc.openConnection().getInputStream();
       }
@@ -378,7 +317,7 @@ public class FileManager {
   }
 
   public static File createTempDir(String path) {
-    File fTempDir = new File(RunTime.get().fpBaseTempPath, path);
+    File fTempDir = new File(RunTime.fpSXTempPath, path);
     log(lvl, "createTempDir:\n%s", fTempDir);
     if (!fTempDir.exists()) {
       fTempDir.mkdirs();
@@ -511,7 +450,7 @@ public class FileManager {
   public static File createTempFile(String suffix, String path) {
     String temp1 = "sikuli-";
     String temp2 = "." + suffix;
-    File fpath = new File(RunTime.get().fpBaseTempPath);
+    File fpath = new File(RunTime.fpSXTempPath);
     if (path != null) {
       fpath = new File(path);
     }

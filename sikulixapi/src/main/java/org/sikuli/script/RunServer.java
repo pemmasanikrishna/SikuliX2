@@ -9,6 +9,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 import javax.script.ScriptEngine;
+
+import org.sikuli.core.SX;
 import org.sikuli.util.Debug;
 
 
@@ -64,7 +66,7 @@ public class RunServer {
       }
       String theIP = InetAddress.getLocalHost().getHostAddress();
       String theServer = String.format("%s %d", theIP, port);
-      isRunning = new File(RunTime.get().fSikulixStore, "RunServer.txt");
+      isRunning = new File(SX.fSXStore, "RunServer.txt");
       try {
         isRunning.createNewFile();
         isRunningFile = new FileOutputStream(isRunning);
@@ -398,11 +400,11 @@ public class RunServer {
       File aFolder = new File(path);
       if (path.toLowerCase().startsWith("/home/")) {
         path = path.substring(6);
-        aFolder = new File(RunTime.get().fUserHome, path);
+        aFolder = new File(SX.fUserHome, path);
       } else if (path.toLowerCase().startsWith("/net/")) {
         path = "__NET/" + path.substring(5);
         aFolder = new File(path);
-      } else if (RunTime.get().runningWindows) {
+      } else if (SX.isWindows()) {
 //TODO handle drive letter
       }
       return aFolder;

@@ -11,7 +11,7 @@ package org.sikuli.script;
 import java.io.File;
 import java.net.URL;
 import org.sikuli.util.FileManager;
-import org.sikuli.util.JythonHelper;
+import org.sikuli.core.JythonHelper;
 
 /**
  *

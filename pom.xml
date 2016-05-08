@@ -41,6 +41,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <timestamp>${maven.build.timestamp}</timestamp>
+    <maven.build.timestamp.format>yyyy-MM-dd_HH:mm</maven.build.timestamp.format>
   </properties>
 
   <dependencies>
@@ -64,9 +66,6 @@
 
   <modules>
     <module>sikulixapi</module>
-    <module>sikulixapitest</module>
-    <module>sikulix</module>
-    <module>test</module>
   </modules>
 
   <build>

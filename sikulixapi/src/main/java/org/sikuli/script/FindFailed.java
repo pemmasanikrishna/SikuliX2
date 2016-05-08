@@ -6,44 +6,15 @@
  */
 package org.sikuli.script;
 
+import org.sikuli.core.ExFindFailed;
+
 /**
  * implements the SikuliX FindFailed exception class
  * and defines constants and settings for the feature FindFailedResponse
  */
-public class FindFailed extends SikuliException {
+public class FindFailed extends ExFindFailed {
 
-	/**
-	 * default FindFailedResponse is ABORT
-	 */
-	public static FindFailedResponse defaultFindFailedResponse = FindFailedResponse.ABORT;
-
-	/**
-	 * FindFailedResponse: should display a prompt dialog with the failing image
-	 * having the options retry, skip and abort
-	 */
-	public static final FindFailedResponse PROMPT = FindFailedResponse.PROMPT;
-
-	/**
-	 * FindFailedResponse: should retry the find op on FindFailed
-	 */
-	public static final FindFailedResponse RETRY = FindFailedResponse.RETRY;
-
-	/**
-	 * FindFailedResponse: should silently continue on FindFailed
-	 */
-	public static final FindFailedResponse SKIP = FindFailedResponse.SKIP;
-
-	/**
-	 * FindFailedResponse: should abort the SikuliX application
-	 */
-	public static final FindFailedResponse ABORT = FindFailedResponse.ABORT;
-
-	/**
-	 * the exception
-	 * @param message to be shown
-	 */
-	public FindFailed(String message) {
+  public FindFailed(String message) {
     super(message);
-    _name = "FindFailed";
   }
 }

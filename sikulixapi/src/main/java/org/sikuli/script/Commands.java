@@ -165,7 +165,7 @@ public class Commands {
       File fJarFound = rt.asExtension(fpJar);
       if (fJarFound != null) {
         fpJarFound = fJarFound.getAbsolutePath();
-        rt.addToClasspath(fpJarFound);
+        rt.addClassPath(fpJarFound);
       }
     }
     if (fpJarFound != null && fpJarImagePath != null) {

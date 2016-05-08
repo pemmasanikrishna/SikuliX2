@@ -15,7 +15,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-public class Commands extends SX {
+class Commands extends SX {
   private static String logStamp = "Command";
   private static Commands sx = null;
 
@@ -268,7 +268,8 @@ public class Commands extends SX {
   }
   
   public static String run(String[] cmd) {
-    return runcmd(cmd);
+    sxGlobal.terminate(1, "run: not implemented");
+    return "";
   }
 
   private static JythonHelper doCompileJythonFolder(JythonHelper jython, File fSource) {
@@ -372,138 +373,6 @@ public class Commands extends SX {
       }
     }
     return ContentManager.buildJar(targetJar, new String[]{null}, new String[]{sourceFolder}, new String[]{prefix}, null);
-  }
-
-  public static <Seconds> void pause(Seconds time) {
-    if (time instanceof Float || time instanceof Double || time instanceof Integer) {
-      try {
-        Thread.sleep((long) ((0.0 + ((Double) time)) * 1000.0));
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-  }
-
-  public final static String runCmdError = "*****error*****";
-  private static String lastResult = "";
-  /**
-   * run a system command finally using Java::Runtime.getRuntime().exec(args) and waiting for completion
-   *
-   * @param cmd the command as it would be given on command line, quoting is preserved
-   * @return the output produced by the command (sysout [+ "*** error ***" + syserr] if the syserr part is present, the
-   * command might have failed
-   */
-  public static String runcmd(String cmd) {
-    return runcmd(new String[]{cmd});
-  }
-  /**
-   * run a system command finally using Java::Runtime.getRuntime().exec(args) and waiting for completion
-   *
-   * @param args the command as it would be given on command line splitted into the space devided parts, first part is
-   *            the command, the rest are parameters and their values
-   * @return the output produced by the command (sysout [+ "*** error ***" + syserr] if the syserr part is present, the
-   * command might have failed
-   */
-  public static String runcmd(String args[]) {
-    if (args.length == 0) {
-      return "";
-    }
-    boolean silent = false;
-    if (args.length == 1) {
-      String separator = "\"";
-      ArrayList<String> argsx = new ArrayList<String>();
-      StringTokenizer toks;
-      String tok;
-      String cmd = args[0];
-      if (Settings.isWindows()) {
-        cmd = cmd.replaceAll("\\\\ ", "%20;");
-      }
-      toks = new StringTokenizer(cmd);
-      while (toks.hasMoreTokens()) {
-        tok = toks.nextToken(" ");
-        if (tok.length() == 0) {
-          continue;
-        }
-        if (separator.equals(tok)) {
-          continue;
-        }
-        if (tok.startsWith(separator)) {
-          if (tok.endsWith(separator)) {
-            tok = tok.substring(1, tok.length() - 1);
-          } else {
-            tok = tok.substring(1);
-            tok += toks.nextToken(separator);
-          }
-        }
-        argsx.add(tok.replaceAll("%20;", " "));
-      }
-      args = argsx.toArray(new String[0]);
-    }
-    if (args[0].startsWith("!")) {
-      silent = true;
-      args[0] = args[0].substring(1);
-    }
-    if (args[0].startsWith("#")) {
-      String pgm = args[0].substring(1);
-      args[0] = (new File(pgm)).getAbsolutePath();
-      runcmd(new String[]{"chmod", "ugo+x", args[0]});
-    }
-    String result = "";
-    String error = runCmdError + NL;
-    boolean hasError = false;
-    int retVal;
-    try {
-      if (!silent) {
-        if (lvl <= Debug.getDebugLevel()) {
-          sx.log(lvl, arrayToString(args));
-        } else {
-          Debug.info("runcmd: " + arrayToString(args));
-        }
-      }
-      Process process = Runtime.getRuntime().exec(args);
-      BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-      String s;
-      while ((s = stdInput.readLine()) != null) {
-        if (!s.isEmpty()) {
-          result += s + NL;
-        }
-      }
-      if ((s = stdError.readLine()) != null) {
-        hasError = true;
-        if (!s.isEmpty()) {
-          error += s + NL;
-        }
-      }
-      process.waitFor();
-      retVal = process.exitValue();
-      process.destroy();
-    } catch (Exception e) {
-      sx.log(-1, "fatal error: " + e);
-      result = String.format(error + "%s", e);
-      retVal = 9999;
-      hasError = true;
-    }
-    if (hasError) {
-      result += error;
-    }
-    lastResult = result;
-    return String.format("%d%s%s", retVal, NL, result);
-  }
-
-  public String getLastCommandResult() {
-    return lastResult;
-  }
-
-  private static String arrayToString(String[] args) {
-    String ret = "";
-    for (String s : args) {
-      if (s.contains(" ")) {
-        s = "\"" + s + "\"";
-      }
-      ret += s + " ";
-    }
-    return ret;
   }
 
   public static Object run(Object... args) {

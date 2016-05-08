@@ -169,15 +169,15 @@ public class JavaScriptHelper extends SX {
    * arg3: minimum similarity to use for search (overwrites Pattern setting)<br>
    * @param args
    * @return the match or throws FindFailed
-   * @throws FindFailed
+   * @throws ExFindFailed
    */
-  public static Match wait(Object... args) throws FindFailed {
+  public static Match wait(Object... args) throws ExFindFailed {
     logCmd("wait", args);
     Object[] realArgs = waitArgs(args);
     return waitx((String) realArgs[0], (Pattern) realArgs[1], (Double) realArgs[2], (Float) realArgs[3]);
   }
 
-  private static Match waitx(String image, Pattern pimage, double timeout, float score) throws FindFailed {
+  private static Match waitx(String image, Pattern pimage, double timeout, float score) throws ExFindFailed {
     Object aPattern = null;
     if (image != null) {
       if (score > 0) {

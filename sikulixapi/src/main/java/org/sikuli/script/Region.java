@@ -18,7 +18,11 @@ import java.util.Iterator;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.sikuli.core.FindFailedResponse;
+import org.sikuli.core.SX;
+import org.sikuli.core.Visual;
 import org.sikuli.util.Debug;
+import org.sikuli.util.FindFailedDialog;
 import org.sikuli.util.Settings;
 import org.sikuli.util.visual.ScreenHighlighter;
 
@@ -1405,7 +1409,7 @@ public class Region {
    */
   @Deprecated
   public Region nearby() {
-    return grow(Settings.DefaultPadding, Settings.DefaultPadding);
+    return grow(Visual.getMargin()[0], Visual.getMargin()[1]);
   }
 
   /**
@@ -1426,7 +1430,7 @@ public class Region {
    * @return the new region
    */
   public Region grow() {
-    return grow(Settings.DefaultPadding, Settings.DefaultPadding);
+    return grow(Visual.getMargin()[0], Visual.getMargin()[1]);
   }
 
   /**
@@ -2187,7 +2191,7 @@ public class Region {
    * @param timeout The time to wait
    */
   public void wait(double timeout) {
-    RunTime.pause(timeout);
+    SX.pause(timeout);
   }
 
   public void wait(float timeout) {

@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import org.apache.commons.cli.CommandLine;
+import org.sikuli.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
@@ -126,24 +127,14 @@ public class Runner {
     // select script runner and/or start interactive session
     // option is overloaded - might specify runner for -r/-t
     if (cmdLine.hasOption(CommandArgsEnum.INTERACTIVE.shortname())) {
-      if (!cmdLine.hasOption(CommandArgsEnum.RUN.shortname())
-              && !cmdLine.hasOption(CommandArgsEnum.TEST.shortname())) {
-        runTime.interactiveRunner = cmdLine.getOptionValue(CommandArgsEnum.INTERACTIVE.longname());
-        runTime.runningInteractive = true;
-        return null;
-      }
+      runTime.terminate(1, "running interactive: not implemented");
     }
 
     String[] runScripts = null;
-    runTime.runningTests = false;
     if (cmdLine.hasOption(CommandArgsEnum.RUN.shortname())) {
       runScripts = cmdLine.getOptionValues(CommandArgsEnum.RUN.longname());
     } else if (cmdLine.hasOption(CommandArgsEnum.TEST.shortname())) {
-      runScripts = cmdLine.getOptionValues(CommandArgsEnum.TEST.longname());
-      log(-1, "Command line option -t: not yet supported! %s", Arrays.asList(args).toString());
-      runTime.runningTests = true;
-//TODO run a script as unittest with HTMLTestRunner
-      System.exit(1);
+      runTime.terminate(1, "running tests: not implemented");
     }
     return runScripts;
   }
@@ -182,7 +173,8 @@ public class Runner {
     String someJS = "";
     int exitCode = 0;
     if (runScripts != null && runScripts.length > 0) {
-      boolean runAsTest = runTime.runningTests;
+      //TODO run as test
+      boolean runAsTest = false;
       for (String givenScriptName : runScripts) {
         if (lastReturnCode == -1) {
           log(lvl, "Exit code -1: Terminating multi-script-run");
@@ -412,7 +404,7 @@ public class Runner {
           header += scriptLocation + "\n";
           if (Debug.is() > 2) {
             FileManager.writeStringToFile(header + trailer + content,
-                    new File(runTime.fSikulixStore, "LastScriptFromNet.txt"));
+                    new File(SX.fSXStore, "LastScriptFromNet.txt"));
           }
         }
       } else {
@@ -420,12 +412,13 @@ public class Runner {
         if (sameFolder) {
           givenScriptName = givenScriptName.substring(2);
         }
-        if (givenScriptName.startsWith("JS*")) {
-          givenScriptName = new File(runTime.fSxProjectTestScriptsJS, givenScriptName.substring(3)).getPath();
-        }
-        if (givenScriptName.startsWith("TEST*")) {
-          givenScriptName = new File(runTime.fSxProjectTestScripts, givenScriptName.substring(5)).getPath();
-        }
+        //TODO script locations
+//        if (givenScriptName.startsWith("JS*")) {
+//          givenScriptName = new File(runTime.fSxProjectTestScriptsJS, givenScriptName.substring(3)).getPath();
+//        }
+//        if (givenScriptName.startsWith("TEST*")) {
+//          givenScriptName = new File(runTime.fSxProjectTestScripts, givenScriptName.substring(5)).getPath();
+//        }
         String scriptName = new File(givenScriptName).getName();
         if (scriptName.contains(".")) {
           parts = scriptName.split("\\.");
@@ -505,7 +498,7 @@ public class Runner {
         if (!fInline.isAbsolute()) {
           fInline = new File(fRobotWork, sLib + ".jar");
         }
-        runTime.addToClasspath(fInline.getAbsolutePath());
+        SX.addClassPath(fInline.getAbsolutePath());
         sLib = "";
       }
     }
@@ -814,7 +807,7 @@ public class Runner {
 //</editor-fold>
 
   public static int runas(String givenScriptScript, boolean silent) {
-    if (!runTime.runningMac) {
+    if (!SX.isMac()) {
       return -1;
     }
     String prefix = silent ? "!" : "";
@@ -841,7 +834,7 @@ public class Runner {
   }
 
   public static int runps(String givenScriptScript) {
-    if (!runTime.runningWindows) {
+    if (!SX.isWindows()) {
       return -1;
     }
     File aFile = FileManager.createTempFile("ps1");

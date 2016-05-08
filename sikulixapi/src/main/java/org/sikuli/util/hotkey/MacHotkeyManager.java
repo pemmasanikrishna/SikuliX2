@@ -20,10 +20,6 @@ public class MacHotkeyManager extends HotkeyManager {
   static final int CARBON_MASK_OPT = 0x0800;
   static final int CARBON_MASK_CTRL = 0x1000;
 
-  static {
-    RunTime.loadLibrary("MacHotkeyManager");
-  }
-
   @Override
   public boolean _addHotkey(int keyCode, int modifiers, HotkeyListener listener) {
     int ckey = convertToCarbonKey(keyCode);

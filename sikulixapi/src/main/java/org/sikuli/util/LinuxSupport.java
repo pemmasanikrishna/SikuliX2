@@ -11,6 +11,8 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
+
+import org.sikuli.core.SX;
 import org.sikuli.script.RunTime;
 
 /**
@@ -40,7 +42,7 @@ public class LinuxSupport {
   private static final String buildFolderSrc = "Build/Source";
   private static final String buildFolderInclude = "Build/Include";
   private static final String buildFolderTarget = "Build/Target";
-  static File fLibs = runTime.fLibsFolder;
+  static File fLibs = RunTime.fSXNative;
   public static final String slibVision = "VisionProxy";
   public static final String libVision = "lib" + slibVision + ".so";
   public static final String libGrabKey = "libJXGrabKey.so";
@@ -54,7 +56,7 @@ public class LinuxSupport {
   private static boolean tessAvail = true;
 
   public static String getLinuxDistro() {
-    if (!runTime.runningLinux) {
+    if (!SX.isLinux()) {
       return "";
     }
     String result = runTime.runcmd("lsb_release -i -r -s");
@@ -67,8 +69,8 @@ public class LinuxSupport {
   }
 
   public static boolean existsLibs() {
-    return new File(runTime.fLibsProvided, libVision).exists() ||
-            new File(runTime.fLibsProvided, libGrabKey).exists();
+    return new File(SX.fLibsProvided, libVision).exists() ||
+            new File(SX.fLibsProvided, libGrabKey).exists();
   }
 
   public static boolean copyProvidedLibs(File fLibsFolder) {
@@ -93,7 +95,7 @@ public class LinuxSupport {
 
   public static boolean checkAllLibs() {
     boolean success = false;
-    if (!isCopiedProvided && !runTime.useLibsProvided) {
+    if (!isCopiedProvided && !SX.useLibsProvided) {
       success = true;
       String[] allLibs = runTime.fLibsProvided.list(new FilenameFilter() {
         @Override
@@ -107,7 +109,7 @@ public class LinuxSupport {
       if (allLibs != null) {
         for (String sLib : allLibs) {
           File fSrc = new File(runTime.fLibsProvided, sLib);
-          File fTgt = new File(runTime.fLibsFolder, sLib);
+          File fTgt = new File(runTime.fSXNative, sLib);
           success &= FileManager.xcopy(fSrc, fTgt);
           log(3, "Copy provided lib: %s (%s)", sLib, (success ? "ok" : "did not work"));
         }
@@ -155,7 +157,7 @@ public class LinuxSupport {
       if (libOpenCVcore == null || libOpenCVhighgui == null || libOpenCVimgproc == null) {
         log(-1, "checking: OpenCV not in loader cache (see doc-note on OpenCV)");
         opencvAvail = checkSuccess = false;
-        runTime.linuxNeededLibs += "libopencv ";
+        SX.linuxNeededLibs += "libopencv ";
       } else {
         log(lvl, "checking: found OpenCV libs:\n%s\n%s\n%s",
                 libOpenCVcore, libOpenCVhighgui, libOpenCVimgproc);
@@ -163,7 +165,7 @@ public class LinuxSupport {
       if (libTesseract == null) {
         log(-1, "checking: Tesseract not in loader cache (see doc-note on Tesseract)");
         tessAvail = checkSuccess = false;
-        runTime.linuxNeededLibs += "libtesseract ";
+        SX.linuxNeededLibs += "libtesseract ";
       } else {
         log(lvl, "checking: found Tesseract lib:\n%s", libTesseract);
       }
@@ -172,13 +174,13 @@ public class LinuxSupport {
     cmdRet = runTime.runcmd("wmctrl -m");
     if (cmdRet.contains(runTime.runCmdError)) {
       log(-1, "checking: wmctrl not available or not working");
-      runTime.linuxAppSupport += "wmctrl ";
+      SX.linuxAppSupport += "wmctrl ";
     } else {
       log(lvl, "checking: wmctrl seems to be available");
     }
     cmdRet = runTime.runcmd("xdotool version");
     if (cmdRet.contains(runTime.runCmdError)) {
-      runTime.linuxAppSupport += "xdotool ";
+      SX.linuxAppSupport += "xdotool ";
       log(-1, "checking: xdotool not available or not working");
     } else {
       log(lvl, "checking: xdotool seems to be available");
@@ -332,8 +334,8 @@ public class LinuxSupport {
       log(-1, "buildVision: could not save:\n%s", providedLib);
       return false;
     }
-    if (runTime.fLibsFolder.exists()) {
-      copyProvidedLibs(runTime.fLibsFolder);
+    if (runTime.fSXNative.exists()) {
+      copyProvidedLibs(runTime.fSXNative);
     }
     log(lvl, "buildVision: ending inline build: success:\n%s", providedLib);
     return true;

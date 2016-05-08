@@ -185,7 +185,7 @@ public class ScreenImage {
 	 * @return absolute path to stored file
 	 */
   public String save() {
-    File fImage = new File(RunTime.get().fpBaseTempPath, 
+    File fImage = new File(RunTime.fpSXTempPath,
             String.format("sikuliximage-%d.png", new Date().getTime()));
     return saveImage(fImage, false);
   }
@@ -238,7 +238,7 @@ public class ScreenImage {
 	 */
   public String save(String path, String name) {
     if (path == null || path.isEmpty()) {
-      path = RunTime.get().fpBaseTempPath;
+      path = RunTime.fpSXTempPath;
     }
     if (name == null || name.isEmpty()) {
       name = String.format("sikuliximage-%d.png", new Date().getTime());

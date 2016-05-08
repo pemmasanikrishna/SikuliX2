@@ -1,10 +1,10 @@
 /*
- * Copyright 2010-2014, Sikuli.org, sikulix.com
- * Released under the MIT License.
- *
- * modified RaiMan
+ * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package org.sikuli.script;
+package org.sikuli.util;
+
+import org.sikuli.core.FindFailedResponse;
+import org.sikuli.script.Pattern;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -22,7 +22,7 @@ import javax.swing.JPanel;
 /**
  * INTERNAL USE
  */
-class FindFailedDialog extends JDialog implements ActionListener {
+public class FindFailedDialog extends JDialog implements ActionListener {
 
   JButton retryButton;
   JButton skipButton;

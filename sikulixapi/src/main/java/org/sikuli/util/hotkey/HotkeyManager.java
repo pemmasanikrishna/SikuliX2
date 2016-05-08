@@ -10,6 +10,8 @@ import java.awt.event.KeyEvent;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.sikuli.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Debug;
 import org.sikuli.util.PreferencesUser;
@@ -93,17 +95,15 @@ public abstract class HotkeyManager {
 
   private static String getOSHotkeyManagerClass() {
     String pkg = "org.sikuli.basics.";
-    int theOS = Settings.getOS();
-    switch (theOS) {
-      case Settings.ISMAC:
+      if (SX.isMac()) {
         return pkg + "MacHotkeyManager";
-      case Settings.ISWINDOWS:
+      } else if (SX.isWindows()) {
         return pkg + "WindowsHotkeyManager";
-      case Settings.ISLINUX:
+      } else if (SX.isLinux()) {
         return pkg + "LinuxHotkeyManager";
-      default:
+      } else {
         Debug.error("HotkeyManager: Hotkey registration is not supported on your OS.");
-    }
+      }
     return null;
   }
 

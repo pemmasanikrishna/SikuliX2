@@ -6,6 +6,7 @@
  */
 package org.sikuli.script;
 
+import org.sikuli.core.SX;
 import org.sikuli.util.visual.animation.Animator;
 import org.sikuli.util.visual.animation.AnimatorOutQuarticEase;
 import org.sikuli.util.visual.animation.AnimatorTimeBased;
@@ -63,7 +64,7 @@ public class RobotDesktop extends Robot implements IRobot {
   
 //TODO Mac: hack to avoid slowdown after some time ???
   private void fakeHighlight(boolean onOff) {
-    if (runTime.runningMac && runTime.isOSX10()) {
+    if (SX.isMac() && SX.isOSX10()) {
       Region reg = Screen.getFakeRegion();
       reg.silentHighlight(onOff);
     }

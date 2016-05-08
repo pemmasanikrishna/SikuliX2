@@ -6,6 +6,7 @@
  */
 package org.sikuli.script;
 
+import org.sikuli.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.natives.OSUtil;
 import org.sikuli.natives.SysUtil;
@@ -68,7 +69,7 @@ public class App {
     Region win;
     try {
       if (Type.EDITOR.equals(appType)) {
-        if (runTime.runningMac) {
+        if (SX.isMac()) {
           app = new App(appsMac.get(appType));
           if (app.window() != null) {
             app.focus();
@@ -86,7 +87,7 @@ public class App {
             return win;
           }
         }
-        if (runTime.runningWindows) {
+        if (SX.isWindows()) {
           app = new App(appsWindows.get(appType));
           if (app.window() != null) {
             app.focus();
@@ -105,7 +106,7 @@ public class App {
           }
         }
       } else if (Type.BROWSER.equals(appType)) {
-        if (runTime.runningWindows) {
+        if (SX.isWindows()) {
           app = new App(appsWindows.get(appType));
           if (app.window() != null) {
             app.focus();
@@ -160,7 +161,7 @@ public class App {
   }
   
   public static void closeWindow() {
-    if (runTime.runningMac) {
+    if (SX.isMac()) {
       aRegion.type("w", Key.CMD);
     } else {
       aRegion.type("w", Key.CTRL);
@@ -646,7 +647,7 @@ public class App {
    */
   public static int run(String cmd) {
     lastRunResult = runTime.runcmd(cmd);
-    String NL = runTime.runningWindows ? "\r\n" : "\n";
+    String NL = SX.isWindows() ? "\r\n" : "\n";
     String[] res = lastRunResult.split(NL);
     try {
       lastRunReturnCode = Integer.parseInt(res[0].trim());

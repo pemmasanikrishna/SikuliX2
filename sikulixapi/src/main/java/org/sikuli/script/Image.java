@@ -43,6 +43,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
+import org.sikuli.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
@@ -277,7 +278,7 @@ public class Image {
   private static synchronized long currentMemoryChange(long size, long max) {
     long maxMemory = max;
     if (max < 0) {
-      maxMemory = Settings.getImageCache() * MB;
+      maxMemory = SX.getImageCache() * MB;
       currentMemory += size;
     }
     if (currentMemory > maxMemory) {
@@ -310,7 +311,7 @@ public class Image {
   }
   
   private static boolean isCaching() {
-    return Settings.getImageCache() > 0;
+    return SX.getImageCache() > 0;
   }
   
   public static void clearCache(int maxSize) {

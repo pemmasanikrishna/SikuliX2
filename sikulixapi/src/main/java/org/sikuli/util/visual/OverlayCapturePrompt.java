@@ -6,6 +6,7 @@
  */
 package org.sikuli.util.visual;
 
+import org.sikuli.core.SX;
 import org.sikuli.util.Settings;
 import org.sikuli.util.Debug;
 import java.awt.*;
@@ -197,8 +198,8 @@ public class OverlayCapturePrompt extends OverlayTransparentWindow implements Ev
     promptMsg = msg;
     Debug.log(4, "CapturePrompt: [%d,%d (%d, %d)] %s", rect.x, rect.y, rect.width, rect.height, promptMsg);
     this.setVisible(true);
-    if (!RunTime.get().isJava7()) {
-      if (RunTime.get().runningMac) {
+    if (!SX.isJava7()) {
+      if (SX.isWindows()) {
         SysUtil.getOSUtil().bringWindowToFront(this, false);
       }
     }
