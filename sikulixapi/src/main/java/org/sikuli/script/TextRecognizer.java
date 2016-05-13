@@ -8,6 +8,7 @@ package org.sikuli.script;
 
 import java.awt.image.BufferedImage;
 
+import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import org.sikuli.util.Settings;
 import org.sikuli.util.FileManager;
@@ -38,14 +39,14 @@ public class TextRecognizer {
   private void init() {
     File fTessdataPath = null;
     initSuccess = false;
-    if (Settings.OcrDataPath != null) {
-      fTessdataPath = new File(FileManager.slashify(Settings.OcrDataPath, false), "tessdata");
+    if (SX.OcrDataPath != null) {
+      fTessdataPath = new File(FileManager.slashify(SX.OcrDataPath, false), "tessdata");
       initSuccess = fTessdataPath.exists();
     }
     if(!initSuccess) {
       fTessdataPath = new File(SX.getSXTESSERACT(), "tessdata");
       if (!(initSuccess = fTessdataPath.exists())) {
-        if (!(initSuccess = (null != runTime.extractTessData(fTessdataPath)))) {
+        if (!(initSuccess = (null != Content.extractTessData(fTessdataPath)))) {
           Debug.error("TextRecognizer: init: export tessdata not possible - run setup with option 3");
         }
       }
@@ -55,12 +56,12 @@ public class TextRecognizer {
 		}
     if (!initSuccess) {
       Debug.error("TextRecognizer not working: tessdata stuff not available at:\n%s", fTessdataPath);
-      Settings.OcrTextRead = false;
-      Settings.OcrTextSearch = false;
+      SX.OcrTextRead = false;
+      SX.OcrTextSearch = false;
     } else {
-      Settings.OcrDataPath = fTessdataPath.getParent();
-//      Vision.initOCR(ContentManager.slashify(Settings.OcrDataPath, true));
-      Debug.log(lvl, "TextRecognizer: init OK: using as data folder:\n%s", Settings.OcrDataPath);
+      SX.OcrDataPath = fTessdataPath.getParent();
+//      Vision.initOCR(Content.slashify(Settings.OcrDataPath, true));
+      Debug.log(lvl, "TextRecognizer: init OK: using as data folder:\n%s", SX.OcrDataPath);
     }
   }
 

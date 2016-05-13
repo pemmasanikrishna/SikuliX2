@@ -16,6 +16,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
+import com.sikulix.core.SX;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.*;
@@ -364,7 +366,7 @@ public class Finder {
     Probe probe = new Probe(found.pattern);
     found.base = base;
     boolean isIterator = Region.FindType.ALL.equals(found.type);
-    if (isRegion && !isIterator && !useOriginal && Settings.CheckLastSeen && probe.lastSeen != null) {
+    if (isRegion && !isIterator && !useOriginal && SX.CheckLastSeen && probe.lastSeen != null) {
       // ****************************** check last seen
       begin_t = new Date().getTime();
       Finder lastSeenFinder = new Finder(probe.lastSeen);

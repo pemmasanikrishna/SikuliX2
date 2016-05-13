@@ -6,6 +6,7 @@
  */
 package org.sikuli.script;
 
+import com.sikulix.core.SX;
 import org.sikuli.util.Settings;
 import java.awt.image.BufferedImage;
 import java.net.URL;
@@ -27,7 +28,7 @@ public class Pattern {
   }
 
   private Image image = null;
-  private double similarity = Settings.MinSimilarity;
+  private double similarity = SX.MinSimilarity;
   private Location offset = new Location(0, 0);
   private int waitAfter = 0;
   private Type type = Type.IMAGE;

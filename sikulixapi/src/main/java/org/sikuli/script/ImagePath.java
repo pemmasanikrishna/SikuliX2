@@ -555,7 +555,7 @@ public class ImagePath {
     if (bundleEquals(pURL)) {
       Image.purge(pURL);
       bundlePath = null;
-      Settings.BundlePath = null;
+      SX.BundlePath = null;
       imagePaths.set(0, null);
     }
     Iterator<PathEntry> it = imagePaths.subList(1, imagePaths.size()).iterator();

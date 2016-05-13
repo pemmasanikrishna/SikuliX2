@@ -11,7 +11,8 @@ import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import com.sikulix.core.JythonHelper;
+import com.sikulix.core.SX;
+import com.sikulix.scripting.JythonHelper;
 import org.sikuli.util.Debug;
 import org.sikuli.util.PreferencesUser;
 import org.sikuli.util.FileManager;
@@ -145,10 +146,10 @@ public class Commands {
       }
       fpJarFound = jython.load(fpJar);
     } else {
-      File fJarFound = rt.asExtension(fpJar);
+      File fJarFound = SX.asExtension(fpJar);
       if (fJarFound != null) {
         fpJarFound = fJarFound.getAbsolutePath();
-        rt.addClassPath(fpJarFound);
+        SX.addClassPath(fpJarFound);
       }
     }
     if (fpJarFound != null && fpJarImagePath != null) {
@@ -290,7 +291,7 @@ public class Commands {
   }
   
   public static String run(String[] cmd) {
-    return rt.runcmd(cmd);
+    return SX.runcmd(cmd);
   }
 //</editor-fold>
   

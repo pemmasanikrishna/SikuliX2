@@ -133,7 +133,7 @@ public class RobotDesktop extends Robot implements IRobot {
   }
 
   public RobotDesktop(Screen screen) throws AWTException {
-    super(runTime.getGraphicsDevice(screen.getcurrentID()));
+    super(SX.getGraphicsDevice(screen.getcurrentID()));
     scr = screen;
   }
 
@@ -145,12 +145,12 @@ public class RobotDesktop extends Robot implements IRobot {
 
   @Override
   public void smoothMove(Location dest) {
-    smoothMove(Mouse.at(), dest, (long) (Settings.MoveMouseDelay * 1000L));
+    smoothMove(Mouse.at(), dest, (long) (SX.MoveMouseDelay * 1000L));
   }
 
   @Override
   public void smoothMove(Location src, Location dest, long ms) {
-    Debug.log(4, "RobotDesktop: smoothMove (%.1f): " + src.toString() + "---" + dest.toString(), Settings.MoveMouseDelay);
+    Debug.log(4, "RobotDesktop: smoothMove (%.1f): " + src.toString() + "---" + dest.toString(), SX.MoveMouseDelay);
     if (ms == 0) {
       doMouseMove(dest.x, dest.y);
       checkMousePosition(dest);

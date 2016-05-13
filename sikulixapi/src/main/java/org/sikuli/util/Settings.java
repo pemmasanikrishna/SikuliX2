@@ -6,9 +6,8 @@
  */
 package org.sikuli.util;
 
-import com.sikulix.core.SX;
 
-public class Settings extends SX {
+public class Settings  {
 
   // empty by intention - everything moved to SX
 

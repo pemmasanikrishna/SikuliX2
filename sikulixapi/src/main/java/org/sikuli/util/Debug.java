@@ -14,7 +14,7 @@ import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
-import com.sikulix.core.JythonHelper;
+import com.sikulix.scripting.JythonHelper;
 
 /**
  * Debug is a utility class that wraps println statements and allows more or less command line

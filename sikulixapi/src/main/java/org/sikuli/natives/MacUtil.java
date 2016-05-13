@@ -84,7 +84,7 @@ public class MacUtil implements OSUtil {
       return app;
     }
     int retVal = Runner.runas(theCmd, true);
-    String result = RunTime.getRunTime().getLastCommandResult();
+    String result = SX.getLastCommandResult();
     if (retVal > -1) {
       if (!result.contains("NotFound")) {
         String[] parts = result.split(",");

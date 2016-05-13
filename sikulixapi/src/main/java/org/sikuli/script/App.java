@@ -405,7 +405,7 @@ public class App {
       }
       wait = 1000 - new Date().getTime() + wait;
       if (wait > 0) {
-        RunTime.pause(wait/1000f);
+        SX.pause(wait/1000f);
       }
     }
     return appPID > -1;
@@ -646,7 +646,7 @@ public class App {
    * @return the final returncode of the command execution
    */
   public static int run(String cmd) {
-    lastRunResult = runTime.runcmd(cmd);
+    lastRunResult = SX.runcmd(cmd);
     String NL = SX.isWindows() ? "\r\n" : "\n";
     String[] res = lastRunResult.split(NL);
     try {
@@ -660,7 +660,7 @@ public class App {
         lastRunStderr += res[n] + NL;
         continue;
       }
-      if (RunTime.runCmdError.equals(res[n])) {
+      if (SX.runCmdError.equals(res[n])) {
         isError = true;
         continue;
       }

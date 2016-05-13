@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+
+import com.sikulix.core.Content;
 import org.apache.commons.cli.CommandLine;
 import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
@@ -15,7 +17,7 @@ import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
 import org.sikuli.util.CommandArgs;
 import org.sikuli.util.CommandArgsEnum;
-import com.sikulix.core.JythonHelper;
+import com.sikulix.scripting.JythonHelper;
 
 public class Runner {
 
@@ -272,7 +274,7 @@ public class Runner {
       }
       after += beforeJS;
     } else {
-      String commands = runTime.extractResourceToString("JavaScript", "commands.js", "");
+      String commands = Content.extractResourceToString("JavaScript", "commands.js", "");
       if (commands != null) {
         after += commands;
       }
@@ -1041,7 +1043,7 @@ public class Runner {
       if (givenScriptName.endsWith(".skl")) {
         log(-1, "RunBox.run: .skl scripts not yet supported.");
         return -9999;
-//        givenScriptName = ContentManager.unzipSKL(givenScriptName);
+//        givenScriptName = Content.unzipSKL(givenScriptName);
 //        if (givenScriptName == null) {
 //          log(-1, "not possible to make .skl runnable");
 //          return -9999;

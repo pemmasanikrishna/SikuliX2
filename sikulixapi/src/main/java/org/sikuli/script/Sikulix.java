@@ -5,12 +5,8 @@
 package org.sikuli.script;
 
 import com.sikulix.core.*;
-import com.sikulix.core.Image;
 import com.sikulix.core.Location;
-import com.sikulix.core.Match;
-import com.sikulix.core.Pattern;
 import com.sikulix.core.Region;
-import com.sikulix.core.Screen;
 
 import java.io.File;
 
@@ -43,7 +39,10 @@ public class Sikulix extends SX {
 //    log.info("a new Match: %s", new Match());
 //    log.info("a new Window: %s", new Window());
 
-    log.info("Match: %s", new Match().setTarget(10,10));
+//    log.info("Match: %s", new Match().setTarget(10,10));
+    Region reg = new Region(100, 100, 100, 100);
+    Location loc = new Location(0, 0);
+    log.info("Contains: %s", reg.union(loc).contains(new Location(50,50)));
 
     terminate(1, "stopped intentionally");
 
@@ -54,7 +53,7 @@ public class Sikulix extends SX {
     File lastSession = new File(getSXSTORE(), "LastAPIJavaScript.js");
     String runSomeJS = "";
     if (lastSession.exists()) {
-      runSomeJS = ContentManager.readFileToString(lastSession);
+      runSomeJS = Content.readFileToString(lastSession);
     }
     runSomeJS = Commands.inputText("enter some JavaScript (know what you do - may silently die ;-)"
             + "\nexample: run(\"git*\") will run the JavaScript showcase from GitHub"
@@ -64,7 +63,7 @@ public class Sikulix extends SX {
       Commands.popup("Nothing to do!");
     } else {
       while (!runSomeJS.isEmpty()) {
-        ContentManager.writeStringToFile(runSomeJS, lastSession);
+        Content.writeStringToFile(runSomeJS, lastSession);
         Runner.runjs(null, null, runSomeJS, null);
         runSomeJS = Commands.inputText("Edit the JavaScript and/or press OK to run it (again)\n"
                 + "Press Cancel to terminate",

@@ -71,12 +71,12 @@ public class Screen extends Region implements EventObserver, IScreen {
     log(lvl + 1, "initScreens: entry");
     primaryScreen = 0;
     globalRobot = getMouseRobot();
-    screens = new Screen[runTime.nMonitors];
-    screens[0] = new Screen(0, runTime.mainMonitor);
+    screens = new Screen[SX.nMonitors];
+    screens[0] = new Screen(0, SX.mainMonitor);
     screens[0].initScreen();
     int nMonitor = 0;
     for (int i = 1; i < screens.length; i++) {
-      if (nMonitor == runTime.mainMonitor) {
+      if (nMonitor == SX.mainMonitor) {
         nMonitor++;
       }
       screens[i] = new Screen(i, nMonitor);
@@ -88,8 +88,8 @@ public class Screen extends Region implements EventObserver, IScreen {
     if (getNumberScreens() > 1) {
       log(lvl, "initScreens: multi monitor mouse check");
       Location lnow = Mouse.at();
-      float mmd = Settings.MoveMouseDelay;
-      Settings.MoveMouseDelay = 0f;
+      float mmd = SX.MoveMouseDelay;
+      SX.MoveMouseDelay = 0f;
       Location lc = null, lcn = null;
       for (Screen s : screens) {
         lc = s.getCenter();
@@ -103,7 +103,7 @@ public class Screen extends Region implements EventObserver, IScreen {
         }
       }
       Mouse.move(lnow);
-      Settings.MoveMouseDelay = mmd;
+      SX.MoveMouseDelay = mmd;
     }
   }
 
@@ -150,9 +150,9 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   public static Screen as(int id) {
-    if (id < 0 || id >= runTime.nMonitors) {
+    if (id < 0 || id >= SX.nMonitors) {
       Debug.error("Screen(%d) not in valid range 0 to %d - using primary %d",
-          id, runTime.nMonitors - 1, primaryScreen);
+          id, SX.nMonitors - 1, primaryScreen);
       return screens[0];
     } else {
       return screens[id];
@@ -166,9 +166,9 @@ public class Screen extends Region implements EventObserver, IScreen {
    */
   public Screen(int id) {
     super();
-    if (id < 0 || id >= runTime.nMonitors) {
+    if (id < 0 || id >= SX.nMonitors) {
       Debug.error("Screen(%d) not in valid range 0 to %d - using primary %d",
-          id, runTime.nMonitors - 1, primaryScreen);
+          id, SX.nMonitors - 1, primaryScreen);
       curID = primaryScreen;
     } else {
       curID = id;
@@ -266,7 +266,7 @@ public class Screen extends Region implements EventObserver, IScreen {
 //    initScreens();
     Debug.logp("*** monitor configuration [ %s Screen(s)] ***", Screen.getNumberScreens());
     Debug.logp("*** Primary is Screen %d", primaryScreen);
-    for (int i = 0; i < runTime.nMonitors; i++) {
+    for (int i = 0; i < SX.nMonitors; i++) {
       Debug.logp("Screen %d: %s", i, Screen.getScreen(i).toString());
     }
     Debug.logp("*** end monitor configuration ***");
@@ -283,7 +283,7 @@ public class Screen extends Region implements EventObserver, IScreen {
     initScreens(true);
     Debug.logp("*** new monitor configuration [ %s Screen(s)] ***", Screen.getNumberScreens());
     Debug.logp("*** Primary is Screen %d", primaryScreen);
-    for (int i = 0; i < runTime.nMonitors; i++) {
+    for (int i = 0; i < SX.nMonitors; i++) {
       Debug.logp("Screen %d: %s", i, Screen.getScreen(i).toString());
     }
     Debug.error("*** end new monitor configuration ***");
@@ -296,7 +296,7 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   private static int getValidID(int id) {
-    if (id < 0 || id >= runTime.nMonitors) {
+    if (id < 0 || id >= SX.nMonitors) {
       Debug.error("Screen: invalid screen id %d - using primary screen", id);
       return primaryScreen;
     }
@@ -304,9 +304,9 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   private static int getValidMonitor(int id) {
-    if (id < 0 || id >= runTime.nMonitors) {
+    if (id < 0 || id >= SX.nMonitors) {
       Debug.error("Screen: invalid screen id %d - using primary screen", id);
-      return runTime.mainMonitor;
+      return SX.mainMonitor;
     }
     return screens[id].monitor;
   }
@@ -316,7 +316,7 @@ public class Screen extends Region implements EventObserver, IScreen {
    * @return number of available screens
    */
   public static int getNumberScreens() {
-    return runTime.nMonitors;
+    return SX.nMonitors;
   }
 
   /**
@@ -622,11 +622,11 @@ public class Screen extends Region implements EventObserver, IScreen {
   //<editor-fold defaultstate="collapsed" desc="Visual effects">
   @Override
   public void showTarget(Location loc) {
-    showTarget(loc, Settings.SlowMotionDelay);
+    showTarget(loc, SX.SlowMotionDelay);
   }
 
   protected void showTarget(Location loc, double secs) {
-    if (Settings.isShowActions()) {
+    if (SX.isShowActions()) {
       ScreenHighlighter overlay = new ScreenHighlighter(this, null);
       overlay.showTarget(loc, (float) secs);
     }

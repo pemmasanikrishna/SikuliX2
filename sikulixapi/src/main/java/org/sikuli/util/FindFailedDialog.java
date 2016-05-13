@@ -3,7 +3,7 @@
  */
 package org.sikuli.util;
 
-import com.sikulix.core.FindFailedResponse;
+import org.sikuli.script.FindFailedResponse;
 import org.sikuli.script.Pattern;
 
 import java.awt.BorderLayout;

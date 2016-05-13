@@ -2,20 +2,20 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.core;
+package com.sikulix.scripting;
 
-import org.sikuli.script.*;
+import com.sikulix.core.*;
+
+import org.sikuli.script.Mouse;
 
 import java.awt.*;
 import java.lang.reflect.Method;
 
-public class JavaScriptHelper extends SX {
+public class JavaScriptHelper {
 
-  private static JavaScriptHelper sx;
-  static { sx = new JavaScriptHelper("JavaScriptHelper"); }
-  private JavaScriptHelper(String className) {}
+  private static SXLog log = SX.getLogger("JavaScriptHelper");
+  private static int lvl = SXLog.DEBUG;
 
-  static void logCmd(Object... args) {}
   static Screen scr, scrSaved;
 
   /**
@@ -23,7 +23,7 @@ public class JavaScriptHelper extends SX {
    * @return true if we are on Java 8+
    */
   public static boolean isNashorn() {
-    return sx.isJava8();
+    return SX.isJava8();
   }
 
   /**
@@ -50,7 +50,7 @@ public class JavaScriptHelper extends SX {
       newArgs[n] = args[n];
     }
     try {
-      m = com.sikulix.core.Commands.class.getMethod(function, Object[].class);
+      m = SXCommands.class.getMethod(function, Object[].class);
       retVal = m.invoke(null, (Object) newArgs);
     } catch (Exception ex) {
       m = null;
@@ -115,7 +115,7 @@ public class JavaScriptHelper extends SX {
    * @return the used region
    */
   public static Region use(Object... args) {
-    logCmd("use", args);
+    SXCommands.logCmd("use", args);
     scrSaved = null;
     return usex(args);
   }
@@ -127,7 +127,7 @@ public class JavaScriptHelper extends SX {
    * @return the used region
    */
   public static Region use1(Object... args) {
-    logCmd("use1", args);
+    SXCommands.logCmd("use1", args);
     scrSaved = scr;
     return usex(args);
   }
@@ -139,7 +139,7 @@ public class JavaScriptHelper extends SX {
     if (scrSaved != null) {
       scr = scrSaved;
       scrSaved = null;
-      logCmd(lvl, "restored: %s", scr);
+      SXCommands.logCmd("restoreUsed", "restored: %s", scr);
     }
   }
 
@@ -173,15 +173,15 @@ public class JavaScriptHelper extends SX {
    * arg3: minimum similarity to use for search (overwrites Pattern setting)<br>
    * @param args
    * @return the match or throws FindFailed
-   * @throws ExFindFailed
+   * @throws FindFailed
    */
-  public static Match wait(Object... args) throws ExFindFailed {
-    logCmd("wait", args);
+  public static Match wait(Object... args) throws FindFailed {
+    SXCommands.logCmd("wait", args);
     Object[] realArgs = waitArgs(args);
     return waitx((String) realArgs[0], (Pattern) realArgs[1], (Double) realArgs[2], (Float) realArgs[3]);
   }
 
-  private static Match waitx(String image, Pattern pimage, double timeout, float score) throws ExFindFailed {
+  private static Match waitx(String image, Pattern pimage, double timeout, float score) throws FindFailed {
     Object aPattern = null;
     if (image != null) {
       if (score > 0) {
@@ -261,7 +261,7 @@ public class JavaScriptHelper extends SX {
    * @return true if not there from beginning or vanished within wait time, false otherwise
    */
   public static boolean waitVanish(Object... args) {
-    logCmd("waitVanish", args);
+    SXCommands.logCmd("waitVanish", args);
     Object aPattern;
     Object[] realArgs = waitArgs(args);
     String image = (String) realArgs[0];
@@ -289,7 +289,7 @@ public class JavaScriptHelper extends SX {
    * @return the match or null if not found within wait time (no FindFailed exception)
    */
   public static Match exists(Object... args) {
-    logCmd("exists", args);
+    SXCommands.logCmd("exists", args);
     Match match = null;
     Object[] realArgs = waitArgs(args);
     if ((Double) realArgs[2] < 0.0) {
@@ -316,7 +316,7 @@ public class JavaScriptHelper extends SX {
    * @return the evaluated location to where the mouse should have moved
    */
   public static Location hover(Object... args) {
-    logCmd("hover", args);
+    SXCommands.logCmd("hover", args);
     return hoverx(args);
   }
 
@@ -370,7 +370,7 @@ public class JavaScriptHelper extends SX {
    * @return the location, where the click was done
    */
   public static Location click(Object... args) {
-    logCmd("click", args);
+    SXCommands.logCmd("click", args);
     hoverx(args);
     Mouse.click(null, "L");
     return  new Location(); // Mouse.at();
@@ -382,7 +382,7 @@ public class JavaScriptHelper extends SX {
    * @return the location, where the double click was done
    */
   public static Location doubleClick(Object... args) {
-    logCmd("doubleClick", args);
+    SXCommands.logCmd("doubleClick", args);
     hoverx(args);
     Mouse.click(null, "LD");
     return  new Location(); //Mouse.at();
@@ -394,7 +394,7 @@ public class JavaScriptHelper extends SX {
    * @return the location, where the right click was done
    */
   public static Location rightClick(Object... args) {
-    logCmd("rightClick", args);
+    SXCommands.logCmd("rightClick", args);
     hoverx(args);
     Mouse.click(null, "R");
     return  new Location(); //Mouse.at();
@@ -410,7 +410,7 @@ public class JavaScriptHelper extends SX {
    */
 
   public static boolean paste(Object... args) {
-    logCmd("paste", args);
+    SXCommands.logCmd("paste", args);
     Object[] realArgs = typeArgs(args);
     return scr.paste((String) realArgs[0]);
   }
@@ -421,7 +421,7 @@ public class JavaScriptHelper extends SX {
    * @return false if problems with write(), true otherwise
    */
   public static boolean write(Object... args) {
-    logCmd("write", args);
+    SXCommands.logCmd("write", args);
     Object[] realArgs = typeArgs(args);
     return scr.write((String) realArgs[0]);
   }

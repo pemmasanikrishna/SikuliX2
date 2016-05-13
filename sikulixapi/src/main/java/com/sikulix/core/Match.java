@@ -11,7 +11,18 @@ public class Match extends Visual {
   private static vType vClazz = vType.MATCH;
   private static SXLog log = SX.getLogger(vClazz.toString());
 
-  double mScore = 0;
+  //<editor-fold desc="score">
+  double score = 0;
+
+  public Match setScore(double score) {
+    this.score = score;
+    return this;
+  }
+
+  public Double getScore() {
+    return score;
+  }
+  //</editor-fold>
 
   public Match() {
     clazz = vClazz;
@@ -20,20 +31,22 @@ public class Match extends Visual {
 
   public Match(Rectangle rect) {
     clazz = vClazz;
-    init(0, 0, 0, 0);
+    init(rect);
   }
 
   public Match(Visual vis) {
     clazz = vClazz;
     init(vis);
+    if (vis.isMatch()) {
+      setScore(((Match) vis).getScore());
+      setTarget(vis.getTarget());
+    }
   }
 
-  public Match setScore(double score) {
-    mScore = score;
-    return this;
-  }
-
-  public Double getScore(double score) {
-    return score;
+  protected Match(Region reg, Double score, Offset off) {
+    clazz = vClazz;
+    init(reg);
+    setScore(score);
+    setTarget(off);
   }
 }

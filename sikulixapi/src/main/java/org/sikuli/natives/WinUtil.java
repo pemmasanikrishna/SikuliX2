@@ -6,6 +6,7 @@
  */
 package org.sikuli.natives;
 
+import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.script.App;
 import org.sikuli.script.Key;
@@ -78,7 +79,7 @@ public class WinUtil implements OSUtil {
     } else {
       cmd = cmd = "!tasklist /V /FO CSV /NH /FI \"PID eq " + pid.toString() + "\"";
     }
-    String result = RunTime.getRunTime().runcmd(cmd);
+    String result = SX.runcmd(cmd);
     String[] lines = result.split("\r\n");
     if ("0".equals(lines[0].trim())) {
       for (int nl = 1; nl < lines.length; nl++) {
@@ -112,7 +113,7 @@ public class WinUtil implements OSUtil {
     }
     if (app == null) {
       cmd = String.format("!tasklist /V /FO CSV /NH /FI \"IMAGENAME eq %s\"", execName);
-      result = RunTime.getRunTime().runcmd(cmd);
+      result = SX.runcmd(cmd);
       lines = result.split("\r\n");
       if ("0".equals(lines[0].trim())) {
         for (int nl = 1; nl < lines.length; nl++) {
@@ -141,7 +142,7 @@ public class WinUtil implements OSUtil {
     } else {
       cmd = String.format("!tasklist /V /FO CSV /NH /FI \"IMAGENAME eq %s\"", name);
     }
-    String result = RunTime.getRunTime().runcmd(cmd);
+    String result = SX.runcmd(cmd);
     String[] lines = result.split("\r\n");
     if ("0".equals(lines[0].trim())) {
       for (int nl = 1; nl < lines.length; nl++) {
@@ -266,7 +267,7 @@ public class WinUtil implements OSUtil {
       String token = app.window.substring(1);
       if(!token.isEmpty()) {
         switchto(app.window.substring(1), 0);
-        RunTime.pause(1);
+        SX.pause(1);
         new Screen().type(Key.F4, Key.ALT);
         return 0;
       } else {

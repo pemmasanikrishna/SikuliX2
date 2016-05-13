@@ -4,7 +4,7 @@
  */
 package org.sikuli.util;
 
-import com.sikulix.core.ContentManager;
+import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import org.sikuli.script.RunTime;
 import java.awt.Desktop;
@@ -52,7 +52,7 @@ import org.sikuli.util.visual.SplashFrame;
  */
 public class FileManager {
 
-  private static String me = "ContentManager";
+  private static String me = "Content";
   private static int lvl = 3;
 
   private static void log(int level, String message, Object... args) {
@@ -66,8 +66,8 @@ public class FileManager {
   public static int tryGetFileSize(URL aUrl) {
     HttpURLConnection conn = null;
     try {
-      if (ContentManager.getProxy() != null) {
-        conn = (HttpURLConnection) aUrl.openConnection(ContentManager.getProxy());
+      if (Content.getProxy() != null) {
+        conn = (HttpURLConnection) aUrl.openConnection(Content.getProxy());
       } else {
         conn = (HttpURLConnection) aUrl.openConnection();
       }
@@ -97,8 +97,8 @@ public class FileManager {
     HttpURLConnection conn = null;
 		try {
 //			HttpURLConnection.setFollowRedirects(false);
-	    if (ContentManager.getProxy() != null) {
-    		conn = (HttpURLConnection) aURL.openConnection(ContentManager.getProxy());
+	    if (Content.getProxy() != null) {
+    		conn = (HttpURLConnection) aURL.openConnection(Content.getProxy());
       } else {
     		conn = (HttpURLConnection) aURL.openConnection();
       }
@@ -173,8 +173,8 @@ public class FileManager {
       FileOutputStream writer = null;
 			try {
 				writer = new FileOutputStream(fullpath);
-				if (ContentManager.getProxy() != null) {
-					reader = url.openConnection(ContentManager.getProxy()).getInputStream();
+				if (Content.getProxy() != null) {
+					reader = url.openConnection(Content.getProxy()).getInputStream();
 				} else {
 					reader = url.openConnection().getInputStream();
 				}
@@ -275,8 +275,8 @@ public class FileManager {
     InputStream reader = null;
     log(lvl, "download to string from:\n%s,", uSrc);
     try {
-      if (ContentManager.getProxy() != null) {
-        reader = uSrc.openConnection(ContentManager.getProxy()).getInputStream();
+      if (Content.getProxy() != null) {
+        reader = uSrc.openConnection(Content.getProxy()).getInputStream();
       } else {
         reader = uSrc.openConnection().getInputStream();
       }
@@ -1032,7 +1032,7 @@ public class FileManager {
 					}
 				})) {
 			if (!usedImages.contains(image.getName())) {
-				Debug.log(3, "ContentManager: delete not used: %s", image.getName());
+				Debug.log(3, "Content: delete not used: %s", image.getName());
 				image.delete();
 			}
 		}

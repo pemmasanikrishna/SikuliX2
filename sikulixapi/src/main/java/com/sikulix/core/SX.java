@@ -4,6 +4,7 @@
 
 package com.sikulix.core;
 
+import com.sikulix.scripting.JythonHelper;
 import org.apache.commons.cli.*;
 import org.sikuli.script.*;
 import org.sikuli.util.SysJNA;
@@ -22,7 +23,11 @@ import java.util.zip.ZipInputStream;
 
 public class SX {
 
-  // ******************************* Logging ****************************
+  public static Match asMatch(Visual vis) {
+    return (Match) vis;
+  }
+
+// ******************************* Logging ****************************
   static int globalLogLevel = 0;
   static final int lvl = SXLog.DEBUG;
 
@@ -109,7 +114,7 @@ public class SX {
             }
           })) {
             log(lvl, "cleanTemp: " + f.getName());
-            ContentManager.deleteFileOrFolder("#" + f.getAbsolutePath());
+            Content.deleteFileOrFolder("#" + f.getAbsolutePath());
           }
         }
       });
@@ -129,6 +134,7 @@ public class SX {
         terminate(1, shouldTerminate);
       }
     }
+    Content.start();
     sxInstance = "DONE";
   }
 
@@ -223,7 +229,7 @@ public class SX {
     CodeSource codeSrc = sxGlobalClassReference.getProtectionDomain().getCodeSource();
     String base = null;
     if (codeSrc != null && codeSrc.getLocation() != null) {
-      base = ContentManager.slashify(codeSrc.getLocation().getPath(), false);
+      base = Content.slashify(codeSrc.getLocation().getPath(), false);
     }
     appType = "from a jar";
     if (base != null) {
@@ -382,7 +388,7 @@ public class SX {
     File fSXNative = getFile(getSXNATIVE());
     if (!new File(fSXNative, sxLibsCheckName).exists()) {
       log(lvl, "exportNativeLibraries: folder empty or has wrong content");
-      ContentManager.deleteFileOrFolder(fSXNative);
+      Content.deleteFileOrFolder(fSXNative);
     }
     if (fSXNative.exists()) {
       log(lvl, "exportNativeLibraries: folder exists: %s", fSXNative);
@@ -401,7 +407,7 @@ public class SX {
         terminate(1, "exportNativeLibraries: libs not on classpath: " + fpJarLibs);
       }
       log(lvl, "exportNativeLibraries: from: %s", uLibsFrom);
-      extractResourcesToFolder(fpJarLibs, fSXNative, null);
+      Content.extractResourcesToFolder(fpJarLibs, fSXNative, null);
       if (!new File(fSXNative, sflibsCheckFileStored).exists()) {
         terminate(1, "exportNativeLibraries: did not work");
       }
@@ -434,8 +440,8 @@ public class SX {
       }
       String lib = "jawt.dll";
       File fJawtDll = new File(fSXNative, lib);
-      ContentManager.deleteFileOrFolder(fJawtDll);
-      ContentManager.xcopy(new File(getJHOME() + "/bin/" + lib), fJawtDll);
+      Content.deleteFileOrFolder(fJawtDll);
+      Content.xcopy(new File(getJHOME() + "/bin/" + lib), fJawtDll);
       if (!fJawtDll.exists()) {
         terminate(1, "exportNativeLibraries: problem copying %s", fJawtDll);
       }
@@ -662,7 +668,7 @@ public class SX {
       for (String aFile : getFile(SYSTEMP).list()) {
         if ((aFile.startsWith("Sikulix") && (new File(aFile).isFile()))
                 || (aFile.startsWith("jffi") && aFile.endsWith(".tmp"))) {
-          ContentManager.deleteFileOrFolder(new File(getSYSTEMP(), aFile));
+          Content.deleteFileOrFolder(new File(getSYSTEMP(), aFile));
         }
       }
       fSXTempPath.mkdirs();
@@ -1035,7 +1041,7 @@ public class SX {
   }
 
   public static File asExtension(String fpJar) {
-    File fJarFound = new File(ContentManager.normalizeAbsolute(fpJar, false));
+    File fJarFound = new File(Content.normalizeAbsolute(fpJar, false));
     if (!fJarFound.exists()) {
       String fpCPEntry = isOnClasspath(fJarFound.getName());
       if (fpCPEntry == null) {
@@ -1083,7 +1089,7 @@ public class SX {
         sxBuild = sxBuild.replaceAll("\\-", "");
         sxBuild = sxBuild.replaceAll("_", "");
         sxBuild = sxBuild.replaceAll("\\:", "");
-        String sxlocalrepo = ContentManager.slashify(prop.getProperty("sxlocalrepo"), true);
+        String sxlocalrepo = Content.slashify(prop.getProperty("sxlocalrepo"), true);
         String sxJythonVersion = prop.getProperty("sxjython");
         String sxJRubyVersion = prop.getProperty("sxjruby");
 
@@ -1313,10 +1319,10 @@ public class SX {
   }
 
   public static String isOnClasspath(String artefact, boolean isJar) {
-    artefact = ContentManager.slashify(artefact, false);
+    artefact = Content.slashify(artefact, false);
     String cpe = null;
     for (URL entry : storeClassPath()) {
-      String sEntry = ContentManager.slashify(new File(entry.getPath()).getPath(), false);
+      String sEntry = Content.slashify(new File(entry.getPath()).getPath(), false);
       if (sEntry.contains(artefact)) {
         if (isJar) {
           if (!sEntry.endsWith(".jar")) {
@@ -1345,10 +1351,10 @@ public class SX {
   }
 
   public static URL fromClasspath(String artefact) {
-    artefact = ContentManager.slashify(artefact, false).toUpperCase();
+    artefact = Content.slashify(artefact, false).toUpperCase();
     URL cpe = null;
     for (URL entry : storeClassPath()) {
-      String sEntry = ContentManager.slashify(new File(entry.getPath()).getPath(), false);
+      String sEntry = Content.slashify(new File(entry.getPath()).getPath(), false);
       if (sEntry.toUpperCase().contains(artefact)) {
         return entry;
       }
@@ -1705,697 +1711,28 @@ public class SX {
     }
   }
 
-  // ******************************* Proxy ****************************
-
-  static String proxyName = "";
-  static String proxyIP = "";
-  static InetAddress proxyAddress = null;
-  static String proxyPort = "";
-  static boolean proxyChecked = false;
-  static Proxy sxProxy = null;
-
   // ******************************* Extract Ressources ****************************
   static Class sxGlobalClassReference;
 
-  public static List<String> extractTessData(File folder) {
-    List<String> files = new ArrayList<String>();
-
-    String tessdata = "/sikulixtessdata";
-    URL uContentList = sxGlobalClassReference.getResource(tessdata + "/" + fpContent);
-    if (uContentList != null) {
-      files = doResourceListWithList(tessdata, files, null);
-      if (files.size() > 0) {
-        files = doExtractToFolderWithList(tessdata, folder, files);
-      }
-    } else {
-      files = extractResourcesToFolder("/sikulixtessdata", folder, null);
-    }
-    return (files.size() == 0 ? null : files);
-  }
-
-  /**
-   * export all resource files from the given subtree on classpath to the given folder retaining the subtree<br>
-   * to export a specific file from classpath use extractResourceToFile or extractResourceToString
-   *
-   * @param fpRessources path of the subtree relative to root
-   * @param fFolder      folder where to export (if null, only list - no export)
-   * @param filter       implementation of interface FilenameFilter or null for no filtering
-   * @return the filtered list of files (compact sikulixcontent format)
-   */
-  public static List<String> extractResourcesToFolder(String fpRessources, File fFolder, FilenameFilter filter) {
-    List<String> content = null;
-    content = resourceList(fpRessources, filter);
-    if (content == null) {
-      return null;
-    }
-    if (fFolder == null) {
-      return content;
-    }
-    return doExtractToFolderWithList(fpRessources, fFolder, content);
-  }
-
-  private static List<String> doExtractToFolderWithList(String fpRessources, File fFolder, List<String> content) {
-    int count = 0;
-    int ecount = 0;
-    String subFolder = "";
-    if (content != null && content.size() > 0) {
-      for (String eFile : content) {
-        if (eFile == null) {
-          continue;
-        }
-        if (eFile.endsWith("/")) {
-          subFolder = eFile.substring(0, eFile.length() - 1);
-          continue;
-        }
-        if (!subFolder.isEmpty()) {
-          eFile = new File(subFolder, eFile).getPath();
-        }
-        if (extractResourceToFile(fpRessources, eFile, fFolder)) {
-          log(lvl + 1, "extractResourceToFile done: %s", eFile);
-          count++;
-        } else {
-          ecount++;
-        }
-      }
-    }
-    if (ecount > 0) {
-      log(lvl, "files exported: %d - skipped: %d from %s to:\n%s", count, ecount, fpRessources, fFolder);
-    } else {
-      log(lvl, "files exported: %d from: %s to:\n%s", count, fpRessources, fFolder);
-    }
-    return content;
-  }
-
-  /**
-   * export all resource files from the given subtree in given jar to the given folder retaining the subtree
-   *
-   * @param aJar         absolute path to an existing jar or a string identifying the jar on classpath (no leading /)
-   * @param fpRessources path of the subtree or file relative to root
-   * @param fFolder      folder where to export (if null, only list - no export)
-   * @param filter       implementation of interface FilenameFilter or null for no filtering
-   * @return the filtered list of files (compact sikulixcontent format)
-   */
-  public List<String> extractResourcesToFolderFromJar(String aJar, String fpRessources, File fFolder, FilenameFilter filter) {
-    List<String> content = new ArrayList<String>();
-    File faJar = new File(aJar);
-    URL uaJar = null;
-    fpRessources = ContentManager.slashify(fpRessources, false);
-    if (faJar.isAbsolute()) {
-      if (!faJar.exists()) {
-        log(-1, "extractResourcesToFolderFromJar: does not exist: %s", faJar);
-        return null;
-      }
-      try {
-        uaJar = new URL("jar", null, "file:" + aJar);
-        logp("%s", uaJar);
-      } catch (MalformedURLException ex) {
-        log(-1, "extractResourcesToFolderFromJar: bad URL for: %s", faJar);
-        return null;
-      }
-    } else {
-      uaJar = fromClasspath(aJar);
-      if (uaJar == null) {
-        log(-1, "extractResourcesToFolderFromJar: not on classpath: %s", aJar);
-        return null;
-      }
-      try {
-        String sJar = "file:" + uaJar.getPath() + "!/";
-        uaJar = new URL("jar", null, sJar);
-      } catch (MalformedURLException ex) {
-        log(-1, "extractResourcesToFolderFromJar: bad URL for: %s", uaJar);
-        return null;
-      }
-    }
-    content = doResourceListJar(uaJar, fpRessources, content, filter);
-    if (fFolder == null) {
-      return content;
-    }
-    copyFromJarToFolderWithList(uaJar, fpRessources, content, fFolder);
-    return content;
-  }
-
-  /**
-   * store a resource found on classpath to a file in the given folder with same filename
-   *
-   * @param inPrefix a subtree found in classpath
-   * @param inFile   the filename combined with the prefix on classpath
-   * @param outDir   a folder where to export
-   * @return success
-   */
-  public static boolean extractResourceToFile(String inPrefix, String inFile, File outDir) {
-    return extractResourceToFile(inPrefix, inFile, outDir, "");
-  }
-
-  /**
-   * store a resource found on classpath to a file in the given folder
-   *
-   * @param inPrefix a subtree found in classpath
-   * @param inFile   the filename combined with the prefix on classpath
-   * @param outDir   a folder where to export
-   * @param outFile  the filename for export
-   * @return success
-   */
-  public static boolean extractResourceToFile(String inPrefix, String inFile, File outDir, String outFile) {
-    InputStream aIS;
-    FileOutputStream aFileOS;
-    String content = inPrefix + "/" + inFile;
-    try {
-      content = isWindows() ? content.replace("\\", "/") : content;
-      if (!content.startsWith("/")) {
-        content = "/" + content;
-      }
-      aIS = (InputStream) sxGlobalClassReference.getResourceAsStream(content);
-      if (aIS == null) {
-        throw new IOException("resource not accessible");
-      }
-      File out = outFile.isEmpty() ? new File(outDir, inFile) : new File(outDir, inFile);
-      if (!out.getParentFile().exists()) {
-        out.getParentFile().mkdirs();
-      }
-      aFileOS = new FileOutputStream(out);
-      copy(aIS, aFileOS);
-      aIS.close();
-      aFileOS.close();
-    } catch (Exception ex) {
-      log(-1, "extractResourceToFile: %s (%s)", content, ex);
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * store the content of a resource found on classpath in the returned string
-   *
-   * @param inPrefix a subtree from root found in classpath (leading /)
-   * @param inFile   the filename combined with the prefix on classpath
-   * @param encoding
-   * @return file content
-   */
-  public static String extractResourceToString(String inPrefix, String inFile, String encoding) {
-    InputStream aIS = null;
-    String out = null;
-    String content = inPrefix + "/" + inFile;
-    if (!content.startsWith("/")) {
-      content = "/" + content;
-    }
-    try {
-      content = isWindows() ? content.replace("\\", "/") : content;
-      aIS = (InputStream) sxGlobalClassReference.getResourceAsStream(content);
-      if (aIS == null) {
-        throw new IOException("extractResourceToString: resource not accessible: " + content);
-      }
-      if (encoding == null || encoding.isEmpty()) {
-        encoding = "UTF-8";
-        out = new String(copy(aIS), "UTF-8");
-      } else {
-        out = new String(copy(aIS), encoding);
-      }
-      aIS.close();
-      aIS = null;
-    } catch (Exception ex) {
-      log(-1, "extractResourceToString error: %s from: %s (%s)", encoding, content, ex);
-    }
-    try {
-      if (aIS != null) {
-        aIS.close();
-      }
-    } catch (Exception ex) {
-    }
-    return out;
-  }
-
-  public static URL resourceLocation(String folderOrFile) {
-    log(lvl, "resourceLocation: (%s) %s", sxGlobalClassReference, folderOrFile);
-    if (!folderOrFile.startsWith("/")) {
-      folderOrFile = "/" + folderOrFile;
-    }
-    return sxGlobalClassReference.getResource(folderOrFile);
-  }
-
-  private static List<String> resourceList(String folder, FilenameFilter filter) {
-    log(lvl, "resourceList: enter");
-    List<String> files = new ArrayList<String>();
-    if (!folder.startsWith("/")) {
-      folder = "/" + folder;
-    }
-    URL uFolder = resourceLocation(folder);
-    if (uFolder == null) {
-      log(lvl, "resourceList: not found: %s", folder);
-      return files;
-    }
-    try {
-      uFolder = new URL(uFolder.toExternalForm().replaceAll(" ", "%20"));
-    } catch (Exception ex) {
-    }
-    URL uContentList = sxGlobalClassReference.getResource(folder + "/" + fpContent);
-    if (uContentList != null) {
-      return doResourceListWithList(folder, files, filter);
-    }
-    File fFolder = null;
-    try {
-      fFolder = new File(uFolder.toURI());
-      log(lvl, "resourceList: having folder:\n%s", fFolder);
-      String sFolder = ContentManager.normalizeAbsolute(fFolder.getPath(), false);
-      if (":".equals(sFolder.substring(2, 3))) {
-        sFolder = sFolder.substring(1);
-      }
-      files.add(sFolder);
-      files = doResourceListFolder(new File(sFolder), files, filter);
-      files.remove(0);
-      return files;
-    } catch (Exception ex) {
-      if (!"jar".equals(uFolder.getProtocol())) {
-        log(lvl, "resourceList:\n%s", folder);
-        log(-1, "resourceList: URL neither folder nor jar:\n%s", ex);
-        return null;
-      }
-    }
-    String[] parts = uFolder.getPath().split("!");
-    if (parts.length < 2 || !parts[0].startsWith("file:")) {
-      log(lvl, "resourceList:\n%s", folder);
-      log(-1, "resourceList: not a valid jar URL:\n" + uFolder.getPath());
-      return null;
-    }
-    String fpFolder = parts[1];
-    log(lvl, "resourceList: having jar:\n%s", uFolder);
-    return doResourceListJar(uFolder, fpFolder, files, filter);
-  }
-
-  /**
-   * write the list as it is produced by calling extractResourcesToFolder to the given file with system line
-   * separator<br>
-   * non-compact format: every file with full path
-   *
-   * @param folder path of the subtree relative to root with leading /
-   * @param target the file to write the list (if null, only list - no file)
-   * @param filter implementation of interface FilenameFilter or null for no filtering
-   * @return success
-   */
-  public String[] resourceListAsFile(String folder, File target, FilenameFilter filter) {
-    String content = resourceListAsString(folder, filter);
-    if (content == null) {
-      log(-1, "resourceListAsFile: did not work: %s", folder);
-      return null;
-    }
-    if (target != null) {
-      try {
-        ContentManager.deleteFileOrFolder(target.getAbsolutePath());
-        target.getParentFile().mkdirs();
-        PrintWriter aPW = new PrintWriter(target);
-        aPW.write(content);
-        aPW.close();
-      } catch (Exception ex) {
-        log(-1, "resourceListAsFile: %s:\n%s", target, ex);
-      }
-    }
-    return content.split(System.getProperty("line.separator"));
-  }
-
-  /**
-   * write the list as it is produced by calling extractResourcesToFolder to the given file with system line
-   * separator<br>
-   * compact sikulixcontent format
-   *
-   * @param folder       path of the subtree relative to root with leading /
-   * @param targetFolder the folder where to store the file sikulixcontent (if null, only list - no export)
-   * @param filter       implementation of interface FilenameFilter or null for no filtering
-   * @return success
-   */
-  public String[] resourceListAsSXContent(String folder, File targetFolder, FilenameFilter filter) {
-    List<String> contentList = resourceList(folder, filter);
-    if (contentList == null) {
-      log(-1, "resourceListAsSikulixContent: did not work: %s", folder);
-      return null;
-    }
-    File target = null;
-    String arrString[] = new String[contentList.size()];
-    try {
-      PrintWriter aPW = null;
-      if (targetFolder != null) {
-        target = new File(targetFolder, fpContent);
-        ContentManager.deleteFileOrFolder(target);
-        target.getParentFile().mkdirs();
-        aPW = new PrintWriter(target);
-      }
-      int n = 0;
-      for (String line : contentList) {
-        arrString[n++] = line;
-        if (targetFolder != null) {
-          aPW.println(line);
-        }
-      }
-      if (targetFolder != null) {
-        aPW.close();
-      }
-    } catch (Exception ex) {
-      log(-1, "resourceListAsFile: %s:\n%s", target, ex);
-    }
-    return arrString;
-  }
-
-  /**
-   * write the list as it is produced by calling extractResourcesToFolder to the given file with system line
-   * separator<br>
-   * compact sikulixcontent format
-   *
-   * @param aJar         absolute path to an existing jar or a string identifying the jar on classpath (no leading /)
-   * @param folder       path of the subtree relative to root with leading /
-   * @param targetFolder the folder where to store the file sikulixcontent (if null, only list - no export)
-   * @param filter       implementation of interface FilenameFilter or null for no filtering
-   * @return success
-   */
-  public String[] resourceListAsSXContentFromJar(String aJar, String folder, File targetFolder, FilenameFilter filter) {
-    List<String> contentList = extractResourcesToFolderFromJar(aJar, folder, null, filter);
-    if (contentList == null || contentList.size() == 0) {
-      log(-1, "resourceListAsSikulixContentFromJar: did not work: %s", folder);
-      return null;
-    }
-    File target = null;
-    String arrString[] = new String[contentList.size()];
-    try {
-      PrintWriter aPW = null;
-      if (targetFolder != null) {
-        target = new File(targetFolder, fpContent);
-        ContentManager.deleteFileOrFolder(target);
-        target.getParentFile().mkdirs();
-        aPW = new PrintWriter(target);
-      }
-      int n = 0;
-      for (String line : contentList) {
-        arrString[n++] = line;
-        if (targetFolder != null) {
-          aPW.println(line);
-        }
-      }
-      if (targetFolder != null) {
-        aPW.close();
-      }
-    } catch (Exception ex) {
-      log(-1, "resourceListAsFile: %s:\n%s", target, ex);
-    }
-    return arrString;
-  }
-
-  /**
-   * write the list produced by calling extractResourcesToFolder to the returned string with system line separator<br>
-   * non-compact format: every file with full path
-   *
-   * @param folder path of the subtree relative to root with leading /
-   * @param filter implementation of interface FilenameFilter or null for no filtering
-   * @return the resulting string
-   */
-  public String resourceListAsString(String folder, FilenameFilter filter) {
-    return resourceListAsString(folder, filter, null);
-  }
-
-  /**
-   * write the list produced by calling extractResourcesToFolder to the returned string with given separator<br>
-   * non-compact format: every file with full path
-   *
-   * @param folder    path of the subtree relative to root with leading /
-   * @param filter    implementation of interface FilenameFilter or null for no filtering
-   * @param separator to be used to separate the entries
-   * @return the resulting string
-   */
-  public String resourceListAsString(String folder, FilenameFilter filter, String separator) {
-    List<String> aList = resourceList(folder, filter);
-    if (aList == null) {
-      return null;
-    }
-    if (separator == null) {
-      separator = System.getProperty("line.separator");
-    }
-    String out = "";
-    String subFolder = "";
-    if (aList != null && aList.size() > 0) {
-      for (String eFile : aList) {
-        if (eFile == null) {
-          continue;
-        }
-        if (eFile.endsWith("/")) {
-          subFolder = eFile.substring(0, eFile.length() - 1);
-          continue;
-        }
-        if (!subFolder.isEmpty()) {
-          eFile = new File(subFolder, eFile).getPath();
-        }
-        out += eFile.replace("\\", "/") + separator;
-      }
-    }
-    return out;
-  }
-
-  private static List<String> doResourceListFolder(File fFolder, List<String> files, FilenameFilter filter) {
-    int localLevel = lvl + 1;
-    String subFolder = "";
-    if (fFolder.isDirectory()) {
-      if (!ContentManager.pathEquals(fFolder.getPath(), files.get(0))) {
-        subFolder = fFolder.getPath().substring(files.get(0).length() + 1).replace("\\", "/") + "/";
-        if (filter != null && !filter.accept(new File(files.get(0), subFolder), "")) {
-          return files;
-        }
-      } else {
-        log(localLevel, "scanning folder:\n%s", fFolder);
-        subFolder = "/";
-        files.add(subFolder);
-      }
-      String[] subList = fFolder.list();
-      for (String entry : subList) {
-        File fEntry = new File(fFolder, entry);
-        if (fEntry.isDirectory()) {
-          files.add(fEntry.getAbsolutePath().substring(1 + files.get(0).length()).replace("\\", "/") + "/");
-          doResourceListFolder(fEntry, files, filter);
-          files.add(subFolder);
-        } else {
-          if (filter != null && !filter.accept(fFolder, entry)) {
-            continue;
-          }
-          log(localLevel, "from %s adding: %s", (subFolder.isEmpty() ? "." : subFolder), entry);
-          files.add(fEntry.getAbsolutePath().substring(1 + fFolder.getPath().length()));
-        }
-      }
-    }
-    return files;
-  }
-
-  private static List<String> doResourceListWithList(String folder, List<String> files, FilenameFilter filter) {
-    String content = extractResourceToString(folder, fpContent, "");
-    String[] contentList = content.split(content.indexOf("\r") != -1 ? "\r\n" : "\n");
-    if (filter == null) {
-      files.addAll(Arrays.asList(contentList));
-    } else {
-      for (String fpFile : contentList) {
-        if (filter.accept(new File(fpFile), "")) {
-          files.add(fpFile);
-        }
-      }
-    }
-    return files;
-  }
-
-  private static List<String> doResourceListJar(URL uJar, String fpResource, List<String> files, FilenameFilter filter) {
-    int localLevel = lvl + 1;
-    ZipInputStream zJar;
-    String fpJar = uJar.getPath().split("!")[0];
-    String fileSep = "/";
-    if (!fpJar.endsWith(".jar")) {
-      return files;
-    }
-    log(localLevel, "scanning jar:\n%s", uJar);
-    fpResource = fpResource.startsWith("/") ? fpResource.substring(1) : fpResource;
-    File fFolder = new File(fpResource);
-    File fSubFolder = null;
-    ZipEntry zEntry;
-    String subFolder = "";
-    boolean skip = false;
-    try {
-      zJar = new ZipInputStream(new URL(fpJar).openStream());
-      while ((zEntry = zJar.getNextEntry()) != null) {
-        if (zEntry.getName().endsWith("/")) {
-          continue;
-        }
-        String zePath = zEntry.getName();
-        if (zePath.startsWith(fpResource)) {
-          if (fpResource.length() == zePath.length()) {
-            files.add(zePath);
-            return files;
-          }
-          String zeName = zePath.substring(fpResource.length() + 1);
-          int nSep = zeName.lastIndexOf(fileSep);
-          String zefName = zeName.substring(nSep + 1, zeName.length());
-          String zeSub = "";
-          if (nSep > -1) {
-            zeSub = zeName.substring(0, nSep + 1);
-            if (!subFolder.equals(zeSub)) {
-              subFolder = zeSub;
-              fSubFolder = new File(fFolder, subFolder);
-              skip = false;
-              if (filter != null && !filter.accept(fSubFolder, "")) {
-                skip = true;
-                continue;
-              }
-              files.add(zeSub);
-            }
-            if (skip) {
-              continue;
-            }
-          } else {
-            if (!subFolder.isEmpty()) {
-              subFolder = "";
-              fSubFolder = fFolder;
-              files.add("/");
-            }
-          }
-          if (filter != null && !filter.accept(fSubFolder, zefName)) {
-            continue;
-          }
-          files.add(zefName);
-          log(localLevel, "from %s adding: %s", (zeSub.isEmpty() ? "." : zeSub), zefName);
-        }
-      }
-    } catch (Exception ex) {
-      log(-1, "doResourceListJar: %s", ex);
-      return files;
-    }
-    return files;
-  }
-
-  private boolean copyFromJarToFolderWithList(URL uJar, String fpRessource, List<String> files, File fFolder) {
-    int localLevel = testing ? lvl : lvl + 1;
-    if (files == null || files.isEmpty()) {
-      log(lvl, "copyFromJarToFolderWithList: list of files is empty");
-      return false;
-    }
-    String fpJar = uJar.getPath().split("!")[0];
-    if (!fpJar.endsWith(".jar")) {
-      return false;
-    }
-    log(localLevel, "scanning jar:\n%s", uJar);
-    fpRessource = fpRessource.startsWith("/") ? fpRessource.substring(1) : fpRessource;
-
-    String subFolder = "";
-
-    int maxFiles = files.size() - 1;
-    int nFiles = 0;
-
-    ZipEntry zEntry;
-    ZipInputStream zJar;
-    String zPath;
-    int prefix = fpRessource.length();
-    fpRessource += !fpRessource.isEmpty() ? "/" : "";
-    String current = "/";
-    boolean shouldStop = false;
-    try {
-      zJar = new ZipInputStream(new URL(fpJar).openStream());
-      while ((zEntry = zJar.getNextEntry()) != null) {
-        zPath = zEntry.getName();
-        if (zPath.endsWith("/")) {
-          continue;
-        }
-        while (current.endsWith("/")) {
-          if (nFiles > maxFiles) {
-            shouldStop = true;
-            break;
-          }
-          subFolder = current.length() == 1 ? "" : current;
-          current = files.get(nFiles++);
-          if (!current.endsWith("/")) {
-            current = fpRessource + subFolder + current;
-            break;
-          }
-        }
-        if (shouldStop) {
-          break;
-        }
-        if (zPath.startsWith(current)) {
-          if (zPath.length() == fpRessource.length() - 1) {
-            log(-1, "extractResourcesToFolderFromJar: only ressource folders allowed - use filter");
-            return false;
-          }
-          log(localLevel, "copying: %s", zPath);
-          File out = new File(fFolder, zPath.substring(prefix));
-          if (!out.getParentFile().exists()) {
-            out.getParentFile().mkdirs();
-          }
-          FileOutputStream aFileOS = new FileOutputStream(out);
-          copy(zJar, aFileOS);
-          aFileOS.close();
-          if (nFiles > maxFiles) {
-            break;
-          }
-          current = files.get(nFiles++);
-          if (!current.endsWith("/")) {
-            current = fpRessource + subFolder + current;
-          }
-        }
-      }
-      zJar.close();
-    } catch (Exception ex) {
-      log(-1, "doResourceListJar: %s", ex);
-      return false;
-    }
-    return true;
-  }
-
-  private static void copy(InputStream in, OutputStream out) throws IOException {
-    byte[] tmp = new byte[8192];
-    int len;
-    while (true) {
-      len = in.read(tmp);
-      if (len <= 0) {
-        break;
-      }
-      out.write(tmp, 0, len);
-    }
-    out.flush();
-  }
-
-  private static byte[] copy(InputStream inputStream) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    byte[] buffer = new byte[1024];
-    int length = 0;
-    while ((length = inputStream.read(buffer)) != -1) {
-      baos.write(buffer, 0, length);
-    }
-    return baos.toByteArray();
-  }
-
-  public class oneFileFilter implements FilenameFilter {
-
-    String aFile;
-
-    public oneFileFilter(String aFileGiven) {
-      aFile = aFileGiven;
-    }
-
-    @Override
-    public boolean accept(File dir, String name) {
-      if (name.contains(aFile)) {
-        return true;
-      }
-      return false;
-    }
-  }
-
-// ******************************* Commands Pathhandling ****************************
+// ******************************* SXCommands Pathhandling ****************************
 
   static ArrayList<URL> imagePath = new ArrayList<URL>();
 
   private static void initImagePath() {
     if (imagePath.isEmpty()) {
-      imagePath.add(ContentManager.makeURL(getSXIMAGES()));
+      imagePath.add(Content.makeURL(getSXIMAGES()));
     }
   }
 
   public static boolean setBundlePath() {
     initImagePath();
-    imagePath.set(0, ContentManager.makeURL(getSXIMAGES()));
+    imagePath.set(0, Content.makeURL(getSXIMAGES()));
     return true;
   }
 
   public static boolean setBundlePath(String fpPath) {
     initImagePath();
-    URL urlPath = ContentManager.makeURL(fpPath);
+    URL urlPath = Content.makeURL(fpPath);
     if (!isUnset(urlPath)) {
       imagePath.set(0, urlPath);
       return true;
@@ -2417,7 +1754,7 @@ public class SX {
   }
 
   public static boolean addClassPath(String jarOrFolder) {
-    URL uJarOrFolder = ContentManager.makeURL(jarOrFolder);
+    URL uJarOrFolder = Content.makeURL(jarOrFolder);
     if (!new File(jarOrFolder).exists()) {
       log(-1, "addToClasspath: does not exist - not added:\n%s", jarOrFolder);
       return false;
@@ -2441,7 +1778,7 @@ public class SX {
     return true;
   }
 
-  // ******************************* Commands which system ****************************
+  // ******************************* SXCommands which system ****************************
 
   /**
    * @return path seperator : or ;
@@ -2453,7 +1790,7 @@ public class SX {
     return ":";
   }
 
-// ******************************* Commands Clipboard ****************************
+// ******************************* SXCommands Clipboard ****************************
 
   /**
    * @return content
@@ -2471,7 +1808,7 @@ public class SX {
     App.setClipboard(text);
   }
 
-// ******************************* Commands Keys ****************************
+// ******************************* SXCommands Keys ****************************
 
   /**
    * get the lock state of the given key
@@ -2528,7 +1865,7 @@ public class SX {
     return Key.removeHotkey(key, modifiers);
   }
 
-  // ******************************* Commands run something ****************************
+  // ******************************* SXCommands run something ****************************
   public static String NL = "\n";
 
   public final static String runCmdError = "*****error*****";
@@ -2541,7 +1878,7 @@ public class SX {
    * @return the output produced by the command (sysout [+ "*** error ***" + syserr] if the syserr part is present, the
    * command might have failed
    */
-  public String runcmd(String cmd) {
+  public static String runcmd(String cmd) {
     return runcmd(new String[]{cmd});
   }
 
@@ -2553,7 +1890,7 @@ public class SX {
    * @return the output produced by the command (sysout [+ "*** error ***" + syserr] if the syserr part is present, the
    * command might have failed
    */
-  public String runcmd(String args[]) {
+  public static String runcmd(String args[]) {
     if (args.length == 0) {
       return "";
     }
@@ -2634,7 +1971,7 @@ public class SX {
     return String.format("%d%s%s", retVal, NL, result);
   }
 
-  public String getLastCommandResult() {
+  public static String getLastCommandResult() {
     return lastResult;
   }
 
@@ -2682,7 +2019,7 @@ public class SX {
     return ret;
   }
 
-  // ******************************* Commands cleanup ****************************
+  // ******************************* SXCommands cleanup ****************************
   public void cleanUp(int n) {
     log(lvl, "cleanUp: %d", n);
 //    ScreenHighlighter.closeAll();

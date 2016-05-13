@@ -4,7 +4,10 @@
 
 package com.sikulix.core;
 
-import java.awt.*;
+import java.awt.Rectangle;
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class Visual {
 
@@ -20,7 +23,7 @@ public abstract class Visual {
   }
 
   public boolean isRectangle() {
-    return isRegion();
+    return isRegion() || isMatch() || isScreen() || isWindow();
   }
 
   public boolean isLocation() {
@@ -56,44 +59,139 @@ public abstract class Visual {
   }
   //</editor-fold>
 
-  //<editor-fold desc="***** construct, show">
+  //<editor-fold desc="x y w h">
   public int x = 0;
   public int y = 0;
   public int w = -1;
   public int h = -1;
 
+  public int getX() { return x;}
+  public int getY() { return y;}
+  public int getW() { return w;}
+  public int getH() { return h;}
+  //</editor-fold>
+
+  //<editor-fold desc="margin">
   private static int stdW = 50;
   private static int stdH = 50;
+
+  public static int[] getMargin() {
+    return new int[]{stdW, stdH};
+  }
+
+  public static void setMargin(int w, int h) {
+    if (w > 0) {
+      stdW = w;
+    }
+    if (h > 0) {
+      stdH = h;
+    }
+  }
 
   public static void setMargin(int wh) {
     setMargin(wh, wh);
   }
+  //</editor-fold>
 
+  //<editor-fold desc="lastMatch">
   private Match lastMatch = null;
+
+  public Match getLastMatch() {
+    return lastMatch;
+  }
+
+  protected void setLastmatch(Match match) {
+    lastMatch = match;
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="lastMatches">
+  private List<Match> lastMatches = new ArrayList<Match>();
+
+  public List<Match> getLastMatches() {
+    return lastMatches;
+  }
+
+  public void setLastMatches(List<Match> lastMatches) {
+    this.lastMatches = lastMatches;
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="lastCapture">
+  private Image lastCapture = null;
+
+  public Image getLastCapture() {
+    return lastCapture;
+  }
+
+  public void setLastCapture(Image lastCapture) {
+    this.lastCapture = lastCapture;
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="target">
   private Location target = null;
 
+  public Visual setTarget(Visual vis) {
+    if (vis.isOffset()) {
+      target = (Location) getCenter().translate((Offset) vis);
+    } else {
+      target = new Location(vis.x, vis.y);
+    }
+    return this;
+  }
+
+  public Visual setTarget(int x, int y) {
+    target = new Location(x, y);
+    return this;
+  }
+
+  public Location getTarget() {
+    if (SX.isUnset(target)) {
+      target = getCenter();
+    }
+    return target;
+  }
+
+  public Location getMatch() {
+    if (lastMatch != null) {
+      return lastMatch.getTarget();
+    }
+    return getTarget();
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="***** construct, show">
   public void init(int _x, int _y, int _w, int _h) {
-    x = _x; y = _y;
-    w = _w < 0 ? 0 : _w;
-    h = _h < 0 ? 0 : _h;
+    x = _x;
+    y = _y;
+    w = _w;
+    h = _h;
+    if (isPoint()) {
+      w = _w < 0 ? 0 : _w;
+      h = _h < 0 ? 0 : _h;
+    } else if (!isOffset()) {
+      w = _w < 1 ? 1 : _w;
+      h = _h < 1 ? 1 : _h;
+    }
   }
 
   public void init(Rectangle rect) {
-    x = rect.x; y = rect.y; w = rect.width; h = rect.height;
+    init(rect.x, rect.y, rect.width, rect.height);
   }
 
   public void init(Point p) {
-    x = p.x; y = p.y; w = 0; h = 0;
+    init(p.x, p.y, 0, 0);
   }
 
   public void init(Visual vis) {
-    x = vis.x; y = vis.y; w = vis.w; h = vis.h;
+    init(vis.x, vis.y, vis.w, vis.h);
   }
 
   @Override
   public String toString() {
-    if (isLocation()) {
-      return String.format("[\"%s\", [%d, %d]%s]", clazz, x, y, toStringPlus());
+    if (isLocation() || isOffset()) {
+      return String.format("[\"%s\", [%d, %d]]", clazz, x, y);
     }
     return String.format("[\"%s\", [%d, %d, %d, %d]%s]", clazz, x, y, w, h, toStringPlus());
   }
@@ -104,6 +202,7 @@ public abstract class Visual {
 
   /**
    * check wether the given object is in JSON format as ["ID", ...]
+   *
    * @param json
    * @return true if object is in JSON format, false otherwise
    */
@@ -122,26 +221,17 @@ public abstract class Visual {
   //</editor-fold>
 
   //<editor-fold desc="***** get, set, change">
-  public static void setMargin(int w, int h) {
-    if (w  > 0) {
-      stdW = w;
-    }
-    if (h  > 0) {
-      stdH = h;
-    }
-  }
-
-  public static int[] getMargin() {
-    return new int[] {stdW, stdH};
-  }
-
   public Rectangle getRectangle() {
     return new Rectangle(x, y, w, h);
   }
 
-  public void at(int x, int y) {
-    this.x = x;
-    this.y = y;
+  public Visual at(int _x, int _y) {
+    if (!SX.isUnset(target)) {
+      translate(_x - x, _y - y);
+    }
+    x = _x;
+    y = _y;
+    return this;
   }
 
   public Visual translate(int xoff, int yoff) {
@@ -150,24 +240,12 @@ public abstract class Visual {
     return this;
   }
 
-  public Location getTarget() {
-    //TODO implement getTarget()
-    return target;
+  public Visual translate(Offset off) {
+    return translate(off.x, off.y);
   }
 
-  public void setTarget(Object visual) {
-    //TODO implement setTarget()
-  }
-
-  public void setTarget(int x, int y) {
-    target = new Location(x, y);
-  }
-
-  public Location getMatch() {
-    if (lastMatch != null) {
-      return lastMatch.getTarget();
-    }
-    return getTarget();
+  public Location getCenter() {
+    return new Location(x + w/2, y + h/2);
   }
   //</editor-fold>
 
@@ -179,9 +257,21 @@ public abstract class Visual {
   }
 
   public boolean contains(Visual vis) {
+    if (!isRectangle()) {
+      return false;
+    }
+    if (!vis.isRectangle() && !vis.isPoint()) {
+      return false;
+    }
     Rectangle r1 = new Rectangle(x, y, w, h);
     Rectangle r2 = new Rectangle(vis.x, vis.y, vis.w, vis.h);
-    return r1.contains(r2);
+    if (vis.isRectangle()) {
+      return r1.contains(vis.x, vis.y, vis.w, vis.h);
+    }
+    if (vis.isPoint()) {
+      return r1.contains(vis.x, vis.y);
+    }
+    return false;
   }
   //</editor-fold>
 

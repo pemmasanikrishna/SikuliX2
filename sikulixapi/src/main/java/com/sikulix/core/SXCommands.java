@@ -4,29 +4,27 @@
 
 package com.sikulix.core;
 
+import com.sikulix.scripting.JythonHelper;
+import com.sikulix.scripting.Runner;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-class Commands extends SX {
-  private static Commands sx = null;
+public class SXCommands {
 
-  static {
-    sx = new Commands("Command");
-  }
+  private static SXLog log = SX.getLogger("SXCommands");
+  private static int lvl = SXLog.DEBUG;
 
-  private Commands(String s) {
-  }
-
-  static void logCmd(String cmd, Object... args) {
+  public static void logCmd(String cmd, Object... args) {
 		String msg = cmd + ": ";
 		if (args.length == 0) {
-			sx.log(lvl, msg + "no-args");
+			log.log(lvl, msg + "no-args");
 		} else {
 			for (int i = 0; i < args.length; i++) {
 				msg += "%s ";
 			}
-			sx.log(lvl, msg, args);
+			log.log(lvl, msg, args);
 		}
 	}
 
@@ -66,14 +64,14 @@ class Commands extends SX {
       }
       fpJarFound = jython.load(fpJar);
     } else {
-      File fJarFound = sx.asExtension(fpJar);
+      File fJarFound = SX.asExtension(fpJar);
       if (fJarFound != null) {
         fpJarFound = fJarFound.getAbsolutePath();
-        sx.addClassPath(fpJarFound);
+        SX.addClassPath(fpJarFound);
       }
     }
     if (fpJarFound != null && fpJarImagePath != null) {
-      sx.addImagePath(fpJarFound, fpJarImagePath);
+      SX.addImagePath(fpJarFound, fpJarImagePath);
     }
     return fpJarFound;
   }
@@ -259,12 +257,12 @@ class Commands extends SX {
   }
   
   public static String run(String[] cmd) {
-    sx.terminate(1, "run: not implemented");
+    log.terminate(1, "run: not implemented");
     return "";
   }
 
   private static JythonHelper doCompileJythonFolder(JythonHelper jython, File fSource) {
-    String fpSource = ContentManager.slashify(fSource.getAbsolutePath(), false);
+    String fpSource = Content.slashify(fSource.getAbsolutePath(), false);
     if (!jython.exec(String.format("compileall.compile_dir(\"%s\"," + "maxlevels = 0, quiet = 1)", fpSource))) {
       return null;
     }
@@ -276,7 +274,7 @@ class Commands extends SX {
     return jython;
   }
 
-  private static class CompileJythonFilter implements ContentManager.FileFilter {
+  private static class CompileJythonFilter implements Content.FileFilter {
     
     JythonHelper jython = null;
     
@@ -287,7 +285,7 @@ class Commands extends SX {
     @Override
     public boolean accept(File entry) {
       if (jython != null && entry.isDirectory()) {
-        jython = Commands.doCompileJythonFolder(jython, entry);
+        jython = SXCommands.doCompileJythonFolder(jython, entry);
       }
       return false;
     }
@@ -310,27 +308,27 @@ class Commands extends SX {
     JythonHelper jython = JythonHelper.get();
     if (jython != null) {
       File fTarget = new File(fpTarget);
-      ContentManager.deleteFileOrFolder(fTarget);
+      Content.deleteFileOrFolder(fTarget);
       fTarget.mkdirs();
       if (!fTarget.exists()) {
-        sx.log(-1, "compileJythonFolder: target folder not available\n%", fTarget);
+        log.log(-1, "compileJythonFolder: target folder not available\n%", fTarget);
         return false;
       }
       File fSource = new File(fpSource);
       if (!fSource.exists()) {
-        sx.log(-1, "compileJythonFolder: source folder not available\n", fSource);
+        log.log(-1, "compileJythonFolder: source folder not available\n", fSource);
         return false;
       }
       if (fTarget.equals(fSource)) {
-        sx.log(-1, "compileJythonFolder: target folder cannot be the same as the source folder");
+        log.log(-1, "compileJythonFolder: target folder cannot be the same as the source folder");
         return false;
       }
-      ContentManager.xcopy(fSource, fTarget);
+      Content.xcopy(fSource, fTarget);
       if (!jython.exec("import compileall")) {
         return false;
       }
       jython = doCompileJythonFolder(jython, fTarget);
-      ContentManager.traverseFolder(fTarget, new CompileJythonFilter(jython));
+      Content.traverseFolder(fTarget, new CompileJythonFilter(jython));
     }
     return false;
   }
@@ -345,15 +343,15 @@ class Commands extends SX {
    * @return
    */
   public static boolean buildJarFromFolder(String targetJar, String sourceFolder) {
-    sx.log(lvl, "buildJarFromFolder: \nfrom Folder: %s\nto Jar: %s", sourceFolder, targetJar);
+    log.log(lvl, "buildJarFromFolder: \nfrom Folder: %s\nto Jar: %s", sourceFolder, targetJar);
     File fJar = new File(targetJar);
     if (!fJar.getParentFile().exists()) {
-      sx.log(-1, "buildJarFromFolder: parent folder of Jar not available");
+      log.log(-1, "buildJarFromFolder: parent folder of Jar not available");
       return false;
     }
     File fSrc = new File(sourceFolder);
     if (!fSrc.exists() || !fSrc.isDirectory()) {
-      sx.log(-1, "buildJarFromFolder: source folder not available");
+      log.log(-1, "buildJarFromFolder: source folder not available");
       return false;
     }
     String prefix = null;
@@ -363,7 +361,7 @@ class Commands extends SX {
         prefix = prefix.substring(0, prefix.length() - 1);
       }
     }
-    return ContentManager.buildJar(targetJar, new String[]{null}, new String[]{sourceFolder}, new String[]{prefix}, null);
+    return Content.buildJar(targetJar, new String[]{null}, new String[]{sourceFolder}, new String[]{prefix}, null);
   }
 
   public static Object run(Object... args) {
