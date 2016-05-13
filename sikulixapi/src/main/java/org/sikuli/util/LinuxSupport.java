@@ -7,12 +7,10 @@
 package org.sikuli.util;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.io.PrintStream;
 
-import org.sikuli.core.SX;
+import com.sikulix.core.SX;
 import org.sikuli.script.RunTime;
 
 /**
@@ -20,7 +18,7 @@ import org.sikuli.script.RunTime;
  */
 public class LinuxSupport {
 
-  static final RunTime runTime = RunTime.get();
+  static final RunTime rt = RunTime.getRunTime();
 
 	//<editor-fold defaultstate="collapsed" desc="new logging concept">
 	private static final String me = "LinuxSupport: ";
@@ -42,7 +40,7 @@ public class LinuxSupport {
   private static final String buildFolderSrc = "Build/Source";
   private static final String buildFolderInclude = "Build/Include";
   private static final String buildFolderTarget = "Build/Target";
-  static File fLibs = RunTime.fSXNative;
+  static File fLibs = rt.getFile(rt.getSXNATIVE());
   public static final String slibVision = "VisionProxy";
   public static final String libVision = "lib" + slibVision + ".so";
   public static final String libGrabKey = "libJXGrabKey.so";
@@ -56,10 +54,10 @@ public class LinuxSupport {
   private static boolean tessAvail = true;
 
   public static String getLinuxDistro() {
-    if (!SX.isLinux()) {
+    if (!rt.isLinux()) {
       return "";
     }
-    String result = runTime.runcmd("lsb_release -i -r -s");
+    String result = rt.runcmd("lsb_release -i -r -s");
     String linuxDistro = result.replaceAll("\n", " ").trim();
     if (linuxDistro.contains("*** error ***")) {
       log(lvl, "command returns error: lsb_release -i -r -s\n%s", result);
@@ -74,7 +72,7 @@ public class LinuxSupport {
   }
 
   public static boolean copyProvidedLibs(File fLibsFolder) {
-    String[] toCopy = runTime.fLibsProvided.list(new FilenameFilter() {
+    String[] toCopy = rt.fLibsProvided.list(new FilenameFilter() {
       @Override
       public boolean accept(File folder, String name) {
         if (name.endsWith(".so")) {
@@ -86,7 +84,7 @@ public class LinuxSupport {
     boolean success = false;
     if (toCopy != null) {
       for (String aLib : toCopy) {
-        success |= FileManager.xcopy(new File(runTime.fLibsProvided, aLib),
+        success |= FileManager.xcopy(new File(rt.fLibsProvided, aLib),
                 new File(fLibsFolder, aLib));
       }
     }
@@ -97,7 +95,7 @@ public class LinuxSupport {
     boolean success = false;
     if (!isCopiedProvided && !SX.useLibsProvided) {
       success = true;
-      String[] allLibs = runTime.fLibsProvided.list(new FilenameFilter() {
+      String[] allLibs = rt.fLibsProvided.list(new FilenameFilter() {
         @Override
         public boolean accept(File folder, String name) {
           if (name.toLowerCase().endsWith(".so")) {
@@ -108,8 +106,8 @@ public class LinuxSupport {
       });
       if (allLibs != null) {
         for (String sLib : allLibs) {
-          File fSrc = new File(runTime.fLibsProvided, sLib);
-          File fTgt = new File(runTime.fSXNative, sLib);
+          File fSrc = new File(rt.fLibsProvided, sLib);
+          File fTgt = new File(rt.getSXNATIVE(), sLib);
           success &= FileManager.xcopy(fSrc, fTgt);
           log(3, "Copy provided lib: %s (%s)", sLib, (success ? "ok" : "did not work"));
         }
@@ -133,8 +131,8 @@ public class LinuxSupport {
     boolean checkSuccess = true;
     log(lvl, "checking: availability of OpenCV and Tesseract");
     log(lvl, "checking: scanning loader cache (ldconfig -p)");
-    cmdRet = runTime.runcmd("ldconfig -p");
-    if (cmdRet.contains(runTime.runCmdError)) {
+    cmdRet = rt.runcmd("ldconfig -p");
+    if (cmdRet.contains(rt.runCmdError)) {
       log(-1, "checking: ldconfig returns error:\ns", cmdRet);
       checkSuccess = false;
     } else {
@@ -171,15 +169,15 @@ public class LinuxSupport {
       }
     }
     // checking wmctrl, xdotool
-    cmdRet = runTime.runcmd("wmctrl -m");
-    if (cmdRet.contains(runTime.runCmdError)) {
+    cmdRet = rt.runcmd("wmctrl -m");
+    if (cmdRet.contains(rt.runCmdError)) {
       log(-1, "checking: wmctrl not available or not working");
       SX.linuxAppSupport += "wmctrl ";
     } else {
       log(lvl, "checking: wmctrl seems to be available");
     }
-    cmdRet = runTime.runcmd("xdotool version");
-    if (cmdRet.contains(runTime.runCmdError)) {
+    cmdRet = rt.runcmd("xdotool version");
+    if (cmdRet.contains(rt.runCmdError)) {
       SX.linuxAppSupport += "xdotool ";
       log(-1, "checking: xdotool not available or not working");
     } else {
@@ -191,7 +189,7 @@ public class LinuxSupport {
   private static boolean runLdd(File lib) {
     // ldd -r lib
     // undefined symbol: _ZN2cv3MatC1ERKS0_RKNS_5Rect_IiEE	(./libVisionProxy.so)
-    String cmdRet = runTime.runcmd("ldd -r " + lib);
+    String cmdRet = rt.runcmd("ldd -r " + lib);
     String[] retLines;
     boolean success = true;
     retLines = cmdRet.split("continued: build on the fly on Linux at runtime: if bundled do not work, looking for provided - if these do not work, try to build. setup not ready yet. \n");
@@ -214,7 +212,7 @@ public class LinuxSupport {
   }
 
   private static boolean buildVision() {
-    File fLibsSaveDir = runTime.fLibsProvided;
+    File fLibsSaveDir = rt.fLibsProvided;
     fWorkDir = fLibsSaveDir.getParentFile();
     fWorkDir.mkdirs();
     fLibsSaveDir.mkdir();
@@ -260,7 +258,7 @@ public class LinuxSupport {
 
     File cmdFile = new File(fWorkDir, "runBuild");
     String libVisionPath = new File(fTarget, libVision).getAbsolutePath();
-    String sRunBuild = runTime.extractResourceToString("/Support/Linux", "runBuild", "");
+    String sRunBuild = rt.extractResourceToString("/Support/Linux", "runBuild", "");
 
     sRunBuild = sRunBuild.replace("#jdkdir#", javaHome.getAbsolutePath());
 
@@ -282,14 +280,14 @@ public class LinuxSupport {
     }
 
     boolean success = true;
-    success &= (null != runTime.extractResourcesToFolder(
+    success &= (null != rt.extractResourcesToFolder(
             "/srcnativelibs/Vision", fSource, null));
     if (exportIncludeOpenCV) {
-      success &= (null != runTime.extractResourcesToFolder(
+      success &= (null != rt.extractResourcesToFolder(
               "/srcnativelibs/Include/OpenCV", fInclude, null));
     }
     if (exportIncludeTesseract) {
-      success &= (null != runTime.extractResourcesToFolder(
+      success &= (null != rt.extractResourcesToFolder(
               "/srcnativelibs/Include/Tesseract", fInclude, null));
     }
     if (!success) {
@@ -314,8 +312,8 @@ public class LinuxSupport {
 
     if (success && opencvAvail && tessAvail) {
       log(lvl, "buildVision: running build script");
-      String cmdRet = runTime.runcmd(cmdFile.getAbsolutePath());
-      if (cmdRet.contains(runTime.runCmdError)) {
+      String cmdRet = rt.runcmd(cmdFile.getAbsolutePath());
+      if (cmdRet.contains(rt.runCmdError)) {
         log(-1, "buildVision: build script returns error:\n%s", cmdRet);
         return false;
       } else {
@@ -334,9 +332,7 @@ public class LinuxSupport {
       log(-1, "buildVision: could not save:\n%s", providedLib);
       return false;
     }
-    if (runTime.fSXNative.exists()) {
-      copyProvidedLibs(runTime.fSXNative);
-    }
+    copyProvidedLibs(SX.getFile(SX.getSXNATIVE()));
     log(lvl, "buildVision: ending inline build: success:\n%s", providedLib);
     return true;
   }
@@ -352,9 +348,9 @@ public class LinuxSupport {
 //    }
 //    if (fLibs.exists()) {
 //      if (fpLibsJar != null) {
-//        runTime.extractResourcesToFolderFromJar(fpLibsJar, runTime.fpJarLibs, fLibs, null);
+//        rt.extractResourcesToFolderFromJar(fpLibsJar, rt.fpJarLibs, fLibs, null);
 //      } else {
-//        runTime.extractResourcesToFolder(runTime.fpJarLibs, fWorkDir, null);
+//        rt.extractResourcesToFolder(rt.fpJarLibs, fWorkDir, null);
 //      }
 //      libsCheck[0] = new File(fLibs, libVision).getAbsolutePath();
 //      libsCheck[1] = new File(fLibs, libGrabKey).getAbsolutePath();
@@ -397,8 +393,8 @@ public class LinuxSupport {
     log(lvl, "checking\n%s", lib);
     // readelf -d lib
     // 0x0000000000000001 (NEEDED)             Shared library: [libtesseract.so.3]
-    cmdRet = runTime.runcmd("readelf -d " + lib);
-    if (cmdRet.contains(runTime.runCmdError)) {
+    cmdRet = rt.runcmd("readelf -d " + lib);
+    if (cmdRet.contains(rt.runCmdError)) {
       log(-1, "checking: readelf returns error:\ns", cmdRet);
       checkSuccess = false;
     } else {

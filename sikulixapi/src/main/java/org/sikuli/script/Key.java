@@ -6,6 +6,7 @@
  */
 package org.sikuli.script;
 
+import com.sikulix.core.SX;
 import org.sikuli.util.hotkey.HotkeyManager;
 import org.sikuli.util.hotkey.HotkeyListener;
 import java.awt.Toolkit;
@@ -14,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import org.sikuli.util.Debug;
-import org.sikuli.util.Settings;
 
 /**
  * this class implements an interface to the Java key system
@@ -821,7 +821,7 @@ public class Key {
 	 * @return META(CMD) on Mac, CTRL otherwise
 	 */
 	public static int getHotkeyModifier() {
-    if (Settings.isMac()) {
+    if (SX.isMac()) {
       return KeyEvent.VK_META;
     } else {
       return KeyEvent.VK_CONTROL;

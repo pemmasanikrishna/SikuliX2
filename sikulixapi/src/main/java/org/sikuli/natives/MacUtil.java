@@ -6,7 +6,7 @@
  */
 package org.sikuli.natives;
 
-import org.sikuli.core.SX;
+import com.sikulix.core.SX;
 import org.sikuli.script.App;
 import org.sikuli.script.RunTime;
 import org.sikuli.script.Runner;
@@ -84,7 +84,7 @@ public class MacUtil implements OSUtil {
       return app;
     }
     int retVal = Runner.runas(theCmd, true);
-    String result = RunTime.get().getLastCommandResult();
+    String result = RunTime.getRunTime().getLastCommandResult();
     if (retVal > -1) {
       if (!result.contains("NotFound")) {
         String[] parts = result.split(",");

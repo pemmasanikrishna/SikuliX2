@@ -1,7 +1,8 @@
 /*
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package org.sikuli.core;
+
+package com.sikulix.core;
 
 /**
  * INTERNAL USE

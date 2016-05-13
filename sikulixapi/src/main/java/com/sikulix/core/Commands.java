@@ -2,29 +2,20 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package org.sikuli.core;
-
-import org.sikuli.util.Debug;
-import org.sikuli.util.Settings;
+package com.sikulix.core;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 class Commands extends SX {
-  private static String logStamp = "Command";
   private static Commands sx = null;
 
   static {
-    sx = new Commands();
+    sx = new Commands("Command");
   }
 
-  private Commands() {
-    setLogger(logStamp);
+  private Commands(String s) {
   }
 
   static void logCmd(String cmd, Object... args) {
@@ -75,14 +66,14 @@ class Commands extends SX {
       }
       fpJarFound = jython.load(fpJar);
     } else {
-      File fJarFound = asExtension(fpJar);
+      File fJarFound = sx.asExtension(fpJar);
       if (fJarFound != null) {
         fpJarFound = fJarFound.getAbsolutePath();
-        addClassPath(fpJarFound);
+        sx.addClassPath(fpJarFound);
       }
     }
     if (fpJarFound != null && fpJarImagePath != null) {
-      addImagePath(fpJarFound, fpJarImagePath);
+      sx.addImagePath(fpJarFound, fpJarImagePath);
     }
     return fpJarFound;
   }
@@ -268,7 +259,7 @@ class Commands extends SX {
   }
   
   public static String run(String[] cmd) {
-    sxGlobal.terminate(1, "run: not implemented");
+    sx.terminate(1, "run: not implemented");
     return "";
   }
 

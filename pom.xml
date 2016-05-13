@@ -43,6 +43,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <timestamp>${maven.build.timestamp}</timestamp>
     <maven.build.timestamp.format>yyyy-MM-dd_HH:mm</maven.build.timestamp.format>
+    <sxjython>2.7.0</sxjython>
+    <sxjruby>9.0.1.0</sxjruby>
+    <sxrepo>${settings.localRepository}</sxrepo>
   </properties>
 
   <dependencies>

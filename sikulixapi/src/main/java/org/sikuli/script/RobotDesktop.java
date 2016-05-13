@@ -6,7 +6,7 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.core.SX;
+import com.sikulix.core.SX;
 import org.sikuli.util.visual.animation.Animator;
 import org.sikuli.util.visual.animation.AnimatorOutQuarticEase;
 import org.sikuli.util.visual.animation.AnimatorTimeBased;
@@ -37,7 +37,7 @@ public class RobotDesktop extends Robot implements IRobot {
   public static int stdDelay = 10;
   public static int stdMaxElapsed = 1000;
   private Screen scr = null;
-  private static RunTime runTime = RunTime.get();
+  private static RunTime runTime = RunTime.getRunTime();
   private long start;
   private static boolean alwaysNewRobot = false;
   
@@ -180,7 +180,7 @@ public class RobotDesktop extends Robot implements IRobot {
         Debug.error("RobotDesktop: checkMousePosition: should be %s\nbut after move is %s"
 								+ "\nPossible cause in case you did not touch the mouse while script was running:\n"
                 + " Mouse actions are blocked generally or by the frontmost application."
-								+ (Settings.isWindows() ? "\nYou might try to run the SikuliX stuff as admin." : ""),
+								+ (SX.isWindows() ? "\nYou might try to run the SikuliX stuff as admin." : ""),
                 p, new Location(pc));
       }
     }
@@ -262,7 +262,7 @@ public class RobotDesktop extends Robot implements IRobot {
       doKeyPress(KeyEvent.VK_ALT);
     }
     if ((modifiers & KeyModifier.META) != 0) {
-      if (Settings.isWindows()) {
+      if (SX.isWindows()) {
         doKeyPress(KeyEvent.VK_WINDOWS);
       } else {
         doKeyPress(KeyEvent.VK_META);
@@ -282,7 +282,7 @@ public class RobotDesktop extends Robot implements IRobot {
       doKeyRelease(KeyEvent.VK_ALT);
     }
     if ((modifiers & KeyModifier.META) != 0) {
-      if (Settings.isWindows()) {
+      if (SX.isWindows()) {
         doKeyRelease(KeyEvent.VK_WINDOWS);
       } else {
         doKeyRelease(KeyEvent.VK_META);
@@ -372,7 +372,7 @@ public class RobotDesktop extends Robot implements IRobot {
   @Override
   public void typeKey(int key) {
     Debug.log(4, "Robot: doType: %s ( %d )", KeyEvent.getKeyText(key), key);
-    if (Settings.isMac()) {
+    if (SX.isMac()) {
       if (key == Key.toJavaKeyCodeFromText("#N.")) {
         doType(KeyMode.PRESS_ONLY, Key.toJavaKeyCodeFromText("#C."));
         doType(KeyMode.PRESS_RELEASE, key);

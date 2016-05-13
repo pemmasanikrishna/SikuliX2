@@ -43,7 +43,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
-import org.sikuli.core.SX;
+import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
@@ -65,7 +65,7 @@ import org.sikuli.util.Settings;
  */
 public class Image {
 
-  static RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.getRunTime();
 
 //<editor-fold defaultstate="collapsed" desc="logging">
   private static final int lvl = 3;

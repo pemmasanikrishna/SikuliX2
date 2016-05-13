@@ -13,8 +13,9 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import javax.swing.ImageIcon;
+
+import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
-import org.sikuli.util.Settings;
 
 /**
  * INTERNAL USE - UNDER DEVELOPMENT - EXPERIMENTAL
@@ -169,7 +170,7 @@ public class RobotRemote implements IRobot {
       keyPress(KeyEvent.VK_ALT);
     }
     if ((modifiers & KeyModifier.META) != 0) {
-      if (Settings.isWindows()) {
+      if (SX.isWindows()) {
         keyPress(KeyEvent.VK_WINDOWS);
       } else {
         keyPress(KeyEvent.VK_META);

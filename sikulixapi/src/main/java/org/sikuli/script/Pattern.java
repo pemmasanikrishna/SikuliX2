@@ -18,7 +18,7 @@ import java.net.URL;
  */
 public class Pattern {
   
-  static RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.getRunTime();
   
   private static double exactAs = 0.99f;
   

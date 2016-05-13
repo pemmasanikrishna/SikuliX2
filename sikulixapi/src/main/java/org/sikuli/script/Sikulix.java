@@ -4,36 +4,54 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.core.ContentManager;
-import org.sikuli.core.SX;
+import com.sikulix.core.*;
+import com.sikulix.core.Image;
+import com.sikulix.core.Location;
+import com.sikulix.core.Match;
+import com.sikulix.core.Pattern;
+import com.sikulix.core.Region;
+import com.sikulix.core.Screen;
 
 import java.io.File;
 
 public class Sikulix extends SX {
 
-  private Sikulix(String[] args) {
-    logOnGlobal(3);
-    //logOffError();
-    sxinit(args);
-    setLogger("Sikulix");
-  }
+  static SXLog log = null;
 
   public static void main(String[] args) {
-    new Sikulix(args).run(args);
-  }
+//    logOn(1);
+    log = getLogger("Sikulix", args);
+    String[] userArgs = getUserArgs();
+    p("*** User Args ***");
+    for (String arg : userArgs) {
+      p("%s", arg);
+    }
+    p("*** END User Args ***");
 
-  private void run(String[] args) {
+    log.info("Sikulix starting");
 
-    logOn(3);
-    logp("Sikulix starting");
-    show();
-    setBundlePath("org.sikuli.script.Sikulix/ImagesAPI");
+//    show();
+//    logp("before: %s", getBundlePath());
+//    setBundlePath("org.sikuli.script.Sikulix/ImagesAPI");
+//    logp("after: %s", getBundlePath());
+
+//    log.info("a new Screen: %s", new Screen());
+//    log.info("a new Region/Rectangle: %s", new Region());
+//    log.info("a new Location/Point: %s", new Location());
+//    log.info("a new Image: %s", new Image());
+//    log.info("a new Pattern: %s", new Pattern());
+//    log.info("a new Match: %s", new Match());
+//    log.info("a new Window: %s", new Window());
+
+    log.info("Match: %s", new Match().setTarget(10,10));
+
+    terminate(1, "stopped intentionally");
 
     addImagePath("");
 
     terminate(1, "stopped intentionally");
-    
-    File lastSession = new File(SX.fSXStore, "LastAPIJavaScript.js");
+
+    File lastSession = new File(getSXSTORE(), "LastAPIJavaScript.js");
     String runSomeJS = "";
     if (lastSession.exists()) {
       runSomeJS = ContentManager.readFileToString(lastSession);

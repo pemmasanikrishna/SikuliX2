@@ -19,7 +19,7 @@ import java.awt.Rectangle;
  */
 public class Location implements Comparable<Location>{
 
-  static RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.getRunTime();
 
   public int x;
   public int y;

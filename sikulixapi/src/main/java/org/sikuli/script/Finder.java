@@ -25,7 +25,7 @@ import org.sikuli.util.Settings;
 
 public class Finder {
 
-  static RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.getRunTime();
 
   //<editor-fold defaultstate="collapsed" desc="logging">
   private static final int lvl = 3;

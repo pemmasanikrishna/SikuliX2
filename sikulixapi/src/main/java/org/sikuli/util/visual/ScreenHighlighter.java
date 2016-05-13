@@ -6,7 +6,7 @@
  */
 package org.sikuli.util.visual;
 
-import org.sikuli.util.visual.OverlayTransparentWindow;
+import com.sikulix.core.SX;
 import org.sikuli.util.visual.animation.Animator;
 import org.sikuli.util.Settings;
 import org.sikuli.util.Debug;
@@ -98,9 +98,9 @@ public class ScreenHighlighter extends OverlayTransparentWindow implements Mouse
 
   private void init() {
     _opened.add(this);
-    if (Settings.isLinux()) {
+    if (SX.isLinux()) {
       _double_buffered = true;
-    } else if (Settings.isMac()) {
+    } else if (SX.isMac()) {
       _native_transparent = true;
     }
 //		getRootPane().putClientProperty("Window.shadow", Boolean.FALSE);
@@ -171,7 +171,7 @@ public class ScreenHighlighter extends OverlayTransparentWindow implements Mouse
   }
 
   public void highlight(Region r_) {
-    if (Settings.isLinux()) {
+    if (SX.isLinux()) {
       Debug.error("highlight does not work on Linux.");
       return;
     }

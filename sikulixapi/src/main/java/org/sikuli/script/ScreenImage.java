@@ -6,6 +6,7 @@
  */
 package org.sikuli.script;
 
+import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import java.awt.*;
 import java.awt.image.*;
@@ -86,8 +87,7 @@ public class ScreenImage {
 	/**
 	 * create ScreenImage from given region as CV-Mat
 	 *
-	 * @param roi the rectangle it was taken from
-	 * @param img the BufferedImage
+	 * @param aReg the rectangle it was taken from
 	 */
 	public ScreenImage(Region aReg) {
     _reg = aReg;
@@ -185,7 +185,7 @@ public class ScreenImage {
 	 * @return absolute path to stored file
 	 */
   public String save() {
-    File fImage = new File(RunTime.fpSXTempPath,
+    File fImage = new File(SX.getSXTEMP(),
             String.format("sikuliximage-%d.png", new Date().getTime()));
     return saveImage(fImage, false);
   }
@@ -238,7 +238,7 @@ public class ScreenImage {
 	 */
   public String save(String path, String name) {
     if (path == null || path.isEmpty()) {
-      path = RunTime.fpSXTempPath;
+      path = SX.getSXTEMP();
     }
     if (name == null || name.isEmpty()) {
       name = String.format("sikuliximage-%d.png", new Date().getTime());

@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public class ImageGroup {
   
-  static RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.getRunTime();
 
   private static Map<String, ImageGroup> imageGroups =
           Collections.synchronizedMap(new HashMap<String, ImageGroup>());

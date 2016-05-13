@@ -1,10 +1,7 @@
 package org.sikuli.script;
 
 import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.io.File;
-import java.lang.reflect.Method;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -14,30 +11,16 @@ import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import org.sikuli.core.JythonHelper;
+import com.sikulix.core.JythonHelper;
 import org.sikuli.util.Debug;
-import org.sikuli.util.hotkey.HotkeyManager;
 import org.sikuli.util.PreferencesUser;
-import org.sikuli.util.Settings;
-import org.sikuli.script.FindFailed;
-import org.sikuli.script.ImagePath;
-import org.sikuli.script.Location;
-import org.sikuli.script.Match;
-import org.sikuli.script.Mouse;
-import org.sikuli.script.Pattern;
-import org.sikuli.script.Region;
-import org.sikuli.script.RunTime;
-import org.sikuli.script.Runner;
-import org.sikuli.script.Screen;
-import org.sikuli.script.Sikulix;
 import org.sikuli.util.FileManager;
-import org.sikuli.util.visual.ScreenHighlighter;
 
 public class Commands {
 
   public static void terminate(Object... args) {}
 
-  private static RunTime rt = RunTime.get();
+  private static RunTime rt = RunTime.getRunTime();
 
   private static int lvl = 3;
   

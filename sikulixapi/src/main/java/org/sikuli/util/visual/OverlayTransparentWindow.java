@@ -6,11 +6,11 @@
  */
 package org.sikuli.util.visual;
 
-import org.sikuli.core.SX;
+import com.sikulix.core.SX;
 import org.sikuli.util.EventObserver;
 import org.sikuli.util.EventSubject;
-import org.sikuli.util.Settings;
 import org.sikuli.util.Debug;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -19,8 +19,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import org.sikuli.util.EventObserver;
-import org.sikuli.util.EventSubject;
 
 /**
  * INTERNAL USE
@@ -49,29 +47,13 @@ public class OverlayTransparentWindow extends JFrame implements EventSubject {
   private void init(Color col, EventObserver o) {
     setUndecorated(true);
     setAlwaysOnTop(true);
-    if (SX.javaVersion < 7) {
-      dynGetMethod();
-    }
     if (col != null) {
       _obs = o;
       _win = this;
-      if (Settings.javaVersion < 7) {
-        _col = col;
-        try {
-          if (__setWindowOpaque != null) {
-            __setWindowOpaque.invoke(null, (Window) this, false);
-          } else {
-            Debug.error("J6: TransparentWindow.setOpaque: not initialized");
-          }
-        } catch (Exception e) {
-          Debug.error("J6: TransparentWindow.setOpaque: did not work");
-        }
-      } else {
-        try {
-          setBackground(col);
-        } catch (Exception e) {
-          Debug.error("J7: TransparentWindow.setOpaque: did not work");
-        }
+      try {
+        setBackground(col);
+      } catch (Exception e) {
+        Debug.error("J7: TransparentWindow.setOpaque: did not work");
       }
       _panel = new javax.swing.JPanel() {
         @Override
@@ -79,10 +61,6 @@ public class OverlayTransparentWindow extends JFrame implements EventSubject {
           if (g instanceof Graphics2D) {
             Graphics2D g2d = (Graphics2D) g;
             _currG2D = g2d;
-            if (SX.javaVersion < 7) {
-              g2d.setColor(_col);
-              g2d.fillRect(0, 0, getWidth(), getHeight());
-            }
             if (_obs != null) {
               _obs.update(_win);
             }
@@ -115,7 +93,7 @@ public class OverlayTransparentWindow extends JFrame implements EventSubject {
   }
 
   public void setOpacity(float alpha) {
-    if (SX.javaVersion > 6) {
+    if (SX.isJava7()) {
       try {
         Class<?> c = Class.forName("javax.swing.JFrame");
         Method m = c.getMethod("setOpacity", float.class);

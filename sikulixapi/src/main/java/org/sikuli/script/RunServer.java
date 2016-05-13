@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.util.Scanner;
 import javax.script.ScriptEngine;
 
-import org.sikuli.core.SX;
+import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 
 
@@ -44,7 +44,7 @@ public class RunServer {
 			args = new String[0];
 		}
     String userArgs = "";
-    for (String userArg : RunTime.get().getArgs()) {
+    for (String userArg : SX.getUserArgs()) {
       userArgs += userArg + " ";
     }
     if (!userArgs.isEmpty()) {
@@ -66,7 +66,7 @@ public class RunServer {
       }
       String theIP = InetAddress.getLocalHost().getHostAddress();
       String theServer = String.format("%s %d", theIP, port);
-      isRunning = new File(SX.fSXStore, "RunServer.txt");
+      isRunning = new File(SX.getSXSTORE(), "RunServer.txt");
       try {
         isRunning.createNewFile();
         isRunningFile = new FileOutputStream(isRunning);
@@ -400,7 +400,7 @@ public class RunServer {
       File aFolder = new File(path);
       if (path.toLowerCase().startsWith("/home/")) {
         path = path.substring(6);
-        aFolder = new File(SX.fUserHome, path);
+        aFolder = new File(SX.getUSERHOME(), path);
       } else if (path.toLowerCase().startsWith("/net/")) {
         path = "__NET/" + path.substring(5);
         aFolder = new File(path);

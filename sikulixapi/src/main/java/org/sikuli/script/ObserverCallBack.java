@@ -9,7 +9,7 @@ package org.sikuli.script;
 import java.lang.reflect.Method;
 import java.util.EventListener;
 import org.sikuli.util.Debug;
-import org.sikuli.core.JythonHelper;
+import com.sikulix.core.JythonHelper;
 
 /**
  * Use this class to implement call back methods for the Region observers

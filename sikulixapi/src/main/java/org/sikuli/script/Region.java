@@ -18,9 +18,9 @@ import java.util.Iterator;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.sikuli.core.FindFailedResponse;
-import org.sikuli.core.SX;
-import org.sikuli.core.Visual;
+import com.sikulix.core.FindFailedResponse;
+import com.sikulix.core.SX;
+import com.sikulix.core.Visual;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FindFailedDialog;
 import org.sikuli.util.Settings;
@@ -32,7 +32,7 @@ import org.sikuli.util.visual.ScreenHighlighter;
  */
 public class Region {
 
-  static RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.getRunTime();
 
   //<editor-fold defaultstate="collapsed" desc="logging">
   private static final int lvl = 3;

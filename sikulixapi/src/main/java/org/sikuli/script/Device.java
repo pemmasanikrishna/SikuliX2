@@ -18,7 +18,7 @@ import org.sikuli.util.Debug;
  */
 public class Device {
 
-  static RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.getRunTime();
 
   private static String me = "Device: ";
   private static final int lvl = 3;

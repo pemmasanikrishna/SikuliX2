@@ -11,7 +11,7 @@ package org.sikuli.script;
 import java.io.File;
 import java.net.URL;
 import org.sikuli.util.FileManager;
-import org.sikuli.core.JythonHelper;
+import com.sikulix.core.JythonHelper;
 
 /**
  *
@@ -28,7 +28,7 @@ public class SikulixForJython {
   static {
     JythonHelper helper = JythonHelper.get();
     helper.log(lvl, "SikulixForJython: init: starting");
-    RunTime runTime = RunTime.get();
+    RunTime runTime = RunTime.getRunTime();
     String sikuliStuff = "sikuli/Sikuli";
     File fSikuliStuff = helper.existsSysPathModule(sikuliStuff);
     String libSikuli = "/Lib/" + sikuliStuff + ".py";

@@ -3,30 +3,18 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.core.SX;
+import com.sikulix.core.SX;
 
 public class RunTime extends SX {
 
   private static RunTime runTime = null;
 
-  private RunTime() {
+  private RunTime(String className) {
   }
 
-  /**
-   * get the initialized RunTime singleton instance
-   *
-   * @return
-   */
-  public static synchronized RunTime get(Object... args) {
+  public static synchronized RunTime getRunTime() {
     if (runTime == null) {
-      return getRunTime();
-    }
-    return runTime;
-  }
-
-  private static synchronized RunTime getRunTime() {
-    if (runTime == null) {
-      runTime = new RunTime();
+      runTime = new RunTime("RunTime");
     }
     return runTime;
   }

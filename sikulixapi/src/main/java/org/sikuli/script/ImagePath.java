@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
@@ -35,7 +36,7 @@ import org.sikuli.util.Settings;
  */
 public class ImagePath {
 
-  static RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.getRunTime();
 
 //<editor-fold defaultstate="collapsed" desc="logging">
   private static final int lvl = 3;
@@ -709,7 +710,7 @@ public class ImagePath {
 				CodeSource codeSrc = cls.getProtectionDomain().getCodeSource();
 				if (codeSrc != null && codeSrc.getLocation() != null) {
 					URL jarURL = codeSrc.getLocation();
-					if (runTime.runningWinApp || jarURL.getPath().endsWith(".jar")) {
+					if ((SX.isWindows() && SX.isSXASAPP()) || jarURL.getPath().endsWith(".jar")) {
 						pathURL = FileManager.makeURL(jarURL.toString() + "!/" + fpSubPath, "jar");
 					} else {
 						if (fpAltPath == null || fpAltPath.isEmpty()) {

@@ -7,6 +7,8 @@
 package org.sikuli.script;
 
 import java.awt.image.BufferedImage;
+
+import com.sikulix.core.SX;
 import org.sikuli.util.Settings;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Debug;
@@ -19,7 +21,7 @@ import java.io.*;
  */
 public class TextRecognizer {
 
-  static RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.getRunTime();
 
   private static TextRecognizer _instance = null;
   private static boolean initSuccess = false;
@@ -41,7 +43,7 @@ public class TextRecognizer {
       initSuccess = fTessdataPath.exists();
     }
     if(!initSuccess) {
-      fTessdataPath = new File(runTime.fSXAppPath, "SikulixTesseract/tessdata");
+      fTessdataPath = new File(SX.getSXTESSERACT(), "tessdata");
       if (!(initSuccess = fTessdataPath.exists())) {
         if (!(initSuccess = (null != runTime.extractTessData(fTessdataPath)))) {
           Debug.error("TextRecognizer: init: export tessdata not possible - run setup with option 3");

@@ -6,8 +6,7 @@
  */
 package org.sikuli.util.visual;
 
-import org.sikuli.core.SX;
-import org.sikuli.util.Settings;
+import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import java.awt.*;
 import java.awt.event.*;
@@ -15,7 +14,6 @@ import java.awt.image.*;
 import org.sikuli.natives.SysUtil;
 import org.sikuli.script.IScreen;
 import org.sikuli.script.Location;
-import org.sikuli.script.RunTime;
 import org.sikuli.script.Screen;
 import org.sikuli.script.ScreenImage;
 import org.sikuli.script.ScreenUnion;

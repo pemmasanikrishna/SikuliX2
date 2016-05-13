@@ -8,10 +8,9 @@ package org.sikuli.script;
 
 import java.awt.AWTException;
 import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
 import java.util.Date;
 
-import org.sikuli.core.SX;
+import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.EventObserver;
 import org.sikuli.util.EventSubject;
@@ -31,7 +30,7 @@ import org.sikuli.util.visual.ScreenHighlighter;
  */
 public class Screen extends Region implements EventObserver, IScreen {
 
-  static RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.getRunTime();
 
   private static String me = "Screen: ";
   private static int lvl = 3;

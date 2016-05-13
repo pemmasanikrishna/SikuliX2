@@ -6,7 +6,7 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.core.SX;
+import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.natives.OSUtil;
 import org.sikuli.natives.SysUtil;
@@ -31,7 +31,7 @@ import java.util.Map;
  */
 public class App {
 
-  static RunTime runTime = RunTime.get();
+  static RunTime runTime = RunTime.getRunTime();
 
   private static final OSUtil _osUtil = SysUtil.getOSUtil();
   private String appNameGiven;

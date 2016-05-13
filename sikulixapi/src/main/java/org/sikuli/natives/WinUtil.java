@@ -78,7 +78,7 @@ public class WinUtil implements OSUtil {
     } else {
       cmd = cmd = "!tasklist /V /FO CSV /NH /FI \"PID eq " + pid.toString() + "\"";
     }
-    String result = RunTime.get().runcmd(cmd);
+    String result = RunTime.getRunTime().runcmd(cmd);
     String[] lines = result.split("\r\n");
     if ("0".equals(lines[0].trim())) {
       for (int nl = 1; nl < lines.length; nl++) {
@@ -112,7 +112,7 @@ public class WinUtil implements OSUtil {
     }
     if (app == null) {
       cmd = String.format("!tasklist /V /FO CSV /NH /FI \"IMAGENAME eq %s\"", execName);
-      result = RunTime.get().runcmd(cmd);
+      result = RunTime.getRunTime().runcmd(cmd);
       lines = result.split("\r\n");
       if ("0".equals(lines[0].trim())) {
         for (int nl = 1; nl < lines.length; nl++) {
@@ -141,7 +141,7 @@ public class WinUtil implements OSUtil {
     } else {
       cmd = String.format("!tasklist /V /FO CSV /NH /FI \"IMAGENAME eq %s\"", name);
     }
-    String result = RunTime.get().runcmd(cmd);
+    String result = RunTime.getRunTime().runcmd(cmd);
     String[] lines = result.split("\r\n");
     if ("0".equals(lines[0].trim())) {
       for (int nl = 1; nl < lines.length; nl++) {

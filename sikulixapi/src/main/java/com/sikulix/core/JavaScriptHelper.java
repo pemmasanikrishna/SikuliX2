@@ -2,7 +2,7 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package org.sikuli.core;
+package com.sikulix.core;
 
 import org.sikuli.script.*;
 
@@ -10,6 +10,10 @@ import java.awt.*;
 import java.lang.reflect.Method;
 
 public class JavaScriptHelper extends SX {
+
+  private static JavaScriptHelper sx;
+  static { sx = new JavaScriptHelper("JavaScriptHelper"); }
+  private JavaScriptHelper(String className) {}
 
   static void logCmd(Object... args) {}
   static Screen scr, scrSaved;
@@ -19,7 +23,7 @@ public class JavaScriptHelper extends SX {
    * @return true if we are on Java 8+
    */
   public static boolean isNashorn() {
-    return isJava8();
+    return sx.isJava8();
   }
 
   /**
@@ -46,7 +50,7 @@ public class JavaScriptHelper extends SX {
       newArgs[n] = args[n];
     }
     try {
-      m = Commands.class.getMethod(function, Object[].class);
+      m = com.sikulix.core.Commands.class.getMethod(function, Object[].class);
       retVal = m.invoke(null, (Object) newArgs);
     } catch (Exception ex) {
       m = null;
@@ -183,16 +187,16 @@ public class JavaScriptHelper extends SX {
       if (score > 0) {
         aPattern = new Pattern(image).similar(score);
       } else {
-        aPattern = image;
+        aPattern = new Pattern(image);
       }
     } else if (pimage != null) {
       aPattern = pimage;
     }
     if (aPattern != null) {
       if (timeout > -1.0) {
-        return scr.wait(aPattern, timeout);
+        return scr.wait((Pattern) aPattern, timeout);
       }
-      return scr.wait(aPattern);
+      return scr.wait((Pattern) aPattern);
     }
     return null;
   }
@@ -268,15 +272,15 @@ public class JavaScriptHelper extends SX {
       if (score > 0) {
         aPattern = new Pattern(image).similar(score);
       } else {
-        aPattern = image;
+        aPattern = new Pattern(image);
       }
     } else {
       aPattern = pimage;
     }
     if (timeout > -1.0) {
-      return scr.waitVanish(aPattern, timeout);
+      return scr.waitVanish((Pattern) aPattern, timeout);
     }
-    return scr.waitVanish(aPattern);
+    return scr.waitVanish((Pattern) aPattern);
   }
 
   /**
@@ -320,7 +324,7 @@ public class JavaScriptHelper extends SX {
     int len = args.length;
     Match aMatch;
     if (len == 0 || args[0] == null) {
-      Mouse.move(scr.checkMatch());
+      Mouse.move(scr.getMatch());
       return new Location(); // Mouse.at();
     }
     if (len < 4) {
@@ -334,7 +338,7 @@ public class JavaScriptHelper extends SX {
           aMatch = wait(args);
           Mouse.move(aMatch.getTarget());
         } catch (Exception ex) {
-          Mouse.move(scr.checkMatch());
+          Mouse.move(scr.getMatch());
         }
         return new Location(); // Mouse.at();
       } else if (aObj instanceof Region) {
@@ -344,7 +348,7 @@ public class JavaScriptHelper extends SX {
       }
       if (len > 1) {
         if (isNumber(aObj) && isNumber(args[1])) {
-          Mouse.move(scr.checkMatch().offset(getInteger(aObj), getInteger(args[1])));
+          Mouse.move(scr.getMatch().translate(getInteger(aObj), getInteger(args[1])));
           return new Location(); //Mouse.at();
         } else if (len == 3 && loc != null && isNumber(args[1]) && isNumber(args[2])) {
           //Mouse.move(loc.offset(getInteger(args[1], 0), getInteger(args[2], 0)));
@@ -356,7 +360,7 @@ public class JavaScriptHelper extends SX {
         return  new Location(); //Mouse.at();
       }
     }
-    Mouse.move(scr.checkMatch());
+    Mouse.move(scr.getMatch());
     return new Location();  //Mouse.at();
   }
 
@@ -402,24 +406,24 @@ public class JavaScriptHelper extends SX {
   /**
    * just doing a currentRegion.paste(text) (see paste())
    * @param args only one parameter being a String
-   * @return true if paste() returned 1, false otherwise
+   * @return false if problems with paste(), true otherwise
    */
 
   public static boolean paste(Object... args) {
     logCmd("paste", args);
     Object[] realArgs = typeArgs(args);
-    return 0 < scr.paste((String) realArgs[0]);
+    return scr.paste((String) realArgs[0]);
   }
 
   /**
    * just doing a currentRegion.write(text) (see write())
    * @param args only one parameter being a String
-   * @return true if write() returned 1, false otherwise
+   * @return false if problems with write(), true otherwise
    */
   public static boolean write(Object... args) {
     logCmd("write", args);
     Object[] realArgs = typeArgs(args);
-    return 0 < scr.write((String) realArgs[0]);
+    return scr.write((String) realArgs[0]);
   }
 
   private static Object[] typeArgs(Object... args) {
@@ -477,13 +481,12 @@ public class JavaScriptHelper extends SX {
     }
     if ("S".equals(oType)) {
       aObj = new Screen(intFromJSON(json, 5));
-      ((Screen) aObj).setRect(rectFromJSON(json));
+      ((Screen) aObj).init(rectFromJSON(json));
     } else if ("R".equals(oType)) {
       newObj = new Region(rectFromJSON(json));
     } else if ("M".equals(oType)) {
-      double score = dblFromJSON(json, 5)/100;
-      newObj = null; //new Match(new Region(rectFromJSON(json)), score);
-      ((Match) newObj).setTarget(intFromJSON(json, 6), intFromJSON(json, 7));
+      Match newMatch = new Match(rectFromJSON(json)).setScore(dblFromJSON(json, 5)/100);
+      newMatch.setTarget(intFromJSON(json, 6), intFromJSON(json, 7));
     } else if ("L".equals(oType)) {
       newObj = null; //new Location(locFromJSON(json));
     } else if ("P".equals(oType)) {

@@ -6,8 +6,6 @@
  */
 package org.sikuli.util;
 
-import org.sikuli.util.FileManager;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -16,7 +14,7 @@ import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
-import org.sikuli.core.JythonHelper;
+import com.sikulix.core.JythonHelper;
 
 /**
  * Debug is a utility class that wraps println statements and allows more or less command line

@@ -6,7 +6,8 @@
  */
 package org.sikuli.util;
 
-import org.sikuli.util.Debug;
+import com.sikulix.core.SX;
+
 import java.awt.Dimension;
 import java.awt.Event;
 import java.awt.Point;
@@ -128,7 +129,7 @@ public class PreferencesUser {
 
 	private int defaultCaptureHotkeyModifiers() {
 		int mod = Event.SHIFT_MASK + Event.META_MASK;
-		if (!Settings.isMac()) {
+		if (!SX.isMac()) {
 			mod = Event.SHIFT_MASK + Event.CTRL_MASK;
 		}
 		return mod;
@@ -161,7 +162,7 @@ public class PreferencesUser {
 
 	private int defaultStopHotkeyModifiers() {
 		int mod = Event.SHIFT_MASK + Event.META_MASK;
-		if (!Settings.isMac()) {
+		if (!SX.isMac()) {
 			mod = Event.SHIFT_MASK + Event.ALT_MASK;
 		}
 		return mod;

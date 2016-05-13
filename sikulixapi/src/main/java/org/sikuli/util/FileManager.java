@@ -4,7 +4,8 @@
  */
 package org.sikuli.util;
 
-import org.sikuli.core.ContentManager;
+import com.sikulix.core.ContentManager;
+import com.sikulix.core.SX;
 import org.sikuli.script.RunTime;
 import java.awt.Desktop;
 import java.awt.image.BufferedImage;
@@ -24,9 +25,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
-import java.net.Proxy;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
@@ -43,7 +42,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
-import org.sikuli.script.Image;
+
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.Commands;
 import org.sikuli.util.visual.SplashFrame;
@@ -317,7 +316,7 @@ public class FileManager {
   }
 
   public static File createTempDir(String path) {
-    File fTempDir = new File(RunTime.fpSXTempPath, path);
+    File fTempDir = new File(SX.getSXTEMP(), path);
     log(lvl, "createTempDir:\n%s", fTempDir);
     if (!fTempDir.exists()) {
       fTempDir.mkdirs();
@@ -450,7 +449,7 @@ public class FileManager {
   public static File createTempFile(String suffix, String path) {
     String temp1 = "sikuli-";
     String temp2 = "." + suffix;
-    File fpath = new File(RunTime.fpSXTempPath);
+    File fpath = new File(SX.getSXTEMP());
     if (path != null) {
       fpath = new File(path);
     }

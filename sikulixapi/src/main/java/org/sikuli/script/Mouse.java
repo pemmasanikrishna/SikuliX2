@@ -8,6 +8,8 @@ package org.sikuli.script;
 
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+
+import com.sikulix.core.Visual;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Settings;
 
@@ -318,7 +320,12 @@ public class Mouse {
     return move(loc, null);
   }
 
-	/**
+  public static int move(Visual loc) {
+    //TODO ajust for com.sikulix.core.Location
+    return 0;
+  }
+
+  /**
 	 * move the mouse from the current position to the offset position given by the parameters
 	 * @param xoff horizontal offset (&lt; 0 left, &gt; 0 right)
 	 * @param yoff vertical offset (&lt; 0 up, &gt; 0 down)

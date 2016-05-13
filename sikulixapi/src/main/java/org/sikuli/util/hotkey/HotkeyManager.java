@@ -11,14 +11,9 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.sikuli.core.SX;
-import org.sikuli.util.Debug;
+import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.PreferencesUser;
-import org.sikuli.util.PreferencesUser;
-import org.sikuli.util.Settings;
-import org.sikuli.util.Settings;
-import org.sikuli.script.Key;
 import org.sikuli.script.Key;
 
 /**
@@ -113,7 +108,7 @@ public abstract class HotkeyManager {
 
   private static String getKeyModifierText(int modifiers) {
     String txtMod = KeyEvent.getKeyModifiersText(modifiers).toUpperCase();
-    if (Settings.isMac()) {
+    if (SX.isMac()) {
       txtMod = txtMod.replace("META", "CMD");
       txtMod = txtMod.replace("WINDOWS", "CMD");
     } else {

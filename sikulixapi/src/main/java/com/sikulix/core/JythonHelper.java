@@ -1,7 +1,8 @@
 /*
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package org.sikuli.core;
+
+package com.sikulix.core;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -11,9 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JythonHelper extends SX {
-  private static String logStamp = "Jythonhelper";
-
   static JythonHelper instance = null;
+  private JythonHelper(String className) {}
+
   static Object interpreter = null;
   List<String> sysPath = new ArrayList<String>();
   List<String> sysArgv = new ArrayList<String>();
@@ -36,18 +37,14 @@ public class JythonHelper extends SX {
 
   static boolean isJythonReady = false;
 
-  private JythonHelper() {
-    setLogger(logStamp);
-  }
-
   public static JythonHelper get() {
     if (instance == null) {
-      instance = new JythonHelper();
+      instance = new JythonHelper("JythonHelper");
       instance.log(lvl, "init: starting");
       try {
         cInterpreter = Class.forName("org.python.util.PythonInterpreter");
       } catch (Exception ex) {
-        addClassPath("Jython");
+        instance.addClassPath("Jython");
       }
       try {
         cInterpreter = Class.forName("org.python.util.PythonInterpreter");
@@ -391,9 +388,9 @@ public class JythonHelper extends SX {
       fJar = new File(fpBundle, fpJarOrFolder);
       fJar = new File(ContentManager.normalizeAbsolute(fJar.getPath(), false));
       if (!fJar.exists()) {
-        fJar = new File(fSXExtensions, fpJarOrFolder);
+        fJar = new File(instance.getSXEXTENSIONS(), fpJarOrFolder);
         if (!fJar.exists()) {
-          fJar = new File(fSXLib, fpJarOrFolder);
+          fJar = new File(instance.getSXLIB(), fpJarOrFolder);
           if (!fJar.exists()) {
             fJar = null;
           }
@@ -449,7 +446,7 @@ public class JythonHelper extends SX {
       fModule = existsModule(modName, fParentBundle);
     }
     if (fModule == null && packPath != null) {
-//      log(lvl, "findModule: packpath not null");
+//      log(level, "findModule: packpath not null");
     }
     if (fModule == null) {
       fModule = existsSysPathModule(modName);
@@ -591,7 +588,7 @@ public class JythonHelper extends SX {
   }
 
   public void addSitePackages() {
-    File fLibFolder = fSXLib;
+    File fLibFolder = getFile(getSXLIB());
     File fSitePackages = new File(fLibFolder, "site-packages");
     if (fSitePackages.exists()) {
       addSysPath(fSitePackages);
@@ -710,14 +707,12 @@ public class JythonHelper extends SX {
   }
 
   public void showSysPath() {
-    if (isLvl(lvl)) {
       getSysPath();
       log(lvl, "***** Jython sys.path");
       for (int i = 0; i < sysPath.size(); i++) {
         logp("%2d: %s", i, sysPath.get(i));
       }
       log(lvl, "***** Jython sys.path end");
-    }
   }
 
   private static class CompileJythonFilter implements ContentManager.FileFilter {

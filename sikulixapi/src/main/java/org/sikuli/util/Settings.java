@@ -6,7 +6,7 @@
  */
 package org.sikuli.util;
 
-import org.sikuli.core.SX;
+import com.sikulix.core.SX;
 
 public class Settings extends SX {
 

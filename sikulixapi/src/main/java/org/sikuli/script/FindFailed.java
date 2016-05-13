@@ -6,7 +6,7 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.core.ExFindFailed;
+import com.sikulix.core.ExFindFailed;
 
 /**
  * implements the SikuliX FindFailed exception class

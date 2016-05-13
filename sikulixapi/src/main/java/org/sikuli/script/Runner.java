@@ -4,27 +4,24 @@ import java.io.File;
 import java.io.FileReader;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import org.apache.commons.cli.CommandLine;
-import org.sikuli.core.SX;
+import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Settings;
 import org.sikuli.util.CommandArgs;
 import org.sikuli.util.CommandArgsEnum;
-import org.sikuli.core.JythonHelper;
-
-import static org.sikuli.core.SX.isIDE;
+import com.sikulix.core.JythonHelper;
 
 public class Runner {
 
   static final String me = "Runner: ";
   static final int lvl = 3;
-  static final RunTime runTime = RunTime.get();
+  static final RunTime runTime = RunTime.getRunTime();
 
   public static Map<String, String> endingTypes = new HashMap<String, String>();
   public static Map<String, String> typeEndings = new HashMap<String, String>();
@@ -255,7 +252,7 @@ public class Runner {
     } else {
       Commands.terminate(1, "ScriptingEngine for JavaScript not available");
     }
-    if (isIDE()) {
+    if (SX.isIDE()) {
       try {
         cIDE = Class.forName("org.sikuli.ide.SikuliIDE");
         mHide = cIDE.getMethod("hideIDE", new Class[0]);
@@ -404,7 +401,7 @@ public class Runner {
           header += scriptLocation + "\n";
           if (Debug.is() > 2) {
             FileManager.writeStringToFile(header + trailer + content,
-                    new File(SX.fSXStore, "LastScriptFromNet.txt"));
+                    new File(SX.getSXSTORE(), "LastScriptFromNet.txt"));
           }
         }
       } else {
@@ -902,7 +899,7 @@ public class Runner {
         return -999;
       }
       if (args == null || args.length == 0) {
-        args = RunTime.get().getArgs();
+        args = SX.getUserArgs();
       }
       String[] newArgs = new String[args.length + 1];
       for (int i = 0; i < args.length; i++) {
@@ -1002,7 +999,7 @@ public class Runner {
 
     static File scriptProject = null;
     static URL uScriptProject = null;
-    RunTime runTime = RunTime.get();
+    RunTime runTime = RunTime.getRunTime();
     boolean asTest = false;
     String[] args = new String[0];
 

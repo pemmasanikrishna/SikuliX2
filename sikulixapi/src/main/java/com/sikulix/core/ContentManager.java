@@ -1,11 +1,11 @@
 /*
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package org.sikuli.core;
+
+package com.sikulix.core;
 
 import org.sikuli.script.Commands;
 import org.sikuli.script.ImagePath;
-import org.sikuli.script.RunTime;
 import org.sikuli.util.PreferencesUser;
 import org.sikuli.util.visual.SplashFrame;
 
@@ -25,15 +25,7 @@ import java.util.zip.ZipOutputStream;
 
 public class ContentManager extends SX {
 
-  private static ContentManager cm;
-
-  static {
-    cm = new ContentManager();
-  }
-
-  private ContentManager() {
-    setLogger("ContentManager");
-  }
+  private static SX sx;
 
   static final int DOWNLOAD_BUFFER_SIZE = 153600;
   private static SplashFrame _progress = null;
@@ -120,7 +112,7 @@ public class ContentManager extends SX {
       }
       if (a != null && p > 1024) {
         proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(a, p));
-        cm.log(lvl, "Proxy defined: %s : %d", a.getHostAddress(), p);
+        sx.log(lvl, "Proxy defined: %s : %d", a.getHostAddress(), p);
       }
       proxyChecked = true;
       sxProxy = proxy;
@@ -148,7 +140,7 @@ public class ContentManager extends SX {
       p = getProxyPort(pPort);
     }
     if (a != null && p > 1024) {
-      cm.log(lvl, "Proxy stored: %s : %d", a.getHostAddress(), p);
+      sx.log(lvl, "Proxy stored: %s : %d", a.getHostAddress(), p);
       proxyChecked = true;
       proxyName = host;
       proxyIP = adr;
@@ -182,12 +174,12 @@ public class ContentManager extends SX {
     File fullpath = new File(localPath);
     if (fullpath.exists()) {
       if (fullpath.isFile()) {
-        cm.log(-1, "download: target path must be a folder:\n%s", localPath);
+        sx.log(-1, "download: target path must be a folder:\n%s", localPath);
         fullpath = null;
       }
     } else {
       if (!fullpath.mkdirs()) {
-        cm.log(-1, "download: could not create target folder:\n%s", localPath);
+        sx.log(-1, "download: could not create target folder:\n%s", localPath);
         fullpath = null;
       }
     }
@@ -195,9 +187,9 @@ public class ContentManager extends SX {
       srcLength = tryGetFileSize(url);
       srcLengthKB = (int) (srcLength / 1024);
       if (srcLength > 0) {
-        cm.log(lvl, "Downloading %s having %d KB", filename, srcLengthKB);
+        sx.log(lvl, "Downloading %s having %d KB", filename, srcLengthKB);
 			} else {
-        cm.log(lvl, "Downloading %s with unknown size", filename);
+        sx.log(lvl, "Downloading %s with unknown size", filename);
 			}
 			fullpath = new File(localPath, filename);
 			targetPath = fullpath.getAbsolutePath();
@@ -237,10 +229,10 @@ public class ContentManager extends SX {
 					}
 				}
 				writer.close();
-				cm.log(lvl, "downloaded %d KB to:\n%s", (int) (totalBytesRead / 1024), targetPath);
-				cm.log(lvl, "download time: %d", (int) (((new Date()).getTime() - begin_t) / 1000));
+				sx.log(lvl, "downloaded %d KB to:\n%s", (int) (totalBytesRead / 1024), targetPath);
+				sx.log(lvl, "download time: %d", (int) (((new Date()).getTime() - begin_t) / 1000));
 			} catch (Exception ex) {
-				cm.log(-1, "problems while downloading\n%s", ex);
+				sx.log(-1, "problems while downloading\n%s", ex);
 				targetPath = null;
 			} finally {
 				if (reader != null) {
@@ -287,7 +279,7 @@ public class ContentManager extends SX {
     try {
       urlSrc = new URL(url);
     } catch (MalformedURLException ex) {
-      cm.log(-1, "download: bad URL: " + url);
+      sx.log(-1, "download: bad URL: " + url);
       return null;
     }
     return downloadURL(urlSrc, localPath);
@@ -303,7 +295,7 @@ public class ContentManager extends SX {
     try {
       url = new URL(src);
     } catch (MalformedURLException ex) {
-      cm.log(-1, "download to string: bad URL:\n%s", src);
+      sx.log(-1, "download to string: bad URL:\n%s", src);
       return null;
     }
     return downloadURLtoString(url);
@@ -312,7 +304,7 @@ public class ContentManager extends SX {
   public static String downloadURLtoString(URL uSrc) {
     String content = "";
     InputStream reader = null;
-    cm.log(lvl, "download to string from:\n%s,", uSrc);
+    sx.log(lvl, "download to string from:\n%s,", uSrc);
     try {
       if (getProxy() != null) {
         reader = uSrc.openConnection(getProxy()).getInputStream();
@@ -325,7 +317,7 @@ public class ContentManager extends SX {
         content += (new String(Arrays.copyOfRange(buffer, 0, bytesRead), Charset.forName("utf-8")));
       }
     } catch (Exception ex) {
-      cm.log(-1, "problems while downloading\n" + ex.getMessage());
+      sx.log(-1, "problems while downloading\n" + ex.getMessage());
     } finally {
       if (reader != null) {
         try {
@@ -348,22 +340,22 @@ public class ContentManager extends SX {
       URL u = new URL(url);
       Desktop.getDesktop().browse(u.toURI());
     } catch (Exception ex) {
-      cm.log(-1, "show in browser: bad URL: " + url);
+      sx.log(-1, "show in browser: bad URL: " + url);
       return false;
     }
     return true;
   }
 
   public static File createTempDir(String path) {
-    File fTempDir = new File(RunTime.fpSXTempPath, path);
-    cm.log(lvl, "createTempDir:\n%s", fTempDir);
+    File fTempDir = new File(sx.getSXTEMP(), path);
+    sx.log(lvl, "createTempDir:\n%s", fTempDir);
     if (!fTempDir.exists()) {
       fTempDir.mkdirs();
     } else {
       ContentManager.resetFolder(fTempDir);
     }
     if (!fTempDir.exists()) {
-      cm.log(-1, "createTempDir: not possible: %s", fTempDir);
+      sx.log(-1, "createTempDir: not possible: %s", fTempDir);
       return null;
     }
     return fTempDir;
@@ -376,15 +368,10 @@ public class ContentManager extends SX {
     }
     return fTempDir;
   }
-  
-  public static int getRandomInt() {
-    int rand = 1 + new Random().nextInt();
-    return (rand < 0 ? rand * -1 : rand);
-  }
 
   public static void deleteTempDir(String path) {
     if (!deleteFileOrFolder(path)) {
-      cm.log(-1, "deleteTempDir: not possible");
+      sx.log(-1, "deleteTempDir: not possible");
     }
   }
 
@@ -400,7 +387,7 @@ public class ContentManager extends SX {
     if (fpPath.startsWith("#")) {
       fpPath = fpPath.substring(1);
     } else {
-  		cm.log(lvl, "deleteFileOrFolder: %s\n%s", (filter == null ? "" : "filtered: "), fpPath);
+  		sx.log(lvl, "deleteFileOrFolder: %s\n%s", (filter == null ? "" : "filtered: "), fpPath);
     }
     return doDeleteFileOrFolder(new File(fpPath), filter);
 	}
@@ -409,13 +396,13 @@ public class ContentManager extends SX {
     if (fpPath.startsWith("#")) {
       fpPath = fpPath.substring(1);
     } else {
-  		cm.log(lvl, "deleteFileOrFolder:\n%s", fpPath);
+  		sx.log(lvl, "deleteFileOrFolder:\n%s", fpPath);
     }
     return doDeleteFileOrFolder(new File(fpPath), null);
   }
 
   public static void resetFolder(File fPath) {
-		cm.log(lvl, "resetFolder:\n%s", fPath);
+		sx.log(lvl, "resetFolder:\n%s", fPath);
     doDeleteFileOrFolder(fPath, null);
     fPath.mkdirs();
   }
@@ -443,7 +430,7 @@ public class ContentManager extends SX {
           try {
             aFile.delete();
           } catch (Exception ex) {
-            cm.log(-1, "deleteFile: not deleted:\n%s\n%s", aFile, ex);
+            sx.log(-1, "deleteFile: not deleted:\n%s\n%s", aFile, ex);
             return false;
           }
         }
@@ -454,7 +441,7 @@ public class ContentManager extends SX {
       try {
         fPath.delete();
       } catch (Exception ex) {
-        cm.log(-1, "deleteFolder: not deleted:\n" + fPath.getAbsolutePath() + "\n" + ex.getMessage());
+        sx.log(-1, "deleteFolder: not deleted:\n" + fPath.getAbsolutePath() + "\n" + ex.getMessage());
         return false;
       }
     }
@@ -488,7 +475,7 @@ public class ContentManager extends SX {
   public static File createTempFile(String suffix, String path) {
     String temp1 = "sikuli-";
     String temp2 = "." + suffix;
-    File fpath = new File(RunTime.fpSXTempPath);
+    File fpath = new File(sx.getSXTEMP());
     if (path != null) {
       fpath = new File(path);
     }
@@ -498,11 +485,11 @@ public class ContentManager extends SX {
       temp.deleteOnExit();
       String fpTemp = temp.getAbsolutePath();
       if (!fpTemp.endsWith(".script")) {
-        cm.log(lvl, "tempfile create:\n%s", temp.getAbsolutePath());
+        sx.log(lvl, "tempfile create:\n%s", temp.getAbsolutePath());
       }
       return temp;
     } catch (IOException ex) {
-      cm.log(-1, "createTempFile: IOException: %s\n%s", ex.getMessage(),
+      sx.log(-1, "createTempFile: IOException: %s\n%s", ex.getMessage(),
               fpath + File.separator + temp1 + "12....56" + temp2);
       return null;
     }
@@ -559,14 +546,14 @@ public class ContentManager extends SX {
   public static boolean unzip(File fZip, File fTarget) {
     String fpZip = null;
     String fpTarget = null;
-    cm.log(lvl, "unzip: from: %s\nto: %s", fZip, fTarget);
+    sx.log(lvl, "unzip: from: %s\nto: %s", fZip, fTarget);
     try {
       fpZip = fZip.getCanonicalPath();
       if (!new File(fpZip).exists()) {
         throw new IOException();
       }
     } catch (IOException ex) {
-      cm.log(-1, "unzip: source not found:\n%s\n%s", fpZip, ex);
+      sx.log(-1, "unzip: source not found:\n%s\n%s", fpZip, ex);
       return false;
     }
     try {
@@ -577,7 +564,7 @@ public class ContentManager extends SX {
         throw new IOException();
       }
     } catch (IOException ex) {
-      cm.log(-1, "unzip: target cannot be created:\n%s\n%s", fpTarget, ex);
+      sx.log(-1, "unzip: target cannot be created:\n%s\n%s", fpTarget, ex);
       return false;
     }
     ZipInputStream inpZip = null;
@@ -605,14 +592,14 @@ public class ContentManager extends SX {
         dest.close();
       }
     } catch (Exception ex) {
-      cm.log(-1, "unzip: not possible: source:\n%s\ntarget:\n%s\n(%s)%s",
+      sx.log(-1, "unzip: not possible: source:\n%s\ntarget:\n%s\n(%s)%s",
           fpZip, fpTarget, entry.getName(), ex);
       return false;
     } finally {
       try {      
         inpZip.close();
       } catch (IOException ex) {
-        cm.log(-1, "unzip: closing source:\n%s\n%s", fpZip, ex);
+        sx.log(-1, "unzip: closing source:\n%s\n%s", fpZip, ex);
       }
     }
     return true;
@@ -625,7 +612,7 @@ public class ContentManager extends SX {
     try {
       doXcopy(fSrc, fDest, null);
     } catch (Exception ex) {
-      cm.log(lvl, "xcopy from: %s\nto: %s\n%s", fSrc, fDest, ex);
+      sx.log(lvl, "xcopy from: %s\nto: %s\n%s", fSrc, fDest, ex);
       return false;
     }
     return true;
@@ -638,7 +625,7 @@ public class ContentManager extends SX {
     try {
       doXcopy(fSrc, fDest, filter);
     } catch (Exception ex) {
-      cm.log(lvl, "xcopy from: %s\nto: %s\n%s", fSrc, fDest, ex);
+      sx.log(lvl, "xcopy from: %s\nto: %s\n%s", fSrc, fDest, ex);
       return false;
     }
     return true;
@@ -808,7 +795,7 @@ public class ContentManager extends SX {
         try {
           path = URLDecoder.decode(path, "UTF-8");
         } catch (Exception ex) {
-					cm.log(lvl, "slashify: decoding problem with %s\nwarning: filename might not be useable.", path);
+					sx.log(lvl, "slashify: decoding problem with %s\nwarning: filename might not be useable.", path);
         }
       }
       if (File.separatorChar != '/') {
@@ -1071,7 +1058,7 @@ public class ContentManager extends SX {
 					}
 				})) {
 			if (!usedImages.contains(image.getName())) {
-				cm.log(3, "ContentManager: delete not used: %s", image.getName());
+				sx.log(3, "ContentManager: delete not used: %s", image.getName());
 				image.delete();
 			}
 		}
@@ -1114,7 +1101,7 @@ public class ContentManager extends SX {
       if (!jarPath.endsWith(".jar")) RunningFromJar = "N";
       jarParentPath = ContentManager.slashify((new File(jarPath)).getParent(), true);
     } else {
-      cm.log(-1, "Fatal Error 101: Not possible to access the jar files!");
+      sx.log(-1, "Fatal Error 101: Not possible to access the jar files!");
       Commands.terminate(101);
     }
     return RunningFromJar + jarParentPath;
@@ -1146,7 +1133,7 @@ public class ContentManager extends SX {
       out = new PrintStream(new FileOutputStream(fPath));
       out.print(text);
     } catch (Exception e) {
-      cm.log(-1,"writeStringToFile: did not work: " + fPath + "\n" + e.getMessage());
+      sx.log(-1,"writeStringToFile: did not work: " + fPath + "\n" + e.getMessage());
     }
     if (out != null) {
       out.close();
@@ -1188,7 +1175,7 @@ public class ContentManager extends SX {
     }
     folderName = ContentManager.slashify(folderName, true);
     if (!(new File(folderName)).isDirectory()) {
-      cm.log(-1, "packJar: not a directory or does not exist: " + folderName);
+      sx.log(-1, "packJar: not a directory or does not exist: " + folderName);
       return false;
     }
     try {
@@ -1200,7 +1187,7 @@ public class ContentManager extends SX {
       } else {
         throw new Exception("workdir is null");
       }
-      cm.log(lvl, "packJar: %s from %s in workDir %s", jarName, folderName, dir.getAbsolutePath());
+      sx.log(lvl, "packJar: %s from %s in workDir %s", jarName, folderName, dir.getAbsolutePath());
       if (!folderName.startsWith("http://") && !folderName.startsWith("https://")) {
         folderName = "file://" + (new File(folderName)).getAbsolutePath();
       }
@@ -1209,10 +1196,10 @@ public class ContentManager extends SX {
       addToJar(jout, new File(src.getFile()), prefix);
       jout.close();
     } catch (Exception ex) {
-      cm.log(-1, "packJar: " + ex.getMessage());
+      sx.log(-1, "packJar: " + ex.getMessage());
       return false;
     }
-    cm.log(lvl, "packJar: completed");
+    sx.log(lvl, "packJar: completed");
     return true;
   }
 
@@ -1222,9 +1209,9 @@ public class ContentManager extends SX {
     if (targetJar.startsWith("#")) {
       logShort = true;
       targetJar = targetJar.substring(1);
-      cm.log(lvl, "buildJar: %s", new File(targetJar).getName());
+      sx.log(lvl, "buildJar: %s", new File(targetJar).getName());
     } else {
-      cm.log(lvl, "buildJar:\n%s", targetJar);
+      sx.log(lvl, "buildJar:\n%s", targetJar);
     }
     try {
       JarOutputStream jout = new JarOutputStream(new FileOutputStream(targetJar));
@@ -1234,9 +1221,9 @@ public class ContentManager extends SX {
           continue;
         }
         if (logShort) {
-          cm.log(lvl, "buildJar: adding: %s", new File(jars[i]).getName());
+          sx.log(lvl, "buildJar: adding: %s", new File(jars[i]).getName());
         } else {
-          cm.log(lvl, "buildJar: adding:\n%s", jars[i]);
+          sx.log(lvl, "buildJar: adding:\n%s", jars[i]);
         }
         BufferedInputStream bin = new BufferedInputStream(new FileInputStream(jars[i]));
         ZipInputStream zin = new ZipInputStream(bin);
@@ -1248,7 +1235,7 @@ public class ContentManager extends SX {
                 bufferedWrite(zin, jout);
               }
               done.add(zipentry.getName());
-              cm.log(lvl+1, "adding: %s", zipentry.getName());
+              sx.log(lvl+1, "adding: %s", zipentry.getName());
             }
           }
         }
@@ -1261,19 +1248,19 @@ public class ContentManager extends SX {
 						continue;
 					}
           if (logShort) {
-            cm.log(lvl, "buildJar: adding %s at %s", new File(files[i]).getName(), prefixs[i]);
+            sx.log(lvl, "buildJar: adding %s at %s", new File(files[i]).getName(), prefixs[i]);
           } else {
-            cm.log(lvl, "buildJar: adding %s at %s", files[i], prefixs[i]);
+            sx.log(lvl, "buildJar: adding %s at %s", files[i], prefixs[i]);
           }
          addToJar(jout, new File(files[i]), prefixs[i]);
         }
       }
       jout.close();
     } catch (Exception ex) {
-      cm.log(-1, "buildJar: %s", ex);
+      sx.log(-1, "buildJar: %s", ex);
       return false;
     }
-    cm.log(lvl, "buildJar: completed");
+    sx.log(lvl, "buildJar: completed");
     return true;
   }
 
@@ -1293,13 +1280,13 @@ public class ContentManager extends SX {
       jarName += ".jar";
     }
     if (!new File(jarName).isAbsolute()) {
-      cm.log(-1, "unpackJar: jar path not absolute");
+      sx.log(-1, "unpackJar: jar path not absolute");
       return false;
     }
     if (folderName == null) {
       folderName = jarName.substring(0, jarName.length() - 4);
     } else if (!new File(folderName).isAbsolute()) {
-      cm.log(-1, "unpackJar: folder path not absolute");
+      sx.log(-1, "unpackJar: folder path not absolute");
       return false;
     }
     folderName = ContentManager.slashify(folderName, true);
@@ -1310,7 +1297,7 @@ public class ContentManager extends SX {
         ContentManager.deleteFileOrFolder(folderName);
       }
       in = new ZipInputStream(new BufferedInputStream(new FileInputStream(jarName)));
-      cm.log(lvl, "unpackJar: %s to %s", jarName, folderName);
+      sx.log(lvl, "unpackJar: %s to %s", jarName, folderName);
       boolean isExecutable;
       int n;
       File f;
@@ -1343,10 +1330,10 @@ public class ContentManager extends SX {
       }
       in.close();
     } catch (Exception ex) {
-      cm.log(-1, "unpackJar: " + ex.getMessage());
+      sx.log(-1, "unpackJar: " + ex.getMessage());
       return false;
     }
-    cm.log(lvl, "unpackJar: completed");
+    sx.log(lvl, "unpackJar: completed");
     return true;
   }
 
@@ -1422,17 +1409,17 @@ public class ContentManager extends SX {
       }
     }
     if (!success) {
-      cm.log(-1, "Not a valid Sikuli script project:\n%s", fScriptFolder.getAbsolutePath());
+      sx.log(-1, "Not a valid Sikuli script project:\n%s", fScriptFolder.getAbsolutePath());
       return null;
     }
     if (scriptType.startsWith("sikuli")) {
       content = fScriptFolder.listFiles(new FileFilterScript(scriptName + "."));
       if (content == null || content.length == 0) {
-        cm.log(-1, "Script project %s \n has no script file %s.xxx", fScriptFolder, scriptName);
+        sx.log(-1, "Script project %s \n has no script file %s.xxx", fScriptFolder, scriptName);
         return null;
       }
     } else if ("jar".equals(scriptType)) {
-      cm.log(-1, "Sorry, script projects as jar-files are not yet supported;");
+      sx.log(-1, "Sorry, script projects as jar-files are not yet supported;");
       //TODO try to load and run as extension
       return null; // until ready
     }
@@ -1453,7 +1440,7 @@ public class ContentManager extends SX {
   public static String unzipSKL(String fpSkl) {
     File fSkl = new File(fpSkl);
     if (!fSkl.exists()) {
-      cm.log(-1, "unzipSKL: file not found: %s", fpSkl);
+      sx.log(-1, "unzipSKL: file not found: %s", fpSkl);
     }
     String name = fSkl.getName();
     name = name.substring(0, name.lastIndexOf('.'));
@@ -1463,7 +1450,7 @@ public class ContentManager extends SX {
       ContentManager.unzip(fSkl, fSikuliDir);
     }
     if (null == fSikuliDir) {
-      cm.log(-1, "unzipSKL: not possible for:\n%s", fpSkl);
+      sx.log(-1, "unzipSKL: not possible for:\n%s", fpSkl);
       return null;
     }
     return fSikuliDir.getAbsolutePath();
@@ -1493,7 +1480,7 @@ public class ContentManager extends SX {
         }
         cnt.close();
       } catch (Exception ex) {
-        cm.log(-1, "extractResourceAsLines: %s\n%s", src, ex);
+        sx.log(-1, "extractResourceAsLines: %s\n%s", src, ex);
       }
     }
     return res;
@@ -1504,13 +1491,13 @@ public class ContentManager extends SX {
     InputStream isContent = cl.getResourceAsStream(src);
     if (isContent != null) {
       try {
-        cm.log(lvl + 1, "extractResource: %s to %s", src, tgt);
+        sx.log(lvl + 1, "extractResource: %s to %s", src, tgt);
         tgt.getParentFile().mkdirs();
         OutputStream osTgt = new FileOutputStream(tgt);
         bufferedWrite(isContent, osTgt);
         osTgt.close();
       } catch (Exception ex) {
-        cm.log(-1, "extractResource:\n%s", src, ex);
+        sx.log(-1, "extractResource:\n%s", src, ex);
         return false;
       }
     } else {

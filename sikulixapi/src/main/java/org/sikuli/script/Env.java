@@ -6,20 +6,20 @@
  */
 package org.sikuli.script;
 
-import org.sikuli.core.SX;
-import org.sikuli.core.Location;
+import com.sikulix.core.SX;
+import com.sikulix.core.Location;
 
 /**
  * features moved to other classes, details below with the methods
  */
-public class Env extends SX {
+public class Env {
 
   /**
    * @return where we store Sikuli specific data
-   * @deprecated use getAppDataPath()
+   * @deprecated use getSXAPP()
    */
   public static String getSikuliDataPath() {
-    return getAppDataPath();
+    return SX.getSXAPP();
   }
 
   /**
@@ -28,7 +28,7 @@ public class Env extends SX {
    */
   @Deprecated
   public static String getSikuliVersion() {
-    return getVersion();
+    return SX.getVersion();
   }
 
   /**
@@ -37,7 +37,7 @@ public class Env extends SX {
    */
   @Deprecated
   public static Location getMouseLocation() {
-    return at();
+    return SX.at();
   }
 
   /**
@@ -46,7 +46,7 @@ public class Env extends SX {
    */
   @Deprecated
   public static String getOSVersion() {
-    return getSystemVersion();
+    return SX.getSYSTEMVERSION();
   }
 
   /**
@@ -54,6 +54,6 @@ public class Env extends SX {
    */
   @Deprecated
   public static String getOS() {
-    return getSystem();
+    return SX.getSYSTEMVERSION();
 	}
 }
