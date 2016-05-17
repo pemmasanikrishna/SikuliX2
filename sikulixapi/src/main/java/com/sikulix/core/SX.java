@@ -6,7 +6,8 @@ package com.sikulix.core;
 
 import com.sikulix.scripting.JythonHelper;
 import org.apache.commons.cli.*;
-import org.sikuli.script.*;
+import org.sikuli.script.App;
+import org.sikuli.script.Key;
 import org.sikuli.util.SysJNA;
 import org.sikuli.util.hotkey.HotkeyListener;
 
@@ -14,71 +15,92 @@ import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.security.CodeSource;
 import java.util.*;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+
+import static com.sikulix.core.SX.NATIVES.HOTKEY;
+import static com.sikulix.core.SX.NATIVES.OPENCV;
+import static com.sikulix.core.SX.NATIVES.SYSUTIL;
 
 public class SX {
 
-  public static Match asMatch(Visual vis) {
-    return (Match) vis;
-  }
+  public static long startTime = new Date().getTime();
 
-// ******************************* Logging ****************************
-  static int globalLogLevel = 0;
-  static final int lvl = SXLog.DEBUG;
+  //<editor-fold desc="*** logging">
+  public static final int INFO = 1;
+  public static final int DEBUG = 3;
+  public static final int TRACE = 4;
+  public static final int ERROR = -1;
+  public static final int FATAL = -2;
 
   static final SXLog log = new SXLog();
 
-  public static void log(int level, String message, Object... args) {
-    log.log(level, message, args);
+  public static void info(String message, Object... args) {
+    log.info(message, args);
   }
 
-  public static void logp(String message, Object... args) {
-    log(log.INFO, message, args);
+  public static void debug(String message, Object... args) {
+    log.debug(message, args);
+  }
+
+  public static void trace(String message, Object... args) {
+    log.trace(message, args);
+  }
+
+  public static void error(String message, Object... args) {
+    log.error(message, args);
   }
 
   public static void terminate(int retval, String message, Object... args) {
-    log.log(SXLog.FATAL, message, args);
+    if (retval != 0) {
+      log.fatal(message, args);
+    } else {
+      info(message, args);
+    }
     System.exit(retval);
   }
 
   public static void p(String msg, Object... args) {
-    System.out.println(String.format(msg, args));
+    log.p(msg, args);
   }
 
   public static SXLog getLogger(String className) {
-    return getLogger(className, null);
+    return getLogger(className, null, -1);
+  }
+
+  public static SXLog getLogger(String className, int level) {
+    return getLogger(className, null, level);
   }
 
   public static SXLog getLogger(String className, String[] args) {
-    return new SXLog(className, args);
+    return getLogger(className, args, -1);
   }
 
-  private static String sxInstance = "";
-
-  static String sxLock = "";
-  static FileOutputStream isRunningFile = null;
-
-  public static boolean isIDE() {
-    return false;
+  public static SXLog getLogger(String className, String[] args, int level) {
+    return new SXLog(className, args, level);
   }
+  //</editor-fold>
 
-  public static void sxinit(String[] args) {
-    if (null != args) {
-      checkArgs(args);
-    }
-    if (isUnset(sxInstance)) {
-      log(lvl, "sxinit: starting");
-      sxGlobalClassReference = SX.class;
+  //<editor-fold desc="*** init">
+  private static String sxInstance = null;
 
+  private static String sxLock = "";
+  private static FileOutputStream isRunningFile = null;
+  static final Class sxGlobalClassReference = SX.class;
+
+  static void sxinit(String[] args) {
+    if (null == sxInstance) {
+      sxInstance = "SX INIT DONE";
+
+      //<editor-fold desc="*** shutdown hook">
       Runtime.getRuntime().addShutdownHook(new Thread() {
         @Override
         public void run() {
-          log(lvl, "final cleanup");
+          trace("final cleanup");
           if (!isUnset(sxLock)) {
             try {
               isRunningFile.close();
@@ -113,12 +135,17 @@ public class SX {
               return false;
             }
           })) {
-            log(lvl, "cleanTemp: " + f.getName());
+            trace("cleanTemp: " + f.getName());
             Content.deleteFileOrFolder("#" + f.getAbsolutePath());
           }
         }
       });
+      //</editor-fold>
 
+      // TODO Content class must be initialized for use in shutdown
+      Content.start();
+
+      //<editor-fold desc="*** sx lock">
       File fLock = new File(getSYSTEMP(), "SikuliX2-i-s-r-u-n-n-i-n-g");
       String shouldTerminate = "";
       try {
@@ -133,34 +160,49 @@ public class SX {
       if (!isUnset(shouldTerminate)) {
         terminate(1, shouldTerminate);
       }
-    }
-    Content.start();
-    sxInstance = "DONE";
-  }
+      //</editor-fold>
 
-  static List<String> sxArgs = new ArrayList<String>();
-  static List<String> userArgs = new ArrayList<String>();
-  static CommandLine sxCommandArgs = null;
+      // *** command line args
+      if (!isNull(args)) {
+        checkArgs(args);
+      }
+
+      trace("sxinit: starting");
+
+      // *** get the version info
+      getSXVERSION();
+
+      // *** check how we are running
+      sxRunningAs();
+
+      // *** get SX options
+      loadOptions();
+
+      // *** get monitor setup
+      globalGetMonitors();
+
+      trace("sxinit: complete %.3f", (new Date().getTime() - startTime) / 1000.0f);
+    }
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="*** command line args">
+  private static List<String> sxArgs = new ArrayList<String>();
+  private static List<String> userArgs = new ArrayList<String>();
+  private static CommandLine sxCommandArgs = null;
 
   static void checkArgs(String[] args) {
     boolean hasUserArgs = false;
-    boolean hasOptDebug = false;
     for (String arg : args) {
-      if ("-d".equals(arg)) {
-        hasOptDebug = true;
-        p("*** Commandline Args ***");
-      }
       if ("--".equals(arg)) {
-        if (hasOptDebug) {
-          p(">>> user args");
-        }
         hasUserArgs = true;
         continue;
       }
-      if (hasOptDebug) p("%s", arg);
       if (hasUserArgs) {
+        trace("checkargs: user: %s", arg);
         userArgs.add(arg);
       } else {
+        trace("checkargs: --sx: %s", arg);
         sxArgs.add(arg);
       }
     }
@@ -172,48 +214,28 @@ public class SX {
       opts.addOption(OptionBuilder.hasArgs().create('r'));
       opts.addOption(OptionBuilder.hasArgs().create('t'));
       opts.addOption(OptionBuilder.hasArg(false).create('c'));
+      opts.addOption(OptionBuilder.hasArg(false).create('q'));
       try {
-        sxCommandArgs = parser.parse(opts, args);
+        sxCommandArgs = parser.parse(opts, sxArgs.toArray(new String[0]));
       } catch (ParseException e) {
-        p("Error: checkArgs: %s", e.getMessage());
+        terminate(1, "checkArgs: %s", e.getMessage());
       }
-      if (sxCommandArgs != null) {
-        if (hasOptDebug) {
-          p("***** SikuliX Args");
+      if (!isNull(sxCommandArgs)) {
+        if (isArg("q")) {
+          log.globalStop();
+        } else if (isArg("d")) {
+          log.globalOn(log.DEBUG);
         }
-        for (Option o : sxCommandArgs.getOptions()) {
-          if (sxCommandArgs.hasOption(o.getOpt())) {
-            if (hasOptDebug) {
-              p("%s: %s", o.getOpt(), sxCommandArgs.getOptionValue(o.getOpt()));
-            }
-          }
-        }
-        if (hasOptDebug) {
-          p("***** END SikuliX Args");
-          String dVal = getArg("d");
-          if (dVal.isEmpty()) {
-            globalLogLevel = 3;
-          } else {
-            try {
-              globalLogLevel = Integer.parseInt(dVal);
-            } catch (Exception ex) {
-              globalLogLevel = -1;
-            }
-            if (globalLogLevel < 0) {
-              p("Error: checkArgs: -d %s not valid", dVal);
-            }
-          }
-          if (globalLogLevel > 0) {
-            p("Info: checkArgs: globalLogLevel = %d", globalLogLevel);
-          }
-        }
-      } else {
-        p("Error: checkArgs: no valid args");
       }
     }
+    //TODO make options from SX args
   }
 
-  static String getArg(String arg) {
+  private static boolean isArg(String arg) {
+    return sxCommandArgs != null && sxCommandArgs.hasOption(arg);
+  }
+
+  private static String getArg(String arg) {
     if (sxCommandArgs != null && sxCommandArgs.hasOption(arg)) {
       String val = sxCommandArgs.getOptionValue(arg);
       return val == null ? "" : val;
@@ -224,8 +246,34 @@ public class SX {
   public static String[] getUserArgs() {
     return userArgs.toArray(new String[0]);
   }
+  //</editor-fold>
 
-  static void globalGetSupport() {
+  //<editor-fold desc="*** check how we are running">
+  public static String sxGlobalClassNameIDE = "";
+
+  private static boolean isJythonReady = false;
+  static String appType = "?appType?";
+
+  static File fSxBaseJar;
+  static File fSxBase;
+  static File fSxProject;
+  static boolean runningInProject = false;
+  static final String fpContent = "sikulixcontent";
+
+  static String sxJythonMaven;
+  static String sxJython;
+
+  static String sxJRubyMaven;
+  static String sxJRuby;
+
+  static Map<String, String> tessData = new HashMap<String, String>();
+
+  static String dlMavenRelease = "https://repo1.maven.org/maven2/";
+  static String dlMavenSnapshot = "https://oss.sonatype.org/content/groups/public/";
+
+  private static boolean runningJar = true;
+
+  static void sxRunningAs() {
     CodeSource codeSrc = sxGlobalClassReference.getProtectionDomain().getCodeSource();
     String base = null;
     if (codeSrc != null && codeSrc.getLocation() != null) {
@@ -236,16 +284,16 @@ public class SX {
       fSxBaseJar = new File(base);
       String jn = fSxBaseJar.getName();
       fSxBase = fSxBaseJar.getParentFile();
-      log(lvl, "runs as %s in:\n%s", jn, fSxBase.getAbsolutePath());
+      debug("runs as %s in:\n%s", jn, fSxBase.getAbsolutePath());
       if (jn.contains("classes")) {
         runningJar = false;
         fSxProject = fSxBase.getParentFile().getParentFile();
-        log(lvl, "not jar - supposing Maven project:\n%s", fSxProject);
+        debug("not jar - supposing Maven project:\n%s", fSxProject);
         appType = "in Maven project from classes";
         runningInProject = true;
       } else if ("target".equals(fSxBase.getName())) {
         fSxProject = fSxBase.getParentFile().getParentFile();
-        log(lvl, "folder target detected - supposing Maven project:\n%s", fSxProject);
+        debug("folder target detected - supposing Maven project:\n%s", fSxProject);
         appType = "in Maven project from some jar";
         runningInProject = true;
       } else {
@@ -270,55 +318,17 @@ public class SX {
               + "(java.security.CodeSource.getLocation() is null)");
     }
   }
+  //</editor-fold>
 
-  static void globalGetMonitors() {
-    if (!isHeadless()) {
-      genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
-      gdevs = genv.getScreenDevices();
-      nMonitors = gdevs.length;
-      if (nMonitors == 0) {
-        terminate(1, "GraphicsEnvironment has no ScreenDevices");
-      }
-      monitorBounds = new com.sikulix.core.Region[nMonitors];
-      rAllMonitors = null;
-      Region currentBounds;
-      for (int i = 0; i < nMonitors; i++) {
-        currentBounds = new com.sikulix.core.Region(gdevs[i].getDefaultConfiguration().getBounds());
-        if (null != rAllMonitors) {
-          rAllMonitors = rAllMonitors.union(currentBounds);
-        } else {
-          rAllMonitors = currentBounds;
-        }
-        if (currentBounds.contains(new Location())) {
-          if (mainMonitor < 0) {
-            mainMonitor = i;
-            log(lvl, "ScreenDevice %d has (0,0) --- will be primary Screen(0)", i);
-          } else {
-            log(lvl, "ScreenDevice %d too contains (0,0)!", i);
-          }
-        }
-        log(lvl, "Monitor %d: (%d, %d) %d x %d", i,
-                currentBounds.x, currentBounds.y, currentBounds.w, currentBounds.h);
-        monitorBounds[i] = currentBounds;
-      }
-      if (mainMonitor < 0) {
-        log(lvl, "No ScreenDevice has (0,0) --- using 0 as primary: %s", monitorBounds[0]);
-        mainMonitor = 0;
-      }
-    } else {
-      log(-1, "running in headless environment");
-    }
-  }
+  //<editor-fold desc="*** get SX options">
+  private static File fOptions;
+  private static Properties options = null;
+  private static String fnOptions = "SXOptions.txt";
 
-  static File fOptions;
-  static Properties options = null;
-  static String fnOptions = "SXOptions.txt";
-  static boolean testing;
-
-  static void loadOptionsSX() {
+  private static void loadOptions() {
     for (String sFile : new String[]{getUSERWORK(), getUSERHOME(), getSXSTORE()}) {
       File aFile = getFile(sFile);
-      log(lvl + 1, "loadOptions: check: %s", aFile);
+      trace("loadOptions: check: %s", aFile);
       fOptions = new File(aFile, fnOptions);
       if (fOptions.exists()) {
         break;
@@ -334,16 +344,11 @@ public class SX {
         options.load(is);
         is.close();
       } catch (Exception ex) {
-        log(-1, "while checking Options file:\n%s", fOptions);
+        error("while checking Options file:\n%s", fOptions);
         fOptions = null;
         options = null;
       }
-      testing = isOption("testing", false);
-      if (testing) {
-        //TODO Global Log Level
-        log.logOnGlobal(3);
-      }
-      log(lvl, "found Options file at: %s", fOptions);
+      debug("found Options file at: %s", fOptions);
     }
     if (hasOptions()) {
       for (Object oKey : options.keySet()) {
@@ -374,107 +379,27 @@ public class SX {
               cField.set(null, getOption(sKey));
             }
           } catch (Exception ex) {
-            log(-1, "loadOptions: not possible: %s = %s", sKey, options.getProperty(sKey));
+            error("loadOptions: not possible: %s = %s", sKey, options.getProperty(sKey));
           }
         }
       }
     }
   }
+  //</editor-fold>
 
-  static void exportNativeLibraries() {
-    if (areLibsExported) {
-      return;
-    }
-    File fSXNative = getFile(getSXNATIVE());
-    if (!new File(fSXNative, sxLibsCheckName).exists()) {
-      log(lvl, "exportNativeLibraries: folder empty or has wrong content");
-      Content.deleteFileOrFolder(fSXNative);
-    }
-    if (fSXNative.exists()) {
-      log(lvl, "exportNativeLibraries: folder exists: %s", fSXNative);
-    } else {
-      fSXNative.mkdirs();
-      if (!fSXNative.exists()) {
-        terminate(1, "exportNativeLibraries: folder not available: %s", fSXNative);
-      }
-      log(lvl, "exportNativeLibraries: new folder: %s", fSXNative);
-      URL uLibsFrom = null;
-      uLibsFrom = sxGlobalClassReference.getResource(fpJarLibs);
-      if (testing || uLibsFrom == null) {
-        dumpClassPath("sikulix");
-      }
-      if (uLibsFrom == null) {
-        terminate(1, "exportNativeLibraries: libs not on classpath: " + fpJarLibs);
-      }
-      log(lvl, "exportNativeLibraries: from: %s", uLibsFrom);
-      Content.extractResourcesToFolder(fpJarLibs, fSXNative, null);
-      if (!new File(fSXNative, sflibsCheckFileStored).exists()) {
-        terminate(1, "exportNativeLibraries: did not work");
-      }
-      new File(fSXNative, sflibsCheckFileStored).renameTo(new File(fSXNative, sxLibsCheckName));
-      if (!new File(fSXNative, sxLibsCheckName).exists()) {
-        terminate(1, "exportNativeLibraries: did not work");
-      }
-    }
-    for (String aFile : fSXNative.list()) {
-      if (aFile.contains("opencv_java")) {
-        sfLibOpencvJava = aFile;
-      } else if (aFile.contains("JXGrabKey")) {
-        sfLibJXGrabKey = aFile;
-      } else if (aFile.contains("JIntellitype")) {
-        sfLibJIntellitype = aFile;
-      } else if (aFile.contains("WinUtil")) {
-        sfLibWinUtil = aFile;
-      } else if (aFile.contains("MacUtil")) {
-        sfLibMacUtil = aFile;
-      } else if (aFile.contains("MacHotkey")) {
-        sfLibMacHotkey = aFile;
-      }
-      libsLoaded.put(aFile, false);
-    }
-    loadNativeLibrary(sfLibOpencvJava);
-    if (isWindows()) {
-      addToWindowsSystemPath(fSXNative);
-      if (!checkJavaUsrPath(fSXNative)) {
-        log(-1, "exportNativeLibraries: JavaUserPath: see errors - might not work and crash later");
-      }
-      String lib = "jawt.dll";
-      File fJawtDll = new File(fSXNative, lib);
-      Content.deleteFileOrFolder(fJawtDll);
-      Content.xcopy(new File(getJHOME() + "/bin/" + lib), fJawtDll);
-      if (!fJawtDll.exists()) {
-        terminate(1, "exportNativeLibraries: problem copying %s", fJawtDll);
-      }
-      loadNativeLibrary(sfLibJIntellitype);
-      loadNativeLibrary(sfLibWinUtil);
-    } else if (isMac()) {
-      loadNativeLibrary(sfLibMacUtil);
-      loadNativeLibrary(sfLibMacHotkey);
-    } else if (isLinux()) {
-      loadNativeLibrary(sfLibJXGrabKey);
-    }
-    areLibsExported = true;
-  }
-
-  static void loadNativeLibrary(String aLib) {
-    try {
-      if (aLib.startsWith("_ext_")) {
-        terminate(1, "loadNativeLibrary: loading external library not implemented: %s", aLib);
-      } else {
-        String sf_aLib = new File(getSXNATIVE(), aLib).getAbsolutePath();
-        System.load(sf_aLib);
-        log(lvl, "loadNativeLibrary: bundled: %s", aLib);
-      }
-    } catch (UnsatisfiedLinkError ex) {
-      terminate(1, "loadNativeLibrary: loading library error: %s (%s)", aLib, ex.getMessage());
-    }
-  }
-
-
-  // ******************************* System/Java ****************************
-
+  //<editor-fold desc="*** system/java version info">
   static enum theSystem {
     WIN, MAC, LUX, FOO
+  }
+
+  /**
+   * @return path seperator : or ;
+   */
+  public String getSeparator() {
+    if (isWindows()) {
+      return ";";
+    }
+    return ":";
   }
 
   /**
@@ -490,12 +415,15 @@ public class SX {
       if (osName.toLowerCase().startsWith("windows")) {
         SXSYS = theSystem.WIN;
         osName = "Windows";
+        SXSYSshort = "windows";
       } else if (osName.toLowerCase().startsWith("mac")) {
         SXSYS = theSystem.MAC;
         osName = "Mac OSX";
+        SXSYSshort = "mac";
       } else if (osName.toLowerCase().startsWith("linux")) {
         SXSYS = theSystem.LUX;
         osName = "Linux";
+        SXSYSshort = "linux";
       } else {
         terminate(-1, "running on not supported System: %s (%s)", osName, osVersion);
       }
@@ -507,6 +435,7 @@ public class SX {
 
   static String SXSYSTEM = "";
   static theSystem SXSYS = theSystem.FOO;
+  static String SXSYSshort = "";
 
 
   /**
@@ -637,7 +566,9 @@ public class SX {
   public static boolean isJava7() {
     return getJVERSIONint() > 6;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="*** temp folders">
 
   /**
    * ***** Property SYSTEMP *****
@@ -689,6 +620,9 @@ public class SX {
     int rand = 1 + new Random().nextInt();
     return (rand < 0 ? rand * -1 : rand);
   }
+  //</editor-fold>
+
+  //<editor-fold desc="*** user/work/appdata folder">
 
   /**
    * ***** Property USERHOME *****
@@ -719,11 +653,13 @@ public class SX {
       if (aFolder == null || aFolder.isEmpty() || !new File(aFolder).exists()) {
         terminate(-1, "getUSERWORK: JavaSystemProperty::user.dir not valid");
       }
+      USERWORK = getFolder(aFolder).getAbsolutePath();
     }
     return USERWORK;
   }
 
   static String USERWORK = "";
+
 
   /**
    * ***** Property SYSAPP *****
@@ -752,6 +688,9 @@ public class SX {
   }
 
   static String SYSAPP = "";
+  //</editor-fold>
+
+  //<editor-fold desc="*** SX app data folder">
 
   /**
    * ***** Property SXAPP *****
@@ -820,10 +759,7 @@ public class SX {
   static String SXNATIVEdefault = "Native";
 
   public static String setSXNATIVE(Object oDir) {
-    File fDir = getFile(oDir, null);
-    if (!isUnset(fDir)) {
-      fDir.mkdirs();
-    }
+    File fDir = getFolder(oDir);
     if (isUnset(fDir) || !existsFile(fDir) || !fDir.isDirectory()) {
       terminate(1, "setSXNATIVE: not posssible or not valid: %s", fDir);
     }
@@ -878,10 +814,7 @@ public class SX {
   static String SXSTOREdefault = "Store";
 
   public static String setSXSTORE(Object oDir) {
-    File fDir = getFile(oDir, null);
-    if (!isUnset(fDir)) {
-      fDir.mkdirs();
-    }
+    File fDir = getFolder(oDir);
     if (isUnset(fDir) || !existsFile(fDir) || !fDir.isDirectory()) {
       terminate(1, "setSXSTORE: not posssible or not valid: %s", fDir);
     }
@@ -964,6 +897,8 @@ public class SX {
   static String SXEXTENSIONS = "";
   static String SXEXTENSIONSdefault = "Extensions";
 
+  static String[] theExtensions = new String[]{"selenium4sikulix"};
+
   public static String setSXEXTENSIONS(Object oDir) {
     File fDir = getFile(oDir, null);
     if (!isUnset(fDir)) {
@@ -974,6 +909,27 @@ public class SX {
     }
     SXEXTENSIONS = fDir.getAbsolutePath();
     return SXEXTENSIONS;
+  }
+
+  public static File asExtension(String fpJar) {
+    File fJarFound = new File(Content.normalizeAbsolute(fpJar, false));
+    if (!fJarFound.exists()) {
+      String fpCPEntry = Content.isOnClasspath(fJarFound.getName());
+      if (fpCPEntry == null) {
+        fJarFound = new File(getSXEXTENSIONS(), fpJar);
+        if (!fJarFound.exists()) {
+          fJarFound = new File(getSXLIB(), fpJar);
+          if (!fJarFound.exists()) {
+            fJarFound = null;
+          }
+        }
+      } else {
+        fJarFound = new File(fpCPEntry, fJarFound.getName());
+      }
+    } else {
+      return null;
+    }
+    return fJarFound;
   }
 
   /**
@@ -1004,63 +960,9 @@ public class SX {
     SXIMAGES = fDir.getAbsolutePath();
     return SXIMAGES;
   }
+  //</editor-fold>
 
-
-  public static File getFile(String fpPath) {
-    return getFile(fpPath, null);
-  }
-
-  public static File getFile(Object oPath, Object oSub) {
-    String sPath = oPath instanceof File ? ((File) oPath).getAbsolutePath() : "";
-    if (isUnset(sPath)) {
-      sPath = oPath instanceof String ? (String) oPath : "";
-    }
-    if (isUnset(oSub)) {
-      return new File(sPath);
-    }
-    String sSub = oPath instanceof String ? (String) oSub : "";
-    return new File(sPath, sSub);
-  }
-
-  static String[] theExtensions = new String[]{"selenium4sikulix"};
-
-  public static boolean existsFile(File fPath) {
-    if (isUnset(fPath.getName())) {
-      return false;
-    }
-    return fPath.exists();
-  }
-
-  public static boolean isNull(Object obj) {
-    return null == obj;
-  }
-
-  public static boolean isUnset(Object obj) {
-    if (obj instanceof String && ((String) obj).isEmpty()) return true;
-    return null == obj;
-  }
-
-  public static File asExtension(String fpJar) {
-    File fJarFound = new File(Content.normalizeAbsolute(fpJar, false));
-    if (!fJarFound.exists()) {
-      String fpCPEntry = isOnClasspath(fJarFound.getName());
-      if (fpCPEntry == null) {
-        fJarFound = new File(getSXEXTENSIONS(), fpJar);
-        if (!fJarFound.exists()) {
-          fJarFound = new File(getSXLIB(), fpJar);
-          if (!fJarFound.exists()) {
-            fJarFound = null;
-          }
-        }
-      } else {
-        fJarFound = new File(fpCPEntry, fJarFound.getName());
-      }
-    } else {
-      return null;
-    }
-    return fJarFound;
-  }
-
+  //<editor-fold desc="*** SX version info">
 
   /**
    * ***** Property SXVERSION *****
@@ -1093,7 +995,7 @@ public class SX {
         String sxJythonVersion = prop.getProperty("sxjython");
         String sxJRubyVersion = prop.getProperty("sxjruby");
 
-        log(lvl, "version: %s build: %s", sxVersion, sxBuild);
+        debug("version: %s build: %s", sxVersion, sxBuild);
         sxStamp = String.format("%s_%s", sxVersion, sxBuild);
 
         // used for download of production versions
@@ -1113,7 +1015,7 @@ public class SX {
       }
       tessData.put("eng", "http://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.eng.tar.gz");
 
-      sxLibsCheckName = String.format(sfLibsCheckFileLoaded, sxStamp);
+      sxLibsCheckName = String.format(sxLibsCheckStamp, sxStamp);
       SXVERSION = sxVersion;
       SXBUILD = sxBuild;
       SXVERSIONSHOW = String.format("%s (%s)", sxVersion, sxBuild);
@@ -1165,45 +1067,97 @@ public class SX {
   }
 
   static String SXSTAMP = "";
+  //</editor-fold>
 
+  //<editor-fold desc="*** monitor info">
+  static GraphicsEnvironment genv = null;
+  static GraphicsDevice[] gdevs;
+  static Rectangle[] monitorBounds = null;
+  static Rectangle rAllMonitors;
+  public static int mainMonitor = -1;
+  public static int nMonitors = 0;
 
-  public static String getVersion() {
-    return getSXVERSION();
+  static void globalGetMonitors() {
+    if (!isHeadless()) {
+      genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
+      gdevs = genv.getScreenDevices();
+      nMonitors = gdevs.length;
+      if (nMonitors == 0) {
+        terminate(1, "GraphicsEnvironment has no ScreenDevices");
+      }
+      monitorBounds = new Rectangle[nMonitors];
+      rAllMonitors = null;
+      Rectangle currentBounds;
+      for (int i = 0; i < nMonitors; i++) {
+        currentBounds = new Rectangle(gdevs[i].getDefaultConfiguration().getBounds());
+        if (null != rAllMonitors) {
+          rAllMonitors = rAllMonitors.union(currentBounds);
+        } else {
+          rAllMonitors = currentBounds;
+        }
+        if (currentBounds.contains(new Point())) {
+          if (mainMonitor < 0) {
+            mainMonitor = i;
+            debug("ScreenDevice %d has (0,0) --- will be primary Screen(0)", i);
+          } else {
+            debug("ScreenDevice %d too contains (0,0)!", i);
+          }
+        }
+        debug("Monitor %d: (%d, %d) %d x %d", i,
+                currentBounds.x, currentBounds.y, currentBounds.width, currentBounds.height);
+        monitorBounds[i] = currentBounds;
+      }
+      if (mainMonitor < 0) {
+        debug("No ScreenDevice has (0,0) --- using 0 as primary: %s", monitorBounds[0]);
+        mainMonitor = 0;
+      }
+    } else {
+      error("running in headless environment");
+    }
   }
 
-  public static File fSxBaseJar;
-  public static File fSxBase;
-  public static File fSxProject;
-  public static boolean runningInProject = false;
-  public static String fpContent;
-
-  public static String sxJythonMaven;
-  public static String sxJython;
-
-  public static String sxJRubyMaven;
-  public static String sxJRuby;
-
-  protected static Map<String, String> tessData = new HashMap<String, String>();
-
-  protected static String dlMavenRelease = "https://repo1.maven.org/maven2/";
-  protected static String dlMavenSnapshot = "https://oss.sonatype.org/content/groups/public/";
-
-  static void initSXVersionInfo() {
+  /**
+   * checks, whether Java runs with a valid GraphicsEnvironment (usually means real screens connected)
+   *
+   * @return false if Java thinks it has access to screen(s), true otherwise
+   */
+  public static boolean isHeadless() {
+    return GraphicsEnvironment.isHeadless();
   }
 
-  // ******************************* Native ****************************
+  public static Region getMonitor(int n) {
+    if (isHeadless()) {
+      return new Region();
+    }
+    n = (n < 0 || n >= nMonitors) ? mainMonitor : n;
+    return new Region(monitorBounds[n]);
+  }
 
+  public static Region getMonitor() {
+    if (isHeadless()) {
+      return new Region();
+    }
+    return new Region(monitorBounds[mainMonitor]);
+  }
+
+  public static GraphicsDevice getGraphicsDevice(int id) {
+    return gdevs[id];
+  }
+
+  //</editor-fold>
+
+  //<editor-fold desc="*** handle native libs">
   public static File fLibsProvided;
   public static boolean useLibsProvided;
   public static String linuxNeededLibs = "";
   public static String linuxAppSupport = "";
   static boolean areLibsExported = false;
   static String fpJarLibs = null;
-  static Map<String, Boolean> libsLoaded = new HashMap<String, Boolean>();
+  static Map<NATIVES, Boolean> libsLoaded = new HashMap<NATIVES, Boolean>();
 
-  static String sfLibsCheckFileLoaded = "MadeForSikuliX_%s";
+  static String sxLibsCheckStamp = "MadeForSikuliX_%s";
   static String sflibsCheckFileStored = "MadeForSikuliX2";
-  static String sxLibsCheckName;
+  public static String sxLibsCheckName = "";
   public static String sfLibOpencvJava = "_ext_opencv_java";
   public static String sfLibJXGrabKey = "_ext_JXGrabKey";
   public static String sfLibJIntellitype = "_ext_JIntellitype";
@@ -1242,7 +1196,7 @@ public class SX {
         if (!syspath.toUpperCase().contains(libsPath.toUpperCase())) {
           terminate(1, "addToWindowsSystemPath: did not work: %s", syspath);
         }
-        log(lvl, "addToWindowsSystemPath: added: %s", libsPath);
+        debug("addToWindowsSystemPath: added: %s", libsPath);
       }
     }
   }
@@ -1254,9 +1208,9 @@ public class SX {
     try {
       usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
     } catch (NoSuchFieldException ex) {
-      log(-1, "checkJavaUsrPath: get (%s)", ex);
+      error("checkJavaUsrPath: get (%s)", ex);
     } catch (SecurityException ex) {
-      log(-1, "checkJavaUsrPath: get (%s)", ex);
+      error("checkJavaUsrPath: get (%s)", ex);
     }
     if (usrPathsField != null) {
       usrPathsField.setAccessible(true);
@@ -1275,194 +1229,143 @@ public class SX {
           final String[] newPaths = Arrays.copyOf(javapaths, javapaths.length + 1);
           newPaths[newPaths.length - 1] = fpLibsFolder;
           usrPathsField.set(null, newPaths);
-          log(lvl, "checkJavaUsrPath: added to ClassLoader.usrPaths");
+          debug("checkJavaUsrPath: added to ClassLoader.usrPaths");
           contained = true;
         }
       } catch (IllegalAccessException ex) {
-        log(-1, "checkJavaUsrPath: set (%s)", ex);
+        error("checkJavaUsrPath: set (%s)", ex);
       } catch (IllegalArgumentException ex) {
-        log(-1, "checkJavaUsrPath: set (%s)", ex);
+        error("checkJavaUsrPath: set (%s)", ex);
       }
       return contained;
     }
     return false;
   }
 
-  // ******************************* ClassPath ****************************
-  static List<URL> storeClassPath() {
-    URLClassLoader sysLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-    return Arrays.asList(sysLoader.getURLs());
-  }
-
-  public static void dumpClassPath() {
-    dumpClassPath(null);
-  }
-
-  public static void dumpClassPath(String filter) {
-    filter = filter == null ? "" : filter;
-    p("*** classpath dump %s", filter);
-    String sEntry;
-    filter = filter.toUpperCase();
-    int n = 0;
-    for (URL uEntry : storeClassPath()) {
-      sEntry = uEntry.getPath();
-      if (!filter.isEmpty()) {
-        if (!sEntry.toUpperCase().contains(filter)) {
-          n++;
-          continue;
-        }
-      }
-      p("%3d: %s", n, sEntry);
-      n++;
+  static void exportNativeLibraries() {
+    if (areLibsExported) {
+      return;
     }
-    p("*** classpath dump end");
-  }
-
-  public static String isOnClasspath(String artefact, boolean isJar) {
-    artefact = Content.slashify(artefact, false);
-    String cpe = null;
-    for (URL entry : storeClassPath()) {
-      String sEntry = Content.slashify(new File(entry.getPath()).getPath(), false);
-      if (sEntry.contains(artefact)) {
-        if (isJar) {
-          if (!sEntry.endsWith(".jar")) {
-            continue;
-          }
-          if (!new File(sEntry).getName().contains(artefact)) {
-            continue;
-          }
-          if (new File(sEntry).getName().contains("4" + artefact)) {
-            continue;
-          }
-        }
-        cpe = new File(entry.getPath()).getPath();
-        break;
-      }
+    File fSXNative = getFile(getSXNATIVE());
+    if (!new File(fSXNative, sxLibsCheckName).exists()) {
+      debug("exportNativeLibraries: folder empty or has wrong content");
+      Content.deleteFileOrFolder(fSXNative);
     }
-    return cpe;
-  }
-
-  public static String isJarOnClasspath(String artefact) {
-    return isOnClasspath(artefact, true);
-  }
-
-  public static String isOnClasspath(String artefact) {
-    return isOnClasspath(artefact, false);
-  }
-
-  public static URL fromClasspath(String artefact) {
-    artefact = Content.slashify(artefact, false).toUpperCase();
-    URL cpe = null;
-    for (URL entry : storeClassPath()) {
-      String sEntry = Content.slashify(new File(entry.getPath()).getPath(), false);
-      if (sEntry.toUpperCase().contains(artefact)) {
-        return entry;
-      }
-    }
-    return cpe;
-  }
-
-  public static boolean isOnClasspath(URL path) {
-    for (URL entry : storeClassPath()) {
-      if (new File(path.getPath()).equals(new File(entry.getPath()))) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // ******************************* Settings ****************************
-  public static String BundlePath = null;
-  public static String OcrDataPath = null;
-  public static boolean OcrTextSearch = false;
-  public static boolean OcrTextRead = false;
-  public static String OcrLanguage = "eng";
-
-  public static final float FOREVER = Float.POSITIVE_INFINITY;
-  public static boolean TRUE = true;
-  public static boolean FALSE = false;
-
-  public static boolean ThrowException = true; // throw FindFailed exception
-  public static float AutoWaitTimeout = 3f; // in seconds
-  public static float WaitScanRate = 3f; // frames per second
-  public static float ObserveScanRate = 3f; // frames per second
-  public static int ObserveMinChangedPixels = 50; // in pixels
-  public static int RepeatWaitTime = 1; // wait 1 second for visual to vanish after action
-  public static double MinSimilarity = 0.7;
-  public static boolean CheckLastSeen = true;
-
-  public static double DelayValue = 0.3;
-  public static double DelayBeforeMouseDown = DelayValue;
-  public static double DelayBeforeDrag = DelayValue;
-  public static double DelayBeforeDrop = DelayValue;
-
-  /**
-   * Specify a delay between the key presses in seconds as 0.nnn. This only
-   * applies to the next type and is then reset to 0 again. A value &gt; 1 is cut
-   * to 1.0 (max delay of 1 second)
-   */
-  public static double TypeDelay = 0.0;
-
-  /**
-   * Specify a delay between the mouse down and up in seconds as 0.nnn. This
-   * only applies to the next click action and is then reset to 0 again. A value
-   * &gt; 1 is cut to 1.0 (max delay of 1 second)
-   */
-  public static double ClickDelay = 0.0;
-
-  /**
-   * true = start slow motion mode, false: stop it (default: false) show a
-   * visual for SlowMotionDelay seconds (default: 2)
-   */
-  private static boolean ShowActions = false;
-
-  public static boolean isShowActions() {
-    return ShowActions;
-  }
-
-  public static void setShowActions(boolean show) {
-    if (show) {
-      MoveMouseDelaySaved = MoveMouseDelay;
+    if (fSXNative.exists()) {
+      debug("exportNativeLibraries: folder exists: %s", fSXNative);
     } else {
-      MoveMouseDelay = MoveMouseDelaySaved;
+      fSXNative.mkdirs();
+      if (!fSXNative.exists()) {
+        terminate(1, "exportNativeLibraries: folder not available: %s", fSXNative);
+      }
+      debug("exportNativeLibraries: new folder: %s", fSXNative);
+      fpJarLibs = "/Native/" + SXSYSshort;
+      URL uLibsFrom = sxGlobalClassReference.getResource(fpJarLibs);
+      if (uLibsFrom == null) {
+        Content.dumpClassPath("sikulix");
+        terminate(1, "exportNativeLibraries: libs not on classpath: " + fpJarLibs);
+      }
+      debug("exportNativeLibraries: from: %s", uLibsFrom);
+      Content.extractResourcesToFolder(fpJarLibs, fSXNative, null);
+      if (!new File(fSXNative, sflibsCheckFileStored).exists()) {
+        terminate(1, "exportNativeLibraries: did not work");
+      }
+      new File(fSXNative, sflibsCheckFileStored).renameTo(new File(fSXNative, sxLibsCheckName));
+      if (!new File(fSXNative, sxLibsCheckName).exists()) {
+        terminate(1, "exportNativeLibraries: did not work");
+      }
     }
-    ShowActions = show;
+    for (String aFile : fSXNative.list()) {
+      if (aFile.contains("opencv_java")) {
+        sfLibOpencvJava = aFile;
+      } else if (aFile.contains("JXGrabKey")) {
+        sfLibJXGrabKey = aFile;
+      } else if (aFile.contains("JIntellitype")) {
+        sfLibJIntellitype = aFile;
+      } else if (aFile.contains("WinUtil")) {
+        sfLibWinUtil = aFile;
+      } else if (aFile.contains("MacUtil")) {
+        sfLibMacUtil = aFile;
+      } else if (aFile.contains("MacHotkey")) {
+        sfLibMacHotkey = aFile;
+      }
+    }
+    areLibsExported = true;
   }
 
-  public static float SlowMotionDelay = 2.0f; // in seconds
-  public static float MoveMouseDelay = 0.5f; // in seconds
-  private static float MoveMouseDelaySaved = MoveMouseDelay;
+  public static enum NATIVES {
+    OPENCV, TESSERACT, SYSUTIL, HOTKEY
+  }
 
-  /**
-   * true = highlight every match (default: false) (show red rectangle around)
-   * for DefaultHighlightTime seconds (default: 2)
-   */
-  public static boolean Highlight = false;
-  public static float DefaultHighlightTime = 2f;
-  public static float WaitAfterHighlight = 0.3f;
+  static void loadNative(NATIVES type) {
+    if (libsLoaded.isEmpty()) {
+      for (NATIVES nType : NATIVES.values()) {
+        libsLoaded.put(nType, false);
+      }
+      exportNativeLibraries();
+      if (isWindows()) {
+        addToWindowsSystemPath(getFile(getSXNATIVE()));
+        if (!checkJavaUsrPath(getFile(getSXNATIVE()))) {
+          error("exportNativeLibraries: JavaUserPath: see errors - might not work and crash later");
+        }
+        String lib = "jawt.dll";
+        File fJawtDll = new File(getFile(getSXNATIVE()), lib);
+        Content.deleteFileOrFolder(fJawtDll);
+        Content.xcopy(new File(getJHOME() + "/bin/" + lib), fJawtDll);
+        if (!fJawtDll.exists()) {
+          terminate(1, "exportNativeLibraries: problem copying %s", fJawtDll);
+        }
+      }
+    }
+    if (OPENCV.equals(type) && !libsLoaded.get(OPENCV)) {
+      loadNativeLibrary(sfLibOpencvJava);
+    } else if (SYSUTIL.equals(type) && !libsLoaded.get(SYSUTIL)) {
+      if (isWindows()) {
+        loadNativeLibrary(sfLibWinUtil);
+      } else if (isMac()) {
+        loadNativeLibrary(sfLibMacUtil);
+      }
+    } else if (HOTKEY.equals(type) && !libsLoaded.get(HOTKEY)) {
+      if (isWindows()) {
+        loadNativeLibrary(sfLibJIntellitype);
+      } else if (isMac()) {
+        loadNativeLibrary(sfLibMacHotkey);
+      } else if (isLinux()) {
+        loadNativeLibrary(sfLibJXGrabKey);
+      }
+    } else {
+      terminate(1, "loadNative: %s not yet supported", type);
+    }
+    libsLoaded.put(type, true);
+  }
 
-  public static boolean ActionLogs = true;
-  public static boolean InfoLogs = true;
-  public static boolean DebugLogs = false;
-  public static boolean ProfileLogs = false;
+  static void loadNativeLibrary(String aLib) {
+    try {
+      if (aLib.startsWith("_ext_")) {
+        terminate(1, "loadNativeLibrary: loading external library not implemented: %s", aLib);
+      } else {
+        String sf_aLib = new File(getSXNATIVE(), aLib).getAbsolutePath();
+        System.load(sf_aLib);
+        debug("loadNativeLibrary: bundled: %s", aLib);
+      }
+    } catch (UnsatisfiedLinkError ex) {
+      terminate(1, "loadNativeLibrary: loading library error: %s (%s)", aLib, ex.getMessage());
+    }
+  }
+  //</editor-fold>
 
-  public static boolean LogTime = false;
-  public static boolean UserLogs = true;
-  public static String UserLogPrefix = "user";
-  public static boolean UserLogTime = true;
-
-  // ******************************* Options ****************************
+  //<editor-fold desc="*** handle options">
   public static void loadOptions(String fpOptions) {
-    log(-1, "loadOptions: not yet implemented");
+    error("loadOptions: not yet implemented");
   }
 
   public static boolean saveOptions(String fpOptions) {
-    log(-1, "saveOptions: not yet implemented");
+    error("saveOptions: not yet implemented");
     return false;
   }
 
   public static boolean saveOptions() {
-    log(-1, "saveOptions: not yet implemented");
+    error("saveOptions: not yet implemented");
     return false;
   }
 
@@ -1566,8 +1469,76 @@ public class SX {
       p("*** options dump end");
     }
   }
+  //</editor-fold>
 
-  // ******************************* Helpers ****************************
+  //<editor-fold desc="*** public features from class Settings (deprecated - now Options)">
+  public static String BundlePath = null;
+  public static String OcrDataPath = null;
+  public static boolean OcrTextSearch = false;
+  public static boolean OcrTextRead = false;
+  public static String OcrLanguage = "eng";
+
+  public static final float FOREVER = Float.POSITIVE_INFINITY;
+  public static boolean TRUE = true;
+  public static boolean FALSE = false;
+
+  public static boolean ThrowException = true; // throw FindFailed exception
+  public static float AutoWaitTimeout = 3f; // in seconds
+  public static float WaitScanRate = 3f; // frames per second
+  public static float ObserveScanRate = 3f; // frames per second
+  public static int ObserveMinChangedPixels = 50; // in pixels
+  public static int RepeatWaitTime = 1; // wait 1 second for visual to vanish after action
+  public static double MinSimilarity = 0.7;
+  public static boolean CheckLastSeen = true;
+
+  public static double DelayValue = 0.3;
+  public static double DelayBeforeMouseDown = DelayValue;
+  public static double DelayBeforeDrag = DelayValue;
+  public static double DelayBeforeDrop = DelayValue;
+
+  /**
+   * Specify a delay between the key presses in seconds as 0.nnn. This only
+   * applies to the next type and is then reset to 0 again. A value &gt; 1 is cut
+   * to 1.0 (max delay of 1 second)
+   */
+  public static double TypeDelay = 0.0;
+
+  /**
+   * Specify a delay between the mouse down and up in seconds as 0.nnn. This
+   * only applies to the next click action and is then reset to 0 again. A value
+   * &gt; 1 is cut to 1.0 (max delay of 1 second)
+   */
+  public static double ClickDelay = 0.0;
+
+  /**
+   * true = start slow motion mode, false: stop it (default: false) show a
+   * visual for SlowMotionDelay seconds (default: 2)
+   */
+  public static boolean ShowActions = false;
+
+  public static float SlowMotionDelay = 2.0f; // in seconds
+  public static float MoveMouseDelay = 0.5f; // in seconds
+
+  /**
+   * true = highlight every match (default: false) (show red rectangle around)
+   * for DefaultHighlightTime seconds (default: 2)
+   */
+  public static boolean Highlight = false;
+  public static float DefaultHighlightTime = 2f;
+  public static float WaitAfterHighlight = 0.3f;
+
+  public static boolean ActionLogs = true;
+  public static boolean InfoLogs = true;
+  public static boolean DebugLogs = false;
+  public static boolean ProfileLogs = false;
+
+  public static boolean LogTime = false;
+  public static boolean UserLogs = true;
+  public static String UserLogPrefix = "user";
+  public static boolean UserLogTime = true;
+  //</editor-fold>
+
+  //<editor-fold desc="*** global helper methods">
   public static void dumpSysProps() {
     dumpSysProps(null);
   }
@@ -1596,10 +1567,6 @@ public class SX {
     p("*** system properties dump end" + filter);
   }
 
-  public static boolean runningJar = true;
-  private static boolean isJythonReady = false;
-  static String appType = "?appType?";
-
   public static void show() {
     if (hasOptions()) {
       dumpOptions();
@@ -1615,11 +1582,102 @@ public class SX {
     if (runningJar) {
       p("executing jar: %s", fSxBaseJar);
     }
-    dumpClassPath("sikulix");
+    Content.dumpClassPath("sikulix");
     if (isJythonReady) {
       JythonHelper.get().showSysPath();
     }
     p("***** show environment end");
+  }
+
+  public static File getFile(Object... args) {
+    if (args.length < 1) {
+      return null;
+    }
+    Object oPath = args[0];
+    Object oSub = "";
+    if (args.length > 1) {
+      oSub = args[1];
+    }
+    File fPath = null;
+    if (isUnset(oSub)) {
+      fPath = new File(oPath.toString());
+    } else {
+      fPath = new File(oPath.toString(), oSub.toString());
+    }
+    try {
+      return fPath.getCanonicalFile();
+    } catch (IOException e) {
+      error("getFile: %s %s error(%s)", oPath, oSub, e.getMessage());
+      return null;
+    }
+  }
+
+  public static File getFolder(Object... args) {
+    File aFile = getFile(args);
+    if (isUnset(aFile)) {
+      return null;
+    }
+    if (aFile.isDirectory()) {
+      return aFile;
+    }
+    aFile.mkdirs();
+    if (aFile.isDirectory()) {
+      return aFile;
+    }
+    error("getFolder: %s error(... does not exist)", aFile);
+    return null;
+  }
+
+  public static URL getFileURL(Object... args) {
+    File aFile = getFile(args);
+    if (isUnset(aFile)) {
+      return null;
+    }
+    try {
+      return new URL("file:" + aFile.toString());
+    } catch (MalformedURLException e) {
+      error("getFileURL: %s error(%s)", aFile, e.getMessage());
+      return null;
+    }
+  }
+
+  public static URL getJarURL(Object... args) {
+    File aFile = getFile(args);
+    if (isUnset(aFile)) {
+      return null;
+    }
+    String sSub = "";
+    if (args.length > 2) {
+      sSub = args[2].toString();
+    }
+    try {
+      return new URL("jar:file:" + aFile.toString() + "!/" + sSub);
+    } catch (MalformedURLException e) {
+      error("getJarURL: %s %s error(%s)", aFile, sSub, e.getMessage());
+      return null;
+    }
+  }
+
+  public static URL getNetURL(Object... args) {
+    //TODO implment getNetURL()
+    URL netURL = null;
+    return netURL;
+  }
+
+  public static boolean existsFile(Object aPath) {
+    if (aPath instanceof URL) {
+      //TODO implement existsFile(URL)
+    }
+    return (getFile(aPath).exists());
+  }
+
+  public static boolean isNull(Object obj) {
+    return null == obj;
+  }
+
+  public static boolean isUnset(Object obj) {
+    if (obj instanceof String && ((String) obj).isEmpty()) return true;
+    return null == obj;
   }
 
   public static void pause(int time) {
@@ -1642,167 +1700,70 @@ public class SX {
     } catch (InterruptedException ex) {
     }
   }
-  // ******************************* ImageCache ****************************
-
-  private static int ImageCache = 64;
-
-  /**
-   * set the maximum to be used for the {@link Image} cache
-   * <br>the start up value is 64 (meaning MB)
-   * <br>using 0 switches off caching and clears the cache in that moment
-   *
-   * @param max cache size in MB
-   */
-  public static void setImageCache(int max) {
-    if (ImageCache > max) {
-      clearCache(max);
-    }
-    ImageCache = max;
-  }
-
-  public static int getImageCache() {
-    return ImageCache;
-  }
-
-  public static void clearCache(int max) {
-    //TODO Image Cache
-  }
-
-
-  // ******************************* Monitors ****************************
-
-  static GraphicsEnvironment genv = null;
-  static GraphicsDevice[] gdevs;
-  static Region[] monitorBounds = null;
-  static Region rAllMonitors;
-  public static int mainMonitor = -1;
-  public static int nMonitors = 0;
-
-  /**
-   * checks, whether Java runs with a valid GraphicsEnvironment (usually means real screens connected)
-   *
-   * @return false if Java thinks it has access to screen(s), true otherwise
-   */
-  public static boolean isHeadless() {
-    return GraphicsEnvironment.isHeadless();
-  }
-
-  public static com.sikulix.core.Region getMonitor(int n) {
-    if (isHeadless()) {
-      return new com.sikulix.core.Region();
-    }
-    n = (n < 0 || n >= nMonitors) ? mainMonitor : n;
-    return monitorBounds[n];
-  }
-
-  public static GraphicsDevice getGraphicsDevice(int id) {
-    return gdevs[id];
-  }
-
-  // ******************************* Devices ****************************
 
   public static Location at() {
     PointerInfo mp = MouseInfo.getPointerInfo();
     if (mp != null) {
       return new Location(MouseInfo.getPointerInfo().getLocation());
     } else {
-      log(-1, "not possible to get mouse position (PointerInfo == null)");
+      error("not possible to get mouse position (PointerInfo == null)");
       return null;
     }
   }
+  //</editor-fold>
 
-  // ******************************* Extract Ressources ****************************
-  static Class sxGlobalClassReference;
-
-// ******************************* SXCommands Pathhandling ****************************
-
-  static ArrayList<URL> imagePath = new ArrayList<URL>();
-
-  private static void initImagePath() {
-    if (imagePath.isEmpty()) {
-      imagePath.add(Content.makeURL(getSXIMAGES()));
+  /**
+   * ***** Property SXROBOT *****
+   *
+   * @return
+   */
+  public static Robot getSXROBOT() {
+    if (isUnset(SXROBOT)) {
+      try {
+        SXROBOT = new Robot();
+      } catch (AWTException e) {
+        terminate(1, "getSXROBOT: not possible: %s", e.getMessage());
+      }
     }
+    return SXROBOT;
   }
 
-  public static boolean setBundlePath() {
-    initImagePath();
-    imagePath.set(0, Content.makeURL(getSXIMAGES()));
-    return true;
-  }
+  static Robot SXROBOT = null;
 
+
+  //<editor-fold desc="************ SX Commands">
+  // ******************************* SX Commands ImagePath handling ****************************
   public static boolean setBundlePath(String fpPath) {
-    initImagePath();
-    URL urlPath = Content.makeURL(fpPath);
-    if (!isUnset(urlPath)) {
-      imagePath.set(0, urlPath);
-      return true;
-    }
-    return false;
+    return Image.setBundlePath(fpPath);
   }
 
   public static String getBundlePath() {
-    initImagePath();
-    return imagePath.get(0).getPath();
+    return Image.getBundlePath();
   }
 
-  public static void addImagePath(String fpMain) {
-    addImagePath(fpMain, null);
+  public static void addImagePath(Object... args) {
+    Image.addPath(args);
   }
 
-  public static void addImagePath(String fpMain, String fpSub) {
-    log(-1, "//TODO addImagePath: not implemented");
+  public static void removeImagePath(Object... args) {
+    Image.removePath(args);
   }
 
-  public static boolean addClassPath(String jarOrFolder) {
-    URL uJarOrFolder = Content.makeURL(jarOrFolder);
-    if (!new File(jarOrFolder).exists()) {
-      log(-1, "addToClasspath: does not exist - not added:\n%s", jarOrFolder);
-      return false;
-    }
-    if (isOnClasspath(uJarOrFolder)) {
-      return true;
-    }
-    log(lvl, "addToClasspath:\n%s", uJarOrFolder);
-    Method method;
-    URLClassLoader sysLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-    Class sysclass = URLClassLoader.class;
-    try {
-      method = sysclass.getDeclaredMethod("addURL", new Class[]{URL.class});
-      method.setAccessible(true);
-      method.invoke(sysLoader, new Object[]{uJarOrFolder});
-    } catch (Exception ex) {
-      log(-1, "Did not work: %s", ex.getMessage());
-      return false;
-    }
-    storeClassPath();
-    return true;
+  public static String[] getImagePath() {
+    return Image.getPath();
   }
 
-  // ******************************* SXCommands which system ****************************
+// ******************************* SX Commands Clipboard ****************************
 
   /**
-   * @return path seperator : or ;
-   */
-  public String getSeparator() {
-    if (isWindows()) {
-      return ";";
-    }
-    return ":";
-  }
-
-// ******************************* SXCommands Clipboard ****************************
-
-  /**
-   * @return content
+   * @return clipboard content
    */
   public static String getClipboard() {
     return App.getClipboard();
   }
 
   /**
-   * set content
-   *
-   * @param text text
+   * @param text to set Clipboard content
    */
   public static void setClipboard(String text) {
     App.setClipboard(text);
@@ -1869,7 +1830,7 @@ public class SX {
   public static String NL = "\n";
 
   public final static String runCmdError = "*****error*****";
-  private String lastResult = "";
+  static String lastResult = "";
 
   /**
    * run a system command finally using Java::Runtime.getRuntime().exec(args) and waiting for completion
@@ -1939,7 +1900,6 @@ public class SX {
     boolean hasError = false;
     int retVal;
     try {
-      log(lvl, arrayToString(args));
       Process process = Runtime.getRuntime().exec(args);
       BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
       BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
@@ -1959,7 +1919,7 @@ public class SX {
       retVal = process.exitValue();
       process.destroy();
     } catch (Exception e) {
-      log(-1, "fatal error: " + e);
+      debug("fatal error: " + e);
       result = String.format(error + "%s", e);
       retVal = 9999;
       hasError = true;
@@ -1975,35 +1935,31 @@ public class SX {
     return lastResult;
   }
 
-  private String[] args = new String[0];
-  private String[] sargs = new String[0];
+  static String[] args = new String[0];
+  static String[] sargs = new String[0];
 
-  public void setArgs(String[] args, String[] sargs) {
-    this.args = args;
-    this.sargs = sargs;
+  public static void setArgs(String[] _args, String[] _sargs) {
+    args = _args;
+    sargs = _sargs;
   }
 
-  public String[] getSikuliArgs() {
+  public static String[] getSikuliArgs() {
     return sargs;
   }
 
-  public String[] getArgs() {
+  public static String[] getArgs() {
     return args;
   }
 
-  public void printArgs() {
+  public static void printArgs() {
     String[] xargs = getSikuliArgs();
     if (xargs.length > 0) {
-      log(lvl, "--- Sikuli parameters ---");
       for (int i = 0; i < xargs.length; i++) {
-        log(lvl, "%d: %s", i + 1, xargs[i]);
       }
     }
     xargs = getArgs();
     if (xargs.length > 0) {
-      log(lvl, "--- User parameters ---");
       for (int i = 0; i < xargs.length; i++) {
-        log(lvl, "%d: %s", i + 1, xargs[i]);
       }
     }
   }
@@ -2019,14 +1975,14 @@ public class SX {
     return ret;
   }
 
-  // ******************************* SXCommands cleanup ****************************
+  // ******************************* SX Commands cleanup ****************************
   public void cleanUp(int n) {
-    log(lvl, "cleanUp: %d", n);
+    trace("cleanUp: %d", n);
 //    ScreenHighlighter.closeAll();
 //    Observer.cleanUp();
 //    Mouse.reset();
 //    Screen.getPrimaryScreen().getRobot().keyUp();
 //    HotkeyManager.reset();
   }
-
+  //</editor-fold>
 }

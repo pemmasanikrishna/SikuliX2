@@ -7,7 +7,7 @@ package com.sikulix.core;
 public class Window extends Visual {
 
   private static vType vClazz = vType.WINDOW;
-  private static SXLog log = SX.getLogger(vClazz.toString());
+  private static SXLog log = SX.getLogger("SX." + vClazz.toString());
   //clazz = vClazz;
 
   public Window() {

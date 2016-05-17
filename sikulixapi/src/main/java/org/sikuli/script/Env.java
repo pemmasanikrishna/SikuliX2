@@ -28,7 +28,7 @@ public class Env {
    */
   @Deprecated
   public static String getSikuliVersion() {
-    return SX.getVersion();
+    return SX.getSXVERSION();
   }
 
   /**

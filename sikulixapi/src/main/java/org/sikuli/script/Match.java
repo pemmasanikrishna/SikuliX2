@@ -7,6 +7,8 @@
 package org.sikuli.script;
 
 import java.awt.Rectangle;
+
+import com.sikulix.core.SX;
 import org.sikuli.util.Settings;
 
 /**
@@ -92,7 +94,6 @@ public class Match extends Region implements Comparable<Match> {
 	/**
 	 * create a Match from a region with given SimScore
 	 * @param reg Region
-	 * @param sc SimScore
 	 */
 	public Match(Region reg) {
     init(reg.x, reg.y, reg.w, reg.h, reg.getScreen());
@@ -224,8 +225,8 @@ public class Match extends Region implements Comparable<Match> {
    */
   protected void setImage(Image img) {
     image = img;
-    if (Settings.Highlight) {
-      highlight(Settings.DefaultHighlightTime);
+    if (SX.Highlight) {
+      highlight(SX.DefaultHighlightTime);
     }
   }
 

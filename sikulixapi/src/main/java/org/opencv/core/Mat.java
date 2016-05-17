@@ -166,11 +166,11 @@ package org.opencv.core;
  *
  * <p>// create a new 320x240 image</p>
  *
- * <p>Mat img(Size(320,240),CV_8UC3);</p>
+ * <p>Mat image(Size(320,240),CV_8UC3);</p>
  *
  * <p>// select a ROI</p>
  *
- * <p>Mat roi(img, Rect(10,10,100,100));</p>
+ * <p>Mat roi(image, Rect(10,10,100,100));</p>
  *
  * <p>// fill the ROI with (0,255,0) (which is green in RGB space);</p>
  *
@@ -227,9 +227,9 @@ package org.opencv.core;
  * <p>int width, int height, int step)</p>
  *
  *
- * <p>Mat img(height, width, CV_8UC3, pixels, step);</p>
+ * <p>Mat image(height, width, CV_8UC3, pixels, step);</p>
  *
- * <p>GaussianBlur(img, img, Size(7,7), 1.5, 1.5);</p>
+ * <p>GaussianBlur(image, image, Size(7,7), 1.5, 1.5);</p>
  *
  *
  * <p></code></p>
@@ -263,15 +263,15 @@ package org.opencv.core;
  *
  * <p>// C++ code:</p>
  *
- * <p>IplImage* img = cvLoadImage("greatwave.jpg", 1);</p>
+ * <p>IplImage* image = cvLoadImage("greatwave.jpg", 1);</p>
  *
- * <p>Mat mtx(img); // convert IplImage* -> Mat</p>
+ * <p>Mat mtx(image); // convert IplImage* -> Mat</p>
  *
  * <p>CvMat oldmat = mtx; // convert Mat -> CvMat</p>
  *
- * <p>CV_Assert(oldmat.cols == img->width && oldmat.rows == img->height &&</p>
+ * <p>CV_Assert(oldmat.cols == image->width && oldmat.rows == image->height &&</p>
  *
- * <p>oldmat.data.ptr == (uchar*)img->imageData && oldmat.step == img->widthStep);</p>
+ * <p>oldmat.data.ptr == (uchar*)image->imageData && oldmat.step == image->widthStep);</p>
  *
  * <p></code></p>
  * <ul>

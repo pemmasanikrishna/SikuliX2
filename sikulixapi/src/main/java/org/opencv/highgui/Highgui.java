@@ -192,7 +192,7 @@ public class Highgui {
 
 
     //
-    // C++:  bool imencode(string ext, Mat img, vector_uchar& buf, vector_int params = vector<int>())
+    // C++:  bool imencode(string ext, Mat image, vector_uchar& buf, vector_int params = vector<int>())
     //
 
 /**
@@ -373,7 +373,7 @@ public class Highgui {
 
 
     //
-    // C++:  bool imwrite(string filename, Mat img, vector_int params = vector<int>())
+    // C++:  bool imwrite(string filename, Mat image, vector_int params = vector<int>())
     //
 
 /**
@@ -463,7 +463,7 @@ public class Highgui {
  *
  *
  * @param filename Name of the file.
- * @param img a img
+ * @param img a image
  * @param params Format-specific save parameters encoded as pairs
  * <code>paramId_1, paramValue_1, paramId_2, paramValue_2,...</code>. The
  * following parameters are currently supported:
@@ -574,7 +574,7 @@ public class Highgui {
  *
  *
  * @param filename Name of the file.
- * @param img a img
+ * @param img a image
  *
  * @see <a href="http://docs.opencv.org/modules/highgui/doc/reading_and_writing_images_and_video.html#imwrite">org.opencv.highgui.Highgui.imwrite</a>
  */
@@ -592,7 +592,7 @@ public class Highgui {
     // C++:  Mat imdecode(Mat buf, int flags)
     private static native long imdecode_0(long buf_nativeObj, int flags);
 
-    // C++:  bool imencode(string ext, Mat img, vector_uchar& buf, vector_int params = vector<int>())
+    // C++:  bool imencode(string ext, Mat image, vector_uchar& buf, vector_int params = vector<int>())
     private static native boolean imencode_0(String ext, long img_nativeObj, long buf_mat_nativeObj, long params_mat_nativeObj);
     private static native boolean imencode_1(String ext, long img_nativeObj, long buf_mat_nativeObj);
 
@@ -600,7 +600,7 @@ public class Highgui {
     private static native long imread_0(String filename, int flags);
     private static native long imread_1(String filename);
 
-    // C++:  bool imwrite(string filename, Mat img, vector_int params = vector<int>())
+    // C++:  bool imwrite(string filename, Mat image, vector_int params = vector<int>())
     private static native boolean imwrite_0(String filename, long img_nativeObj, long params_mat_nativeObj);
     private static native boolean imwrite_1(String filename, long img_nativeObj);
 

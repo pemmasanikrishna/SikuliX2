@@ -7,7 +7,7 @@ package com.sikulix.core;
 public class Screen extends Visual {
 
   private static vType vClazz = vType.SCREEN;
-  private static SXLog log = SX.getLogger(vClazz.toString());
+  private static SXLog log = SX.getLogger("SX." + vClazz.toString());
   //clazz = vClazz;
 
   private int sNum = 0;

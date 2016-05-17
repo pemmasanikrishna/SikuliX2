@@ -1,82 +1,20 @@
 /*
- * Copyright 2010-2014, Sikuli.org, sikulix.com
- * Released under the MIT License.
- *
- * modified RaiMan
+ * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package org.sikuli.script;
+package com.sikulix.core;
 
-import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
-import com.sikulix.core.SX;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
-import org.sikuli.util.Debug;
-import org.sikuli.util.Settings;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.*;
+import java.util.List;
 
 public class Finder {
 
-  static RunTime runTime = RunTime.getRunTime();
-
-  //<editor-fold defaultstate="collapsed" desc="logging">
-  private static final int lvl = 3;
-  private static final Logger logger = LogManager.getLogger("SX.Finder");
-
-  private static void log(int level, String message, Object... args) {
-    if (Debug.is(lvl) || level < 0) {
-      message = String.format(message, args).replaceFirst("\\n", "\n          ");
-      if (level == lvl) {
-        logger.debug(message, args);
-      } else if (level > lvl) {
-        logger.trace(message, args);
-      } else if (level == -1) {
-        logger.error(message, args);
-      } else {
-        logger.info(message, args);
-      }
-    }
-  }
-
-  private static void logp(String message, Object... args) {
-    System.out.println(String.format(message, args));
-  }
-
-  public static void terminate(int retval, String message, Object... args) {
-    logger.fatal(String.format(" *** terminating: " + message, args));
-    System.exit(retval);
-  }
-  
-  private long started = 0;
-  
-  private void start() {
-    started = new Date().getTime();
-  }
-
-  private long end() {
-    return end("");
-  }
-
-  private long end(String message) {
-    long ended = new Date().getTime();
-    long diff = ended - started;
-    if (!message.isEmpty()) {
-      logp("[time] %s: %d msec", message, diff);
-    }
-    started = ended;
-    return diff;
-  }
-//</editor-fold>
+  private static final SXLog log = SX.getLogger("SX.Finder");
 
   private static final double downSimDiff = 0.15;
 
@@ -98,7 +36,7 @@ public class Finder {
     public double downSim = 0;
     public Image img = null;
     public Mat mat = null;
-    public Region lastSeen = null;
+    public Match lastSeen = null;
     public double lastSeenScore = 0;
 
     private boolean valid = false;
@@ -106,13 +44,13 @@ public class Finder {
     public Probe(Pattern pattern) {
       if (pattern.isValid()) {
         this.pattern = pattern;
-        similarity = pattern.getSimilar();
+        similarity = pattern.getScore();
         downSim = ((int) ((similarity - downSimDiff) * 100)) / 100.0;
         img = pattern.getImage();
-        mat = img.getMat();
-        if (null != img.getLastSeen()) {
-          lastSeen = new Region(img.getLastSeen());
-          lastSeenScore = img.getLastSeenScore();
+        mat = img.content;
+        if (null != img.getLastMatch()) {
+          lastSeen = img.getLastMatch();
+          lastSeenScore = lastSeen.getScore();
         }
       }
     }
@@ -126,7 +64,7 @@ public class Finder {
 
     public String name = "";
     public boolean success = false;
-    public Region.FindType type = Region.FindType.ONE;
+    public Visual.FindType type = Visual.FindType.ONE;
 
     public Region region = null;
     private int baseX = 0;
@@ -163,13 +101,13 @@ public class Finder {
     public synchronized boolean hasNext() {
       return hasNext(true);
     }
-    
+
     public synchronized boolean hasNext(boolean withTrace) {
       boolean success = false;
       if (currentScore < 0) {
-        width = pattern.getImage().getWidth();
-        height = pattern.getImage().getHeight();
-        givenScore = pattern.getSimilar();
+        width = pattern.getImage().w;
+        height = pattern.getImage().h;
+        givenScore = pattern.getScore();
         if (givenScore < 0.95) {
           margin = 4;
         } else if (givenScore < 0.85) {
@@ -187,11 +125,11 @@ public class Finder {
           firstScore = currentScore;
         }
       }
-      if (currentScore > pattern.getSimilar() && currentScore  > firstScore - scoreMaxDiff) {
+      if (currentScore > pattern.getScore() && currentScore  > firstScore - scoreMaxDiff) {
         success = true;
       }
       if (withTrace) {
-        log(lvl + 1, "hasNext: %.4f (%d, %d)", currentScore, baseX + currentX, baseY + currentY);
+        log.trace("hasNext: %.4f (%d, %d)", currentScore, baseX + currentX, baseY + currentY);
       }
       return success;
     }
@@ -200,7 +138,7 @@ public class Finder {
     public synchronized Match next() {
       Match match = null;
       if (hasNext(false)) {
-        match = new Match(new Rectangle(baseX + currentX, baseY + currentY, width, height), currentScore);
+        match = new Match(new Region(baseX + currentX, baseY + currentY, width, height), currentScore, null);
         int newX = Math.max(currentX - margin, 0);
         int newY = Math.max(currentY - margin, 0);
         int newXX = Math.min(newX + 2 * margin, result.cols());
@@ -208,10 +146,10 @@ public class Finder {
         result.colRange(newX, newXX).rowRange(newY, newYY).setTo(new Scalar(0f));
         mRes = null;
       }
-      log(lvl + 1, "next: %s", match == null ? "no match" : match.toJSON());
+      log.trace("next: %s", match == null ? "no match" : match);
       return match;
     }
-    
+
     public Match[] getMatches() {
       if (matches == null) {
         if (hasNext()) {
@@ -240,10 +178,10 @@ public class Finder {
     public String toJSON() {
       String template = "{name:[\"%s\", \"%s\"], elapsed:%s, pattern:%s, %s:%s, match:%s}";
       String inWhat = !inRegion ? "in_image" : "in_region";
-      String inWhatJSON = !inRegion ? image.toJSON(false) : region.toJSON();
+      String inWhatJSON = !inRegion ? image.toString() : region.toString();
       String[] nameParts = name.split("_");
       String found = String.format(template, nameParts[0], nameParts[1], elapsed,
-          pattern.toJSON(false), inWhat, inWhatJSON, match.toJSON());
+          pattern, inWhat, inWhatJSON, match);
       return found;
     }
 
@@ -251,7 +189,7 @@ public class Finder {
     public String toString() {
       return toJSON();
     }
-    
+
     @Override
     public void remove() {}
   }
@@ -262,20 +200,20 @@ public class Finder {
   public Finder(Image img) {
     if (img != null && img.isValid()) {
       image = img;
-      base = img.getMat();
+      base = img.content;
       isRegion = false;
     } else {
-      log(-1, "init: invalid image: %s", img);
+      log.error("init: invalid image: %s", img);
     }
   }
 
-  public Finder(Region reg) {
-    if (reg != null) {
-      region = reg;
+  public Finder(Visual vis) {
+    if (!SX.isNull(vis) && vis.isRectangle()) {
+      region = (Region) vis;
       offX = region.x;
       offY = region.y;
     } else {
-      log(-1, "init: invalid region: %s", reg);
+      log.error("init: invalid region: %s", vis);
     }
   }
 
@@ -284,16 +222,16 @@ public class Finder {
       image = new Image(base);
       this.base = base;
     } else {
-      log(-1, "init: invalid CV-Mat: %s", base);
+      log.error("init: invalid CV-Mat: %s", base);
     }
   }
 
   public void setIsMultiFinder() {
-    terminate(1, "TODO setIsMultiFinder()");
+    log.terminate(1, "TODO setIsMultiFinder()");
   }
 
   protected void setBase(BufferedImage bImg) {
-    terminate(1, "TODO setBase(BufferedImage bImg)");
+    log.terminate(1, "TODO setBase(BufferedImage bImg)");
 //    base = new Image(bImg, "").getMat();
   }
 
@@ -302,7 +240,7 @@ public class Finder {
     region = reg;
     offX = region.x;
     offY = region.y;
-    base = region.captureThis().getMat();
+    base = region.capture().content;
   }
 
   protected long setBase() {
@@ -310,7 +248,7 @@ public class Finder {
       return 0;
     }
     long begin_t = new Date().getTime();
-    base = region.captureThis().getMat();
+    base = region.capture().content;
     return new Date().getTime() - begin_t;
   }
 
@@ -320,11 +258,11 @@ public class Finder {
     }
     return true;
   }
-  
+
   public boolean inRegion() {
     return isRegion;
   }
-  
+
   public Region getRegion() {
     return region;
   }
@@ -343,7 +281,7 @@ public class Finder {
   }
 
   public String findText(String text) {
-    terminate(1, "findText: not yet implemented");
+    log.terminate(1, "findText: not yet implemented");
     return null;
   }
 
@@ -376,15 +314,15 @@ public class Finder {
       if (found.match != null) {
         mFound = found.match;
         success = true;
-        log(lvl + 1, "doFind: checkLastSeen: success %d msec", new Date().getTime() - begin_t);
+        log.trace("doFind: checkLastSeen: success %d msec", new Date().getTime() - begin_t);
       } else {
-        log(lvl + 1, "doFind: checkLastSeen: not found %d msec", new Date().getTime() - begin_t);
+        log.trace("doFind: checkLastSeen: not found %d msec", new Date().getTime() - begin_t);
       }
       found.pattern = probe.pattern;
     }
     if (!success) {
       if (isRegion) {
-        log(lvl + 1, "doFind: capture: %d msec", setBase());
+        log.trace("doFind: capture: %d msec", setBase());
       }
       double rfactor = 0;
       if (!isIterator && !useOriginal && probe.img.getResizeFactor() > resizeMinFactor) {
@@ -406,14 +344,13 @@ public class Finder {
             break;
           }
         }
-        log(lvl + 1, "doFindDown: %d msec", new Date().getTime() - begin_t);
+        log.trace("doFindDown: %d msec", new Date().getTime() - begin_t);
       }
       if (!isIterator && mMinMax != null) {
         // ************************************* check after downsized success
         if (base.size().equals(probe.mat.size())) {
           // trust downsized result, if images have same size
-          mFound = new Match((int) offX, (int) offY,
-              base.width(), base.height(), mMinMax.maxVal);
+          mFound = new Match(new Region((int) offX, (int) offY, base.width(), base.height()),mMinMax.maxVal, null);
           success = true;
         } else {
           int maxLocX = (int) (mMinMax.maxLoc.x * rfactor);
@@ -421,36 +358,36 @@ public class Finder {
           begin_t = new Date().getTime();
           int margin = ((int) probe.img.getResizeFactor()) + 1;
           Rect r = new Rect(Math.max(0, maxLocX - margin), Math.max(0, maxLocY - margin),
-              Math.min(probe.img.getWidth() + 2 * margin, base.width()),
-              Math.min(probe.img.getHeight() + 2 * margin, base.height()));
+              Math.min(probe.img.w + 2 * margin, base.width()),
+              Math.min(probe.img.h + 2 * margin, base.height()));
           result = doFindMatch(probe, base.submat(r), probe.mat);
           mMinMax = Core.minMaxLoc(result);
           if (mMinMax.maxVal > probe.similarity) {
-            mFound = new Match((int) mMinMax.maxLoc.x + offX + r.x, (int) mMinMax.maxLoc.y + offY + r.y,
-                probe.img.getWidth(), probe.img.getHeight(), mMinMax.maxVal);
+            mFound = new Match(new Region((int) mMinMax.maxLoc.x + offX + r.x, (int) mMinMax.maxLoc.y + offY + r.y,
+                    probe.img.w, probe.img.h), mMinMax.maxVal, null);
             success = true;
           }
-          log(lvl + 1, "doFind: check after doFindDown %%%.2f(%%%.2f) %d msec",
+          log.trace("doFind: check after doFindDown %%%.2f(%%%.2f) %d msec",
               mMinMax.maxVal * 100, probe.similarity * 100, new Date().getTime() - begin_t);
         }
       }
       if (isIterator || (!success && useOriginal)) {
-        // ************************************** search in original 
+        // ************************************** search in original
         begin_t = new Date().getTime();
         result = doFindMatch(probe, base, probe.mat);
         mMinMax = Core.minMaxLoc(result);
         if (mMinMax != null && mMinMax.maxVal > probe.similarity) {
-          mFound = new Match((int) mMinMax.maxLoc.x + offX, (int) mMinMax.maxLoc.y + offY,
-              probe.img.getWidth(), probe.img.getHeight(), mMinMax.maxVal);
+          mFound = new Match(new Region((int) mMinMax.maxLoc.x + offX, (int) mMinMax.maxLoc.y + offY,
+              probe.img.w, probe.img.h), mMinMax.maxVal, null);
           success = true;
         }
         if (!useOriginal) {
-          log(lvl + 1, "doFind: search in original: %d msec", new Date().getTime() - begin_t);
+          log.trace("doFind: search in original: %d msec", new Date().getTime() - begin_t);
         }
       }
     }
     if (success) {
-      probe.img.setLastSeen(mFound.getRect(), mFound.getScore());
+      probe.img.setLastMatch(new Match(mFound, mFound.getScore(), null));
       found.match = mFound;
       if (Region.FindType.ALL.equals(found.type)) {
         found.result = result;
@@ -478,9 +415,9 @@ public class Finder {
     }
     return res;
   }
-    
+
   public void findAny(Found found) {
-    log(lvl, "findBest: enter");
+    log.trace("findBest: enter");
     findAnyCollect(found);
     if (found.type.equals(Region.FindType.BEST)) {
       List<Match> mList = Arrays.asList(found.getMatches());
@@ -519,7 +456,7 @@ public class Finder {
         patterns[np] = events[np].getPattern();
       }
     } else {
-      log(-1, "findAnyCollect: found structure invalid");
+      log.error("findAnyCollect: found structure invalid");
       return;
     }
     Match[] mArray = new Match[targetCount];
@@ -537,7 +474,7 @@ public class Finder {
       }
       nobj++;
     }
-    log(lvl, "findAnyCollect: waiting for SubFindRuns");
+    log.trace("findAnyCollect: waiting for SubFindRuns");
     nobj = 0;
     boolean all = false;
     while (!all) {
@@ -546,7 +483,7 @@ public class Finder {
         all &= sub.hasFinished();
       }
     }
-    log(lvl, "findAnyCollect: SubFindRuns finished");
+    log.trace("findAnyCollect: SubFindRuns finished");
     nobj = 0;
     boolean anyMatch = false;
     for (Match match : mArray) {
@@ -591,7 +528,7 @@ public class Finder {
           mArray[subN] = subFound.match;
         }
       } catch (Exception ex) {
-        log(-1, "findAnyCollect: image file not found:\n", target);
+        log.error("findAnyCollect: image file not found:\n", target);
       }
       hasFinished(true);
     }
@@ -642,16 +579,16 @@ public class Finder {
     Imgproc.findContours(diff, points, contours, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
     int n = 0;
     for (Mat pm : points) {
-      log(lvl, "(%d) %s", n++, pm);
+      log.trace("(%d) %s", n++, pm);
       printMatI(pm);
     }
-    log(lvl, "contours: %s", contours);
+    log.trace("contours: %s", contours);
     printMatI(contours);
     return true;
   }
 
   public void setMinChanges(int min) {
-    terminate(1, "setMinChanges");
+    log.terminate(1, "setMinChanges");
   }
 
   protected static Pattern evalTarget(Object target) throws IOException {
@@ -662,8 +599,8 @@ public class Finder {
       if (((String) target).startsWith("\t") && ((String) target).endsWith("\t")) {
         findingText = true;
       } else {
-        img = Image.get((String) target);
-        if (img.isUseable()) {
+        img = new Image((String) target);
+        if (img.isValid()) {
           pattern = new Pattern(img);
         } else if (img.isText()) {
           findingText = true;
@@ -672,9 +609,7 @@ public class Finder {
         }
       }
       if (findingText) {
-        if (TextRecognizer.getInstance() != null) {
-          pattern = new Pattern((String) target, Pattern.Type.TEXT);
-        }
+        log.terminate(1, "//TODO implement findingText");
       }
     } else if (target instanceof Pattern) {
       if (((Pattern) target).isValid()) {
@@ -700,7 +635,7 @@ public class Finder {
     for (int r = 0; r < mat.rows(); r++) {
       for (int c = 0; c < mat.cols(); c++) {
         mat.get(r, c, data);
-        log(lvl, "(%d, %d) %s", r, c, Arrays.toString(data));
+        log.trace("(%d, %d) %s", r, c, Arrays.toString(data));
       }
     }
   }

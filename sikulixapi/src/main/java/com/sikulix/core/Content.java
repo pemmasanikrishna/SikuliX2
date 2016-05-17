@@ -14,6 +14,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.security.CodeSource;
@@ -26,10 +27,12 @@ import java.util.zip.ZipOutputStream;
 
 public class Content {
 
-  public static void start() {}
-
-  private static SXLog log = SX.getLogger("Content");
+  private static SXLog log = SX.getLogger("SX.Content");
   private static int lvl = SXLog.DEBUG;
+
+  public static void start() {
+    log.trace("class init");
+  }
 
   static final int DOWNLOAD_BUFFER_SIZE = 153600;
   private static SplashFrame _progress = null;
@@ -125,7 +128,7 @@ public class Content {
       }
       if (a != null && p > 1024) {
         proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(a, p));
-        log.log(lvl, "Proxy defined: %s : %d", a.getHostAddress(), p);
+        log.debug("Proxy defined: %s : %d", a.getHostAddress(), p);
       }
       proxyChecked = true;
       sxProxy = proxy;
@@ -153,7 +156,7 @@ public class Content {
       p = getProxyPort(pPort);
     }
     if (a != null && p > 1024) {
-      log.log(lvl, "Proxy stored: %s : %d", a.getHostAddress(), p);
+      log.debug("Proxy stored: %s : %d", a.getHostAddress(), p);
       proxyChecked = true;
       proxyName = host;
       proxyIP = adr;
@@ -187,12 +190,12 @@ public class Content {
     File fullpath = new File(localPath);
     if (fullpath.exists()) {
       if (fullpath.isFile()) {
-        log.log(-1, "download: target path must be a folder:\n%s", localPath);
+        log.error("download: target path must be a folder:\n%s", localPath);
         fullpath = null;
       }
     } else {
       if (!fullpath.mkdirs()) {
-        log.log(-1, "download: could not create target folder:\n%s", localPath);
+        log.error("download: could not create target folder:\n%s", localPath);
         fullpath = null;
       }
     }
@@ -200,9 +203,9 @@ public class Content {
       srcLength = tryGetFileSize(url);
       srcLengthKB = (int) (srcLength / 1024);
       if (srcLength > 0) {
-        log.log(lvl, "Downloading %s having %d KB", filename, srcLengthKB);
+        log.debug("Downloading %s having %d KB", filename, srcLengthKB);
 			} else {
-        log.log(lvl, "Downloading %s with unknown size", filename);
+        log.debug("Downloading %s with unknown size", filename);
 			}
 			fullpath = new File(localPath, filename);
 			targetPath = fullpath.getAbsolutePath();
@@ -242,10 +245,10 @@ public class Content {
 					}
 				}
 				writer.close();
-				log.log(lvl, "downloaded %d KB to:\n%s", (int) (totalBytesRead / 1024), targetPath);
-				log.log(lvl, "download time: %d", (int) (((new Date()).getTime() - begin_t) / 1000));
+				log.debug("downloaded %d KB to:\n%s", (int) (totalBytesRead / 1024), targetPath);
+				log.debug("download time: %d", (int) (((new Date()).getTime() - begin_t) / 1000));
 			} catch (Exception ex) {
-				log.log(-1, "problems while downloading\n%s", ex);
+				log.error("problems while downloading\n%s", ex);
 				targetPath = null;
 			} finally {
 				if (reader != null) {
@@ -292,7 +295,7 @@ public class Content {
     try {
       urlSrc = new URL(url);
     } catch (MalformedURLException ex) {
-      log.log(-1, "download: bad URL: " + url);
+      log.error("download: bad URL: " + url);
       return null;
     }
     return downloadURL(urlSrc, localPath);
@@ -308,7 +311,7 @@ public class Content {
     try {
       url = new URL(src);
     } catch (MalformedURLException ex) {
-      log.log(-1, "download to string: bad URL:\n%s", src);
+      log.error("download to string: bad URL:\n%s", src);
       return null;
     }
     return downloadURLtoString(url);
@@ -317,7 +320,7 @@ public class Content {
   public static String downloadURLtoString(URL uSrc) {
     String content = "";
     InputStream reader = null;
-    log.log(lvl, "download to string from:\n%s,", uSrc);
+    log.debug("download to string from:\n%s,", uSrc);
     try {
       if (getProxy() != null) {
         reader = uSrc.openConnection(getProxy()).getInputStream();
@@ -330,7 +333,7 @@ public class Content {
         content += (new String(Arrays.copyOfRange(buffer, 0, bytesRead), Charset.forName("utf-8")));
       }
     } catch (Exception ex) {
-      log.log(-1, "problems while downloading\n" + ex.getMessage());
+      log.error("problems while downloading\n" + ex.getMessage());
     } finally {
       if (reader != null) {
         try {
@@ -353,7 +356,7 @@ public class Content {
       URL u = new URL(url);
       Desktop.getDesktop().browse(u.toURI());
     } catch (Exception ex) {
-      log.log(-1, "show in browser: bad URL: " + url);
+      log.error("show in browser: bad URL: " + url);
       return false;
     }
     return true;
@@ -361,14 +364,14 @@ public class Content {
 
   public static File createTempDir(String path) {
     File fTempDir = new File(SX.getSXTEMP(), path);
-    log.log(lvl, "createTempDir:\n%s", fTempDir);
+    log.debug("createTempDir:\n%s", fTempDir);
     if (!fTempDir.exists()) {
       fTempDir.mkdirs();
     } else {
       Content.resetFolder(fTempDir);
     }
     if (!fTempDir.exists()) {
-      log.log(-1, "createTempDir: not possible: %s", fTempDir);
+      log.error("createTempDir: not possible: %s", fTempDir);
       return null;
     }
     return fTempDir;
@@ -384,7 +387,7 @@ public class Content {
 
   public static void deleteTempDir(String path) {
     if (!deleteFileOrFolder(path)) {
-      log.log(-1, "deleteTempDir: not possible");
+      log.error("deleteTempDir: not possible");
     }
   }
 
@@ -400,7 +403,7 @@ public class Content {
     if (fpPath.startsWith("#")) {
       fpPath = fpPath.substring(1);
     } else {
-  		log.log(lvl, "deleteFileOrFolder: %s\n%s", (filter == null ? "" : "filtered: "), fpPath);
+  		log.debug("deleteFileOrFolder: %s\n%s", (filter == null ? "" : "filtered: "), fpPath);
     }
     return doDeleteFileOrFolder(new File(fpPath), filter);
 	}
@@ -409,13 +412,13 @@ public class Content {
     if (fpPath.startsWith("#")) {
       fpPath = fpPath.substring(1);
     } else {
-  		log.log(lvl, "deleteFileOrFolder:\n%s", fpPath);
+  		log.debug("deleteFileOrFolder:\n%s", fpPath);
     }
     return doDeleteFileOrFolder(new File(fpPath), null);
   }
 
   public static void resetFolder(File fPath) {
-		log.log(lvl, "resetFolder:\n%s", fPath);
+		log.debug("resetFolder:\n%s", fPath);
     doDeleteFileOrFolder(fPath, null);
     fPath.mkdirs();
   }
@@ -443,7 +446,7 @@ public class Content {
           try {
             aFile.delete();
           } catch (Exception ex) {
-            log.log(-1, "deleteFile: not deleted:\n%s\n%s", aFile, ex);
+            log.error("deleteFile: not deleted:\n%s\n%s", aFile, ex);
             return false;
           }
         }
@@ -454,7 +457,7 @@ public class Content {
       try {
         fPath.delete();
       } catch (Exception ex) {
-        log.log(-1, "deleteFolder: not deleted:\n" + fPath.getAbsolutePath() + "\n" + ex.getMessage());
+        log.error("deleteFolder: not deleted:\n" + fPath.getAbsolutePath() + "\n" + ex.getMessage());
         return false;
       }
     }
@@ -498,11 +501,11 @@ public class Content {
       temp.deleteOnExit();
       String fpTemp = temp.getAbsolutePath();
       if (!fpTemp.endsWith(".script")) {
-        log.log(lvl, "tempfile create:\n%s", temp.getAbsolutePath());
+        log.debug("tempfile create:\n%s", temp.getAbsolutePath());
       }
       return temp;
     } catch (IOException ex) {
-      log.log(-1, "createTempFile: IOException: %s\n%s", ex.getMessage(),
+      log.error("createTempFile: IOException: %s\n%s", ex.getMessage(),
               fpath + File.separator + temp1 + "12....56" + temp2);
       return null;
     }
@@ -559,14 +562,14 @@ public class Content {
   public static boolean unzip(File fZip, File fTarget) {
     String fpZip = null;
     String fpTarget = null;
-    log.log(lvl, "unzip: from: %s\nto: %s", fZip, fTarget);
+    log.debug("unzip: from: %s\nto: %s", fZip, fTarget);
     try {
       fpZip = fZip.getCanonicalPath();
       if (!new File(fpZip).exists()) {
         throw new IOException();
       }
     } catch (IOException ex) {
-      log.log(-1, "unzip: source not found:\n%s\n%s", fpZip, ex);
+      log.error("unzip: source not found:\n%s\n%s", fpZip, ex);
       return false;
     }
     try {
@@ -577,7 +580,7 @@ public class Content {
         throw new IOException();
       }
     } catch (IOException ex) {
-      log.log(-1, "unzip: target cannot be created:\n%s\n%s", fpTarget, ex);
+      log.error("unzip: target cannot be created:\n%s\n%s", fpTarget, ex);
       return false;
     }
     ZipInputStream inpZip = null;
@@ -605,14 +608,14 @@ public class Content {
         dest.close();
       }
     } catch (Exception ex) {
-      log.log(-1, "unzip: not possible: source:\n%s\ntarget:\n%s\n(%s)%s",
+      log.error("unzip: not possible: source:\n%s\ntarget:\n%s\n(%s)%s",
           fpZip, fpTarget, entry.getName(), ex);
       return false;
     } finally {
       try {      
         inpZip.close();
       } catch (IOException ex) {
-        log.log(-1, "unzip: closing source:\n%s\n%s", fpZip, ex);
+        log.error("unzip: closing source:\n%s\n%s", fpZip, ex);
       }
     }
     return true;
@@ -625,7 +628,7 @@ public class Content {
     try {
       doXcopy(fSrc, fDest, null);
     } catch (Exception ex) {
-      log.log(lvl, "xcopy from: %s\nto: %s\n%s", fSrc, fDest, ex);
+      log.debug("xcopy from: %s\nto: %s\n%s", fSrc, fDest, ex);
       return false;
     }
     return true;
@@ -638,7 +641,7 @@ public class Content {
     try {
       doXcopy(fSrc, fDest, filter);
     } catch (Exception ex) {
-      log.log(lvl, "xcopy from: %s\nto: %s\n%s", fSrc, fDest, ex);
+      log.debug("xcopy from: %s\nto: %s\n%s", fSrc, fDest, ex);
       return false;
     }
     return true;
@@ -808,7 +811,7 @@ public class Content {
         try {
           path = URLDecoder.decode(path, "UTF-8");
         } catch (Exception ex) {
-					log.log(lvl, "slashify: decoding problem with %s\nwarning: filename might not be useable.", path);
+					log.debug("slashify: decoding problem with %s\nwarning: filename might not be useable.", path);
         }
       }
       if (File.separatorChar != '/') {
@@ -1071,7 +1074,7 @@ public class Content {
 					}
 				})) {
 			if (!usedImages.contains(image.getName())) {
-				log.log(3, "Content: delete not used: %s", image.getName());
+				log.debug("Content: delete not used: %s", image.getName());
 				image.delete();
 			}
 		}
@@ -1114,7 +1117,7 @@ public class Content {
       if (!jarPath.endsWith(".jar")) RunningFromJar = "N";
       jarParentPath = Content.slashify((new File(jarPath)).getParent(), true);
     } else {
-      log.log(-1, "Fatal Error 101: Not possible to access the jar files!");
+      log.error("Fatal Error 101: Not possible to access the jar files!");
       Commands.terminate(101);
     }
     return RunningFromJar + jarParentPath;
@@ -1146,7 +1149,7 @@ public class Content {
       out = new PrintStream(new FileOutputStream(fPath));
       out.print(text);
     } catch (Exception e) {
-      log.log(-1,"writeStringToFile: did not work: " + fPath + "\n" + e.getMessage());
+      log.error("writeStringToFile: did not work: " + fPath + "\n" + e.getMessage());
     }
     if (out != null) {
       out.close();
@@ -1188,7 +1191,7 @@ public class Content {
     }
     folderName = Content.slashify(folderName, true);
     if (!(new File(folderName)).isDirectory()) {
-      log.log(-1, "packJar: not a directory or does not exist: " + folderName);
+      log.error("packJar: not a directory or does not exist: " + folderName);
       return false;
     }
     try {
@@ -1200,7 +1203,7 @@ public class Content {
       } else {
         throw new Exception("workdir is null");
       }
-      log.log(lvl, "packJar: %s from %s in workDir %s", jarName, folderName, dir.getAbsolutePath());
+      log.debug("packJar: %s from %s in workDir %s", jarName, folderName, dir.getAbsolutePath());
       if (!folderName.startsWith("http://") && !folderName.startsWith("https://")) {
         folderName = "file://" + (new File(folderName)).getAbsolutePath();
       }
@@ -1209,10 +1212,10 @@ public class Content {
       addToJar(jout, new File(src.getFile()), prefix);
       jout.close();
     } catch (Exception ex) {
-      log.log(-1, "packJar: " + ex.getMessage());
+      log.error("packJar: " + ex.getMessage());
       return false;
     }
-    log.log(lvl, "packJar: completed");
+    log.debug("packJar: completed");
     return true;
   }
 
@@ -1222,9 +1225,9 @@ public class Content {
     if (targetJar.startsWith("#")) {
       logShort = true;
       targetJar = targetJar.substring(1);
-      log.log(lvl, "buildJar: %s", new File(targetJar).getName());
+      log.debug("buildJar: %s", new File(targetJar).getName());
     } else {
-      log.log(lvl, "buildJar:\n%s", targetJar);
+      log.debug("buildJar:\n%s", targetJar);
     }
     try {
       JarOutputStream jout = new JarOutputStream(new FileOutputStream(targetJar));
@@ -1234,9 +1237,9 @@ public class Content {
           continue;
         }
         if (logShort) {
-          log.log(lvl, "buildJar: adding: %s", new File(jars[i]).getName());
+          log.debug("buildJar: adding: %s", new File(jars[i]).getName());
         } else {
-          log.log(lvl, "buildJar: adding:\n%s", jars[i]);
+          log.debug("buildJar: adding:\n%s", jars[i]);
         }
         BufferedInputStream bin = new BufferedInputStream(new FileInputStream(jars[i]));
         ZipInputStream zin = new ZipInputStream(bin);
@@ -1248,7 +1251,7 @@ public class Content {
                 bufferedWrite(zin, jout);
               }
               done.add(zipentry.getName());
-              log.log(lvl+1, "adding: %s", zipentry.getName());
+              log.trace("adding: %s", zipentry.getName());
             }
           }
         }
@@ -1261,19 +1264,19 @@ public class Content {
 						continue;
 					}
           if (logShort) {
-            log.log(lvl, "buildJar: adding %s at %s", new File(files[i]).getName(), prefixs[i]);
+            log.debug("buildJar: adding %s at %s", new File(files[i]).getName(), prefixs[i]);
           } else {
-            log.log(lvl, "buildJar: adding %s at %s", files[i], prefixs[i]);
+            log.debug("buildJar: adding %s at %s", files[i], prefixs[i]);
           }
          addToJar(jout, new File(files[i]), prefixs[i]);
         }
       }
       jout.close();
     } catch (Exception ex) {
-      log.log(-1, "buildJar: %s", ex);
+      log.error("buildJar: %s", ex);
       return false;
     }
-    log.log(lvl, "buildJar: completed");
+    log.debug("buildJar: completed");
     return true;
   }
 
@@ -1293,13 +1296,13 @@ public class Content {
       jarName += ".jar";
     }
     if (!new File(jarName).isAbsolute()) {
-      log.log(-1, "unpackJar: jar path not absolute");
+      log.error("unpackJar: jar path not absolute");
       return false;
     }
     if (folderName == null) {
       folderName = jarName.substring(0, jarName.length() - 4);
     } else if (!new File(folderName).isAbsolute()) {
-      log.log(-1, "unpackJar: folder path not absolute");
+      log.error("unpackJar: folder path not absolute");
       return false;
     }
     folderName = Content.slashify(folderName, true);
@@ -1310,7 +1313,7 @@ public class Content {
         Content.deleteFileOrFolder(folderName);
       }
       in = new ZipInputStream(new BufferedInputStream(new FileInputStream(jarName)));
-      log.log(lvl, "unpackJar: %s to %s", jarName, folderName);
+      log.debug("unpackJar: %s to %s", jarName, folderName);
       boolean isExecutable;
       int n;
       File f;
@@ -1343,10 +1346,10 @@ public class Content {
       }
       in.close();
     } catch (Exception ex) {
-      log.log(-1, "unpackJar: " + ex.getMessage());
+      log.error("unpackJar: " + ex.getMessage());
       return false;
     }
-    log.log(lvl, "unpackJar: completed");
+    log.debug("unpackJar: completed");
     return true;
   }
 
@@ -1422,17 +1425,17 @@ public class Content {
       }
     }
     if (!success) {
-      log.log(-1, "Not a valid Sikuli script project:\n%s", fScriptFolder.getAbsolutePath());
+      log.error("Not a valid Sikuli script project:\n%s", fScriptFolder.getAbsolutePath());
       return null;
     }
     if (scriptType.startsWith("sikuli")) {
       content = fScriptFolder.listFiles(new FileFilterScript(scriptName + "."));
       if (content == null || content.length == 0) {
-        log.log(-1, "Script project %s \n has no script file %s.xxx", fScriptFolder, scriptName);
+        log.error("Script project %s \n has no script file %s.xxx", fScriptFolder, scriptName);
         return null;
       }
     } else if ("jar".equals(scriptType)) {
-      log.log(-1, "Sorry, script projects as jar-files are not yet supported;");
+      log.error("Sorry, script projects as jar-files are not yet supported;");
       //TODO try to load and run as extension
       return null; // until ready
     }
@@ -1493,7 +1496,7 @@ public class Content {
           eFile = new File(subFolder, eFile).getPath();
         }
         if (extractResourceToFile(fpRessources, eFile, fFolder)) {
-          log.log(lvl + 1, "extractResourceToFile done: %s", eFile);
+          log.trace("extractResourceToFile done: %s", eFile);
           count++;
         } else {
           ecount++;
@@ -1501,9 +1504,9 @@ public class Content {
       }
     }
     if (ecount > 0) {
-      log.log(lvl, "files exported: %d - skipped: %d from %s to:\n%s", count, ecount, fpRessources, fFolder);
+      log.debug("files exported: %d - skipped: %d from %s to:\n%s", count, ecount, fpRessources, fFolder);
     } else {
-      log.log(lvl, "files exported: %d from: %s to:\n%s", count, fpRessources, fFolder);
+      log.debug("files exported: %d from: %s to:\n%s", count, fpRessources, fFolder);
     }
     return content;
   }
@@ -1551,7 +1554,7 @@ public class Content {
       aIS.close();
       aFileOS.close();
     } catch (Exception ex) {
-      log.log(-1, "extractResourceToFile: %s (%s)", content, ex);
+      log.error("extractResourceToFile: %s (%s)", content, ex);
       return false;
     }
     return true;
@@ -1587,7 +1590,7 @@ public class Content {
       aIS.close();
       aIS = null;
     } catch (Exception ex) {
-      log.log(-1, "extractResourceToString error: %s from: %s (%s)", encoding, content, ex);
+      log.error("extractResourceToString error: %s from: %s (%s)", encoding, content, ex);
     }
     try {
       if (aIS != null) {
@@ -1599,7 +1602,7 @@ public class Content {
   }
 
   public static URL resourceLocation(String folderOrFile) {
-    log.log(lvl, "resourceLocation: (%s) %s", SX.sxGlobalClassReference, folderOrFile);
+    log.debug("resourceLocation: (%s) %s", SX.sxGlobalClassReference, folderOrFile);
     if (!folderOrFile.startsWith("/")) {
       folderOrFile = "/" + folderOrFile;
     }
@@ -1607,14 +1610,14 @@ public class Content {
   }
 
   public static List<String> resourceList(String folder, FilenameFilter filter) {
-    log.log(lvl, "resourceList: enter");
+    log.debug("resourceList: enter");
     List<String> files = new ArrayList<String>();
     if (!folder.startsWith("/")) {
       folder = "/" + folder;
     }
     URL uFolder = resourceLocation(folder);
     if (uFolder == null) {
-      log.log(lvl, "resourceList: not found: %s", folder);
+      log.debug("resourceList: not found: %s", folder);
       return files;
     }
     try {
@@ -1628,7 +1631,7 @@ public class Content {
     File fFolder = null;
     try {
       fFolder = new File(uFolder.toURI());
-      log.log(lvl, "resourceList: having folder:\n%s", fFolder);
+      log.debug("resourceList: having folder:\n%s", fFolder);
       String sFolder = normalizeAbsolute(fFolder.getPath(), false);
       if (":".equals(sFolder.substring(2, 3))) {
         sFolder = sFolder.substring(1);
@@ -1639,19 +1642,19 @@ public class Content {
       return files;
     } catch (Exception ex) {
       if (!"jar".equals(uFolder.getProtocol())) {
-        log.log(lvl, "resourceList:\n%s", folder);
-        log.log(-1, "resourceList: URL neither folder nor jar:\n%s", ex);
+        log.debug("resourceList:\n%s", folder);
+        log.error("resourceList: URL neither folder nor jar:\n%s", ex);
         return null;
       }
     }
     String[] parts = uFolder.getPath().split("!");
     if (parts.length < 2 || !parts[0].startsWith("file:")) {
-      log.log(lvl, "resourceList:\n%s", folder);
-      log.log(-1, "resourceList: not a valid jar URL:\n" + uFolder.getPath());
+      log.debug("resourceList:\n%s", folder);
+      log.error("resourceList: not a valid jar URL:\n" + uFolder.getPath());
       return null;
     }
     String fpFolder = parts[1];
-    log.log(lvl, "resourceList: having jar:\n%s", uFolder);
+    log.debug("resourceList: having jar:\n%s", uFolder);
     return doResourceListJar(uFolder, fpFolder, files, filter);
   }
 
@@ -1665,7 +1668,7 @@ public class Content {
           return files;
         }
       } else {
-        log.log(localLevel, "scanning folder:\n%s", fFolder);
+        log.trace("scanning folder:\n%s", fFolder);
         subFolder = "/";
         files.add(subFolder);
       }
@@ -1680,7 +1683,7 @@ public class Content {
           if (filter != null && !filter.accept(fFolder, entry)) {
             continue;
           }
-          log.log(localLevel, "from %s adding: %s", (subFolder.isEmpty() ? "." : subFolder), entry);
+          log.trace("from %s adding: %s", (subFolder.isEmpty() ? "." : subFolder), entry);
           files.add(fEntry.getAbsolutePath().substring(1 + fFolder.getPath().length()));
         }
       }
@@ -1711,7 +1714,7 @@ public class Content {
     if (!fpJar.endsWith(".jar")) {
       return files;
     }
-    log.log(localLevel, "scanning jar:\n%s", uJar);
+    log.trace("scanning jar:\n%s", uJar);
     fpResource = fpResource.startsWith("/") ? fpResource.substring(1) : fpResource;
     File fFolder = new File(fpResource);
     File fSubFolder = null;
@@ -1760,11 +1763,11 @@ public class Content {
             continue;
           }
           files.add(zefName);
-          log.log(localLevel, "from %s adding: %s", (zeSub.isEmpty() ? "." : zeSub), zefName);
+          log.trace("from %s adding: %s", (zeSub.isEmpty() ? "." : zeSub), zefName);
         }
       }
     } catch (Exception ex) {
-      log.log(-1, "doResourceListJar: %s", ex);
+      log.error("doResourceListJar: %s", ex);
       return files;
     }
     return files;
@@ -1809,27 +1812,27 @@ public class Content {
     fpRessources = slashify(fpRessources, false);
     if (faJar.isAbsolute()) {
       if (!faJar.exists()) {
-        log.log(-1, "extractResourcesToFolderFromJar: does not exist: %s", faJar);
+        log.error("extractResourcesToFolderFromJar: does not exist: %s", faJar);
         return null;
       }
       try {
         uaJar = new URL("jar", null, "file:" + aJar);
-        log.logp("%s", uaJar);
+        log.info("%s", uaJar);
       } catch (MalformedURLException ex) {
-        log.log(-1, "extractResourcesToFolderFromJar: bad URL for: %s", faJar);
+        log.error("extractResourcesToFolderFromJar: bad URL for: %s", faJar);
         return null;
       }
     } else {
-      uaJar = SX.fromClasspath(aJar);
+      uaJar = fromClasspath(aJar);
       if (uaJar == null) {
-        log.log(-1, "extractResourcesToFolderFromJar: not on classpath: %s", aJar);
+        log.error("extractResourcesToFolderFromJar: not on classpath: %s", aJar);
         return null;
       }
       try {
         String sJar = "file:" + uaJar.getPath() + "!/";
         uaJar = new URL("jar", null, sJar);
       } catch (MalformedURLException ex) {
-        log.log(-1, "extractResourcesToFolderFromJar: bad URL for: %s", uaJar);
+        log.error("extractResourcesToFolderFromJar: bad URL for: %s", uaJar);
         return null;
       }
     }
@@ -1854,7 +1857,7 @@ public class Content {
   public static String[] resourceListAsFile(String folder, File target, FilenameFilter filter) {
     String content = resourceListAsString(folder, filter);
     if (content == null) {
-      log.log(-1, "resourceListAsFile: did not work: %s", folder);
+      log.error("resourceListAsFile: did not work: %s", folder);
       return null;
     }
     if (target != null) {
@@ -1865,7 +1868,7 @@ public class Content {
         aPW.write(content);
         aPW.close();
       } catch (Exception ex) {
-        log.log(-1, "resourceListAsFile: %s:\n%s", target, ex);
+        log.error("resourceListAsFile: %s:\n%s", target, ex);
       }
     }
     return content.split(System.getProperty("line.separator"));
@@ -1884,7 +1887,7 @@ public class Content {
   public static String[] resourceListAsSXContent(String folder, File targetFolder, FilenameFilter filter) {
     List<String> contentList = resourceList(folder, filter);
     if (contentList == null) {
-      log.log(-1, "resourceListAsSikulixContent: did not work: %s", folder);
+      log.error("resourceListAsSikulixContent: did not work: %s", folder);
       return null;
     }
     File target = null;
@@ -1908,7 +1911,7 @@ public class Content {
         aPW.close();
       }
     } catch (Exception ex) {
-      log.log(-1, "resourceListAsFile: %s:\n%s", target, ex);
+      log.error("resourceListAsFile: %s:\n%s", target, ex);
     }
     return arrString;
   }
@@ -1927,7 +1930,7 @@ public class Content {
   public static String[] resourceListAsSXContentFromJar(String aJar, String folder, File targetFolder, FilenameFilter filter) {
     List<String> contentList = extractResourcesToFolderFromJar(aJar, folder, null, filter);
     if (contentList == null || contentList.size() == 0) {
-      log.log(-1, "resourceListAsSikulixContentFromJar: did not work: %s", folder);
+      log.error("resourceListAsSikulixContentFromJar: did not work: %s", folder);
       return null;
     }
     File target = null;
@@ -1951,7 +1954,7 @@ public class Content {
         aPW.close();
       }
     } catch (Exception ex) {
-      log.log(-1, "resourceListAsFile: %s:\n%s", target, ex);
+      log.error("resourceListAsFile: %s:\n%s", target, ex);
     }
     return arrString;
   }
@@ -2006,16 +2009,15 @@ public class Content {
   }
 
   public static boolean copyFromJarToFolderWithList(URL uJar, String fpRessource, List<String> files, File fFolder) {
-    int localLevel = SX.testing ? lvl : lvl + 1;
     if (files == null || files.isEmpty()) {
-      log.log(lvl, "copyFromJarToFolderWithList: list of files is empty");
+      log.debug("copyFromJarToFolderWithList: list of files is empty");
       return false;
     }
     String fpJar = uJar.getPath().split("!")[0];
     if (!fpJar.endsWith(".jar")) {
       return false;
     }
-    log.log(localLevel, "scanning jar:\n%s", uJar);
+    log.trace("scanning jar:\n%s", uJar);
     fpRessource = fpRessource.startsWith("/") ? fpRessource.substring(1) : fpRessource;
 
     String subFolder = "";
@@ -2054,10 +2056,10 @@ public class Content {
         }
         if (zPath.startsWith(current)) {
           if (zPath.length() == fpRessource.length() - 1) {
-            log.log(-1, "extractResourcesToFolderFromJar: only ressource folders allowed - use filter");
+            log.error("extractResourcesToFolderFromJar: only ressource folders allowed - use filter");
             return false;
           }
-          log.log(localLevel, "copying: %s", zPath);
+          log.trace("copying: %s", zPath);
           File out = new File(fFolder, zPath.substring(prefix));
           if (!out.getParentFile().exists()) {
             out.getParentFile().mkdirs();
@@ -2076,7 +2078,7 @@ public class Content {
       }
       zJar.close();
     } catch (Exception ex) {
-      log.log(-1, "doResourceListJar: %s", ex);
+      log.error("doResourceListJar: %s", ex);
       return false;
     }
     return true;
@@ -2096,7 +2098,7 @@ public class Content {
   public static String unzipSKL(String fpSkl) {
     File fSkl = new File(fpSkl);
     if (!fSkl.exists()) {
-      log.log(-1, "unzipSKL: file not found: %s", fpSkl);
+      log.error("unzipSKL: file not found: %s", fpSkl);
     }
     String name = fSkl.getName();
     name = name.substring(0, name.lastIndexOf('.'));
@@ -2106,7 +2108,7 @@ public class Content {
       Content.unzip(fSkl, fSikuliDir);
     }
     if (null == fSikuliDir) {
-      log.log(-1, "unzipSKL: not possible for:\n%s", fpSkl);
+      log.error("unzipSKL: not possible for:\n%s", fpSkl);
       return null;
     }
     return fSikuliDir.getAbsolutePath();
@@ -2136,7 +2138,7 @@ public class Content {
         }
         cnt.close();
       } catch (Exception ex) {
-        log.log(-1, "extractResourceAsLines: %s\n%s", src, ex);
+        log.error("extractResourceAsLines: %s\n%s", src, ex);
       }
     }
     return res;
@@ -2147,13 +2149,13 @@ public class Content {
     InputStream isContent = cl.getResourceAsStream(src);
     if (isContent != null) {
       try {
-        log.log(lvl + 1, "extractResource: %s to %s", src, tgt);
+        log.trace("extractResource: %s to %s", src, tgt);
         tgt.getParentFile().mkdirs();
         OutputStream osTgt = new FileOutputStream(tgt);
         bufferedWrite(isContent, osTgt);
         osTgt.close();
       } catch (Exception ex) {
-        log.log(-1, "extractResource:\n%s", src, ex);
+        log.error("extractResource:\n%s", src, ex);
         return false;
       }
     } else {
@@ -2205,4 +2207,110 @@ public class Content {
     return isEqual;
   }
 
+  //<editor-fold desc="*** java class path">
+  public static boolean addClassPath(String jarOrFolder) {
+    URL uJarOrFolder = Content.makeURL(jarOrFolder);
+    if (!new File(jarOrFolder).exists()) {
+      log.debug("addToClasspath: does not exist - not added:\n%s", jarOrFolder);
+      return false;
+    }
+    if (isOnClasspath(uJarOrFolder)) {
+      return true;
+    }
+    log.debug("addToClasspath:\n%s", uJarOrFolder);
+    Method method;
+    URLClassLoader sysLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+    Class sysclass = URLClassLoader.class;
+    try {
+      method = sysclass.getDeclaredMethod("addURL", new Class[]{URL.class});
+      method.setAccessible(true);
+      method.invoke(sysLoader, new Object[]{uJarOrFolder});
+    } catch (Exception ex) {
+      log.error("Did not work: %s", ex.getMessage());
+      return false;
+    }
+    storeClassPath();
+    return true;
+  }
+
+  private static List<URL> storeClassPath() {
+    URLClassLoader sysLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+    return Arrays.asList(sysLoader.getURLs());
+  }
+
+  public static void dumpClassPath() {
+    dumpClassPath(null);
+  }
+
+  public static void dumpClassPath(String filter) {
+    filter = filter == null ? "" : filter;
+    log.p("*** classpath dump %s", filter);
+    String sEntry;
+    filter = filter.toUpperCase();
+    int n = 0;
+    for (URL uEntry : storeClassPath()) {
+      sEntry = uEntry.getPath();
+      if (!filter.isEmpty()) {
+        if (!sEntry.toUpperCase().contains(filter)) {
+          n++;
+          continue;
+        }
+      }
+      log.p("%3d: %s", n, sEntry);
+      n++;
+    }
+    log.p("*** classpath dump end");
+  }
+
+  public static String isOnClasspath(String fpName, boolean isJar) {
+    File fMatch = null;
+    List<URL> classPath = storeClassPath();
+    int n = -1;
+    String sEntry = "";
+    for (URL entry : classPath) {
+      n++;
+      sEntry = entry.toString();
+      if (sEntry.contains(".jdk")) {
+        continue;
+      }
+      log.info("%2d: %s", n, entry);
+      if (isJar && !sEntry.endsWith(".jar")) {
+        continue;
+      }
+      if (SX.getFile(entry.getPath()).toString().contains(fpName)) {
+        fMatch = new File(entry.getPath());
+      }
+    }
+    return fMatch.toString();
+  }
+
+  public static String isJarOnClasspath(String artefact) {
+    return isOnClasspath(artefact, true);
+  }
+
+  public static String isOnClasspath(String artefact) {
+    return isOnClasspath(artefact, false);
+  }
+
+  public static URL fromClasspath(String artefact) {
+    artefact = Content.slashify(artefact, false).toUpperCase();
+    URL cpe = null;
+    for (URL entry : storeClassPath()) {
+      String sEntry = Content.slashify(new File(entry.getPath()).getPath(), false);
+      if (sEntry.toUpperCase().contains(artefact)) {
+        return entry;
+      }
+    }
+    return cpe;
+  }
+
+  public static boolean isOnClasspath(URL path) {
+    for (URL entry : storeClassPath()) {
+      if (new File(path.getPath()).equals(new File(entry.getPath()))) {
+        return true;
+      }
+    }
+    return false;
+  }
+  //</editor-fold>
 }

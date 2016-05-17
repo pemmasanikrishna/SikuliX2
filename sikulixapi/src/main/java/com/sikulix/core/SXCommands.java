@@ -13,18 +13,18 @@ import java.io.File;
 
 public class SXCommands {
 
-  private static SXLog log = SX.getLogger("SXCommands");
+  private static SXLog log = SX.getLogger("SX.Commands");
   private static int lvl = SXLog.DEBUG;
 
   public static void logCmd(String cmd, Object... args) {
 		String msg = cmd + ": ";
 		if (args.length == 0) {
-			log.log(lvl, msg + "no-args");
+			log.debug(msg + "no-args");
 		} else {
 			for (int i = 0; i < args.length; i++) {
 				msg += "%s ";
 			}
-			log.log(lvl, msg, args);
+			log.debug(msg, args);
 		}
 	}
 
@@ -67,7 +67,7 @@ public class SXCommands {
       File fJarFound = SX.asExtension(fpJar);
       if (fJarFound != null) {
         fpJarFound = fJarFound.getAbsolutePath();
-        SX.addClassPath(fpJarFound);
+        Content.addClassPath(fpJarFound);
       }
     }
     if (fpJarFound != null && fpJarImagePath != null) {
@@ -311,16 +311,16 @@ public class SXCommands {
       Content.deleteFileOrFolder(fTarget);
       fTarget.mkdirs();
       if (!fTarget.exists()) {
-        log.log(-1, "compileJythonFolder: target folder not available\n%", fTarget);
+        log.error("compileJythonFolder: target folder not available\n%", fTarget);
         return false;
       }
       File fSource = new File(fpSource);
       if (!fSource.exists()) {
-        log.log(-1, "compileJythonFolder: source folder not available\n", fSource);
+        log.error("compileJythonFolder: source folder not available\n", fSource);
         return false;
       }
       if (fTarget.equals(fSource)) {
-        log.log(-1, "compileJythonFolder: target folder cannot be the same as the source folder");
+        log.error("compileJythonFolder: target folder cannot be the same as the source folder");
         return false;
       }
       Content.xcopy(fSource, fTarget);
@@ -343,15 +343,15 @@ public class SXCommands {
    * @return
    */
   public static boolean buildJarFromFolder(String targetJar, String sourceFolder) {
-    log.log(lvl, "buildJarFromFolder: \nfrom Folder: %s\nto Jar: %s", sourceFolder, targetJar);
+    log.debug("buildJarFromFolder: \nfrom Folder: %s\nto Jar: %s", sourceFolder, targetJar);
     File fJar = new File(targetJar);
     if (!fJar.getParentFile().exists()) {
-      log.log(-1, "buildJarFromFolder: parent folder of Jar not available");
+      log.error("buildJarFromFolder: parent folder of Jar not available");
       return false;
     }
     File fSrc = new File(sourceFolder);
     if (!fSrc.exists() || !fSrc.isDirectory()) {
-      log.log(-1, "buildJarFromFolder: source folder not available");
+      log.error("buildJarFromFolder: source folder not available");
       return false;
     }
     String prefix = null;

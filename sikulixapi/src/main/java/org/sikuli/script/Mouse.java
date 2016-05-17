@@ -9,6 +9,7 @@ package org.sikuli.script;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
+import com.sikulix.core.SX;
 import com.sikulix.core.Visual;
 import org.sikuli.util.Debug;
 import org.sikuli.util.Settings;
@@ -196,7 +197,7 @@ public class Mouse {
     getArgsClick(loc, action, args);
     get().device.use();
     Device.delay(mouse.beforeWait);
-    Settings.ClickDelay = mouse.innerWait / 1000;
+    SX.ClickDelay = mouse.innerWait / 1000;
     click(loc, mouse.buttons, 0, ((Mouse) get()).clickDouble, null);
     Device.delay(mouse.afterWait);
     get().device.let();
@@ -269,8 +270,8 @@ public class Mouse {
     }
     r.clickStarts();
     r.pressModifiers(modifiers);
-    int pause = Settings.ClickDelay > 1 ? 1 : (int) (Settings.ClickDelay * 1000);
-    Settings.ClickDelay = 0.0;
+    int pause = SX.ClickDelay > 1 ? 1 : (int) (SX.ClickDelay * 1000);
+    SX.ClickDelay = 0.0;
     if (dblClick) {
       r.mouseDown(buttons);
       r.mouseUp(buttons);

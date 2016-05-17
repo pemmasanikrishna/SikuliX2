@@ -267,6 +267,27 @@ public class Image {
 //</editor-fold>
   
 //<editor-fold defaultstate="collapsed" desc="Caching">
+  private static int ImageCache = 64;
+
+  /**
+   * set the maximum to be used for the {@link Image} cache
+   * <br>the start up value is 64 (meaning MB)
+   * <br>using 0 switches off caching and clears the cache in that moment
+   *
+   * @param max cache size in MB
+   */
+  public static void setImageCache(int max) {
+    if (ImageCache > max) {
+      clearCache(max);
+    }
+    ImageCache = max;
+  }
+
+  public static int getImageCache() {
+    return ImageCache;
+  }
+
+
   private static List<Image> images = Collections.synchronizedList(new ArrayList<Image>());
   private static Map<URL, Image> imageFiles = Collections.synchronizedMap(new HashMap<URL, Image>());
 
@@ -278,7 +299,7 @@ public class Image {
   private static synchronized long currentMemoryChange(long size, long max) {
     long maxMemory = max;
     if (max < 0) {
-      maxMemory = SX.getImageCache() * MB;
+      maxMemory = getImageCache() * MB;
       currentMemory += size;
     }
     if (currentMemory > maxMemory) {
@@ -311,7 +332,7 @@ public class Image {
   }
   
   private static boolean isCaching() {
-    return SX.getImageCache() > 0;
+    return getImageCache() > 0;
   }
   
   public static void clearCache(int maxSize) {
@@ -339,12 +360,12 @@ public class Image {
       entry = it.next();
       log(lvl, entry.getKey().toString());
     }
-    if (Settings.getImageCache() == 0) {
+    if (getImageCache() == 0) {
       log(lvl, "Cache state: switched off!");
     } else {
       log(lvl, "Cache state: Max %d MB (entries: %d  used: %d %% %d KB)",
-              Settings.getImageCache(), images.size(),
-              (int) (100 * currentMemory / (Settings.getImageCache() * MB)), (int) (currentMemory / KB));
+              getImageCache(), images.size(),
+              (int) (100 * currentMemory / (getImageCache() * MB)), (int) (currentMemory / KB));
     }
     log(lvl, "--- end of Image dump ---");
   }
@@ -450,7 +471,7 @@ public class Image {
   }
   
   private void cacheLog(String type) {
-    int maxMemory = Settings.getImageCache() * MB;
+    int maxMemory = getImageCache() * MB;
     log(lvl + 1, "cache %s: (%dx%d) #%d %%%d of %dMB", type, mwidth, mheight, images.size(),
         (int) (100 * currentMemory / maxMemory), (int) (maxMemory / MB));
   }

@@ -9,20 +9,17 @@ import java.awt.*;
 public class Match extends Visual {
 
   private static vType vClazz = vType.MATCH;
-  private static SXLog log = SX.getLogger(vClazz.toString());
+  private static SXLog log = SX.getLogger("SX." + vClazz.toString());
 
-  //<editor-fold desc="score">
-  double score = 0;
-
-  public Match setScore(double score) {
-    this.score = score;
-    return this;
+  public int getIndex() {
+    return index;
   }
 
-  public Double getScore() {
-    return score;
+  public void setIndex(int index) {
+    this.index = index;
   }
-  //</editor-fold>
+
+  private int index = 0;
 
   public Match() {
     clazz = vClazz;
@@ -39,14 +36,14 @@ public class Match extends Visual {
     init(vis);
     if (vis.isMatch()) {
       setScore(((Match) vis).getScore());
-      setTarget(vis.getTarget());
+      setOffset(vis.getOffset());
     }
   }
 
-  protected Match(Region reg, Double score, Offset off) {
+  protected Match(Visual vis, Double score, Offset off) {
     clazz = vClazz;
-    init(reg);
+    init(vis);
     setScore(score);
-    setTarget(off);
+    setOffset(off);
   }
 }

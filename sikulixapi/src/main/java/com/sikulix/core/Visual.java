@@ -4,19 +4,43 @@
 
 package com.sikulix.core;
 
-import java.awt.Rectangle;
+import org.opencv.core.*;
+import org.opencv.highgui.Highgui;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public abstract class Visual {
 
+  static {
+    SX.trace("Visual: loadNative(SX.NATIVES.OPENCV)");
+    SX.loadNative(SX.NATIVES.OPENCV);
+  }
+
+  private static vType vClazz = vType.VISUAL;
+  private static SXLog vLog = SX.getLogger("SX." + vClazz.toString());
+
   //<editor-fold desc="***** Visual variants">
   public static enum vType {
-    REGION, LOCATION, IMAGE, SCREEN, MATCH, WINDOW, PATTERN, OFFSET
+    VISUAL, REGION, LOCATION, IMAGE, SCREEN, MATCH, WINDOW, PATTERN, OFFSET
   }
 
   public vType clazz;
+
+  public boolean isOnScreen() {
+    return isRectangle() || isPoint();
+  }
 
   public boolean isRegion() {
     return vType.REGION.equals(clazz);
@@ -57,18 +81,33 @@ public abstract class Visual {
   public boolean isOffset() {
     return vType.OFFSET.equals(clazz);
   }
+
+  public boolean isDesktop() { return !isRemote(); }
+
+  public boolean isRemote() { return onRemoteScreen; }
+
+  /**
+   * @return true if the Visual is useable and/or has valid content
+   */
+  public boolean isValid() { return true; };
   //</editor-fold>
 
   //<editor-fold desc="x y w h">
-  public int x = 0;
-  public int y = 0;
-  public int w = -1;
-  public int h = -1;
+  public Integer x = 0;
+  public Integer y = 0;
+  public Integer w = -1;
+  public Integer h = -1;
+
+  protected boolean onRemoteScreen = false;
 
   public int getX() { return x;}
   public int getY() { return y;}
   public int getW() { return w;}
   public int getH() { return h;}
+
+  public long getSize() {
+    return w * h;
+  }
   //</editor-fold>
 
   //<editor-fold desc="margin">
@@ -100,8 +139,15 @@ public abstract class Visual {
     return lastMatch;
   }
 
-  protected void setLastmatch(Match match) {
+  protected void setLastMatch(Match match) {
     lastMatch = match;
+  }
+
+  public Location getMatch() {
+    if (lastMatch != null) {
+      return lastMatch.getTarget();
+    }
+    return getTarget();
   }
   //</editor-fold>
 
@@ -130,11 +176,27 @@ public abstract class Visual {
   //</editor-fold>
 
   //<editor-fold desc="target">
-  private Location target = null;
+  public enum FindType {
+    ONE, ALL, VANISH, ANY, BEST
+  }
+
+  public Offset getOffset() {
+    return offset;
+  }
+
+  public void setOffset(Offset offset) {
+    this.offset = offset;
+  }
+
+  public void setOffset(int xoff, int yoff) {
+    this.offset = new Offset(xoff, yoff);
+  }
+
+  private Offset offset = null;
 
   public Visual setTarget(Visual vis) {
     if (vis.isOffset()) {
-      target = (Location) getCenter().translate((Offset) vis);
+      target = getCenter().offset((Offset) vis);
     } else {
       target = new Location(vis.x, vis.y);
     }
@@ -147,21 +209,74 @@ public abstract class Visual {
   }
 
   public Location getTarget() {
-    if (SX.isUnset(target)) {
+    if (SX.isNull(target)) {
       target = getCenter();
+      if (!SX.isNull(offset)) {
+        return target.offset(offset);
+      }
     }
     return target;
   }
 
-  public Location getMatch() {
-    if (lastMatch != null) {
-      return lastMatch.getTarget();
+  private Location target = null;
+
+  public double getScore() {
+    return score;
+  }
+
+  public void setScore(double score) {
+    this.score = score;
+  }
+
+  protected double score = -1;
+
+  public Image getImage() {
+    return image;
+  }
+
+  public void setImage(Image img) {
+    this.image = img;
+  }
+
+  protected Image image = null;
+
+  //</editor-fold>
+
+  //<editor-fold desc="content">
+  protected Mat content = new Mat();
+
+  final static String PNG = "png";
+  final static String dotPNG = "." + PNG;
+
+  protected static Mat makeMat(BufferedImage bImg) {
+    Mat aMat = null;
+    if (bImg.getType() == BufferedImage.TYPE_INT_RGB) {
+      vLog.trace("makeMat: INT_RGB (%dx%d)", bImg.getWidth(), bImg.getHeight());
+      int[] data = ((DataBufferInt) bImg.getRaster().getDataBuffer()).getData();
+      ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4);
+      IntBuffer intBuffer = byteBuffer.asIntBuffer();
+      intBuffer.put(data);
+      aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC4);
+      aMat.put(0, 0, byteBuffer.array());
+      Mat oMatBGR = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC3);
+      Mat oMatA = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC1);
+      List<Mat> mixIn = new ArrayList<Mat>(Arrays.asList(new Mat[]{aMat}));
+      List<Mat> mixOut = new ArrayList<Mat>(Arrays.asList(new Mat[]{oMatA, oMatBGR}));
+      //A 0 - R 1 - G 2 - B 3 -> A 0 - B 1 - G 2 - R 3
+      Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 3, 2, 2, 3, 1));
+      return oMatBGR;
+    } else if (bImg.getType() == BufferedImage.TYPE_3BYTE_BGR) {
+      vLog.error("makeMat: 3BYTE_BGR (%dx%d)",
+              bImg.getWidth(), bImg.getHeight());
+    } else {
+      vLog.error("makeMat: Type not supported: %d (%dx%d)",
+              bImg.getType(), bImg.getWidth(), bImg.getHeight());
     }
-    return getTarget();
+    return aMat;
   }
   //</editor-fold>
 
-  //<editor-fold desc="***** construct, show">
+  //<editor-fold desc="***** construct, info">
   public void init(int _x, int _y, int _w, int _h) {
     x = _x;
     y = _y;
@@ -221,31 +336,215 @@ public abstract class Visual {
   //</editor-fold>
 
   //<editor-fold desc="***** get, set, change">
+  public Region getRegion() {
+    return new Region(x, y, w, h);
+  }
+
   public Rectangle getRectangle() {
     return new Rectangle(x, y, w, h);
   }
 
-  public Visual at(int _x, int _y) {
-    if (!SX.isUnset(target)) {
-      translate(_x - x, _y - y);
-    }
-    x = _x;
-    y = _y;
-    return this;
-  }
-
-  public Visual translate(int xoff, int yoff) {
-    this.x += xoff;
-    this.y += yoff;
-    return this;
-  }
-
-  public Visual translate(Offset off) {
-    return translate(off.x, off.y);
-  }
-
   public Location getCenter() {
     return new Location(x + w/2, y + h/2);
+  }
+
+  public Point getPoint() {
+    if (isPoint()) {
+      return new Point(x, y);
+    }
+    return new Point(getCenter().x, getCenter().y);
+  }
+
+  public void at(int x, int y) {
+    this.x = x;
+    this.y = y;
+    if (!SX.isNull(target)) {
+      target.translate(x - this.x, y - this.y);
+    }
+  }
+
+  public void translate(Integer xoff, Integer yoff) {
+    this.x += xoff;
+    this.y += yoff;
+    if (!SX.isNull(target)) {
+      target.translate(xoff, yoff);
+    }
+  }
+
+  public void translate(Offset off) {
+    translate(off.x, off.y);
+  }
+
+  /**
+   * creates a point at the given offset, might be negative<br>
+   * for a rectangle the reference is the center
+   *
+   * @param off an offset
+   * @return new location
+   */
+  public Location offset(Offset off) {
+    if (isPoint()) {
+      return new Location(off.x, off.y);
+    }
+    return getCenter().offset(off);
+  }
+
+  /**
+   * creates a point at the given offset, might be negative<br>
+   * for a rectangle the reference is the center
+   *
+   * @param dx x offset
+   * @param dy y offset
+   * @return new location
+   */
+  public Location offset(Integer dx, Integer dy) {
+    if (isPoint()) {
+      return new Location(x + dx, y + dy);
+    }
+    return getCenter().offset(dx, dy);
+  }
+
+  /**
+   * creates a point at the given offset to the left<br>
+   * negative means the opposite direction<br>
+   * for rectangles the reference point is the middle of the left side
+   *
+   * @param dx x offset
+   * @return new location
+   */
+  public Location left(Integer dx) {
+    if (isPoint()) {
+      return new Location(x - dx, y);
+    }
+    return new Location(getCenter().x - (int) (w/2) - dx, y);
+  }
+
+  /**
+   * creates a point at the given offset to the right<br>
+   * negative means the opposite direction<br>
+   * for rectangles the reference point is the middle of the right side
+   *
+   * @param dx x offset
+   * @return new location
+   */
+  public Location right(Integer dx) {
+    if (isPoint()) {
+      return new Location(x + dx, y);
+    }
+    return new Location(getCenter().x + (int) (w/2) + dx, y);
+  }
+
+  /**
+   * creates a point at the given offset above<br>
+   * negative means the opposite direction<br>
+   * for rectangles the reference point is the middle of upper side
+   *
+   * @param dy y offset
+   * @return new location
+   */
+  public Location above(Integer dy) {
+    if (isPoint()) {
+      return new Location(x - dy, y);
+    }
+    return new Location(getCenter().x - (int) (h/2) - dy, y);
+  }
+
+  /**
+   * creates a point at the given offset below<br>
+   * negative means the opposite direction<br>
+   * for rectangles the reference point is the middle of the lower side
+   *
+   * @param dy y offset
+   * @return new location
+   */
+  public Location below(Integer dy) {
+    if (isPoint()) {
+      return new Location(x - dy, y);
+    }
+    return new Location(getCenter().x - (int) (h/2) - dy, y);
+  }
+
+  /**
+   * returns -1, if outside of any screen <br>
+   *
+   * @return the sequence number of the screen, that contains the given point
+   */
+  public int getContainingScreenNumber() {
+    Rectangle r;
+    for (int i = 0; i < SX.nMonitors; i++) {
+      r = SX.getMonitor(i).getRectangle();
+      if (r.contains(this.x, this.y)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+// TODO getColor() implement more support and make it useable
+  /**
+   * Get the color at the given Point (center of visual) for details: see java.awt.Robot and ...Color
+   *
+   * @return The Color of the Point or null if not possible
+   */
+  public Color getColor() {
+    if (isOnScreen()) {
+      return getScreenColor();
+    }
+    return null;
+  }
+
+  private static Color getScreenColor() {
+    return null;
+  }
+
+  //</editor-fold>
+
+  //<editor-fold desc="***** capture/show">
+  public Image capture() {
+    Image img = new Image();
+    if (isDesktop()) {
+      Robot robot = SX.getSXROBOT();
+      img = new Image(robot.createScreenCapture(getRectangle()));
+    } else {
+      SX.terminate(1, "capture: remote not implemented");
+    }
+    return img;
+  }
+
+  public void show() {
+    // TODO show()
+    SX.terminate(1, "show(): not yet implemented");
+  }
+
+  public void show(int time) {
+    // TODO show()
+    SX.terminate(1, "show(): not yet implemented");
+  }
+
+  protected BufferedImage getBufferedImage() {
+    return getBufferedImage("png");
+  }
+
+  protected BufferedImage getBufferedImage(String type) {
+    BufferedImage bImg = null;
+    byte[] bytes = getImageBytes(type);
+    InputStream in = new ByteArrayInputStream(bytes);
+    try {
+      bImg = ImageIO.read(in);
+    } catch (IOException ex) {
+      vLog.error("getBufferedImage: %s error(%s)", this, ex.getMessage());
+    }
+    return bImg;
+  }
+
+  protected byte[] getImageBytes(String dotType) {
+    MatOfByte bytemat = new MatOfByte();
+    Highgui.imencode(dotType, content, bytemat);
+    return bytemat.toArray();
+  }
+
+  protected byte[] getImageBytes() {
+    return getImageBytes(dotPNG);
   }
   //</editor-fold>
 
@@ -276,9 +575,8 @@ public abstract class Visual {
   //</editor-fold>
 
   //<editor-fold desc="**** wait">
-  public Visual wait(double time) {
-    //TODO implement wait(double time)
-    return this;
+  public void wait(double time) {
+    SX.pause(time);
   }
 
   public Match wait(Visual vis) {
@@ -311,6 +609,16 @@ public abstract class Visual {
   public boolean paste(String text) {
     //TODO implement paste(String text)
     return true;
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="***** observe">
+  public void stopObserver() {
+    stopObserver("");
+  }
+
+  public void stopObserver(String text) {
+    //TODO implement stopObserver()
   }
   //</editor-fold>
 }

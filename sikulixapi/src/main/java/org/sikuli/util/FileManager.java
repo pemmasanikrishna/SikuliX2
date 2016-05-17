@@ -503,7 +503,7 @@ public class FileManager {
   }
   
   public static String saveTimedImage(BufferedImage img, String path, String name) {
-    RunTime.pause(0.01f);
+    SX.pause(0.01f);
     File fImage = new File(path, String.format("%s-%d.png", name, new Date().getTime()));
     try {
       ImageIO.write(img, "png", fImage);

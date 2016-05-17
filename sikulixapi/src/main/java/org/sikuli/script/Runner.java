@@ -110,7 +110,7 @@ public class Runner {
       cmdValue = cmdLine.getOptionValue(CommandArgsEnum.DEBUG.longname());
       if (cmdValue == null) {
         Debug.setDebugLevel(3);
-        Settings.LogTime = true;
+        SX.LogTime = true;
         if (!Debug.isLogToFile()) {
           Debug.setLogFile("");
         }
@@ -119,21 +119,21 @@ public class Runner {
       }
     }
 
-    runTime.setArgs(cmdArgs.getUserArgs(), cmdArgs.getSikuliArgs());
+    SX.setArgs(cmdArgs.getUserArgs(), cmdArgs.getSikuliArgs());
     log(lvl, "commandline: %s", cmdArgs.getArgsOrg());
-    runTime.printArgs();
+    SX.printArgs();
 
     // select script runner and/or start interactive session
     // option is overloaded - might specify runner for -r/-t
     if (cmdLine.hasOption(CommandArgsEnum.INTERACTIVE.shortname())) {
-      runTime.terminate(1, "running interactive: not implemented");
+      SX.terminate(1, "running interactive: not implemented");
     }
 
     String[] runScripts = null;
     if (cmdLine.hasOption(CommandArgsEnum.RUN.shortname())) {
       runScripts = cmdLine.getOptionValues(CommandArgsEnum.RUN.longname());
     } else if (cmdLine.hasOption(CommandArgsEnum.TEST.shortname())) {
-      runTime.terminate(1, "running tests: not implemented");
+      SX.terminate(1, "running tests: not implemented");
     }
     return runScripts;
   }
@@ -179,14 +179,14 @@ public class Runner {
           log(lvl, "Exit code -1: Terminating multi-script-run");
           break;
         }
-        someJS = runTime.getOption("runsetup", "");
+        someJS = SX.getOption("runsetup", "");
         if (!someJS.isEmpty()) {
           log(lvl, "Options.runsetup: %s", someJS);
           new RunBox().runjs(null, null, someJS, null);
         }
-        RunBox rb = new RunBox(givenScriptName, runTime.getArgs(), runAsTest);
+        RunBox rb = new RunBox(givenScriptName, SX.getArgs(), runAsTest);
         exitCode = rb.run();
-        someJS = runTime.getOption("runteardown", "");
+        someJS = SX.getOption("runteardown", "");
         if (!someJS.isEmpty()) {
           log(lvl, "Options.runteardown: %s", someJS);
           new RunBox().runjs(null, null, someJS, null);
@@ -225,7 +225,7 @@ public class Runner {
   }
 
   static JythonHelper pyRunner = null;
-  static Class cIDE;
+  static Class cIDE = null;
   static Method mShow;
   static Method mHide;
 
@@ -254,13 +254,12 @@ public class Runner {
     } else {
       Commands.terminate(1, "ScriptingEngine for JavaScript not available");
     }
-    if (SX.isIDE()) {
+    if (!SX.isUnset(SX.sxGlobalClassNameIDE)) {
       try {
-        cIDE = Class.forName("org.sikuli.ide.SikuliIDE");
+        cIDE = Class.forName(SX.sxGlobalClassNameIDE);
         mHide = cIDE.getMethod("hideIDE", new Class[0]);
         mShow = cIDE.getMethod("showIDE", new Class[0]);
       } catch (Exception ex) {
-        log(-1, "initjs: getIDE");
       }
     }
     return jsr;
@@ -269,7 +268,7 @@ public class Runner {
   public static String prologjs(String before) {
     String after = before;
     if (after.isEmpty()) {
-      if (runTime.isJava8()) {
+      if (SX.isJava8()) {
         after += beforeJSjava8;
       }
       after += beforeJS;
@@ -497,7 +496,7 @@ public class Runner {
         if (!fInline.isAbsolute()) {
           fInline = new File(fRobotWork, sLib + ".jar");
         }
-        SX.addClassPath(fInline.getAbsolutePath());
+        Content.addClassPath(fInline.getAbsolutePath());
         sLib = "";
       }
     }
@@ -815,7 +814,7 @@ public class Runner {
     File aFile = FileManager.createTempFile("script");
     aFile.setExecutable(true);
     FileManager.writeStringToFile(givenScriptScript, aFile);
-    String retVal = runTime.runcmd(new String[]{prefix + aFile.getAbsolutePath()});
+    String retVal = SX.runcmd(new String[]{prefix + aFile.getAbsolutePath()});
     String[] parts = retVal.split("\n");
     int retcode = -1;
     try {
@@ -824,9 +823,9 @@ public class Runner {
     }
     if (retcode != 0) {
       if (silent) {
-        log(lvl, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, runTime.getLastCommandResult());
+        log(lvl, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, SX.getLastCommandResult());
       } else {
-        log(-1, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, runTime.getLastCommandResult());
+        log(-1, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, SX.getLastCommandResult());
       }
     }
     return retcode;
@@ -847,7 +846,7 @@ public class Runner {
       "cmd.exe", "/S", "/C",
       "type " + aFile.getAbsolutePath() + " | powershell -noprofile -"
     };
-    String retVal = runTime.runcmd(psCmdType);
+    String retVal = SX.runcmd(psCmdType);
     String[] parts = retVal.split("\\s");
     int retcode = -1;
     try {
@@ -855,7 +854,7 @@ public class Runner {
     } catch (Exception ex) {
     }
     if (retcode != 0) {
-      log(-1, "PowerShell:\n%s\nreturned:\n%s", givenScriptScript, runTime.getLastCommandResult());
+      log(-1, "PowerShell:\n%s\nreturned:\n%s", givenScriptScript, SX.getLastCommandResult());
     }
     return retcode;
   }

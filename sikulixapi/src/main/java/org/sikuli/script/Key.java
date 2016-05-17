@@ -1006,8 +1006,8 @@ public class Key {
 //
 //    @Override
 //    public void run() {
-//      BufferedImage img = Image.create("SikuliLogo").get();
-//      Debug.log(3, "KBSetup: %s", img);
+//      BufferedImage image = Image.create("SikuliLogo").get();
+//      Debug.log(3, "KBSetup: %s", image);
 //      Image.dump();
 //      kbSetup = new JFrame("Localized Keyboard Setup");
 //      Container mpwinCP = kbSetup.getContentPane();
@@ -1017,7 +1017,7 @@ public class Key {
 //      kbSetup.pack();
 //      kbSetup.setAlwaysOnTop(true);
 //      kbSetup.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-//      win.setLogo(new ImageIcon(img));
+//      win.setLogo(new ImageIcon(image));
 //      kbSetup.setVisible(true);
 //    }
 //  }

@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 
 public class JavaScriptHelper {
 
-  private static SXLog log = SX.getLogger("JavaScriptHelper");
+  private static SXLog log = SX.getLogger("SX.JavaScriptHelper");
   private static int lvl = SXLog.DEBUG;
 
   static Screen scr, scrSaved;
@@ -348,11 +348,13 @@ public class JavaScriptHelper {
       }
       if (len > 1) {
         if (isNumber(aObj) && isNumber(args[1])) {
-          Mouse.move(scr.getMatch().translate(getInteger(aObj), getInteger(args[1])));
+          Location match = scr.getMatch();
+          match.translate(getInteger(aObj), getInteger(args[1]));
+          Mouse.move(match);
           return new Location(); //Mouse.at();
         } else if (len == 3 && loc != null && isNumber(args[1]) && isNumber(args[2])) {
           //Mouse.move(loc.offset(getInteger(args[1], 0), getInteger(args[2], 0)));
-          return  new Location();  //Mouse.at();
+          return new Location();  //Mouse.at();
         }
       }
       if (loc != null) {
@@ -485,7 +487,8 @@ public class JavaScriptHelper {
     } else if ("R".equals(oType)) {
       newObj = new Region(rectFromJSON(json));
     } else if ("M".equals(oType)) {
-      Match newMatch = new Match(rectFromJSON(json)).setScore(dblFromJSON(json, 5)/100);
+      Match newMatch = new Match(rectFromJSON(json));
+      newMatch.setScore(dblFromJSON(json, 5)/100);
       newMatch.setTarget(intFromJSON(json, 6), intFromJSON(json, 7));
     } else if ("L".equals(oType)) {
       newObj = null; //new Location(locFromJSON(json));

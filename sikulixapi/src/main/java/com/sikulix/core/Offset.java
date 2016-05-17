@@ -9,7 +9,7 @@ import java.awt.*;
 public class Offset extends Visual {
 
   private static vType vClazz = vType.OFFSET;
-  private static SXLog log = SX.getLogger(vClazz.toString());
+  private static SXLog log = SX.getLogger("SX." + vClazz.toString());
 
   public Offset() {
     clazz = vClazz;

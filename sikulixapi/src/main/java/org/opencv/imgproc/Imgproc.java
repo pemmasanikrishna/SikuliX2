@@ -592,13 +592,13 @@ public class Imgproc {
  * <p>int main(int argc, char argv)</p>
  *
  *
- * <p>Mat img, gray;</p>
+ * <p>Mat image, gray;</p>
  *
- * <p>if(argc != 2 && !(img=imread(argv[1], 1)).data)</p>
+ * <p>if(argc != 2 && !(image=imread(argv[1], 1)).data)</p>
  *
  * <p>return -1;</p>
  *
- * <p>cvtColor(img, gray, CV_BGR2GRAY);</p>
+ * <p>cvtColor(image, gray, CV_BGR2GRAY);</p>
  *
  * <p>// smooth it, otherwise a lot of false circles may be detected</p>
  *
@@ -619,16 +619,16 @@ public class Imgproc {
  *
  * <p>// draw the circle center</p>
  *
- * <p>circle(img, center, 3, Scalar(0,255,0), -1, 8, 0);</p>
+ * <p>circle(image, center, 3, Scalar(0,255,0), -1, 8, 0);</p>
  *
  * <p>// draw the circle outline</p>
  *
- * <p>circle(img, center, radius, Scalar(0,0,255), 3, 8, 0);</p>
+ * <p>circle(image, center, radius, Scalar(0,0,255), 3, 8, 0);</p>
  *
  *
  * <p>namedWindow("circles", 1);</p>
  *
- * <p>imshow("circles", img);</p>
+ * <p>imshow("circles", image);</p>
  *
  * <p>return 0;</p>
  *
@@ -702,13 +702,13 @@ public class Imgproc {
  * <p>int main(int argc, char argv)</p>
  *
  *
- * <p>Mat img, gray;</p>
+ * <p>Mat image, gray;</p>
  *
- * <p>if(argc != 2 && !(img=imread(argv[1], 1)).data)</p>
+ * <p>if(argc != 2 && !(image=imread(argv[1], 1)).data)</p>
  *
  * <p>return -1;</p>
  *
- * <p>cvtColor(img, gray, CV_BGR2GRAY);</p>
+ * <p>cvtColor(image, gray, CV_BGR2GRAY);</p>
  *
  * <p>// smooth it, otherwise a lot of false circles may be detected</p>
  *
@@ -729,16 +729,16 @@ public class Imgproc {
  *
  * <p>// draw the circle center</p>
  *
- * <p>circle(img, center, 3, Scalar(0,255,0), -1, 8, 0);</p>
+ * <p>circle(image, center, 3, Scalar(0,255,0), -1, 8, 0);</p>
  *
  * <p>// draw the circle outline</p>
  *
- * <p>circle(img, center, radius, Scalar(0,0,255), 3, 8, 0);</p>
+ * <p>circle(image, center, radius, Scalar(0,0,255), 3, 8, 0);</p>
  *
  *
  * <p>namedWindow("circles", 1);</p>
  *
- * <p>imshow("circles", img);</p>
+ * <p>imshow("circles", image);</p>
  *
  * <p>return 0;</p>
  *
@@ -2427,14 +2427,14 @@ public class Imgproc {
  * extrapolation border mode. For example, if you use <code>BORDER_WRAP</code>
  * mode in the horizontal direction, <code>BORDER_REFLECT_101</code> in the
  * vertical direction and want to compute value of the "virtual" pixel
- * <code>Point(-5, 100)</code> in a floating-point image <code>img</code>, it
+ * <code>Point(-5, 100)</code> in a floating-point image <code>image</code>, it
  * looks like: <code></p>
  *
  * <p>// C++ code:</p>
  *
- * <p>float val = img.at<float>(borderInterpolate(100, img.rows, BORDER_REFLECT_101),</p>
+ * <p>float val = image.at<float>(borderInterpolate(100, image.rows, BORDER_REFLECT_101),</p>
  *
- * <p>borderInterpolate(-5, img.cols, BORDER_WRAP));</p>
+ * <p>borderInterpolate(-5, image.cols, BORDER_WRAP));</p>
  *
  * <p>Normally, the function is not called directly. It is used inside </code></p>
  *
@@ -3919,9 +3919,9 @@ public class Imgproc {
  *
  * <p>// C++ code:</p>
  *
- * <p>img *= 1./255;</p>
+ * <p>image *= 1./255;</p>
  *
- * <p>cvtColor(img, img, CV_BGR2Luv);</p>
+ * <p>cvtColor(image, image, CV_BGR2Luv);</p>
  *
  * <p>If you use <code>cvtColor</code> with 8-bit images, the conversion will have
  * some information lost. For many applications, this will not be noticeable but
@@ -4276,9 +4276,9 @@ public class Imgproc {
  *
  * <p>// C++ code:</p>
  *
- * <p>img *= 1./255;</p>
+ * <p>image *= 1./255;</p>
  *
- * <p>cvtColor(img, img, CV_BGR2Luv);</p>
+ * <p>cvtColor(image, image, CV_BGR2Luv);</p>
  *
  * <p>If you use <code>cvtColor</code> with 8-bit images, the conversion will have
  * some information lost. For many applications, this will not be noticeable but
@@ -6876,7 +6876,7 @@ public class Imgproc {
 
 
     //
-    // C++:  void grabCut(Mat img, Mat& mask, Rect rect, Mat& bgdModel, Mat& fgdModel, int iterCount, int mode = GC_EVAL)
+    // C++:  void grabCut(Mat image, Mat& mask, Rect rect, Mat& bgdModel, Mat& fgdModel, int iterCount, int mode = GC_EVAL)
     //
 
 /**
@@ -9999,7 +9999,7 @@ public class Imgproc {
     private static native void goodFeaturesToTrack_0(long image_nativeObj, long corners_mat_nativeObj, int maxCorners, double qualityLevel, double minDistance, long mask_nativeObj, int blockSize, boolean useHarrisDetector, double k);
     private static native void goodFeaturesToTrack_1(long image_nativeObj, long corners_mat_nativeObj, int maxCorners, double qualityLevel, double minDistance);
 
-    // C++:  void grabCut(Mat img, Mat& mask, Rect rect, Mat& bgdModel, Mat& fgdModel, int iterCount, int mode = GC_EVAL)
+    // C++:  void grabCut(Mat image, Mat& mask, Rect rect, Mat& bgdModel, Mat& fgdModel, int iterCount, int mode = GC_EVAL)
     private static native void grabCut_0(long img_nativeObj, long mask_nativeObj, int rect_x, int rect_y, int rect_width, int rect_height, long bgdModel_nativeObj, long fgdModel_nativeObj, int iterCount, int mode);
     private static native void grabCut_1(long img_nativeObj, long mask_nativeObj, int rect_x, int rect_y, int rect_width, int rect_height, long bgdModel_nativeObj, long fgdModel_nativeObj, int iterCount);
 

@@ -11,6 +11,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import com.sikulix.scripting.JythonHelper;
 import org.sikuli.util.Debug;
@@ -149,7 +150,7 @@ public class Commands {
       File fJarFound = SX.asExtension(fpJar);
       if (fJarFound != null) {
         fpJarFound = fJarFound.getAbsolutePath();
-        SX.addClassPath(fpJarFound);
+        Content.addClassPath(fpJarFound);
       }
     }
     if (fpJarFound != null && fpJarImagePath != null) {

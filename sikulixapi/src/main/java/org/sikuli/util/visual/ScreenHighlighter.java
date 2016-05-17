@@ -114,7 +114,7 @@ public class ScreenHighlighter extends OverlayTransparentWindow implements Mouse
     _opened.remove(this);
     clean();
     try {
-      Thread.sleep((int) (Settings.WaitAfterHighlight > 0.3f ? Settings.WaitAfterHighlight * 1000 - 300 : 300));
+      Thread.sleep((int) (SX.WaitAfterHighlight > 0.3f ? SX.WaitAfterHighlight * 1000 - 300 : 300));
     } catch (InterruptedException e) {
     }
   }

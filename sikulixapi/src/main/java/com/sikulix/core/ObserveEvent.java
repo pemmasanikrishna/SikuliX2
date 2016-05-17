@@ -1,74 +1,19 @@
 /*
- * Copyright 2010-2014, Sikuli.org, sikulix.com
- * Released under the MIT License.
- *
- * modified RaiMan
+ * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package org.sikuli.script;
+package com.sikulix.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.sikulix.core.SX;
-import org.apache.logging.log4j.LogManager;
-import org.sikuli.util.Debug;
-import org.sikuli.util.Settings;
-
 /**
  * provides information about the observed event being in the {@link ObserverCallBack}
  */
 public class ObserveEvent {
 
-  //<editor-fold defaultstate="collapsed" desc="logging">
-  private static final int lvl = 3;
-  private static final org.apache.logging.log4j.Logger logger = LogManager.getLogger("SX.ObserveEvent");
-
-  private static void log(int level, String message, Object... args) {
-    if (Debug.is(lvl) || level < 0) {
-      message = String.format(message, args).replaceFirst("\\n", "\n          ");
-      if (level == lvl) {
-        logger.debug(message, args);
-      } else if (level > lvl) {
-        logger.trace(message, args);
-      } else if (level == -1) {
-        logger.error(message, args);
-      } else {
-        logger.info(message, args);
-      }
-    }
-  }
-
-  private static void logp(String message, Object... args) {
-    System.out.println(String.format(message, args));
-  }
-
-  public static void terminate(int retval, String message, Object... args) {
-    logger.fatal(String.format(" *** terminating: " + message, args));
-    System.exit(retval);
-  }
-  
-  private long started = 0;
-  
-  private void start() {
-    started = new Date().getTime();
-  }
-
-  private long end() {
-    return end("");
-  }
-
-  private long end(String message) {
-    long ended = new Date().getTime();
-    long diff = ended - started;
-    if (!message.isEmpty()) {
-      logp("[time] %s: %d msec", message, diff);
-    }
-    started = ended;
-    return diff;
-  }
-//</editor-fold>
+  private static SXLog log = SX.getLogger("SX.ObserveEvent");
 
   public enum Type {
     APPEAR, VANISH, CHANGE, GENERIC
@@ -84,11 +29,11 @@ public class ObserveEvent {
   private ObserverCallBack callback = null;
   private Object[] vals = null;
   private int minChanged = SX.ObserveMinChangedPixels;
-  
+
   private long repeatAfter = 0;
   private int count = 0;
   private boolean active = true;
- 
+
   private List<Match> matchOrChanges = new ArrayList<Match>();
 
   private ObserveEvent() {
@@ -100,7 +45,7 @@ public class ObserveEvent {
     time = new Date().getTime();
     init(type, callback, targetOrMinChanges);
   }
-  
+
   public ObserveEvent(Type type, ObserverCallBack callback, Object... args) {
     this.type = type;
     this.callback = callback;
@@ -111,7 +56,7 @@ public class ObserveEvent {
     this.type = type;
     init(args);
   }
-  
+
   private void init(Object... args) {
     if (type == Type.GENERIC) {
       vals = args;
@@ -124,12 +69,12 @@ public class ObserveEvent {
         try {
           pattern = Finder.evalTarget(args[0]);
         } catch (IOException ex) {
-          log(-1, "init: file not found: %s", args[0]);
+          log.error("init: file not found: %s", args[0]);
         }
       }
     }
   }
-  
+
   /**
    * get the observe event type
    * @return a string containing either APPEAR, VANISH, CHANGE or GENERIC
@@ -137,7 +82,7 @@ public class ObserveEvent {
   public String getType() {
     return type.toString();
   }
-  
+
   /**
    *
    * @return wether this event is currently ready to be observed
@@ -145,7 +90,7 @@ public class ObserveEvent {
   public boolean isActive() {
     return active;
   }
-  
+
   /**
    *
    * @param state the intended active state
@@ -189,14 +134,14 @@ public class ObserveEvent {
    public boolean isGeneric() {
     return type == Type.GENERIC;
   }
-   
+
   public boolean hasCallback() {
     return callback != null;
   }
-  
+
   public ObserverCallBack getCallback() {
     return callback;
-  } 
+  }
 
   /**
    *
@@ -207,7 +152,7 @@ public class ObserveEvent {
   }
 
   public boolean hasHappened() {
-    if (matchOrChanges.size() > 0) { 
+    if (matchOrChanges.size() > 0) {
       if (isChange()) {
         return matchOrChanges.get(0) == null;
       }
@@ -231,16 +176,16 @@ public class ObserveEvent {
     matchOrChanges.clear();
     matchOrChanges.add(0, m);
   }
-  
+
   protected void setHappened() {
     matchOrChanges.clear();
-    matchOrChanges.add(0, new Match());    
+    matchOrChanges.add(0, new Match());
   }
 
   public void reset() {
     matchOrChanges.clear();
   }
-    
+
   /**
    *
    * @return a list of observed changes as matches (CHANGE)

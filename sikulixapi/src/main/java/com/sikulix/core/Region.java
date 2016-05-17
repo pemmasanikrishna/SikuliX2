@@ -10,7 +10,7 @@ import java.awt.Point;
 public class Region extends Visual{
 
   private static vType vClazz = vType.REGION;
-  private static SXLog log = SX.getLogger(vClazz.toString());
+  private static SXLog log = SX.getLogger("SX." + vClazz.toString());
 
   public Region() {
     clazz = vClazz;

@@ -971,7 +971,7 @@ public class Core {
 
 
     //
-    // C++:  void arrowedLine(Mat& img, Point pt1, Point pt2, Scalar color, int thickness = 1, int line_type = 8, int shift = 0, double tipLength = 0.1)
+    // C++:  void arrowedLine(Mat& image, Point pt1, Point pt2, Scalar color, int thickness = 1, int line_type = 8, int shift = 0, double tipLength = 0.1)
     //
 
 /**
@@ -1684,7 +1684,7 @@ public class Core {
 
 
     //
-    // C++:  void circle(Mat& img, Point center, int radius, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
+    // C++:  void circle(Mat& image, Point center, int radius, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
     //
 
 /**
@@ -3197,7 +3197,7 @@ public class Core {
 
 
     //
-    // C++:  void ellipse(Mat& img, Point center, Size axes, double angle, double startAngle, double endAngle, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
+    // C++:  void ellipse(Mat& image, Point center, Size axes, double angle, double startAngle, double endAngle, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
     //
 
 /**
@@ -3305,7 +3305,7 @@ public class Core {
 
 
     //
-    // C++:  void ellipse(Mat& img, RotatedRect box, Scalar color, int thickness = 1, int lineType = 8)
+    // C++:  void ellipse(Mat& image, RotatedRect box, Scalar color, int thickness = 1, int lineType = 8)
     //
 
 /**
@@ -3513,7 +3513,7 @@ public class Core {
 
 
     //
-    // C++:  void fillConvexPoly(Mat& img, vector_Point points, Scalar color, int lineType = 8, int shift = 0)
+    // C++:  void fillConvexPoly(Mat& image, vector_Point points, Scalar color, int lineType = 8, int shift = 0)
     //
 
 /**
@@ -3568,7 +3568,7 @@ public class Core {
 
 
     //
-    // C++:  void fillPoly(Mat& img, vector_vector_Point pts, Scalar color, int lineType = 8, int shift = 0, Point offset = Point())
+    // C++:  void fillPoly(Mat& image, vector_vector_Point pts, Scalar color, int lineType = 8, int shift = 0, Point offset = Point())
     //
 
 /**
@@ -4458,7 +4458,7 @@ public class Core {
 
 
     //
-    // C++:  void line(Mat& img, Point pt1, Point pt2, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
+    // C++:  void line(Mat& image, Point pt1, Point pt2, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
     //
 
 /**
@@ -6219,7 +6219,7 @@ public class Core {
 
 
     //
-    // C++:  void polylines(Mat& img, vector_vector_Point pts, bool isClosed, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
+    // C++:  void polylines(Mat& image, vector_vector_Point pts, bool isClosed, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
     //
 
 /**
@@ -6347,7 +6347,7 @@ public class Core {
 
 
     //
-    // C++:  void putText(Mat img, string text, Point org, int fontFace, double fontScale, Scalar color, int thickness = 1, int lineType = 8, bool bottomLeftOrigin = false)
+    // C++:  void putText(Mat image, string text, Point org, int fontFace, double fontScale, Scalar color, int thickness = 1, int lineType = 8, bool bottomLeftOrigin = false)
     //
 
 /**
@@ -6537,7 +6537,7 @@ public class Core {
 
 
     //
-    // C++:  void rectangle(Mat& img, Point pt1, Point pt2, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
+    // C++:  void rectangle(Mat& image, Point pt1, Point pt2, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
     //
 
 /**
@@ -7972,7 +7972,7 @@ public class Core {
  *
  * <p>int thickness = 3;</p>
  *
- * <p>Mat img(600, 800, CV_8UC3, Scalar.all(0));</p>
+ * <p>Mat image(600, 800, CV_8UC3, Scalar.all(0));</p>
  *
  * <p>int baseline=0;</p>
  *
@@ -7984,13 +7984,13 @@ public class Core {
  *
  * <p>// center the text</p>
  *
- * <p>Point textOrg((img.cols - textSize.width)/2,</p>
+ * <p>Point textOrg((image.cols - textSize.width)/2,</p>
  *
- * <p>(img.rows + textSize.height)/2);</p>
+ * <p>(image.rows + textSize.height)/2);</p>
  *
  * <p>// draw the box</p>
  *
- * <p>rectangle(img, textOrg + Point(0, baseline),</p>
+ * <p>rectangle(image, textOrg + Point(0, baseline),</p>
  *
  * <p>textOrg + Point(textSize.width, -textSize.height),</p>
  *
@@ -7998,7 +7998,7 @@ public class Core {
  *
  * <p>//... and the baseline first</p>
  *
- * <p>line(img, textOrg + Point(0, thickness),</p>
+ * <p>line(image, textOrg + Point(0, thickness),</p>
  *
  * <p>textOrg + Point(textSize.width, thickness),</p>
  *
@@ -8006,7 +8006,7 @@ public class Core {
  *
  * <p>// then put the text itself</p>
  *
- * <p>putText(img, text, textOrg, fontFace, fontScale,</p>
+ * <p>putText(image, text, textOrg, fontFace, fontScale,</p>
  *
  * <p>Scalar.all(255), thickness, 8);</p>
  *
@@ -8076,7 +8076,7 @@ public class Core {
     private static native void addWeighted_0(long src1_nativeObj, double alpha, long src2_nativeObj, double beta, double gamma, long dst_nativeObj, int dtype);
     private static native void addWeighted_1(long src1_nativeObj, double alpha, long src2_nativeObj, double beta, double gamma, long dst_nativeObj);
 
-    // C++:  void arrowedLine(Mat& img, Point pt1, Point pt2, Scalar color, int thickness = 1, int line_type = 8, int shift = 0, double tipLength = 0.1)
+    // C++:  void arrowedLine(Mat& image, Point pt1, Point pt2, Scalar color, int thickness = 1, int line_type = 8, int shift = 0, double tipLength = 0.1)
     private static native void arrowedLine_0(long img_nativeObj, double pt1_x, double pt1_y, double pt2_x, double pt2_y, double color_val0, double color_val1, double color_val2, double color_val3, int thickness, int line_type, int shift, double tipLength);
     private static native void arrowedLine_1(long img_nativeObj, double pt1_x, double pt1_y, double pt2_x, double pt2_y, double color_val0, double color_val1, double color_val2, double color_val3);
 
@@ -8113,7 +8113,7 @@ public class Core {
     private static native boolean checkRange_0(long a_nativeObj, boolean quiet, double minVal, double maxVal);
     private static native boolean checkRange_1(long a_nativeObj);
 
-    // C++:  void circle(Mat& img, Point center, int radius, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
+    // C++:  void circle(Mat& image, Point center, int radius, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
     private static native void circle_0(long img_nativeObj, double center_x, double center_y, int radius, double color_val0, double color_val1, double color_val2, double color_val3, int thickness, int lineType, int shift);
     private static native void circle_1(long img_nativeObj, double center_x, double center_y, int radius, double color_val0, double color_val1, double color_val2, double color_val3, int thickness);
     private static native void circle_2(long img_nativeObj, double center_x, double center_y, int radius, double color_val0, double color_val1, double color_val2, double color_val3);
@@ -8169,12 +8169,12 @@ public class Core {
     // C++:  bool eigen(Mat src, bool computeEigenvectors, Mat& eigenvalues, Mat& eigenvectors)
     private static native boolean eigen_0(long src_nativeObj, boolean computeEigenvectors, long eigenvalues_nativeObj, long eigenvectors_nativeObj);
 
-    // C++:  void ellipse(Mat& img, Point center, Size axes, double angle, double startAngle, double endAngle, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
+    // C++:  void ellipse(Mat& image, Point center, Size axes, double angle, double startAngle, double endAngle, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
     private static native void ellipse_0(long img_nativeObj, double center_x, double center_y, double axes_width, double axes_height, double angle, double startAngle, double endAngle, double color_val0, double color_val1, double color_val2, double color_val3, int thickness, int lineType, int shift);
     private static native void ellipse_1(long img_nativeObj, double center_x, double center_y, double axes_width, double axes_height, double angle, double startAngle, double endAngle, double color_val0, double color_val1, double color_val2, double color_val3, int thickness);
     private static native void ellipse_2(long img_nativeObj, double center_x, double center_y, double axes_width, double axes_height, double angle, double startAngle, double endAngle, double color_val0, double color_val1, double color_val2, double color_val3);
 
-    // C++:  void ellipse(Mat& img, RotatedRect box, Scalar color, int thickness = 1, int lineType = 8)
+    // C++:  void ellipse(Mat& image, RotatedRect box, Scalar color, int thickness = 1, int lineType = 8)
     private static native void ellipse_3(long img_nativeObj, double box_center_x, double box_center_y, double box_size_width, double box_size_height, double box_angle, double color_val0, double color_val1, double color_val2, double color_val3, int thickness, int lineType);
     private static native void ellipse_4(long img_nativeObj, double box_center_x, double box_center_y, double box_size_width, double box_size_height, double box_angle, double color_val0, double color_val1, double color_val2, double color_val3, int thickness);
     private static native void ellipse_5(long img_nativeObj, double box_center_x, double box_center_y, double box_size_width, double box_size_height, double box_angle, double color_val0, double color_val1, double color_val2, double color_val3);
@@ -8191,11 +8191,11 @@ public class Core {
     // C++:  float fastAtan2(float y, float x)
     private static native float fastAtan2_0(float y, float x);
 
-    // C++:  void fillConvexPoly(Mat& img, vector_Point points, Scalar color, int lineType = 8, int shift = 0)
+    // C++:  void fillConvexPoly(Mat& image, vector_Point points, Scalar color, int lineType = 8, int shift = 0)
     private static native void fillConvexPoly_0(long img_nativeObj, long points_mat_nativeObj, double color_val0, double color_val1, double color_val2, double color_val3, int lineType, int shift);
     private static native void fillConvexPoly_1(long img_nativeObj, long points_mat_nativeObj, double color_val0, double color_val1, double color_val2, double color_val3);
 
-    // C++:  void fillPoly(Mat& img, vector_vector_Point pts, Scalar color, int lineType = 8, int shift = 0, Point offset = Point())
+    // C++:  void fillPoly(Mat& image, vector_vector_Point pts, Scalar color, int lineType = 8, int shift = 0, Point offset = Point())
     private static native void fillPoly_0(long img_nativeObj, long pts_mat_nativeObj, double color_val0, double color_val1, double color_val2, double color_val3, int lineType, int shift, double offset_x, double offset_y);
     private static native void fillPoly_1(long img_nativeObj, long pts_mat_nativeObj, double color_val0, double color_val1, double color_val2, double color_val3);
 
@@ -8258,7 +8258,7 @@ public class Core {
     private static native double kmeans_0(long data_nativeObj, int K, long bestLabels_nativeObj, int criteria_type, int criteria_maxCount, double criteria_epsilon, int attempts, int flags, long centers_nativeObj);
     private static native double kmeans_1(long data_nativeObj, int K, long bestLabels_nativeObj, int criteria_type, int criteria_maxCount, double criteria_epsilon, int attempts, int flags);
 
-    // C++:  void line(Mat& img, Point pt1, Point pt2, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
+    // C++:  void line(Mat& image, Point pt1, Point pt2, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
     private static native void line_0(long img_nativeObj, double pt1_x, double pt1_y, double pt2_x, double pt2_y, double color_val0, double color_val1, double color_val2, double color_val3, int thickness, int lineType, int shift);
     private static native void line_1(long img_nativeObj, double pt1_x, double pt1_y, double pt2_x, double pt2_y, double color_val0, double color_val1, double color_val2, double color_val3, int thickness);
     private static native void line_2(long img_nativeObj, double pt1_x, double pt1_y, double pt2_x, double pt2_y, double color_val0, double color_val1, double color_val2, double color_val3);
@@ -8345,7 +8345,7 @@ public class Core {
     private static native void polarToCart_0(long magnitude_nativeObj, long angle_nativeObj, long x_nativeObj, long y_nativeObj, boolean angleInDegrees);
     private static native void polarToCart_1(long magnitude_nativeObj, long angle_nativeObj, long x_nativeObj, long y_nativeObj);
 
-    // C++:  void polylines(Mat& img, vector_vector_Point pts, bool isClosed, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
+    // C++:  void polylines(Mat& image, vector_vector_Point pts, bool isClosed, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
     private static native void polylines_0(long img_nativeObj, long pts_mat_nativeObj, boolean isClosed, double color_val0, double color_val1, double color_val2, double color_val3, int thickness, int lineType, int shift);
     private static native void polylines_1(long img_nativeObj, long pts_mat_nativeObj, boolean isClosed, double color_val0, double color_val1, double color_val2, double color_val3, int thickness);
     private static native void polylines_2(long img_nativeObj, long pts_mat_nativeObj, boolean isClosed, double color_val0, double color_val1, double color_val2, double color_val3);
@@ -8353,7 +8353,7 @@ public class Core {
     // C++:  void pow(Mat src, double power, Mat& dst)
     private static native void pow_0(long src_nativeObj, double power, long dst_nativeObj);
 
-    // C++:  void putText(Mat img, string text, Point org, int fontFace, double fontScale, Scalar color, int thickness = 1, int lineType = 8, bool bottomLeftOrigin = false)
+    // C++:  void putText(Mat image, string text, Point org, int fontFace, double fontScale, Scalar color, int thickness = 1, int lineType = 8, bool bottomLeftOrigin = false)
     private static native void putText_0(long img_nativeObj, String text, double org_x, double org_y, int fontFace, double fontScale, double color_val0, double color_val1, double color_val2, double color_val3, int thickness, int lineType, boolean bottomLeftOrigin);
     private static native void putText_1(long img_nativeObj, String text, double org_x, double org_y, int fontFace, double fontScale, double color_val0, double color_val1, double color_val2, double color_val3, int thickness);
     private static native void putText_2(long img_nativeObj, String text, double org_x, double org_y, int fontFace, double fontScale, double color_val0, double color_val1, double color_val2, double color_val3);
@@ -8368,7 +8368,7 @@ public class Core {
     // C++:  void randu(Mat& dst, double low, double high)
     private static native void randu_0(long dst_nativeObj, double low, double high);
 
-    // C++:  void rectangle(Mat& img, Point pt1, Point pt2, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
+    // C++:  void rectangle(Mat& image, Point pt1, Point pt2, Scalar color, int thickness = 1, int lineType = 8, int shift = 0)
     private static native void rectangle_0(long img_nativeObj, double pt1_x, double pt1_y, double pt2_x, double pt2_y, double color_val0, double color_val1, double color_val2, double color_val3, int thickness, int lineType, int shift);
     private static native void rectangle_1(long img_nativeObj, double pt1_x, double pt1_y, double pt2_x, double pt2_y, double color_val0, double color_val1, double color_val2, double color_val3, int thickness);
     private static native void rectangle_2(long img_nativeObj, double pt1_x, double pt1_y, double pt2_x, double pt2_y, double color_val0, double color_val1, double color_val2, double color_val3);

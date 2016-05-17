@@ -17,11 +17,10 @@ import java.util.List;
 
 public class JythonHelper {
 
-  public static SXLog log = SX.getLogger("JythonHelper");
-  private static int lvl = SXLog.DEBUG;
+  public static SXLog log = SX.getLogger("SX.JythonHelper");
 
-  static JythonHelper instance = null;
-  private JythonHelper(String className) {}
+  static JythonHelper jh = null;
+  private JythonHelper() {}
 
   static Object interpreter = null;
   List<String> sysPath = new ArrayList<String>();
@@ -46,13 +45,13 @@ public class JythonHelper {
   static boolean isJythonReady = false;
 
   public static JythonHelper get() {
-    if (instance == null) {
-      instance = new JythonHelper("JythonHelper");
-      instance.log.log(lvl, "init: starting");
+    if (jh == null) {
+      jh = new JythonHelper();
+      log.trace("init: starting");
       try {
         cInterpreter = Class.forName("org.python.util.PythonInterpreter");
       } catch (Exception ex) {
-        SX.addClassPath("Jython");
+        Content.addClassPath("Jython");
       }
       try {
         cInterpreter = Class.forName("org.python.util.PythonInterpreter");
@@ -78,13 +77,13 @@ public class JythonHelper {
       } catch (Exception ex) {
         cInterpreter = null;
       }
-      log.log(lvl, "init: success");
+      log.trace("init: success");
     }
     if (cInterpreter == null) {
-      log.log(-1, "no Jython on classpath");
+      log.error("no Jython on classpath");
     }
     isJythonReady = true;
-    return instance;
+    return jh;
   }
 
   private void noOp() {
@@ -257,7 +256,7 @@ public class JythonHelper {
     } catch (Exception ex) {
       PyException pex = new PyException(ex.getCause());
       if (pex.isTypeExit() < 0) {
-        log.log(-1, "exec: returns:\n%s", ex.getCause());
+        log.error("exec: returns:\n%s", ex.getCause());
       }
       return false;
     }
@@ -271,19 +270,19 @@ public class JythonHelper {
     } catch (Exception ex) {
       PyException pex = new PyException(ex.getCause());
       if ((retval = pex.isTypeExit()) < 0) {
-        log.log(-1, "execFile: returns:\n%s", ex.getCause());
+        log.error("execFile: returns:\n%s", ex.getCause());
       }
     }
     return retval;
   }
 
-  //TODO check signature (instance method)
+  //TODO check signature (jh method)
   public boolean checkCallback(Object[] args) {
     PyInstance inst = new PyInstance(args[0]);
     String mName = (String) args[1];
     Object method = inst.__getattr__(mName);
     if (method == null || !method.getClass().getName().contains("PyMethod")) {
-      log.log(-100, "checkCallback: Object: %s, Method not found: %s", inst, mName);
+      log.error("checkCallback: Object: %s, Method not found: %s", inst, mName);
       return false;
     }
     return true;
@@ -295,14 +294,14 @@ public class JythonHelper {
     String msg = (String) args[2];
     Object method = inst.__getattr__(mName);
     if (method == null || !method.getClass().getName().contains("PyMethod")) {
-      log.log(-100, "runLoggerCallback: Object: %s, Method not found: %s", inst, mName);
+      log.error("runLoggerCallback: Object: %s, Method not found: %s", inst, mName);
       return false;
     }
     try {
       PyString pmsg = new PyString(msg);
       inst.invoke(mName, pmsg.get());
     } catch (Exception ex) {
-      log.log(-100, "runLoggerCallback: invoke: %s", ex.getMessage());
+      log.error("runLoggerCallback: invoke: %s", ex.getMessage());
       return false;
     }
     return true;
@@ -316,7 +315,7 @@ public class JythonHelper {
     } catch (Exception ex) {
 //      if (!"<lambda>".equals(func.__name__)) {
       if (!func.toString().contains("<lambda>")) {
-        log.log(-1, "runObserveCallback: jython invoke: %s", ex.getMessage());
+        log.error("runObserveCallback: jython invoke: %s", ex.getMessage());
         return false;
       }
       success = false;
@@ -327,7 +326,7 @@ public class JythonHelper {
     try {
       func.__call__();
     } catch (Exception ex) {
-      log.log(-1, "runObserveCallback: jython invoke <lambda>: %s", ex.getMessage());
+      log.error("runObserveCallback: jython invoke <lambda>: %s", ex.getMessage());
       return false;
     }
     return true;
@@ -339,14 +338,14 @@ public class JythonHelper {
     String mName = (String) args[1];
     Object method = inst.__getattr__(mName);
     if (method == null || !method.getClass().getName().contains("PyMethod")) {
-      log.log(-1, "runCallback: Object: %s, Method not found: %s", inst, mName);
+      log.error("runCallback: Object: %s, Method not found: %s", inst, mName);
       return false;
     }
     try {
       PyString pmsg = new PyString("not yet supported");
       inst.invoke(mName, pmsg.get());
     } catch (Exception ex) {
-      log.log(-1, "runCallback: invoke: %s", ex.getMessage());
+      log.error("runCallback: invoke: %s", ex.getMessage());
       return false;
     }
     return true;
@@ -355,7 +354,7 @@ public class JythonHelper {
   public static JythonHelper set(Object ip) {
     JythonHelper.get();
     interpreter = ip;
-    return instance;
+    return jh;
   }
 
   public String load(String fpJarOrFolder) {
@@ -386,7 +385,7 @@ public class JythonHelper {
 //    if path and _load(path):
 //        return True
 //    return False
-    log.log(lvl, "load: to be loaded:\n%s", fpJarOrFolder);
+    log.debug("load: to be loaded:\n%s", fpJarOrFolder);
     if (!fpJarOrFolder.endsWith(".jar")) {
       fpJarOrFolder += ".jar";
     }
@@ -406,15 +405,15 @@ public class JythonHelper {
       }
     }
     if (fJar != null) {
-      if (SX.addClassPath(fJar.getPath())) {
+      if (Content.addClassPath(fJar.getPath())) {
         if (!hasSysPath(fJar.getPath())) {
           insertSysPath(fJar);
         }
       } else {
-        log.log(-1, "load: not possible");
+        log.error("load: not possible");
       }
     } else {
-      log.log(-1, "load: could not be found - even not in bundle nor in Lib nor in Extensions");
+      log.error("load: could not be found - even not in bundle nor in Lib nor in Extensions");
     }
     if (fJar == null) {
       return null;
@@ -462,7 +461,7 @@ public class JythonHelper {
         return null;
       }
     }
-    log.log(lvl, "findModule: %s (%s)", fModule.getName(), packPath);
+    log.debug("findModule: %s (%s)", fModule.getName(), packPath);
 //    if (!fModule.getName().endsWith(".sikuli")) {
 //      fModule = fModule.getParentFile();
 //    }
@@ -476,7 +475,7 @@ public class JythonHelper {
 //  Sikuli._addModPath(self.path)
 //  return self._load_module(module_name)
 
-    log.log(lvl, "loadModulePrepare: %s in %s", modName, modPath);
+    log.debug("loadModulePrepare: %s in %s", modName, modPath);
     int nDot = modName.lastIndexOf(".");
     if (nDot > -1) {
       modName = modName.substring(nDot + 1);
@@ -516,7 +515,7 @@ public class JythonHelper {
       Integer argvLen = (Integer) mLen.invoke(pyArgv, (Object[]) null);
       for (int i = 0; i < argvLen; i++) {
         String entry = (String) mGet.invoke(pyArgv, i);
-        log.log(lvl + 1, "sys.path[%2d] = %s", i, entry);
+        log.trace("sys.path[%2d] = %s", i, entry);
         sysArgv.add(entry);
       }
     } catch (Exception ex) {
@@ -554,7 +553,7 @@ public class JythonHelper {
       Integer pathLen = (Integer) mLen.invoke(pyPath, (Object[]) null);
       for (int i = 0; i < pathLen; i++) {
         String entry = (String) mGet.invoke(pyPath, i);
-        log.log(lvl + 1, "sys.path[%2d] = %s", i, entry);
+        log.trace("sys.path[%2d] = %s", i, entry);
         sysPath.add(entry);
       }
     } catch (Exception ex) {
@@ -573,20 +572,20 @@ public class JythonHelper {
       Integer pathLen = (Integer) mLen.invoke(pyPath, (Object[]) null);
       for (int i = 0; i < pathLen && i < sysPath.size(); i++) {
         String entry = sysPath.get(i);
-        log.log(lvl + 1, "sys.path.set[%2d] = %s", i, entry);
+        log.trace("sys.path.set[%2d] = %s", i, entry);
         mSet.invoke(pyPath, i, entry);
       }
       if (pathLen < sysPath.size()) {
         for (int i = pathLen; i < sysPath.size(); i++) {
           String entry = sysPath.get(i);
-          log.log(lvl + 1, "sys.path.add[%2d] = %s", i, entry);
+          log.trace("sys.path.add[%2d] = %s", i, entry);
           mAdd.invoke(pyPath, entry);
         }
       }
       if (pathLen > sysPath.size()) {
         for (int i = sysPath.size(); i < pathLen; i++) {
           String entry = (String) mGet.invoke(pyPath, i);
-          log.log(lvl + 1, "sys.path.rem[%2d] = %s", i, entry);
+          log.trace("sys.path.rem[%2d] = %s", i, entry);
           mRemove.invoke(pyPath, i);
         }
       }
@@ -601,7 +600,7 @@ public class JythonHelper {
     if (fSitePackages.exists()) {
       addSysPath(fSitePackages);
       if (hasSysPath(fSitePackages.getAbsolutePath())) {
-        log.log(lvl, "added as Jython::sys.path[0]:\n%s", fSitePackages);
+        log.debug("added as Jython::sys.path[0]:\n%s", fSitePackages);
       }
       File fSites = new File(fSitePackages, "sites.txt");
       String sSites = "";
@@ -716,11 +715,11 @@ public class JythonHelper {
 
   public void showSysPath() {
       getSysPath();
-      log.log(lvl, "***** Jython sys.path");
+      log.debug("***** Jython sys.path");
       for (int i = 0; i < sysPath.size(); i++) {
-        log.logp("%2d: %s", i, sysPath.get(i));
+        log.info("%2d: %s", i, sysPath.get(i));
       }
-      log.log(lvl, "***** Jython sys.path end");
+      log.debug("***** Jython sys.path end");
   }
 
   private static class CompileJythonFilter implements Content.FileFilter {
@@ -761,16 +760,16 @@ public class JythonHelper {
       Content.deleteFileOrFolder(fTarget);
       fTarget.mkdirs();
       if (!fTarget.exists()) {
-        log.log(-1, "compileJythonFolder: target folder not available\n%", fTarget);
+        log.error("compileJythonFolder: target folder not available\n%", fTarget);
         return false;
       }
       File fSource = new File(fpSource);
       if (!fSource.exists()) {
-        log.log(-1, "compileJythonFolder: source folder not available\n", fSource);
+        log.error("compileJythonFolder: source folder not available\n", fSource);
         return false;
       }
       if (fTarget.equals(fSource)) {
-        log.log(-1, "compileJythonFolder: target folder cannot be the same as the source folder");
+        log.error("compileJythonFolder: target folder cannot be the same as the source folder");
         return false;
       }
       Content.xcopy(fSource, fTarget);

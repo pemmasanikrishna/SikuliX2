@@ -1,4 +1,4 @@
-package com.sikulix.sikulixapitest;
+package com.sikulix.sikulixcoretest;
 
 import java.io.File;
 import java.util.Date;
