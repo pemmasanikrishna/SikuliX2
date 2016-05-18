@@ -508,7 +508,10 @@ public class SX {
    */
   public static String getJHOME() {
     if (isUnset(JHOME)) {
-      terminate(1, "Value not set: JHOME");
+      String jhome = System.getProperty("java.home");
+      if (!isUnset(jhome)) {
+        JHOME = jhome;
+      }
     }
     return JHOME;
   }

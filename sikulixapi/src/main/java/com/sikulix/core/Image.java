@@ -185,36 +185,61 @@ public class Image extends Visual {
   //<editor-fold desc="*** path">
   private static final List<URL> imagePath = Collections.synchronizedList(new ArrayList<URL>());
 
-  private static void initImagePath() {
+  public static URL makePath(Object... args) {
+    //TODO implment makePath()
+    URL url = null;
+    return url;
+  }
+
+  private static void initPath() {
     if (imagePath.isEmpty()) {
       imagePath.add(SX.getFileURL(SX.getSXIMAGES()));
     }
   }
 
-  public static boolean setBundlePath() {
-    initImagePath();
-    imagePath.set(0, Content.makeURL(SX.getSXIMAGES()));
-    return true;
+  private static String getPathFromURL(URL uPath) {
+    String sPath = "";
+    String proto = "";
+    sPath = uPath.getPath();
+    proto = uPath.getProtocol();
+    if ("file".equals(proto) || "jar".equals(proto)) {
+      sPath = SX.getFile(sPath).getAbsolutePath();
+      if ("jar".equals(proto)) {
+        log.debug("getPath: jar: %s", sPath);
+      }
+    } else if (proto.startsWith("http")) {
+      log.debug("getPath: http: %s", uPath);
+    } else {
+      log.debug("getPath: other: %s", uPath);
+    }
+    return sPath;
   }
 
-  public static boolean resetPath() {
-    imagePath.clear();
-    initImagePath();
-    imagePath.set(0, Content.makeURL(SX.getSXIMAGES()));
+  public static String getBundlePath() {
+    initPath();
+    return getPathFromURL(imagePath.get(0));
+  }
+
+  public static boolean setBundlePath() {
+    initPath();
+    imagePath.set(0, SX.getFileURL(SX.getSXIMAGES()));
     return true;
   }
 
   public static boolean setBundlePath(String fpPath) {
-    initImagePath();
-    File fPath = SX.getFolder(fpPath);
-    if (!SX.isUnset(fPath)) {
-      URL urlPath = Content.makeURL(fpPath);
-      if (!SX.isUnset(urlPath)) {
-        imagePath.set(0, urlPath);
-        return true;
-      }
+    initPath();
+    URL urlPath = makePath(fpPath);
+    if (!SX.isUnset(urlPath)) {
+      imagePath.set(0, urlPath);
+      return true;
     }
     return false;
+  }
+
+  public static boolean resetPath() {
+    imagePath.clear();
+    initPath();
+    return true;
   }
 
   public static boolean resetPath(String fpPath) {
@@ -222,44 +247,86 @@ public class Image extends Visual {
     return setBundlePath(fpPath);
   }
 
-  public static String[] getPath() {
+  public static String[] getPath(String filter) {
     String[] sPaths = new String[imagePath.size()];
     int n = 0;
-    String sPath = "";
+    String sPath;
     for (URL uPath : imagePath) {
-      sPath = uPath.toString().split(":")[1];
+      sPath = getPathFromURL(uPath);
+      if (!SX.isUnset(filter) && !sPath.contains(filter)) {
+        continue;
+      }
       sPaths[n++] = sPath;
     }
     return sPaths;
   }
 
-  public static String getBundlePath() {
-    initImagePath();
-    return imagePath.get(0).getPath();
+  public static String[] getPath() {
+    return getPath("");
   }
 
-  public static URL addPath(Object... args) {
+  public static int hasPath(String filter) {
+    if (SX.isUnset(filter)) return -1;
+    int n = 0;
+    String sPath;
+    for (URL uPath : imagePath) {
+      sPath = getPathFromURL(uPath);
+      if (sPath.contains(filter)) {
+        return n;
+      }
+      n++;
+    }
+    return -1;
+  }
+
+  public static String getPath(int n) {
+    if (n < 0 || n > imagePath.size() - 1) {
+      n = 0;
+    }
+    return getPathFromURL(imagePath.get(n));
+  }
+
+  public static boolean setPath(int n, String fpPath) {
+    if (n < 0 || n > imagePath.size() - 1) {
+      return false;
+    }
+    URL urlPath = makePath(fpPath);
+    if (!SX.isUnset(urlPath)) {
+      imagePath.set(n, urlPath);
+      return true;
+    }
+    return false;
+  }
+
+  public static String removePath(int n) {
+    if (n < 0 || n > imagePath.size() - 1) {
+      n = 0;
+    }
+    return getPathFromURL(imagePath.get(n));
+  }
+
+  public static int addPath(Object... args) {
     log.error("//TODO addPath: not implemented");
     URL url = null;
-    return url;
+    return -1;
   }
 
-  public static URL makePath(Object... args) {
-    //TODO implment makePath()
-    URL url = null;
-    return url;
-  }
-
-  public static URL removePath(Object... args) {
+  public static int removePath(Object... args) {
     //TODO implment removePath()
     URL url = null;
-    return url;
+    return -1;
   }
 
-  public static URL insertPath(URL urlBefore, Object... args) {
+  public static int insertPath(Object... args) {
     //TODO implment insertPath()
     URL url = null;
-    return url;
+    return -1;
+  }
+
+  public static int changePath(Object... args) {
+    //TODO implment insertPath()
+    URL url = null;
+    return -1;
   }
   //</editor-fold>
 

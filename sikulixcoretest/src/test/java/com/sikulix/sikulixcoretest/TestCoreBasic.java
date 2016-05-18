@@ -95,7 +95,7 @@ public class TestCoreBasic extends SX {
   @Test
   public void test_21_setBundlePath() {
     currentTest = "test_21_setBundlePath";
-    String bundlePath = "MyImages";
+    String bundlePath = "My Images";
     boolean success = setBundlePath(bundlePath);
     result = getBundlePath();
     success &= existsFile(result);
