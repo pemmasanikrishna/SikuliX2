@@ -14,7 +14,6 @@ import java.util.List;
 import com.sikulix.core.SX;
 import org.apache.logging.log4j.LogManager;
 import org.sikuli.util.Debug;
-import org.sikuli.util.Settings;
 
 /**
  * provides information about the observed event being in the {@link ObserverCallBack}

@@ -14,7 +14,6 @@ import org.apache.commons.cli.CommandLine;
 import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
-import org.sikuli.util.Settings;
 import org.sikuli.util.CommandArgs;
 import org.sikuli.util.CommandArgsEnum;
 import com.sikulix.scripting.JythonHelper;
@@ -76,6 +75,18 @@ public class Runner {
     Debug.logx(level, me + message, args);
   }
 
+  private static String[] args = new String[0];
+  private static String[] sargs = new String[0];
+
+  private static void setArgs(String[] _args, String[] _sargs) {
+    args = _args;
+    sargs = _sargs;
+  }
+
+  private static String[] getArgs() {
+    return args;
+  }
+
   public static String[] evalArgs(String[] args) {
     CommandArgs cmdArgs = new CommandArgs("SCRIPT");
     CommandLine cmdLine = cmdArgs.getCommandLine(CommandArgs.scanArgs(args));
@@ -119,9 +130,8 @@ public class Runner {
       }
     }
 
-    SX.setArgs(cmdArgs.getUserArgs(), cmdArgs.getSikuliArgs());
+    setArgs(cmdArgs.getUserArgs(), cmdArgs.getSikuliArgs());
     log(lvl, "commandline: %s", cmdArgs.getArgsOrg());
-    SX.printArgs();
 
     // select script runner and/or start interactive session
     // option is overloaded - might specify runner for -r/-t
@@ -184,7 +194,7 @@ public class Runner {
           log(lvl, "Options.runsetup: %s", someJS);
           new RunBox().runjs(null, null, someJS, null);
         }
-        RunBox rb = new RunBox(givenScriptName, SX.getArgs(), runAsTest);
+        RunBox rb = new RunBox(givenScriptName, getArgs(), runAsTest);
         exitCode = rb.run();
         someJS = SX.getOption("runteardown", "");
         if (!someJS.isEmpty()) {

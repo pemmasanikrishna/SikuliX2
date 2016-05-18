@@ -115,7 +115,7 @@ public class JavaScriptHelper {
    * @return the used region
    */
   public static Region use(Object... args) {
-    SXCommands.logCmd("use", args);
+    logCmd("use", args);
     scrSaved = null;
     return usex(args);
   }
@@ -127,7 +127,7 @@ public class JavaScriptHelper {
    * @return the used region
    */
   public static Region use1(Object... args) {
-    SXCommands.logCmd("use1", args);
+    logCmd("use1", args);
     scrSaved = scr;
     return usex(args);
   }
@@ -139,7 +139,7 @@ public class JavaScriptHelper {
     if (scrSaved != null) {
       scr = scrSaved;
       scrSaved = null;
-      SXCommands.logCmd("restoreUsed", "restored: %s", scr);
+      logCmd("restoreUsed", "restored: %s", scr);
     }
   }
 
@@ -176,7 +176,7 @@ public class JavaScriptHelper {
    * @throws FindFailed
    */
   public static Match wait(Object... args) throws FindFailed {
-    SXCommands.logCmd("wait", args);
+    logCmd("wait", args);
     Object[] realArgs = waitArgs(args);
     return waitx((String) realArgs[0], (Pattern) realArgs[1], (Double) realArgs[2], (Float) realArgs[3]);
   }
@@ -261,7 +261,7 @@ public class JavaScriptHelper {
    * @return true if not there from beginning or vanished within wait time, false otherwise
    */
   public static boolean waitVanish(Object... args) {
-    SXCommands.logCmd("waitVanish", args);
+    logCmd("waitVanish", args);
     Object aPattern;
     Object[] realArgs = waitArgs(args);
     String image = (String) realArgs[0];
@@ -289,7 +289,7 @@ public class JavaScriptHelper {
    * @return the match or null if not found within wait time (no FindFailed exception)
    */
   public static Match exists(Object... args) {
-    SXCommands.logCmd("exists", args);
+    logCmd("exists", args);
     Match match = null;
     Object[] realArgs = waitArgs(args);
     if ((Double) realArgs[2] < 0.0) {
@@ -316,7 +316,7 @@ public class JavaScriptHelper {
    * @return the evaluated location to where the mouse should have moved
    */
   public static Location hover(Object... args) {
-    SXCommands.logCmd("hover", args);
+    logCmd("hover", args);
     return hoverx(args);
   }
 
@@ -372,7 +372,7 @@ public class JavaScriptHelper {
    * @return the location, where the click was done
    */
   public static Location click(Object... args) {
-    SXCommands.logCmd("click", args);
+    logCmd("click", args);
     hoverx(args);
     Mouse.click(null, "L");
     return  new Location(); // Mouse.at();
@@ -384,7 +384,7 @@ public class JavaScriptHelper {
    * @return the location, where the double click was done
    */
   public static Location doubleClick(Object... args) {
-    SXCommands.logCmd("doubleClick", args);
+    logCmd("doubleClick", args);
     hoverx(args);
     Mouse.click(null, "LD");
     return  new Location(); //Mouse.at();
@@ -396,7 +396,7 @@ public class JavaScriptHelper {
    * @return the location, where the right click was done
    */
   public static Location rightClick(Object... args) {
-    SXCommands.logCmd("rightClick", args);
+    logCmd("rightClick", args);
     hoverx(args);
     Mouse.click(null, "R");
     return  new Location(); //Mouse.at();
@@ -412,7 +412,7 @@ public class JavaScriptHelper {
    */
 
   public static boolean paste(Object... args) {
-    SXCommands.logCmd("paste", args);
+    logCmd("paste", args);
     Object[] realArgs = typeArgs(args);
     return scr.paste((String) realArgs[0]);
   }
@@ -423,7 +423,7 @@ public class JavaScriptHelper {
    * @return false if problems with write(), true otherwise
    */
   public static boolean write(Object... args) {
-    SXCommands.logCmd("write", args);
+    logCmd("write", args);
     Object[] realArgs = typeArgs(args);
     return scr.write((String) realArgs[0]);
   }
@@ -547,6 +547,18 @@ public class JavaScriptHelper {
       return 0;
     }
   }
+
+  private static void logCmd(String cmd, Object... args) {
+		String msg = cmd + ": ";
+		if (args.length == 0) {
+			log.debug(msg + "no-args");
+		} else {
+			for (int i = 0; i < args.length; i++) {
+				msg += "%s ";
+			}
+			log.debug(msg, args);
+		}
+	}
 //</editor-fold>
 
 }

@@ -21,7 +21,7 @@ public class TestCoreBasic extends SX {
   private Object result = null;
   private String currentTest = "";
   private static int nTest = 0;
-  private static boolean testLimit = false;
+  private static boolean testLimit = true;
 
   public TestCoreBasic() {
     log.trace("TestCoreBasic()");
@@ -60,7 +60,8 @@ public class TestCoreBasic extends SX {
   @Test
   public void test_00_play() {
     currentTest = "test_00_play";
-    result = "nothing to do";
+    setBundlePath(SX.getSXIMAGES(), "myimages");
+    result = Image.getPath(0); // "nothing to do";
     assert true;
   }
 

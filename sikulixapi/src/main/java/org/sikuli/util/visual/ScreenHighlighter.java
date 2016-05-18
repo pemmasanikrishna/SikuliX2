@@ -8,7 +8,6 @@ package org.sikuli.util.visual;
 
 import com.sikulix.core.SX;
 import org.sikuli.util.visual.animation.Animator;
-import org.sikuli.util.Settings;
 import org.sikuli.util.Debug;
 import java.awt.*;
 import java.awt.event.*;

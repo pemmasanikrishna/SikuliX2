@@ -185,50 +185,19 @@ public class Image extends Visual {
   //<editor-fold desc="*** path">
   private static final List<URL> imagePath = Collections.synchronizedList(new ArrayList<URL>());
 
-  public static URL makePath(Object... args) {
-    //TODO implment makePath()
-    URL url = null;
-    return url;
-  }
-
   private static void initPath() {
     if (imagePath.isEmpty()) {
       imagePath.add(SX.getFileURL(SX.getSXIMAGES()));
     }
   }
 
-  private static String getPathFromURL(URL uPath) {
-    String sPath = "";
-    String proto = "";
-    sPath = uPath.getPath();
-    proto = uPath.getProtocol();
-    if ("file".equals(proto) || "jar".equals(proto)) {
-      sPath = SX.getFile(sPath).getAbsolutePath();
-      if ("jar".equals(proto)) {
-        log.debug("getPath: jar: %s", sPath);
-      }
-    } else if (proto.startsWith("http")) {
-      log.debug("getPath: http: %s", uPath);
-    } else {
-      log.debug("getPath: other: %s", uPath);
+  public static boolean setBundlePath(Object... args) {
+    initPath();
+    if (args.length == 0) {
+      imagePath.set(0, SX.getFileURL(SX.getSXIMAGES()));
+      return true;
     }
-    return sPath;
-  }
-
-  public static String getBundlePath() {
-    initPath();
-    return getPathFromURL(imagePath.get(0));
-  }
-
-  public static boolean setBundlePath() {
-    initPath();
-    imagePath.set(0, SX.getFileURL(SX.getSXIMAGES()));
-    return true;
-  }
-
-  public static boolean setBundlePath(String fpPath) {
-    initPath();
-    URL urlPath = makePath(fpPath);
+    URL urlPath = SX.makeURL(args);
     if (!SX.isUnset(urlPath)) {
       imagePath.set(0, urlPath);
       return true;
@@ -236,15 +205,18 @@ public class Image extends Visual {
     return false;
   }
 
-  public static boolean resetPath() {
+  public static boolean resetPath(Object... args) {
     imagePath.clear();
-    initPath();
-    return true;
+    if (args.length == 0) {
+      initPath();
+      return true;
+    }
+    return setBundlePath(args);
   }
 
-  public static boolean resetPath(String fpPath) {
-    imagePath.clear();
-    return setBundlePath(fpPath);
+  public static String getBundlePath() {
+    initPath();
+    return SX.makePath(imagePath.get(0));
   }
 
   public static String[] getPath(String filter) {
@@ -252,7 +224,7 @@ public class Image extends Visual {
     int n = 0;
     String sPath;
     for (URL uPath : imagePath) {
-      sPath = getPathFromURL(uPath);
+      sPath = SX.makePath(uPath);
       if (!SX.isUnset(filter) && !sPath.contains(filter)) {
         continue;
       }
@@ -270,7 +242,7 @@ public class Image extends Visual {
     int n = 0;
     String sPath;
     for (URL uPath : imagePath) {
-      sPath = getPathFromURL(uPath);
+      sPath = SX.makePath(uPath);
       if (sPath.contains(filter)) {
         return n;
       }
@@ -283,14 +255,14 @@ public class Image extends Visual {
     if (n < 0 || n > imagePath.size() - 1) {
       n = 0;
     }
-    return getPathFromURL(imagePath.get(n));
+    return SX.makePath(imagePath.get(n));
   }
 
   public static boolean setPath(int n, String fpPath) {
     if (n < 0 || n > imagePath.size() - 1) {
       return false;
     }
-    URL urlPath = makePath(fpPath);
+    URL urlPath = SX.makeURL(fpPath);
     if (!SX.isUnset(urlPath)) {
       imagePath.set(n, urlPath);
       return true;
@@ -302,7 +274,7 @@ public class Image extends Visual {
     if (n < 0 || n > imagePath.size() - 1) {
       n = 0;
     }
-    return getPathFromURL(imagePath.get(n));
+    return SX.makePath(imagePath.get(n));
   }
 
   public static int addPath(Object... args) {

@@ -4,13 +4,12 @@
 package com.sikulix.scripting;
 
 import com.sikulix.core.*;
-import org.sikuli.script.Commands;
 
 import java.io.File;
 
-public class Run extends SX {
+public class Run extends SXCommands {
 
-  static SXLog log = null;
+  private static SXLog log = null;
 
   public static void main(String[] args) {
     log = getLogger("Sikulix", args);
@@ -30,13 +29,14 @@ public class Run extends SX {
 //    log.info("a new Window: %s", new Window());
 
 //    log.info("Match: %s", new Match().setTarget(10,10));
+    terminate(1, "stopped intentionally");
+
     Region reg = new Region(500, 100, 300, 600);
 
     Image img = reg.capture();
     log.info("%s", img);
     img.show(1);
 
-    terminate(1, "stopped intentionally");
 
     terminate(1, "stopped intentionally");
 
@@ -45,17 +45,17 @@ public class Run extends SX {
     if (lastSession.exists()) {
       runSomeJS = Content.readFileToString(lastSession);
     }
-    runSomeJS = Commands.inputText("enter some JavaScript (know what you do - may silently die ;-)"
+    runSomeJS = inputText("enter some JavaScript (know what you do - may silently die ;-)"
             + "\nexample: run(\"git*\") will run the JavaScript showcase from GitHub"
             + "\nWhat you enter now will be shown the next time.",
             "API::JavaScriptRunner ", 10, 60, runSomeJS);
     if (runSomeJS.isEmpty()) {
-      Commands.popup("Nothing to do!");
+      popup("Nothing to do!");
     } else {
       while (!runSomeJS.isEmpty()) {
         Content.writeStringToFile(runSomeJS, lastSession);
         Runner.runjs(null, null, runSomeJS, null);
-        runSomeJS = Commands.inputText("Edit the JavaScript and/or press OK to run it (again)\n"
+        runSomeJS = inputText("Edit the JavaScript and/or press OK to run it (again)\n"
                 + "Press Cancel to terminate",
                 "API::JavaScriptRunner ", 10, 60, runSomeJS);
       }

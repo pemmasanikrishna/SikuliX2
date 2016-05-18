@@ -46,7 +46,6 @@ import org.opencv.imgproc.Imgproc;
 import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
-import org.sikuli.util.Settings;
 
 /**
  * This class hides the complexity behind image names given as string.

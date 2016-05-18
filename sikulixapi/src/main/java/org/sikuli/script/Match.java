@@ -9,7 +9,6 @@ package org.sikuli.script;
 import java.awt.Rectangle;
 
 import com.sikulix.core.SX;
-import org.sikuli.util.Settings;
 
 /**
  * holds the result of a find operation, is itself the region on the screen,

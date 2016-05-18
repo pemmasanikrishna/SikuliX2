@@ -14,7 +14,6 @@ import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.EventObserver;
 import org.sikuli.util.EventSubject;
-import org.sikuli.util.Settings;
 import org.sikuli.util.visual.OverlayCapturePrompt;
 import org.sikuli.util.visual.ScreenHighlighter;
 

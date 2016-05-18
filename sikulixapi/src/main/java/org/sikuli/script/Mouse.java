@@ -12,7 +12,6 @@ import java.awt.event.KeyEvent;
 import com.sikulix.core.SX;
 import com.sikulix.core.Visual;
 import org.sikuli.util.Debug;
-import org.sikuli.util.Settings;
 
 /**
  * Main pupose is to coordinate the mouse usage among threads <br>

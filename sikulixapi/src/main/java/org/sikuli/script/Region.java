@@ -22,7 +22,6 @@ import com.sikulix.core.SX;
 import com.sikulix.core.Visual;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FindFailedDialog;
-import org.sikuli.util.Settings;
 import org.sikuli.util.visual.ScreenHighlighter;
 
 /**

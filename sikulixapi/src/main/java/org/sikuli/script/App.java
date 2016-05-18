@@ -7,6 +7,7 @@
 package org.sikuli.script;
 
 import com.sikulix.core.SX;
+import com.sikulix.core.SXCommands;
 import org.sikuli.util.Debug;
 import org.sikuli.natives.OSUtil;
 import org.sikuli.natives.SysUtil;
@@ -646,7 +647,7 @@ public class App {
    * @return the final returncode of the command execution
    */
   public static int run(String cmd) {
-    lastRunResult = SX.runcmd(cmd);
+    lastRunResult = SXCommands.runcmd(cmd);
     String NL = SX.isWindows() ? "\r\n" : "\n";
     String[] res = lastRunResult.split(NL);
     try {
@@ -660,7 +661,7 @@ public class App {
         lastRunStderr += res[n] + NL;
         continue;
       }
-      if (SX.runCmdError.equals(res[n])) {
+      if (SXCommands.runCmdError.equals(res[n])) {
         isError = true;
         continue;
       }

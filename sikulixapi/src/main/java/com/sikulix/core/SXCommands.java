@@ -6,28 +6,23 @@ package com.sikulix.core;
 
 import com.sikulix.scripting.JythonHelper;
 import com.sikulix.scripting.Runner;
+import org.sikuli.script.App;
+import org.sikuli.script.Key;
+import org.sikuli.util.hotkey.HotkeyListener;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 
-public class SXCommands {
+public class SXCommands extends SX {
 
-  private static SXLog log = SX.getLogger("SX.Commands");
-  private static int lvl = SXLog.DEBUG;
+  private static SXLog log = getLogger("SXCommands");
 
-  public static void logCmd(String cmd, Object... args) {
-		String msg = cmd + ": ";
-		if (args.length == 0) {
-			log.debug(msg + "no-args");
-		} else {
-			for (int i = 0; i < args.length; i++) {
-				msg += "%s ";
-			}
-			log.debug(msg, args);
-		}
-	}
-
+  //<editor-fold desc="load a jar">
   /**
    * add a jar to the scripting environment<br>
    * Jython: added to sys.path<br>
@@ -71,11 +66,13 @@ public class SXCommands {
       }
     }
     if (fpJarFound != null && fpJarImagePath != null) {
-      SX.addImagePath(fpJarFound, fpJarImagePath);
+      addImagePath(fpJarFound, fpJarImagePath);
     }
     return fpJarFound;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="input, popselect">
   /**
    * request user's input as one line of text <br>
    * with hidden = true: <br>
@@ -140,37 +137,6 @@ public class SXCommands {
 
   public static String input(String msg) {
     return input(msg, "", "", false);
-  }
-
-  public static void popup(String message) {
-    popup(message, "Sikuli");
-  }
-
-  public static void popup(String message, String title) {
-    JOptionPane.showMessageDialog(null, message, title, JOptionPane.PLAIN_MESSAGE);
-  }
-
-  public static boolean popAsk(String msg) {
-    return popAsk(msg, null);
-  }
-
-  public static boolean popAsk(String msg, String title) {
-    if (title == null) {
-      title = "... something to decide!";
-    }
-    int ret = JOptionPane.showConfirmDialog(null, msg, title, JOptionPane.YES_NO_OPTION);
-    if (ret == JOptionPane.CLOSED_OPTION || ret == JOptionPane.NO_OPTION) {
-      return false;
-    }
-    return true;
-  }
-
-  public static void popError(String message) {
-    popError(message, "Sikuli");
-  }
-
-  public static void popError(String message, String title) {
-    JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
   }
 
   /**
@@ -251,7 +217,42 @@ public class SXCommands {
     }
     return (String) JOptionPane.showInputDialog(null, msg, title, JOptionPane.PLAIN_MESSAGE, null, options, preset);
   }
+  //</editor-fold>
 
+  //<editor-fold desc="popup, ...">
+  public static void popup(String message) {
+    popup(message, "Sikuli");
+  }
+
+  public static void popup(String message, String title) {
+    JOptionPane.showMessageDialog(null, message, title, JOptionPane.PLAIN_MESSAGE);
+  }
+
+  public static boolean popAsk(String msg) {
+    return popAsk(msg, null);
+  }
+
+  public static boolean popAsk(String msg, String title) {
+    if (title == null) {
+      title = "... something to decide!";
+    }
+    int ret = JOptionPane.showConfirmDialog(null, msg, title, JOptionPane.YES_NO_OPTION);
+    if (ret == JOptionPane.CLOSED_OPTION || ret == JOptionPane.NO_OPTION) {
+      return false;
+    }
+    return true;
+  }
+
+  public static void popError(String message) {
+    popError(message, "Sikuli");
+  }
+
+  public static void popError(String message, String title) {
+    JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="run something">
   public static String run(String cmdline) {
     return run(new String[]{cmdline});
   }
@@ -260,6 +261,18 @@ public class SXCommands {
     log.terminate(1, "run: not implemented");
     return "";
   }
+
+  public static Object run(Object... args) {
+    String script = args[0].toString();
+    String scriptArgs[] = new String[args.length - 1];
+    if (scriptArgs.length > 0) {
+      for (int i = 1; i < args.length; i++) {
+        scriptArgs[i-1] = args[i].toString();
+      }
+    }
+    return Runner.run(script, scriptArgs);
+  }
+  //</editor-fold>
 
   private static JythonHelper doCompileJythonFolder(JythonHelper jython, File fSource) {
     String fpSource = Content.slashify(fSource.getAbsolutePath(), false);
@@ -364,15 +377,217 @@ public class SXCommands {
     return Content.buildJar(targetJar, new String[]{null}, new String[]{sourceFolder}, new String[]{prefix}, null);
   }
 
-  public static Object run(Object... args) {
-    String script = args[0].toString();
-    String scriptArgs[] = new String[args.length - 1];
-    if (scriptArgs.length > 0) {
-      for (int i = 1; i < args.length; i++) {
-        scriptArgs[i-1] = args[i].toString();
-      }
-    }
-    return Runner.run(script, scriptArgs);
+
+  // ******************************* SX Commands ImagePath handling ****************************
+  public static boolean setBundlePath(Object... args) {
+    return Image.setBundlePath(args);
   }
 
+  public static String getBundlePath() {
+    return Image.getBundlePath();
+  }
+
+  public static void addImagePath(Object... args) {
+    Image.addPath(args);
+  }
+
+  public static void removeImagePath(Object... args) {
+    Image.removePath(args);
+  }
+
+  public static String[] getImagePath() {
+    return Image.getPath();
+  }
+
+// ******************************* SX Commands Clipboard ****************************
+
+  /**
+   * @return clipboard content
+   */
+  public static String getClipboard() {
+    return App.getClipboard();
+  }
+
+  /**
+   * @param text to set Clipboard content
+   */
+  public static void setClipboard(String text) {
+    App.setClipboard(text);
+  }
+
+// ******************************* SXCommands Keys ****************************
+
+  /**
+   * get the lock state of the given key
+   *
+   * @param key respective key specifier according class Key
+   * @return true/false
+   */
+  public static boolean isLockOn(char key) {
+    return Key.isLockOn(key);
+  }
+
+  /**
+   * @return System dependent key
+   */
+  public static int getHotkeyModifier() {
+    return Key.getHotkeyModifier();
+  }
+
+  /**
+   * @param key       respective key specifier according class Key
+   * @param modifiers respective key specifier according class KeyModifiers
+   * @param listener  a HotKeyListener instance
+   * @return true if ok, false otherwise
+   */
+  public static boolean addHotkey(String key, int modifiers, HotkeyListener listener) {
+    return Key.addHotkey(key, modifiers, listener);
+  }
+
+  /**
+   * @param key       respective key specifier according class Key
+   * @param modifiers respective key specifier according class KeyModifiers
+   * @param listener  a HotKeyListener instance
+   * @return true if ok, false otherwise
+   */
+  public static boolean addHotkey(char key, int modifiers, HotkeyListener listener) {
+    return Key.addHotkey(key, modifiers, listener);
+  }
+
+  /**
+   * @param key       respective key specifier according class Key
+   * @param modifiers respective key specifier according class KeyModifiers
+   * @return true if ok, false otherwise
+   */
+  public static boolean removeHotkey(String key, int modifiers) {
+    return Key.removeHotkey(key, modifiers);
+  }
+
+  /**
+   * @param key       respective key specifier according class Key
+   * @param modifiers respective key specifier according class KeyModifiers
+   * @return true if ok, false otherwise
+   */
+  public static boolean removeHotkey(char key, int modifiers) {
+    return Key.removeHotkey(key, modifiers);
+  }
+
+  // ******************************* SXCommands run something ****************************
+  public static String NL = "\n";
+
+  public final static String runCmdError = "*****error*****";
+  static String lastResult = "";
+
+  /**
+   * run a system command finally using Java::Runtime.getRuntime().exec(args) and waiting for completion
+   *
+   * @param cmd the command as it would be given on command line, quoting is preserved
+   * @return the output produced by the command (sysout [+ "*** error ***" + syserr] if the syserr part is present, the
+   * command might have failed
+   */
+  public static String runcmd(String cmd) {
+    return runcmd(new String[]{cmd});
+  }
+
+  /**
+   * run a system command finally using Java::Runtime.getRuntime().exec(args) and waiting for completion
+   *
+   * @param args the command as it would be given on command line splitted into the space devided parts, first part is
+   *             the command, the rest are parameters and their values
+   * @return the output produced by the command (sysout [+ "*** error ***" + syserr] if the syserr part is present, the
+   * command might have failed
+   */
+  public static String runcmd(String args[]) {
+    if (args.length == 0) {
+      return "";
+    }
+    boolean silent = false;
+    if (args.length == 1) {
+      String separator = "\"";
+      ArrayList<String> argsx = new ArrayList<String>();
+      StringTokenizer toks;
+      String tok;
+      String cmd = args[0];
+      if (SX.isWindows()) {
+        cmd = cmd.replaceAll("\\\\ ", "%20;");
+      }
+      toks = new StringTokenizer(cmd);
+      while (toks.hasMoreTokens()) {
+        tok = toks.nextToken(" ");
+        if (tok.length() == 0) {
+          continue;
+        }
+        if (separator.equals(tok)) {
+          continue;
+        }
+        if (tok.startsWith(separator)) {
+          if (tok.endsWith(separator)) {
+            tok = tok.substring(1, tok.length() - 1);
+          } else {
+            tok = tok.substring(1);
+            tok += toks.nextToken(separator);
+          }
+        }
+        argsx.add(tok.replaceAll("%20;", " "));
+      }
+      args = argsx.toArray(new String[0]);
+    }
+    if (args[0].startsWith("!")) {
+      silent = true;
+      args[0] = args[0].substring(1);
+    }
+    if (args[0].startsWith("#")) {
+      String pgm = args[0].substring(1);
+      args[0] = (new File(pgm)).getAbsolutePath();
+      runcmd(new String[]{"chmod", "ugo+x", args[0]});
+    }
+    String result = "";
+    String error = runCmdError + NL;
+    boolean hasError = false;
+    int retVal;
+    try {
+      Process process = Runtime.getRuntime().exec(args);
+      BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+      BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+      String s;
+      while ((s = stdInput.readLine()) != null) {
+        if (!s.isEmpty()) {
+          result += s + NL;
+        }
+      }
+      if ((s = stdError.readLine()) != null) {
+        hasError = true;
+        if (!s.isEmpty()) {
+          error += s + NL;
+        }
+      }
+      process.waitFor();
+      retVal = process.exitValue();
+      process.destroy();
+    } catch (Exception e) {
+      log.fatal("error: " + e);
+      result = String.format(error + "%s", e);
+      retVal = 9999;
+      hasError = true;
+    }
+    if (hasError) {
+      result += error;
+    }
+    lastResult = result;
+    return String.format("%d%s%s", retVal, NL, result);
+  }
+
+  public static String getLastCommandResult() {
+    return lastResult;
+  }
+
+  // ******************************* SX Commands cleanup ****************************
+  public void cleanUp(int n) {
+    log.trace("cleanUp: %d", n);
+//    ScreenHighlighter.closeAll();
+//    Observer.cleanUp();
+//    Mouse.reset();
+//    Screen.getPrimaryScreen().getRobot().keyUp();
+//    HotkeyManager.reset();
+  }
 }

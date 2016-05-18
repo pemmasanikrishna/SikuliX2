@@ -10,7 +10,6 @@ import java.awt.image.BufferedImage;
 
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
-import org.sikuli.util.Settings;
 import org.sikuli.util.FileManager;
 import org.sikuli.util.Debug;
 import java.io.*;

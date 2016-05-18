@@ -28,7 +28,7 @@ import static com.sikulix.core.SX.NATIVES.SYSUTIL;
 
 public class SX {
 
-  public static long startTime = new Date().getTime();
+  private static long startTime = new Date().getTime();
 
   //<editor-fold desc="*** logging">
   public static final int INFO = 1;
@@ -37,9 +37,9 @@ public class SX {
   public static final int ERROR = -1;
   public static final int FATAL = -2;
 
-  static final SXLog log = new SXLog();
+  private static final SXLog log = new SXLog();
 
-  public static void info(String message, Object... args) {
+  private static void info(String message, Object... args) {
     log.info(message, args);
   }
 
@@ -385,6 +385,7 @@ public class SX {
       }
     }
   }
+
   //</editor-fold>
 
   //<editor-fold desc="*** system/java version info">
@@ -1715,6 +1716,91 @@ public class SX {
   }
   //</editor-fold>
 
+  //<editor-fold desc="*** candidates for Content">
+  public static String canoPath(File aFile) {
+    try {
+      return aFile.getCanonicalPath();
+    } catch (IOException e) {
+      return aFile.getAbsolutePath();
+    }
+  }
+
+  public static URL makeURL(Object... args) {
+    if (args.length < 1) {
+      return null;
+    }
+
+    URL url = null;
+    String proto = "file:";
+    String sURL = "";
+
+    String fpMain = "";
+
+    Object arg0 = args[0];
+    String fpSub = args.length > 1 ? (String) args[1] : "";
+    if (arg0 instanceof File) {
+      fpMain = canoPath((File) arg0);
+    } else if (arg0 instanceof String) {
+      if (((String) arg0).startsWith("http")) {
+        proto = "http:";
+        fpMain = (String) arg0;
+      } else {
+        fpMain = canoPath(getFile(arg0.toString()));
+      }
+    }
+    if ("file:".equals(proto)) {
+      if (fpMain.endsWith(".jar")) {
+        if (!existsFile(fpMain)) {
+          log.error("makeURL: not exists: %s", fpMain);
+        }
+        fpMain = "file:" + fpMain + "!/";
+        proto = "jar:";
+      }
+    }
+    if (!isUnset(fpSub)) {
+      if ("file:".equals(proto)) {
+        fpMain = canoPath(getFile(fpMain, fpSub));
+      } else {
+        if (!fpSub.startsWith("/")) {
+          fpSub = "/" + fpSub;
+        }
+        fpMain += fpSub;
+      }
+    }
+    if (!"http:".equals(proto)) {
+      if ("file:".equals(proto) && isUnset(getFolder(fpMain))) {
+        log.error("makeURL: not exists: %s", fpMain);
+      }
+      sURL = proto + fpMain;
+    } else {
+      sURL = fpMain;
+    }
+    try {
+      url = new URL(sURL);
+    } catch (MalformedURLException e) {
+      log.error("makeURL: not valid: %s %s", arg0, (isUnset(fpSub) ? "" : ", " + fpSub));
+    }
+    return url;
+  }
+
+  public static String makePath(URL uPath) {
+    String sPath = "";
+    String proto = "";
+    sPath = uPath.getPath();
+    proto = uPath.getProtocol();
+    if ("file".equals(proto) || "jar".equals(proto)) {
+      if ("jar".equals(proto)) {
+        sPath = sPath.replaceFirst("file:", "");
+        sPath = sPath.replaceFirst("!/", "/");
+      }
+      sPath = getFile(sPath).getAbsolutePath();
+    } else {
+      sPath = uPath.toExternalForm();
+    }
+    return sPath;
+  }
+  //</editor-fold>
+
   /**
    * ***** Property SXROBOT *****
    *
@@ -1732,260 +1818,4 @@ public class SX {
   }
 
   static Robot SXROBOT = null;
-
-
-  //<editor-fold desc="************ SX Commands">
-  // ******************************* SX Commands ImagePath handling ****************************
-  public static boolean setBundlePath(String fpPath) {
-    return Image.setBundlePath(fpPath);
-  }
-
-  public static String getBundlePath() {
-    return Image.getBundlePath();
-  }
-
-  public static void addImagePath(Object... args) {
-    Image.addPath(args);
-  }
-
-  public static void removeImagePath(Object... args) {
-    Image.removePath(args);
-  }
-
-  public static String[] getImagePath() {
-    return Image.getPath();
-  }
-
-// ******************************* SX Commands Clipboard ****************************
-
-  /**
-   * @return clipboard content
-   */
-  public static String getClipboard() {
-    return App.getClipboard();
-  }
-
-  /**
-   * @param text to set Clipboard content
-   */
-  public static void setClipboard(String text) {
-    App.setClipboard(text);
-  }
-
-// ******************************* SXCommands Keys ****************************
-
-  /**
-   * get the lock state of the given key
-   *
-   * @param key respective key specifier according class Key
-   * @return true/false
-   */
-  public static boolean isLockOn(char key) {
-    return Key.isLockOn(key);
-  }
-
-  /**
-   * @return System dependent key
-   */
-  public static int getHotkeyModifier() {
-    return Key.getHotkeyModifier();
-  }
-
-  /**
-   * @param key       respective key specifier according class Key
-   * @param modifiers respective key specifier according class KeyModifiers
-   * @param listener  a HotKeyListener instance
-   * @return true if ok, false otherwise
-   */
-  public static boolean addHotkey(String key, int modifiers, HotkeyListener listener) {
-    return Key.addHotkey(key, modifiers, listener);
-  }
-
-  /**
-   * @param key       respective key specifier according class Key
-   * @param modifiers respective key specifier according class KeyModifiers
-   * @param listener  a HotKeyListener instance
-   * @return true if ok, false otherwise
-   */
-  public static boolean addHotkey(char key, int modifiers, HotkeyListener listener) {
-    return Key.addHotkey(key, modifiers, listener);
-  }
-
-  /**
-   * @param key       respective key specifier according class Key
-   * @param modifiers respective key specifier according class KeyModifiers
-   * @return true if ok, false otherwise
-   */
-  public static boolean removeHotkey(String key, int modifiers) {
-    return Key.removeHotkey(key, modifiers);
-  }
-
-  /**
-   * @param key       respective key specifier according class Key
-   * @param modifiers respective key specifier according class KeyModifiers
-   * @return true if ok, false otherwise
-   */
-  public static boolean removeHotkey(char key, int modifiers) {
-    return Key.removeHotkey(key, modifiers);
-  }
-
-  // ******************************* SXCommands run something ****************************
-  public static String NL = "\n";
-
-  public final static String runCmdError = "*****error*****";
-  static String lastResult = "";
-
-  /**
-   * run a system command finally using Java::Runtime.getRuntime().exec(args) and waiting for completion
-   *
-   * @param cmd the command as it would be given on command line, quoting is preserved
-   * @return the output produced by the command (sysout [+ "*** error ***" + syserr] if the syserr part is present, the
-   * command might have failed
-   */
-  public static String runcmd(String cmd) {
-    return runcmd(new String[]{cmd});
-  }
-
-  /**
-   * run a system command finally using Java::Runtime.getRuntime().exec(args) and waiting for completion
-   *
-   * @param args the command as it would be given on command line splitted into the space devided parts, first part is
-   *             the command, the rest are parameters and their values
-   * @return the output produced by the command (sysout [+ "*** error ***" + syserr] if the syserr part is present, the
-   * command might have failed
-   */
-  public static String runcmd(String args[]) {
-    if (args.length == 0) {
-      return "";
-    }
-    boolean silent = false;
-    if (args.length == 1) {
-      String separator = "\"";
-      ArrayList<String> argsx = new ArrayList<String>();
-      StringTokenizer toks;
-      String tok;
-      String cmd = args[0];
-      if (isWindows()) {
-        cmd = cmd.replaceAll("\\\\ ", "%20;");
-      }
-      toks = new StringTokenizer(cmd);
-      while (toks.hasMoreTokens()) {
-        tok = toks.nextToken(" ");
-        if (tok.length() == 0) {
-          continue;
-        }
-        if (separator.equals(tok)) {
-          continue;
-        }
-        if (tok.startsWith(separator)) {
-          if (tok.endsWith(separator)) {
-            tok = tok.substring(1, tok.length() - 1);
-          } else {
-            tok = tok.substring(1);
-            tok += toks.nextToken(separator);
-          }
-        }
-        argsx.add(tok.replaceAll("%20;", " "));
-      }
-      args = argsx.toArray(new String[0]);
-    }
-    if (args[0].startsWith("!")) {
-      silent = true;
-      args[0] = args[0].substring(1);
-    }
-    if (args[0].startsWith("#")) {
-      String pgm = args[0].substring(1);
-      args[0] = (new File(pgm)).getAbsolutePath();
-      runcmd(new String[]{"chmod", "ugo+x", args[0]});
-    }
-    String result = "";
-    String error = runCmdError + NL;
-    boolean hasError = false;
-    int retVal;
-    try {
-      Process process = Runtime.getRuntime().exec(args);
-      BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-      String s;
-      while ((s = stdInput.readLine()) != null) {
-        if (!s.isEmpty()) {
-          result += s + NL;
-        }
-      }
-      if ((s = stdError.readLine()) != null) {
-        hasError = true;
-        if (!s.isEmpty()) {
-          error += s + NL;
-        }
-      }
-      process.waitFor();
-      retVal = process.exitValue();
-      process.destroy();
-    } catch (Exception e) {
-      debug("fatal error: " + e);
-      result = String.format(error + "%s", e);
-      retVal = 9999;
-      hasError = true;
-    }
-    if (hasError) {
-      result += error;
-    }
-    lastResult = result;
-    return String.format("%d%s%s", retVal, NL, result);
-  }
-
-  public static String getLastCommandResult() {
-    return lastResult;
-  }
-
-  static String[] args = new String[0];
-  static String[] sargs = new String[0];
-
-  public static void setArgs(String[] _args, String[] _sargs) {
-    args = _args;
-    sargs = _sargs;
-  }
-
-  public static String[] getSikuliArgs() {
-    return sargs;
-  }
-
-  public static String[] getArgs() {
-    return args;
-  }
-
-  public static void printArgs() {
-    String[] xargs = getSikuliArgs();
-    if (xargs.length > 0) {
-      for (int i = 0; i < xargs.length; i++) {
-      }
-    }
-    xargs = getArgs();
-    if (xargs.length > 0) {
-      for (int i = 0; i < xargs.length; i++) {
-      }
-    }
-  }
-
-  static String arrayToString(String[] args) {
-    String ret = "";
-    for (String s : args) {
-      if (s.contains(" ")) {
-        s = "\"" + s + "\"";
-      }
-      ret += s + " ";
-    }
-    return ret;
-  }
-
-  // ******************************* SX Commands cleanup ****************************
-  public void cleanUp(int n) {
-    trace("cleanUp: %d", n);
-//    ScreenHighlighter.closeAll();
-//    Observer.cleanUp();
-//    Mouse.reset();
-//    Screen.getPrimaryScreen().getRobot().keyUp();
-//    HotkeyManager.reset();
-  }
-  //</editor-fold>
 }

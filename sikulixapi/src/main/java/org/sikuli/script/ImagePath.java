@@ -22,7 +22,6 @@ import org.apache.logging.log4j.Logger;
 import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FileManager;
-import org.sikuli.util.Settings;
 
 /**
  * runtain the path list of locations, where images will be searched.

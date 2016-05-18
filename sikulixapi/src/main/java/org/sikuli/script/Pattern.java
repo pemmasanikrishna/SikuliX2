@@ -7,7 +7,6 @@
 package org.sikuli.script;
 
 import com.sikulix.core.SX;
-import org.sikuli.util.Settings;
 import java.awt.image.BufferedImage;
 import java.net.URL;
 
