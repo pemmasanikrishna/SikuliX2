@@ -13,6 +13,7 @@ import javax.swing.JTextArea;
 
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
+import com.sikulix.core.SXCommands;
 import com.sikulix.scripting.JythonHelper;
 import org.sikuli.util.Debug;
 import org.sikuli.util.PreferencesUser;
@@ -292,7 +293,7 @@ public class Commands {
   }
   
   public static String run(String[] cmd) {
-    return SX.runcmd(cmd);
+    return SXCommands.runcmd(cmd);
   }
 //</editor-fold>
   

@@ -10,6 +10,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import com.sikulix.core.Content;
+import com.sikulix.core.SXCommands;
 import org.apache.commons.cli.CommandLine;
 import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
@@ -824,7 +825,7 @@ public class Runner {
     File aFile = FileManager.createTempFile("script");
     aFile.setExecutable(true);
     FileManager.writeStringToFile(givenScriptScript, aFile);
-    String retVal = SX.runcmd(new String[]{prefix + aFile.getAbsolutePath()});
+    String retVal = SXCommands.runcmd(new String[]{prefix + aFile.getAbsolutePath()});
     String[] parts = retVal.split("\n");
     int retcode = -1;
     try {
@@ -833,9 +834,9 @@ public class Runner {
     }
     if (retcode != 0) {
       if (silent) {
-        log(lvl, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, SX.getLastCommandResult());
+        log(lvl, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, SXCommands.getLastCommandResult());
       } else {
-        log(-1, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, SX.getLastCommandResult());
+        log(-1, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, SXCommands.getLastCommandResult());
       }
     }
     return retcode;
@@ -856,7 +857,7 @@ public class Runner {
       "cmd.exe", "/S", "/C",
       "type " + aFile.getAbsolutePath() + " | powershell -noprofile -"
     };
-    String retVal = SX.runcmd(psCmdType);
+    String retVal = SXCommands.runcmd(psCmdType);
     String[] parts = retVal.split("\\s");
     int retcode = -1;
     try {
@@ -864,7 +865,7 @@ public class Runner {
     } catch (Exception ex) {
     }
     if (retcode != 0) {
-      log(-1, "PowerShell:\n%s\nreturned:\n%s", givenScriptScript, SX.getLastCommandResult());
+      log(-1, "PowerShell:\n%s\nreturned:\n%s", givenScriptScript, SXCommands.getLastCommandResult());
     }
     return retcode;
   }

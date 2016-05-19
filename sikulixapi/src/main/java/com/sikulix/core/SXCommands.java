@@ -114,7 +114,7 @@ public class SXCommands extends SX {
         }
         return pwr;
       } else {
-        return "";
+        return null;
       }
     }
   }

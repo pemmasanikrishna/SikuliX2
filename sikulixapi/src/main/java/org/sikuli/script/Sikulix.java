@@ -22,10 +22,6 @@ public class Sikulix extends SX {
 
     terminate(1, "stopped intentionally");
 
-    addImagePath("");
-
-    terminate(1, "stopped intentionally");
-
     File lastSession = new File(getSXSTORE(), "LastAPIJavaScript.js");
     String runSomeJS = "";
     if (lastSession.exists()) {

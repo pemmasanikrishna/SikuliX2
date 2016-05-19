@@ -16,6 +16,9 @@ public class Run extends SXCommands {
     log.on(1);
     log.trace("Sikulix starting");
 
+    String result = input("something");
+    log.info("result |%s|", result);
+
     terminate(1, "stopped intentionally");
 
     String[] userArgs = getUserArgs();

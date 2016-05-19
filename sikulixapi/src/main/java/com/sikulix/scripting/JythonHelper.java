@@ -6,6 +6,7 @@ package com.sikulix.scripting;
 
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
+import com.sikulix.core.SXCommands;
 import com.sikulix.core.SXLog;
 
 import java.io.File;
@@ -389,7 +390,7 @@ public class JythonHelper {
     if (!fpJarOrFolder.endsWith(".jar")) {
       fpJarOrFolder += ".jar";
     }
-    String fpBundle = SX.getBundlePath();
+    String fpBundle = SXCommands.getBundlePath();
     File fJar = new File(Content.normalizeAbsolute(fpJarOrFolder, false));
     if (!fJar.exists()) {
       fJar = new File(fpBundle, fpJarOrFolder);
@@ -445,7 +446,7 @@ public class JythonHelper {
     if (nDot > -1) {
       modName = modName.substring(nDot + 1);
     }
-    String fpBundle = SX.getBundlePath();
+    String fpBundle = SXCommands.getBundlePath();
     File fParentBundle = null;
     File fModule = null;
     if (fpBundle != null) {
@@ -482,7 +483,7 @@ public class JythonHelper {
     }
     addSysPath(modPath);
     if (modPath.endsWith(".sikuli")) {
-      SX.addImagePath(modPath);
+      SXCommands.addImagePath(modPath);
     }
     return modName;
   }
