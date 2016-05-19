@@ -1,14 +1,14 @@
-[![RaiMan's Stuff](https://raw.github.com/RaiMan/SikuliX-2014-Docs/master/src/main/resources/docs/source/RaiManStuff64.png)](http://www.sikuli.org) SikuliX2 (version 2.0.x)
+[![RaiMan's Stuff](https://raw.github.com/RaiMan/SikuliX-2014-Docs/master/src/main/resources/docs/source/RaiManStuff64.png)](http://sikulix.com) SikuliX2 (version 2.0.x)
 ============
 
 [![Join the chat at https://gitter.im/RaiMan/SikuliX2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RaiMan/SikuliX2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 <hr>
 **Version 2.0.0-Beta under developement**<br> 
-built on **[TravisCI](https://travis-ci.org/RaiMan/SikuliX2)** (coming soon)
+[![Build Status](https://travis-ci.org/RaiMan/SikuliX2.svg?branch=master)](https://travis-ci.org/RaiMan/SikuliX2)
 <hr>
+
 **[latest working version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
-<hr>
 
 **Forking and/or downloading this repo only makes sense:**
 
