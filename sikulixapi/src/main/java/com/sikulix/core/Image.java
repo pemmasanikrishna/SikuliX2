@@ -24,7 +24,6 @@ public class Image extends Visual {
   //<editor-fold desc="*** construction">
   public Image() {
     clazz = vClazz;
-    content = new Mat();
     init(0, 0, 0, 0);
   }
 
