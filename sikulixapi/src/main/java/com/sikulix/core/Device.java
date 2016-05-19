@@ -1,17 +1,17 @@
 /*
- * Copyright 2010-2014, Sikuli.org, sikulix.com
- * Released under the MIT License.
- *
- * modified RaiMan
+ * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package org.sikuli.script;
+package com.sikulix.core;
 
-import java.awt.MouseInfo;
-import java.awt.Point;
-import java.awt.PointerInfo;
-
-import com.sikulix.core.Keys;
+import org.sikuli.script.*;
+import org.sikuli.script.Location;
+import org.sikuli.script.ObserveEvent;
+import org.sikuli.script.ObserverCallBack;
+import org.sikuli.script.Region;
+import org.sikuli.script.Screen;
 import org.sikuli.util.Debug;
+
+import java.awt.*;
 
 /**
  *

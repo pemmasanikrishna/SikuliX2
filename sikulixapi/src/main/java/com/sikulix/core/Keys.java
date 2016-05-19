@@ -1,12 +1,7 @@
 /*
- * Copyright 2010-2014, Sikuli.org, sikulix.com
- * Released under the MIT License.
- *
- * modified RaiMan
+ * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package org.sikuli.script;
-
-import org.sikuli.util.Debug;
+package com.sikulix.core;
 
 /**
  * Main pupose is to coordinate the keyboard usage among threads <br>
@@ -23,12 +18,6 @@ import org.sikuli.util.Debug;
  */
 public class Keys {
 
-  private static String me = "KeyBoard: ";
-  private static final int lvl = 3;
-  private static void log(int level, String message, Object... args) {
-    Debug.logx(level, me + message, args);
-  }
-
   private static Keys keys = null;
   private static Device device = null;
 
@@ -39,7 +28,6 @@ public class Keys {
     if (keys == null) {
       keys = new Keys();
       device = new Device(keys);
-      log(3, "init");
     }
   }
 }

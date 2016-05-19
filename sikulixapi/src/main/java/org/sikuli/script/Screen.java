@@ -10,6 +10,7 @@ import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.util.Date;
 
+import com.sikulix.core.Keys;
 import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.EventObserver;
