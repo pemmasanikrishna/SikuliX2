@@ -75,16 +75,10 @@ public class TestCoreBasic extends SXCommands {
   @Test
   public void test_11_startup_native_load() {
     currentTest = "test_11_startup_native_load";
-    boolean testOK = true;
-    if (!isLinux()) {
-      Image img = new Image();
-      File test = getFile(getSXNATIVE(), sxLibsCheckName);
-      result = test.toString();
-      testOK = existsFile(test);
-    } else {
-      result = "skipping - running on Linux";
-    }
-    assert testOK;
+    Image img = new Image();
+    File test = getFile(getSXNATIVE(), sxLibsCheckName);
+    result = test.toString();
+    assert (isLinux() ? true : existsFile(test));
   }
 
   @Test
@@ -114,6 +108,6 @@ public class TestCoreBasic extends SXCommands {
       result += path + ", ";
     }
     result += "]";
-    assert true;
+    assert 1 == paths.length;
   }
 }

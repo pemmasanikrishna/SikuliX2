@@ -1301,7 +1301,8 @@ public class SX {
     OPENCV, TESSERACT, SYSUTIL, HOTKEY
   }
 
-  static void loadNative(NATIVES type) {
+  static boolean loadNative(NATIVES type) {
+    boolean success = true;
     if (libsLoaded.isEmpty()) {
       for (NATIVES nType : NATIVES.values()) {
         libsLoaded.put(nType, false);
@@ -1338,9 +1339,10 @@ public class SX {
         loadNativeLibrary(sfLibJXGrabKey);
       }
     } else {
-      terminate(1, "loadNative: %s not yet supported", type);
+      success = false;
     }
     libsLoaded.put(type, true);
+    return success;
   }
 
   static void loadNativeLibrary(String aLib) {
