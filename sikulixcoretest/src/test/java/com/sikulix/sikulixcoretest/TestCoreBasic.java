@@ -4,24 +4,21 @@
 
 package com.sikulix.sikulixcoretest;
 
-import com.sikulix.core.Content;
-import com.sikulix.core.Image;
-import com.sikulix.core.SX;
-import com.sikulix.core.SXLog;
+import com.sikulix.core.*;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import java.io.File;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class TestCoreBasic extends SX {
+public class TestCoreBasic extends SXCommands {
 
   static final int logLevel = INFO;
   static SXLog log = getLogger("TestCoreBasic");
   private Object result = null;
   private String currentTest = "";
   private static int nTest = 0;
-  private static boolean testLimit = true;
+  private static boolean testLimit = false;
 
   public TestCoreBasic() {
     log.trace("TestCoreBasic()");
@@ -60,8 +57,7 @@ public class TestCoreBasic extends SX {
   @Test
   public void test_00_play() {
     currentTest = "test_00_play";
-    setBundlePath(SX.getSXIMAGES(), "myimages");
-    result = Image.getPath(0); // "nothing to do";
+    result = "nothing to do";
     assert true;
   }
 
