@@ -1341,14 +1341,16 @@ public class SX {
     } else {
       success = false;
     }
-    libsLoaded.put(type, true);
+    if (success) {
+      libsLoaded.put(type, true);
+    }
     return success;
   }
 
   static void loadNativeLibrary(String aLib) {
     try {
       if (aLib.startsWith("_ext_")) {
-        terminate(1, "loadNativeLibrary: loading external library not implemented: %s", aLib);
+        error("loadNativeLibrary: loading external library not implemented: %s", aLib);
       } else {
         String sf_aLib = new File(getSXNATIVE(), aLib).getAbsolutePath();
         System.load(sf_aLib);
