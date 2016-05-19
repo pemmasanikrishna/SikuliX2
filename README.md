@@ -5,10 +5,10 @@
 
 <hr>
 **Version 2.0.0-Beta under developement**<br> 
-.. image:: https://travis-ci.org/RaiMan/SikuliX2.svg?branch=master
-    :target: https://travis-ci.org/RaiMan/SikuliX2<hr>
-**[latest working version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
+[![Build Status](https://travis-ci.org/RaiMan/SikuliX2.svg?branch=master)](https://travis-ci.org/RaiMan/SikuliX2)
 <hr>
+
+**[latest working version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
 
 **Forking and/or downloading this repo only makes sense:**
 
