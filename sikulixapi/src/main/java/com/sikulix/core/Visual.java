@@ -243,7 +243,7 @@ public abstract class Visual {
   //</editor-fold>
 
   //<editor-fold desc="content">
-  protected Mat content = new Mat();
+  protected Mat content = null;
 
   final static String PNG = "png";
   final static String dotPNG = "." + PNG;
@@ -539,6 +539,9 @@ public abstract class Visual {
 
   protected byte[] getImageBytes(String dotType) {
     MatOfByte bytemat = new MatOfByte();
+    if (SX.isNull(content)) {
+      content = new Mat();
+    }
     Highgui.imencode(dotType, content, bytemat);
     return bytemat.toArray();
   }
