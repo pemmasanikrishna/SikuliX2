@@ -75,9 +75,9 @@ public class TestCoreBasic extends SXCommands {
   @Test
   public void test_11_startup_native_load() {
     currentTest = "test_11_startup_native_load";
-    Image img = new Image();
     boolean testOK = true;
     if (!isLinux()) {
+      Image img = new Image();
       File test = getFile(getSXNATIVE(), sxLibsCheckName);
       result = test.toString();
       testOK = existsFile(test);
