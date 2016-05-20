@@ -4,20 +4,16 @@
 
 package com.sikulix.core;
 
+import com.sikulix.api.Location;
 import com.sikulix.scripting.JythonHelper;
 import org.apache.commons.cli.*;
-import org.sikuli.script.App;
-import org.sikuli.script.Key;
 import org.sikuli.util.SysJNA;
-import org.sikuli.util.hotkey.HotkeyListener;
 
 import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.security.CodeSource;
 import java.util.*;
 import java.util.List;
@@ -1078,8 +1074,12 @@ public class SX {
   static GraphicsDevice[] gdevs;
   static Rectangle[] monitorBounds = null;
   static Rectangle rAllMonitors;
-  public static int mainMonitor = -1;
-  public static int nMonitors = 0;
+  private static int mainMonitor = -1;
+  private static int nMonitors = 0;
+
+  public static int getNumberOfMonitors() {
+    return nMonitors;
+  }
 
   static void globalGetMonitors() {
     if (!isHeadless()) {
@@ -1129,19 +1129,20 @@ public class SX {
     return GraphicsEnvironment.isHeadless();
   }
 
-  public static Region getMonitor(int n) {
-    if (isHeadless()) {
-      return new Region();
+  public static Rectangle getMonitor(int n) {
+    if (isHeadless() || mainMonitor < 0) {
+      return null;
     }
     n = (n < 0 || n >= nMonitors) ? mainMonitor : n;
-    return new Region(monitorBounds[n]);
+    return new Rectangle(monitorBounds[n]);
   }
 
-  public static Region getMonitor() {
-    if (isHeadless()) {
-      return new Region();
-    }
-    return new Region(monitorBounds[mainMonitor]);
+  public static Rectangle getMonitor() {
+    return getMonitor(mainMonitor);
+  }
+
+  public static int getMainMonitorID() {
+    return mainMonitor;
   }
 
   public static GraphicsDevice getGraphicsDevice(int id) {

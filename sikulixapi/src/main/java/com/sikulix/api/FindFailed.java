@@ -2,9 +2,7 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.core;
-
-import static com.sikulix.core.FindFailed.Response.ABORT;
+package com.sikulix.api;
 
 /**
  * implements the SikuliX FindFailed exception class

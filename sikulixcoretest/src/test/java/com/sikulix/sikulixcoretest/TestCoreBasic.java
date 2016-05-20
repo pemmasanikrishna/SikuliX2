@@ -4,6 +4,8 @@
 
 package com.sikulix.sikulixcoretest;
 
+import com.sikulix.api.Image;
+import com.sikulix.api.Commands;
 import com.sikulix.core.*;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -11,7 +13,7 @@ import org.junit.runners.MethodSorters;
 import java.io.File;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class TestCoreBasic extends SXCommands {
+public class TestCoreBasic extends Commands {
 
   static final int logLevel = INFO;
   static SXLog log = getLogger("TestCoreBasic");
@@ -109,5 +111,15 @@ public class TestCoreBasic extends SXCommands {
     }
     result += "]";
     assert 1 == paths.length;
+  }
+
+  @Test
+  @Ignore
+  public void test_30_popat() {
+    currentTest = "test_30_popat";
+    popat(300,300);
+    popup("testing popat", "testing popat");
+    result = "testing popat";
+    assert true;
   }
 }

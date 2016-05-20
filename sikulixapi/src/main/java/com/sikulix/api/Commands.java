@@ -2,10 +2,14 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.core;
+package com.sikulix.api;
 
+import com.sikulix.core.Content;
+import com.sikulix.core.SX;
+import com.sikulix.core.SXLog;
 import com.sikulix.scripting.JythonHelper;
 import com.sikulix.scripting.Runner;
+import com.sikulix.util.SikulixFileChooser;
 import org.sikuli.script.App;
 import org.sikuli.script.Key;
 import org.sikuli.util.hotkey.HotkeyListener;
@@ -18,7 +22,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-public class SXCommands extends SX {
+public class Commands extends SX {
 
   private static SXLog log = getLogger("SXCommands");
 
@@ -72,7 +76,52 @@ public class SXCommands extends SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="input, popselect">
+  private static Point locPopAt = null;
+
+  public static Location popat(Location at) {
+    locPopAt = new Point(at.x, at.y);
+    return new Location(locPopAt);
+  }
+
+  public static Location popat(Region at) {
+    locPopAt = new Point(at.getCenter().x, at.getCenter().y);
+    return new Location(locPopAt);
+  }
+
+  public static Location popat(int atx, int aty) {
+    locPopAt = new Point(atx, aty);
+    return new Location(locPopAt);
+  }
+
+  public static Location popat() {
+    locPopAt = getLocPopAt();
+    return new Location(locPopAt);
+  }
+
+  private static Point getLocPopAt() {
+    Rectangle screen0 = getMonitor();
+    if (null == screen0) {
+      return null;
+    }
+    return new Point((int) screen0.getCenterX(), (int) screen0.getCenterY());
+  }
+
+  private static JFrame popLocation() {
+    if (null == locPopAt) {
+      locPopAt = getLocPopAt();
+      if (null == locPopAt) {
+        return null;
+      }
+    }
+    JFrame anchor = new JFrame();
+    anchor.setAlwaysOnTop(true);
+    anchor.setUndecorated(true);
+    anchor.setSize(1,1);
+    anchor.setLocation(locPopAt);
+    anchor.setVisible(true);
+    return anchor;
+  }
+
   /**
    * request user's input as one line of text <br>
    * with hidden = true: <br>
@@ -86,11 +135,14 @@ public class SXCommands extends SX {
    * @return the text entered
    */
   public static String input(String msg, String preset, String title, boolean hidden) {
+    JFrame anchor = popLocation();
+    String ret = null;
     if (!hidden) {
       if ("".equals(title)) {
         title = "Sikuli input request";
       }
-      return (String) JOptionPane.showInputDialog(null, msg, title, JOptionPane.PLAIN_MESSAGE, null, null, preset);
+      ret = (String) JOptionPane.showInputDialog(anchor, msg, title,
+              JOptionPane.PLAIN_MESSAGE, null, null, preset);
     } else {
       preset = "";
       JTextArea tm = new JTextArea(msg);
@@ -105,18 +157,19 @@ public class SXCommands extends SX {
       pnl.add(pw);
       pnl.add(Box.createVerticalStrut(10));
       pnl.add(tm);
-      if (0 == JOptionPane.showConfirmDialog(null, pnl, title, JOptionPane.OK_CANCEL_OPTION)) {
+      int retval = JOptionPane.showConfirmDialog(anchor, pnl, title, JOptionPane.OK_CANCEL_OPTION);
+      if (0 == retval) {
         char[] pwc = pw.getPassword();
-        String pwr = "";
         for (int i = 0; i < pwc.length; i++) {
-          pwr = pwr + pwc[i];
+          ret = ret + pwc[i];
           pwc[i] = 0;
         }
-        return pwr;
-      } else {
-        return null;
       }
     }
+    if (anchor != null) {
+      anchor.dispose();
+    }
+    return ret;
   }
 
   public static String input(String msg, String title, boolean hidden) {
@@ -180,10 +233,58 @@ public class SXCommands extends SX {
     pnl.add(Box.createVerticalStrut(10));
     pnl.add(tm);
     pnl.add(Box.createVerticalStrut(10));
-    if (0 == JOptionPane.showConfirmDialog(null, pnl, title, JOptionPane.OK_CANCEL_OPTION)) {
+    JFrame anchor = popLocation();
+    int ret = JOptionPane.showConfirmDialog(anchor, pnl, title, JOptionPane.OK_CANCEL_OPTION);
+    if (anchor != null) {
+      anchor.dispose();
+    }
+    if (0 == ret) {
       return ta.getText();
     } else {
       return "";
+    }
+  }
+
+  public static void popup(String message) {
+    popup(message, "Sikuli");
+  }
+
+  public static void popup(String message, String title) {
+    JFrame anchor = popLocation();
+    JOptionPane.showMessageDialog(anchor, message, title, JOptionPane.PLAIN_MESSAGE);
+    if (anchor != null) {
+      anchor.dispose();
+    }
+  }
+
+  public static boolean popAsk(String msg) {
+    return popAsk(msg, null);
+  }
+
+  public static boolean popAsk(String msg, String title) {
+    if (title == null) {
+      title = "... something to decide!";
+    }
+    JFrame anchor = popLocation();
+    int ret = JOptionPane.showConfirmDialog(anchor, msg, title, JOptionPane.YES_NO_OPTION);
+    if (anchor != null) {
+      anchor.dispose();
+    }
+    if (ret == JOptionPane.CLOSED_OPTION || ret == JOptionPane.NO_OPTION) {
+      return false;
+    }
+    return true;
+  }
+
+  public static void popError(String message) {
+    popError(message, "Sikuli");
+  }
+
+  public static void popError(String message, String title) {
+    JFrame anchor = popLocation();
+    JOptionPane.showMessageDialog(anchor, message, title, JOptionPane.ERROR_MESSAGE);
+    if (anchor != null) {
+      anchor.dispose();
     }
   }
 
@@ -215,42 +316,24 @@ public class SXCommands extends SX {
     if (preset == null) {
       preset = options[0];
     }
-    return (String) JOptionPane.showInputDialog(null, msg, title, JOptionPane.PLAIN_MESSAGE, null, options, preset);
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="popup, ...">
-  public static void popup(String message) {
-    popup(message, "Sikuli");
-  }
-
-  public static void popup(String message, String title) {
-    JOptionPane.showMessageDialog(null, message, title, JOptionPane.PLAIN_MESSAGE);
-  }
-
-  public static boolean popAsk(String msg) {
-    return popAsk(msg, null);
-  }
-
-  public static boolean popAsk(String msg, String title) {
-    if (title == null) {
-      title = "... something to decide!";
+    JFrame anchor = popLocation();
+    String ret = (String) JOptionPane.showInputDialog(anchor, msg, title,
+            JOptionPane.PLAIN_MESSAGE, null, options, preset);
+    if (anchor != null) {
+      anchor.dispose();
     }
-    int ret = JOptionPane.showConfirmDialog(null, msg, title, JOptionPane.YES_NO_OPTION);
-    if (ret == JOptionPane.CLOSED_OPTION || ret == JOptionPane.NO_OPTION) {
-      return false;
-    }
-    return true;
+    return ret;
   }
 
-  public static void popError(String message) {
-    popError(message, "Sikuli");
+  public static String popFile(String title) {
+    popat(new Screen(0).getCenter());
+    JFrame anchor = popLocation();
+    SikulixFileChooser fc = new SikulixFileChooser(anchor);
+    File ret = fc.show(title);
+    fc = null;
+    popat();
+    return ret.getAbsolutePath();
   }
-
-  public static void popError(String message, String title) {
-    JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
-  }
-  //</editor-fold>
 
   //<editor-fold desc="run something">
   public static String run(String cmdline) {
@@ -298,7 +381,7 @@ public class SXCommands extends SX {
     @Override
     public boolean accept(File entry) {
       if (jython != null && entry.isDirectory()) {
-        jython = SXCommands.doCompileJythonFolder(jython, entry);
+        jython = Commands.doCompileJythonFolder(jython, entry);
       }
       return false;
     }
@@ -380,23 +463,23 @@ public class SXCommands extends SX {
 
   // ******************************* SX Commands ImagePath handling ****************************
   public static boolean setBundlePath(Object... args) {
-    return Image.setBundlePath(args);
+    return com.sikulix.api.Image.setBundlePath(args);
   }
 
   public static String getBundlePath() {
-    return Image.getBundlePath();
+    return com.sikulix.api.Image.getBundlePath();
   }
 
   public static void addImagePath(Object... args) {
-    Image.addPath(args);
+    com.sikulix.api.Image.addPath(args);
   }
 
   public static void removeImagePath(Object... args) {
-    Image.removePath(args);
+    com.sikulix.api.Image.removePath(args);
   }
 
   public static String[] getImagePath() {
-    return Image.getPath();
+    return com.sikulix.api.Image.getPath();
   }
 
 // ******************************* SX Commands Clipboard ****************************

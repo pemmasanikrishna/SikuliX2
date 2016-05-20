@@ -4,6 +4,7 @@
 
 package com.sikulix.scripting;
 
+import com.sikulix.api.*;
 import com.sikulix.core.*;
 
 import org.sikuli.script.Mouse;
@@ -50,7 +51,7 @@ public class JavaScriptHelper {
       newArgs[n] = args[n];
     }
     try {
-      m = SXCommands.class.getMethod(function, Object[].class);
+      m = Commands.class.getMethod(function, Object[].class);
       retVal = m.invoke(null, (Object) newArgs);
     } catch (Exception ex) {
       m = null;

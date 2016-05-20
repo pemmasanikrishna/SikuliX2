@@ -3,6 +3,7 @@
  */
 package com.sikulix.core;
 
+import com.sikulix.api.Keys;
 import org.sikuli.script.*;
 import org.sikuli.script.Location;
 import org.sikuli.script.ObserveEvent;
@@ -19,13 +20,8 @@ import java.awt.*;
  */
 public class Device {
 
-  static RunTime runTime = RunTime.getRunTime();
-
-  private static String me = "Device: ";
-  private static final int lvl = 3;
-  private static void log(int level, String message, Object... args) {
-    Debug.logx(level, me + message, args);
-  }
+  private static SXLog log = SX.getLogger("SX.Device");
+  private static int lvl = SXLog.DEBUG;
 
   private Object device = null;
   private String devName = "Device";
@@ -35,8 +31,9 @@ public class Device {
   protected Object owner = null;
   private boolean blocked = false;
   private boolean suspended = false;
-  protected Location lastPos = null;
+  
   protected boolean isMouse = false;
+  protected Location lastPos = null;
 
   protected int MouseMovedIgnore = 0;
   protected int MouseMovedShow = 1;
@@ -44,14 +41,17 @@ public class Device {
   protected int MouseMovedAction = 3;
   protected int mouseMovedResponse = MouseMovedIgnore;
   protected boolean MouseMovedHighlight = true;
+
+  //<editor-fold desc="*** Callback">
   protected ObserverCallBack mouseMovedCallback = null;
   protected ObserverCallBack callback = null;
   private  boolean shouldRunCallback = false;
+
 	static boolean shouldTerminate = false;
 
 	public static void setShouldTerminate() {
 		shouldTerminate = true;
-		log(lvl, "setShouldTerminate: request issued");
+		log.debug("setShouldTerminate: request issued");
 	}
 
   public boolean isShouldRunCallback() {
@@ -62,21 +62,48 @@ public class Device {
     this.shouldRunCallback = shouldRunCallback;
   }
 
-  protected Device(Mouse m) {
+  private void checkShouldRunCallback() {
+    if (shouldRunCallback && callback != null) {
+      callback.happened(new ObserveEvent(ObserveEvent.Type.GENERIC));
+      if (shouldTerminate) {
+        shouldTerminate = false;
+        throw new AssertionError("aborted by Sikulix.GenericDeviceCallBack");
+      }
+    }
+  }
+
+  /**
+   * what to do if mouse is moved outside Sikuli's mouse protection <br>
+   * in case of event the user provided callBack.happened is called
+   *
+   * @param givenCallBack
+   */
+
+  public void setCallback(Object givenCallBack) {
+    if (givenCallBack != null) {
+      callback = new ObserverCallBack(givenCallBack, ObserveEvent.Type.GENERIC);
+    }
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="*** Construction">
+  public Device(Mouse m) {
     device = m;
     devName = "Mouse";
   }
 
-  protected Device(Keys k) {
+  public Device(Keys k) {
     device = k;
     devName = "KeyBoard";
   }
 
-  protected Device(Screen s) {
+  public Device(Screen s) {
     device = s;
     devName = "Screen";
   }
+  //</editor-fold>
 
+  //<editor-fold desc="*** get state">
   public boolean isInUse() {
     return inUse;
   }
@@ -101,7 +128,9 @@ public class Device {
     }
 		return false;
 	}
+  //</editor-fold>
 
+  //<editor-fold desc="*** block globally">
   /**
    * to block the device globally <br>
    * only the contained device methods without owner will be granted
@@ -156,7 +185,9 @@ public class Device {
 		}
 		return false;
 	}
+  //</editor-fold>
 
+  //<editor-fold desc="*** coordinate usage">
   protected boolean use() {
     return use(null);
   }
@@ -186,10 +217,10 @@ public class Device {
 			}
       keep = false;
       this.owner = owner;
-      log(lvl + 1, "%s: use start: %s", devName, owner);
+      log.trace("%s: use start: %s", devName, owner);
       return true;
     }
-    log(-1, "synch problem - use start: %s", owner);
+    log.error("synch problem - use start: %s", owner);
     return false;
   }
 
@@ -201,7 +232,7 @@ public class Device {
 		}
     if (inUse && owner == ownerGiven) {
       keep = true;
-      log(lvl + 1, "%s: use keep: %s", devName, ownerGiven);
+      log.trace("%s: use keep: %s", devName, ownerGiven);
       return true;
     }
     return false;
@@ -228,12 +259,14 @@ public class Device {
       inUse = false;
       this.owner = null;
       notify();
-      log(lvl + 1, "%s: use stop: %s", devName, owner);
+      log.trace("%s: use stop: %s", devName, owner);
       return true;
     }
     return false;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="special for Mouse">
   protected Location getLocation() {
     PointerInfo mp = MouseInfo.getPointerInfo();
     if (mp != null) {
@@ -250,7 +283,7 @@ public class Device {
     }
     Location pos = getLocation();
     if (pos != null && (lastPos.x != pos.x || lastPos.y != pos.y)) {
-      log(lvl, "%s: moved externally: now (%d,%d) was (%d,%d) (mouseMovedResponse %d)",
+      log.debug("%s: moved externally: now (%d,%d) was (%d,%d) (mouseMovedResponse %d)",
               devName, pos.x, pos.y, lastPos.x, lastPos.y, mouseMovedResponse);
       if (mouseMovedResponse > 0) {
         if (MouseMovedHighlight) {
@@ -268,7 +301,7 @@ public class Device {
 				if (pos.x < 1) {
 					return;
 				}
-				log(-1, "Terminating in MouseMovedResponse = Pause");
+				log.error("Terminating in MouseMovedResponse = Pause");
 				Commands.terminate(1);
       }
       if (mouseMovedResponse == MouseMovedAction) {
@@ -284,29 +317,6 @@ public class Device {
     }
   }
 
-  private void checkShouldRunCallback() {
-    if (shouldRunCallback && callback != null) {
-      callback.happened(new ObserveEvent(ObserveEvent.Type.GENERIC));
-			if (shouldTerminate) {
-				shouldTerminate = false;
-				throw new AssertionError("aborted by Sikulix.GenericDeviceCallBack");
-			}
-    }
-  }
-
-  /**
-   * what to do if mouse is moved outside Sikuli's mouse protection <br>
-   * in case of event the user provided callBack.happened is called
-   *
-   * @param givenCallBack
-   */
-
-  public void setCallback(Object givenCallBack) {
-    if (givenCallBack != null) {
-      callback = new ObserverCallBack(givenCallBack, ObserveEvent.Type.GENERIC);
-    }
-  }
-
   private static void showMousePos(Point pos) {
     Location lPos = new Location(pos);
     Region inner = lPos.grow(20).highlight();
@@ -315,6 +325,7 @@ public class Device {
     delay(500);
     inner.highlight();
   }
+  //</editor-fold>
 
   protected static void delay(int time) {
     if (time == 0) {

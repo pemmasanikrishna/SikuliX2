@@ -12,7 +12,7 @@ import java.io.PrintStream;
 
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
-import com.sikulix.core.SXCommands;
+import com.sikulix.api.Commands;
 import org.sikuli.script.RunTime;
 
 /**
@@ -59,7 +59,7 @@ public class LinuxSupport {
     if (!SX.isLinux()) {
       return "";
     }
-    String result = SXCommands.runcmd("lsb_release -i -r -s");
+    String result = Commands.runcmd("lsb_release -i -r -s");
     String linuxDistro = result.replaceAll("\n", " ").trim();
     if (linuxDistro.contains("*** error ***")) {
       log(lvl, "command returns error: lsb_release -i -r -s\n%s", result);
@@ -133,8 +133,8 @@ public class LinuxSupport {
     boolean checkSuccess = true;
     log(lvl, "checking: availability of OpenCV and Tesseract");
     log(lvl, "checking: scanning loader cache (ldconfig -p)");
-    cmdRet = SXCommands.runcmd("ldconfig -p");
-    if (cmdRet.contains(SXCommands.runCmdError)) {
+    cmdRet = Commands.runcmd("ldconfig -p");
+    if (cmdRet.contains(Commands.runCmdError)) {
       log(-1, "checking: ldconfig returns error:\ns", cmdRet);
       checkSuccess = false;
     } else {
@@ -171,16 +171,16 @@ public class LinuxSupport {
       }
     }
     // checking wmctrl, xdotool
-    cmdRet = SXCommands.runcmd("wmctrl -m");
-    if (cmdRet.contains(SXCommands.runCmdError)) {
+    cmdRet = Commands.runcmd("wmctrl -m");
+    if (cmdRet.contains(Commands.runCmdError)) {
       log(-1, "checking: wmctrl not available or not working");
-      SXCommands.linuxAppSupport += "wmctrl ";
+      Commands.linuxAppSupport += "wmctrl ";
     } else {
       log(lvl, "checking: wmctrl seems to be available");
     }
-    cmdRet = SXCommands.runcmd("xdotool version");
-    if (cmdRet.contains(SXCommands.runCmdError)) {
-      SXCommands.linuxAppSupport += "xdotool ";
+    cmdRet = Commands.runcmd("xdotool version");
+    if (cmdRet.contains(Commands.runCmdError)) {
+      Commands.linuxAppSupport += "xdotool ";
       log(-1, "checking: xdotool not available or not working");
     } else {
       log(lvl, "checking: xdotool seems to be available");
@@ -191,7 +191,7 @@ public class LinuxSupport {
   private static boolean runLdd(File lib) {
     // ldd -r lib
     // undefined symbol: _ZN2cv3MatC1ERKS0_RKNS_5Rect_IiEE	(./libVisionProxy.so)
-    String cmdRet = SXCommands.runcmd("ldd -r " + lib);
+    String cmdRet = Commands.runcmd("ldd -r " + lib);
     String[] retLines;
     boolean success = true;
     retLines = cmdRet.split("continued: build on the fly on Linux at runtime: if bundled do not work, looking for provided - if these do not work, try to build. setup not ready yet. \n");
@@ -314,8 +314,8 @@ public class LinuxSupport {
 
     if (success && opencvAvail && tessAvail) {
       log(lvl, "buildVision: running build script");
-      String cmdRet = SXCommands.runcmd(cmdFile.getAbsolutePath());
-      if (cmdRet.contains(SXCommands.runCmdError)) {
+      String cmdRet = Commands.runcmd(cmdFile.getAbsolutePath());
+      if (cmdRet.contains(Commands.runCmdError)) {
         log(-1, "buildVision: build script returns error:\n%s", cmdRet);
         return false;
       } else {
@@ -395,8 +395,8 @@ public class LinuxSupport {
     log(lvl, "checking\n%s", lib);
     // readelf -d lib
     // 0x0000000000000001 (NEEDED)             Shared library: [libtesseract.so.3]
-    cmdRet = SXCommands.runcmd("readelf -d " + lib);
-    if (cmdRet.contains(SXCommands.runCmdError)) {
+    cmdRet = Commands.runcmd("readelf -d " + lib);
+    if (cmdRet.contains(Commands.runCmdError)) {
       log(-1, "checking: readelf returns error:\ns", cmdRet);
       checkSuccess = false;
     } else {

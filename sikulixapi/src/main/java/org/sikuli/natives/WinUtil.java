@@ -7,11 +7,10 @@
 package org.sikuli.natives;
 
 import com.sikulix.core.SX;
-import com.sikulix.core.SXCommands;
+import com.sikulix.api.Commands;
 import org.sikuli.util.Debug;
 import org.sikuli.script.App;
 import org.sikuli.script.Key;
-import org.sikuli.script.RunTime;
 import org.sikuli.script.Screen;
 
 import java.awt.*;
@@ -80,7 +79,7 @@ public class WinUtil implements OSUtil {
     } else {
       cmd = cmd = "!tasklist /V /FO CSV /NH /FI \"PID eq " + pid.toString() + "\"";
     }
-    String result = SXCommands.runcmd(cmd);
+    String result = Commands.runcmd(cmd);
     String[] lines = result.split("\r\n");
     if ("0".equals(lines[0].trim())) {
       for (int nl = 1; nl < lines.length; nl++) {
@@ -114,7 +113,7 @@ public class WinUtil implements OSUtil {
     }
     if (app == null) {
       cmd = String.format("!tasklist /V /FO CSV /NH /FI \"IMAGENAME eq %s\"", execName);
-      result = SXCommands.runcmd(cmd);
+      result = Commands.runcmd(cmd);
       lines = result.split("\r\n");
       if ("0".equals(lines[0].trim())) {
         for (int nl = 1; nl < lines.length; nl++) {
@@ -143,7 +142,7 @@ public class WinUtil implements OSUtil {
     } else {
       cmd = String.format("!tasklist /V /FO CSV /NH /FI \"IMAGENAME eq %s\"", name);
     }
-    String result = SXCommands.runcmd(cmd);
+    String result = Commands.runcmd(cmd);
     String[] lines = result.split("\r\n");
     if ("0".equals(lines[0].trim())) {
       for (int nl = 1; nl < lines.length; nl++) {

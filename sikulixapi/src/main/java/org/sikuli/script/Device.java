@@ -10,7 +10,7 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.PointerInfo;
 
-import com.sikulix.core.Keys;
+import com.sikulix.api.Keys;
 import org.sikuli.util.Debug;
 
 /**

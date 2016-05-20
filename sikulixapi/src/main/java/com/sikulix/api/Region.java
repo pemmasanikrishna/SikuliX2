@@ -2,12 +2,16 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.core;
+package com.sikulix.api;
+
+import com.sikulix.core.SX;
+import com.sikulix.core.SXLog;
+import com.sikulix.core.Visual;
 
 import java.awt.Rectangle;
 import java.awt.Point;
 
-public class Region extends Visual{
+public class Region extends Visual {
 
   private static vType vClazz = vType.REGION;
   private static SXLog log = SX.getLogger("SX." + vClazz.toString());

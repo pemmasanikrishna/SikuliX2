@@ -1,7 +1,10 @@
 /*
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package com.sikulix.core;
+
+package com.sikulix.api;
+
+import com.sikulix.core.Device;
 
 /**
  * Main pupose is to coordinate the keyboard usage among threads <br>

@@ -10,7 +10,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import com.sikulix.core.Content;
-import com.sikulix.core.SXCommands;
+import com.sikulix.api.Commands;
 import org.apache.commons.cli.CommandLine;
 import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
@@ -263,7 +263,7 @@ public class Runner {
     if (jsr != null) {
       log(lvl, "ScriptingEngine started: JavaScript (ending .js)");
     } else {
-      Commands.terminate(1, "ScriptingEngine for JavaScript not available");
+      org.sikuli.script.Commands.terminate(1, "ScriptingEngine for JavaScript not available");
     }
     if (!SX.isUnset(SX.sxGlobalClassNameIDE)) {
       try {
@@ -364,7 +364,7 @@ public class Runner {
         if (givenScriptName.endsWith(".zip")) {
           scriptLocation = givenScriptHost + givenScriptFolder + givenScriptName;
           if (0 < FileManager.isUrlUseabel(scriptLocation)) {
-            Commands.terminate(1, ".zip from net not yet supported\n%s", scriptLocation);
+            org.sikuli.script.Commands.terminate(1, ".zip from net not yet supported\n%s", scriptLocation);
           }
         } else {
           for (String suffix : endingTypes.keySet()) {
@@ -825,7 +825,7 @@ public class Runner {
     File aFile = FileManager.createTempFile("script");
     aFile.setExecutable(true);
     FileManager.writeStringToFile(givenScriptScript, aFile);
-    String retVal = SXCommands.runcmd(new String[]{prefix + aFile.getAbsolutePath()});
+    String retVal = Commands.runcmd(new String[]{prefix + aFile.getAbsolutePath()});
     String[] parts = retVal.split("\n");
     int retcode = -1;
     try {
@@ -834,9 +834,9 @@ public class Runner {
     }
     if (retcode != 0) {
       if (silent) {
-        log(lvl, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, SXCommands.getLastCommandResult());
+        log(lvl, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, Commands.getLastCommandResult());
       } else {
-        log(-1, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, SXCommands.getLastCommandResult());
+        log(-1, "AppleScript:\n%s\nreturned:\n%s", givenScriptScript, Commands.getLastCommandResult());
       }
     }
     return retcode;
@@ -857,7 +857,7 @@ public class Runner {
       "cmd.exe", "/S", "/C",
       "type " + aFile.getAbsolutePath() + " | powershell -noprofile -"
     };
-    String retVal = SXCommands.runcmd(psCmdType);
+    String retVal = Commands.runcmd(psCmdType);
     String[] parts = retVal.split("\\s");
     int retcode = -1;
     try {
@@ -865,7 +865,7 @@ public class Runner {
     } catch (Exception ex) {
     }
     if (retcode != 0) {
-      log(-1, "PowerShell:\n%s\nreturned:\n%s", givenScriptScript, SXCommands.getLastCommandResult());
+      log(-1, "PowerShell:\n%s\nreturned:\n%s", givenScriptScript, Commands.getLastCommandResult());
     }
     return retcode;
   }
@@ -963,7 +963,7 @@ public class Runner {
               try {
                 Runner.mShow.invoke(null, (Object[]) new Class[0]);
               } catch (Exception e) {
-                Commands.terminate(901);
+                org.sikuli.script.Commands.terminate(901);
               }
             }
           }

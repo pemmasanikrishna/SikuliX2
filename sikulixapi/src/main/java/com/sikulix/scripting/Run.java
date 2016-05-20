@@ -3,11 +3,14 @@
  */
 package com.sikulix.scripting;
 
+import com.sikulix.api.Image;
+import com.sikulix.api.Region;
+import com.sikulix.api.Commands;
 import com.sikulix.core.*;
 
 import java.io.File;
 
-public class Run extends SXCommands {
+public class Run extends Commands {
 
   private static SXLog log = null;
 

@@ -3,10 +3,12 @@
  */
 package com.sikulix.core;
 
+import com.sikulix.api.Match;
+import com.sikulix.api.Pattern;
+import com.sikulix.api.Region;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.*;
@@ -19,7 +21,7 @@ public class Finder {
   private static final double downSimDiff = 0.15;
 
   private boolean isImage = false;
-  private Image image = null;
+  private com.sikulix.api.Image image = null;
 
   private boolean isRegion = true;
   private Region region = null;
@@ -34,7 +36,7 @@ public class Finder {
     public Pattern pattern = null;
     public double similarity = 0;
     public double downSim = 0;
-    public Image img = null;
+    public com.sikulix.api.Image img = null;
     public Mat mat = null;
     public Match lastSeen = null;
     public double lastSeenScore = 0;
@@ -69,7 +71,7 @@ public class Finder {
     public Region region = null;
     private int baseX = 0;
     private int baseY = 0;
-    public Image image = null;
+    public com.sikulix.api.Image image = null;
     public boolean inRegion = true;
 
     public Mat base = null;
@@ -197,7 +199,7 @@ public class Finder {
   protected Finder() {
   }
 
-  public Finder(Image img) {
+  public Finder(com.sikulix.api.Image img) {
     if (img != null && img.isValid()) {
       image = img;
       base = img.content;
@@ -219,7 +221,7 @@ public class Finder {
 
   protected Finder(Mat base) {
     if (base != null) {
-      image = new Image(base);
+      image = new com.sikulix.api.Image(base);
       this.base = base;
     } else {
       log.error("init: invalid CV-Mat: %s", base);
@@ -267,7 +269,7 @@ public class Finder {
     return region;
   }
 
-  public Image getImage() {
+  public com.sikulix.api.Image getImage() {
     return image;
   }
 
@@ -506,7 +508,7 @@ public class Finder {
   private class SubFindRun implements Runnable {
 
     Match[] mArray;
-    Image base;
+    com.sikulix.api.Image base;
     Object target;
     Region reg;
     boolean finished = false;
@@ -593,13 +595,13 @@ public class Finder {
 
   protected static Pattern evalTarget(Object target) throws IOException {
     boolean findingText = false;
-    Image img = null;
+    com.sikulix.api.Image img = null;
     Pattern pattern = null;
     if (target instanceof String) {
       if (((String) target).startsWith("\t") && ((String) target).endsWith("\t")) {
         findingText = true;
       } else {
-        img = new Image((String) target);
+        img = new com.sikulix.api.Image((String) target);
         if (img.isValid()) {
           pattern = new Pattern(img);
         } else if (img.isText()) {
@@ -617,9 +619,9 @@ public class Finder {
       } else {
         throw new IOException("Region: doFind: Pattern not useable: " + target.toString());
       }
-    } else if (target instanceof Image) {
-      if (((Image) target).isValid()) {
-        pattern = new Pattern((Image) target);
+    } else if (target instanceof com.sikulix.api.Image) {
+      if (((com.sikulix.api.Image) target).isValid()) {
+        pattern = new Pattern((com.sikulix.api.Image) target);
       } else {
         throw new IOException("Region: doFind: Image not useable: " + target.toString());
       }

@@ -4,6 +4,10 @@
 
 package com.sikulix.core;
 
+import com.sikulix.api.Location;
+import com.sikulix.api.Match;
+import com.sikulix.api.Offset;
+import com.sikulix.api.Region;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 
@@ -164,13 +168,13 @@ public abstract class Visual {
   //</editor-fold>
 
   //<editor-fold desc="lastCapture">
-  private Image lastCapture = null;
+  private com.sikulix.api.Image lastCapture = null;
 
-  public Image getLastCapture() {
+  public com.sikulix.api.Image getLastCapture() {
     return lastCapture;
   }
 
-  public void setLastCapture(Image lastCapture) {
+  public void setLastCapture(com.sikulix.api.Image lastCapture) {
     this.lastCapture = lastCapture;
   }
   //</editor-fold>
@@ -230,15 +234,15 @@ public abstract class Visual {
 
   protected double score = -1;
 
-  public Image getImage() {
+  public com.sikulix.api.Image getImage() {
     return image;
   }
 
-  public void setImage(Image img) {
+  public void setImage(com.sikulix.api.Image img) {
     this.image = img;
   }
 
-  protected Image image = null;
+  protected com.sikulix.api.Image image = null;
 
   //</editor-fold>
 
@@ -471,8 +475,8 @@ public abstract class Visual {
    */
   public int getContainingScreenNumber() {
     Rectangle r;
-    for (int i = 0; i < SX.nMonitors; i++) {
-      r = SX.getMonitor(i).getRectangle();
+    for (int i = 0; i < SX.getNumberOfMonitors(); i++) {
+      r = SX.getMonitor(i);
       if (r.contains(this.x, this.y)) {
         return i;
       }
@@ -500,11 +504,11 @@ public abstract class Visual {
   //</editor-fold>
 
   //<editor-fold desc="***** capture/show">
-  public Image capture() {
-    Image img = new Image();
+  public com.sikulix.api.Image capture() {
+    com.sikulix.api.Image img = new com.sikulix.api.Image();
     if (isDesktop()) {
       Robot robot = SX.getSXROBOT();
-      img = new Image(robot.createScreenCapture(getRectangle()));
+      img = new com.sikulix.api.Image(robot.createScreenCapture(getRectangle()));
     } else {
       SX.terminate(1, "capture: remote not implemented");
     }

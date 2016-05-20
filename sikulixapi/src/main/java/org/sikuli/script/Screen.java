@@ -10,7 +10,7 @@ import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.util.Date;
 
-import com.sikulix.core.Keys;
+import com.sikulix.api.Keys;
 import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
 import org.sikuli.util.EventObserver;
@@ -71,12 +71,12 @@ public class Screen extends Region implements EventObserver, IScreen {
     log(lvl + 1, "initScreens: entry");
     primaryScreen = 0;
     globalRobot = getMouseRobot();
-    screens = new Screen[SX.nMonitors];
-    screens[0] = new Screen(0, SX.mainMonitor);
+    screens = new Screen[SX.getNumberOfMonitors()];
+    screens[0] = new Screen(0, SX.getMainMonitorID());
     screens[0].initScreen();
     int nMonitor = 0;
     for (int i = 1; i < screens.length; i++) {
-      if (nMonitor == SX.mainMonitor) {
+      if (nMonitor == SX.getMainMonitorID()) {
         nMonitor++;
       }
       screens[i] = new Screen(i, nMonitor);
@@ -150,9 +150,9 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   public static Screen as(int id) {
-    if (id < 0 || id >= SX.nMonitors) {
+    if (id < 0 || id >= SX.getNumberOfMonitors()) {
       Debug.error("Screen(%d) not in valid range 0 to %d - using primary %d",
-          id, SX.nMonitors - 1, primaryScreen);
+          id, SX.getNumberOfMonitors() - 1, primaryScreen);
       return screens[0];
     } else {
       return screens[id];
@@ -166,9 +166,9 @@ public class Screen extends Region implements EventObserver, IScreen {
    */
   public Screen(int id) {
     super();
-    if (id < 0 || id >= SX.nMonitors) {
+    if (id < 0 || id >= SX.getNumberOfMonitors()) {
       Debug.error("Screen(%d) not in valid range 0 to %d - using primary %d",
-          id, SX.nMonitors - 1, primaryScreen);
+          id, SX.getNumberOfMonitors() - 1, primaryScreen);
       curID = primaryScreen;
     } else {
       curID = id;
@@ -266,7 +266,7 @@ public class Screen extends Region implements EventObserver, IScreen {
 //    initScreens();
     Debug.logp("*** monitor configuration [ %s Screen(s)] ***", Screen.getNumberScreens());
     Debug.logp("*** Primary is Screen %d", primaryScreen);
-    for (int i = 0; i < SX.nMonitors; i++) {
+    for (int i = 0; i < SX.getNumberOfMonitors(); i++) {
       Debug.logp("Screen %d: %s", i, Screen.getScreen(i).toString());
     }
     Debug.logp("*** end monitor configuration ***");
@@ -283,7 +283,7 @@ public class Screen extends Region implements EventObserver, IScreen {
     initScreens(true);
     Debug.logp("*** new monitor configuration [ %s Screen(s)] ***", Screen.getNumberScreens());
     Debug.logp("*** Primary is Screen %d", primaryScreen);
-    for (int i = 0; i < SX.nMonitors; i++) {
+    for (int i = 0; i < SX.getNumberOfMonitors(); i++) {
       Debug.logp("Screen %d: %s", i, Screen.getScreen(i).toString());
     }
     Debug.error("*** end new monitor configuration ***");
@@ -296,7 +296,7 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   private static int getValidID(int id) {
-    if (id < 0 || id >= SX.nMonitors) {
+    if (id < 0 || id >= SX.getNumberOfMonitors()) {
       Debug.error("Screen: invalid screen id %d - using primary screen", id);
       return primaryScreen;
     }
@@ -304,9 +304,9 @@ public class Screen extends Region implements EventObserver, IScreen {
   }
 
   private static int getValidMonitor(int id) {
-    if (id < 0 || id >= SX.nMonitors) {
+    if (id < 0 || id >= SX.getNumberOfMonitors()) {
       Debug.error("Screen: invalid screen id %d - using primary screen", id);
-      return SX.mainMonitor;
+      return SX.getMainMonitorID();
     }
     return screens[id].monitor;
   }
@@ -316,7 +316,7 @@ public class Screen extends Region implements EventObserver, IScreen {
    * @return number of available screens
    */
   public static int getNumberScreens() {
-    return SX.nMonitors;
+    return SX.getNumberOfMonitors();
   }
 
   /**
@@ -350,7 +350,7 @@ public class Screen extends Region implements EventObserver, IScreen {
    */
   @Override
   public Rectangle getBounds() {
-    return new Rectangle(SX.getMonitor(monitor).getRectangle());
+    return new Rectangle(SX.getMonitor(monitor));
   }
 
   /**
@@ -359,7 +359,7 @@ public class Screen extends Region implements EventObserver, IScreen {
    * @return the physical coordinate/size <br>as AWT.Rectangle to avoid mix up with getROI
    */
   public static Rectangle getBounds(int id) {
-    return new Rectangle(SX.getMonitor(getValidMonitor(id)).getRectangle());
+    return new Rectangle(SX.getMonitor(getValidMonitor(id)));
   }
 
   /**

@@ -2,7 +2,11 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.core;
+package com.sikulix.api;
+
+import com.sikulix.core.SX;
+import com.sikulix.core.SXLog;
+import com.sikulix.core.Visual;
 
 import java.awt.*;
 
@@ -40,7 +44,7 @@ public class Match extends Visual {
     }
   }
 
-  protected Match(Visual vis, Double score, Offset off) {
+  public Match(Visual vis, Double score, Offset off) {
     clazz = vClazz;
     init(vis);
     setScore(score);

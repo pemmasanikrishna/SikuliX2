@@ -8,7 +8,7 @@ import com.sikulix.core.Visual;
 
 import java.awt.*;
 
-class LocationSX extends com.sikulix.core.Location {
+class LocationSX extends com.sikulix.api.Location {
   public LocationSX() {
     init(0, 0, 0, 0);
   }

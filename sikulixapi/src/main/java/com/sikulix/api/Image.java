@@ -2,8 +2,11 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.core;
+package com.sikulix.api;
 
+import com.sikulix.core.SX;
+import com.sikulix.core.SXLog;
+import com.sikulix.core.Visual;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;

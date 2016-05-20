@@ -7,7 +7,7 @@
 package org.sikuli.script;
 
 import com.sikulix.core.SX;
-import com.sikulix.core.Location;
+import com.sikulix.api.Location;
 
 /**
  * features moved to other classes, details below with the methods
