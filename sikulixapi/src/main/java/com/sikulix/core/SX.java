@@ -1070,10 +1070,10 @@ public class SX {
   //</editor-fold>
 
   //<editor-fold desc="*** monitor info">
-  static GraphicsEnvironment genv = null;
-  static GraphicsDevice[] gdevs;
-  static Rectangle[] monitorBounds = null;
-  static Rectangle rAllMonitors;
+  private static GraphicsEnvironment genv = null;
+  private static GraphicsDevice[] gdevs;
+  private static Rectangle[] monitorBounds = null;
+  private static Rectangle rAllMonitors;
   private static int mainMonitor = -1;
   private static int nMonitors = 0;
 
@@ -1145,6 +1145,9 @@ public class SX {
     return mainMonitor;
   }
 
+  public static Rectangle getAllMonitors() {
+    return rAllMonitors;
+  }
   public static GraphicsDevice getGraphicsDevice(int id) {
     return gdevs[id];
   }

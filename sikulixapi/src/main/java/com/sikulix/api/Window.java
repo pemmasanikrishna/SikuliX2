@@ -8,7 +8,7 @@ import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 import com.sikulix.core.Visual;
 
-public class Window extends Visual {
+public class Window extends Region {
 
   private static vType vClazz = vType.WINDOW;
   private static SXLog log = SX.getLogger("SX." + vClazz.toString());

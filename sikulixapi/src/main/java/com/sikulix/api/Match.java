@@ -10,7 +10,7 @@ import com.sikulix.core.Visual;
 
 import java.awt.*;
 
-public class Match extends Visual {
+public class Match extends Region {
 
   private static vType vClazz = vType.MATCH;
   private static SXLog log = SX.getLogger("SX." + vClazz.toString());
