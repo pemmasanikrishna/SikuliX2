@@ -111,9 +111,7 @@ public class SXLog {
   }
 
   public void p(String msg, Object... args) {
-    if (shouldLog(INFO)) {
-      System.out.println(String.format(msg, args));
-    }
+    System.out.println(String.format(msg, args));
   }
 
   public void info(String message, Object... args) {

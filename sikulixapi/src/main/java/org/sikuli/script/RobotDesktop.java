@@ -10,7 +10,6 @@ import com.sikulix.core.SX;
 import org.sikuli.util.visual.animation.Animator;
 import org.sikuli.util.visual.animation.AnimatorOutQuarticEase;
 import org.sikuli.util.visual.animation.AnimatorTimeBased;
-import org.sikuli.util.Settings;
 import org.sikuli.util.Debug;
 import java.awt.AWTException;
 import java.awt.Color;

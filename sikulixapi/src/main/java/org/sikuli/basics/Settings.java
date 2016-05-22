@@ -1,13 +1,10 @@
 /*
- * Copyright 2010-2014, Sikuli.org, sikulix.com
- * Released under the MIT License.
- *
- * modified RaiMan 2013
+ * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package org.sikuli.util;
 
-@Deprecated
-public class Settings  {
+package org.sikuli.basics;
+
+public class Settings {
   //<editor-fold desc="*** public features from class Settings (deprecated - now Options)">
   public static String BundlePath = null;
   public static String OcrDataPath = null;

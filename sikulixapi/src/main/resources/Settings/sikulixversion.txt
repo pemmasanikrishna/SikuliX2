@@ -1,5 +1,0 @@
-sxversion=${project.version}
-sxbuild=${timestamp}
-sxlocalrepo=${sxrepo}
-sxjython=${sxjython}
-sxjruby=${sxjruby}

@@ -7,6 +7,9 @@ package com.sikulix.core;
 import com.sikulix.api.Location;
 import com.sikulix.scripting.JythonHelper;
 import org.apache.commons.cli.*;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.sikuli.util.SysJNA;
 
 import java.awt.*;
@@ -165,14 +168,14 @@ public class SX {
 
       trace("sxinit: starting");
 
+      // *** get SX options
+      loadOptions();
+
       // *** get the version info
       getSXVERSION();
 
       // *** check how we are running
       sxRunningAs();
-
-      // *** get SX options
-      loadOptions();
 
       // *** get monitor setup
       globalGetMonitors();
@@ -317,72 +320,225 @@ public class SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** get SX options">
-  private static File fOptions;
-  private static Properties options = null;
-  private static String fnOptions = "SXOptions.txt";
+  //<editor-fold desc="*** get SX options at startup">
+  private static File fOptions = null;
+  private static String fnOptions = "sxoptions.txt";
+
+  private static PropertiesConfiguration sxOptions = null;
 
   private static void loadOptions() {
-    for (String sFile : new String[]{getUSERWORK(), getUSERHOME(), getSXSTORE()}) {
-      File aFile = getFile(sFile);
-      trace("loadOptions: check: %s", aFile);
-      fOptions = new File(aFile, fnOptions);
-      if (fOptions.exists()) {
-        break;
-      } else {
-        fOptions = null;
+    boolean success = true;
+    URL urlOptions = SX.class.getClassLoader().getResource("Settings/sxoptions.txt");
+    if (!isNull(urlOptions)) {
+      Configurations configs = new Configurations();
+      try {
+        sxOptions = configs.properties(urlOptions);
+      } catch (ConfigurationException cex) {
+        success = false;
+      }
+    } else {
+      success = false;
+    }
+    if (!success) {
+      terminate(1, "SX Options not available: %s", urlOptions);
+    }
+    setSettingsOptions(sxOptions);
+
+    PropertiesConfiguration extraOptions = null;
+
+    File aFile = null;
+    String argFile = getArg("o");
+    if (!isNull(argFile)) {
+      aFile = getFile(argFile);
+      if (!aFile.isDirectory()) {
+        if (aFile.exists()) {
+          fOptions = aFile;
+          trace("loadOptions: check: %s (from arg -o)", aFile);
+        } else {
+          fnOptions = aFile.getName();
+          trace("loadOptions: file name given: %s (from arg -o)", fnOptions);
+        }
+      }
+    }
+
+    if (isNull(fOptions)) {
+      for (String sFile : new String[]{getUSERWORK(), getUSERHOME(), getSXSTORE()}) {
+        if (isNull(sFile)) {
+          continue;
+        }
+        aFile = getFile(sFile);
+        trace("loadOptions: check: %s", aFile);
+        fOptions = new File(aFile, fnOptions);
+        if (fOptions.exists()) {
+          break;
+        } else {
+          fOptions = null;
+        }
       }
     }
     if (fOptions != null) {
-      options = new Properties();
+      trace("loadOptions: found Options file at: %s", fOptions);
+      Configurations configs = new Configurations();
       try {
-        InputStream is;
-        is = new FileInputStream(fOptions);
-        options.load(is);
-        is.close();
-      } catch (Exception ex) {
-        error("while checking Options file:\n%s", fOptions);
-        fOptions = null;
-        options = null;
+        extraOptions = configs.properties(fOptions);
+      } catch (ConfigurationException cex) {
+        error("loadOptions: Options not valid: %s", cex.getMessage());
       }
-      debug("found Options file at: %s", fOptions);
+      if (!isNull(extraOptions)) {
+        setSettingsOptions(extraOptions);
+        mergeExtraOptions(sxOptions, extraOptions);
+      }
+    } else {
+      trace("loadOptions: no extra Options file found");
     }
-    if (hasOptions()) {
-      for (Object oKey : options.keySet()) {
-        String sKey = (String) oKey;
-        String[] parts = sKey.split("\\.");
-        if (parts.length == 1) {
-          continue;
-        }
-        String sClass = parts[0];
-        String sAttr = parts[1];
-        Class cClass = null;
-        Field cField = null;
-        Class ccField = null;
-        if (sClass.contains("Settings")) {
+  }
+
+  private static void setSettingsOptions(PropertiesConfiguration someOptions) {
+    if (isNull(someOptions) || someOptions.size() == 0) {
+      return;
+    }
+    Iterator<String> allKeys = someOptions.getKeys();
+    List<String> sxSettings = new ArrayList<>();
+    while (allKeys.hasNext()) {
+      String key = allKeys.next();
+      if (key.startsWith("Settings.")) sxSettings.add(key);
+      trace("Option: %s = %s", key, someOptions.getProperty(key));
+    }
+    if (sxSettings.size() > 0) {
+      Class cClass = null;
+      try {
+        cClass = Class.forName("org.sikuli.basics.Settings");
+      } catch (ClassNotFoundException e) {
+        error("addOptions: class not accessible: %s", cClass);
+      }
+      if (!isNull(cClass)) {
+        for (String sKey : sxSettings) {
+          String sAttr = sKey.substring("Settings.".length());
+          Field cField = null;
+          Class ccField = null;
           try {
-            cClass = Class.forName("org.sikuli.basics.Settings");
             cField = cClass.getField(sAttr);
             ccField = cField.getType();
             if (ccField.getName() == "boolean") {
-              cField.setBoolean(null, isOption(sKey));
+              cField.setBoolean(null, someOptions.getBoolean(sKey));
             } else if (ccField.getName() == "int") {
-              cField.setInt(null, getOptionNumber(sKey));
+              cField.setInt(null, someOptions.getInt(sKey));
             } else if (ccField.getName() == "float") {
-              cField.setInt(null, getOptionNumber(sKey));
+              cField.setFloat(null, someOptions.getFloat(sKey));
             } else if (ccField.getName() == "double") {
-              cField.setInt(null, getOptionNumber(sKey));
+              cField.setDouble(null, someOptions.getDouble(sKey));
             } else if (ccField.getName() == "String") {
-              cField.set(null, getOption(sKey));
+              cField.set(null, someOptions.getString(sKey));
             }
+            trace("Settings from Options: %s = %s", sAttr, someOptions.getProperty(sKey));
+            someOptions.clearProperty(sKey);
           } catch (Exception ex) {
-            error("loadOptions: not possible: %s = %s", sKey, options.getProperty(sKey));
+            error("addOptions: not possible: %s = %s", sKey, sxOptions.getProperty(sKey));
           }
         }
       }
     }
   }
 
+  private static void mergeExtraOptions(PropertiesConfiguration baseOptions, PropertiesConfiguration extraOptions) {
+    trace("loadOptions: have to merge extra Options");
+    if (isNull(extraOptions) || extraOptions.size() == 0) {
+      return;
+    }
+    Iterator<String> allKeys = extraOptions.getKeys();
+    while (allKeys.hasNext()) {
+      String key = allKeys.next();
+      if (isNull(baseOptions.getProperty(key))) {
+        baseOptions.addProperty(key, extraOptions.getProperty(key));
+        trace("Option added: %s", key);
+      } else {
+        baseOptions.addProperty(key, extraOptions.getProperty(key));
+        trace("Option changed: %s", key);
+      }
+    }
+  }
+
+//</editor-fold> at start
+
+  //<editor-fold desc="*** handle options at runtime">
+  public static void loadOptions(String fpOptions) {
+    error("loadOptions: not yet implemented");
+  }
+
+  public static boolean saveOptions(String fpOptions) {
+    error("saveOptions: not yet implemented");
+    return false;
+  }
+
+  public static boolean saveOptions() {
+    error("saveOptions: not yet implemented");
+    return false;
+  }
+
+  public static boolean hasOptions() {
+    return sxOptions != null && sxOptions.size() > 0;
+  }
+
+  public static boolean isOption(String pName) {
+    return isOption(pName, false);
+  }
+
+  public static boolean isOption(String pName, Boolean bDefault) {
+    if (sxOptions == null) {
+      return bDefault;
+    }
+    String pVal = sxOptions.getString(pName, bDefault.toString()).toLowerCase();
+    if (pVal.contains("yes") || pVal.contains("true") || pVal.contains("on")) {
+      return true;
+    }
+    return false;
+  }
+
+  public static String getOption(String pName) {
+    return getOption(pName, "");
+  }
+
+  public static String getOption(String pName, String sDefault) {
+    if (!hasOptions()) {
+      return "";
+    }
+    return sxOptions.getString(pName, sDefault);
+  }
+
+  public static void setOption(String pName, String sValue) {
+    sxOptions.setProperty(pName, sValue);
+  }
+
+  public static double getOptionNumber(String pName) {
+    return getOptionNumber(pName, 0);
+  }
+
+  public static double getOptionNumber(String pName, double nDefault) {
+    double nVal = sxOptions.getDouble(pName, nDefault);
+    return nVal;
+  }
+
+  public static Map<String, String> getOptions() {
+    Map<String, String> mapOptions = new HashMap<String, String>();
+    if (hasOptions()) {
+      Iterator<String> allKeys = sxOptions.getKeys();
+      while (allKeys.hasNext()) {
+        String key = allKeys.next();
+        mapOptions.put(key, getOption(key));
+      }
+    }
+    return mapOptions;
+  }
+
+  public static void dumpOptions() {
+    if (hasOptions()) {
+      p("*** options dump");
+      for (String sOpt : getOptions().keySet()) {
+        p("%s = %s", sOpt, getOption(sOpt));
+      }
+      p("*** options dump end");
+    }
+  }
   //</editor-fold>
 
   //<editor-fold desc="*** system/java version info">
@@ -678,9 +834,9 @@ public class SX {
         }
         fSysAppPath = getFile(sDir);
       } else if (isMac()) {
-        fSysAppPath = getFile(USERHOME, "Library/Application Support");
+        fSysAppPath = getFile(getUSERHOME(), "Library/Application Support");
       } else if (isLinux()) {
-        fSysAppPath = getFile(USERHOME);
+        fSysAppPath = getFile(getUSERHOME());
         SXAPPdefault = ".Sikulix/SX2";
       }
       SYSAPP = fSysAppPath.getAbsolutePath();
@@ -976,44 +1132,30 @@ public class SX {
       String sxBuild = "?sxBuild?";
       String sxVersionShow = "?sxVersionShow?";
       String sxStamp = "?sxStamp?";
-      Properties prop = new Properties();
-      String sVersionFile = "sikulixversion.txt";
-      try {
-        InputStream is;
-        is = sxGlobalClassReference.getClassLoader().getResourceAsStream("Settings/" + sVersionFile);
-        if (is == null) {
-          terminate(1, "getSXVERSION: not found on classpath: %s", "Settings/" + sVersionFile);
-        }
-        prop.load(is);
-        is.close();
+      sxVersion = sxOptions.getString("sxversion");
+      sxBuild = sxOptions.getString("sxbuild");
+      sxBuild = sxBuild.replaceAll("\\-", "");
+      sxBuild = sxBuild.replaceAll("_", "");
+      sxBuild = sxBuild.replaceAll("\\:", "");
+      String sxlocalrepo = Content.slashify(sxOptions.getString("sxlocalrepo"), true);
+      String sxJythonVersion = sxOptions.getString("sxjython");
+      String sxJRubyVersion = sxOptions.getString("sxjruby");
 
-        sxVersion = prop.getProperty("sxversion");
-        sxBuild = prop.getProperty("sxbuild");
-        sxBuild = sxBuild.replaceAll("\\-", "");
-        sxBuild = sxBuild.replaceAll("_", "");
-        sxBuild = sxBuild.replaceAll("\\:", "");
-        String sxlocalrepo = Content.slashify(prop.getProperty("sxlocalrepo"), true);
-        String sxJythonVersion = prop.getProperty("sxjython");
-        String sxJRubyVersion = prop.getProperty("sxjruby");
+      debug("version: %s build: %s", sxVersion, sxBuild);
+      sxStamp = String.format("%s_%s", sxVersion, sxBuild);
 
-        debug("version: %s build: %s", sxVersion, sxBuild);
-        sxStamp = String.format("%s_%s", sxVersion, sxBuild);
+      // used for download of production versions
+      String dlProdLink = "https://launchpad.net/raiman/sikulix2013+/";
+      String dlProdLinkSuffix = "/+download/";
+      // used for download of development versions (nightly builds)
+      String dlDevLink = "http://nightly.sikuli.de/";
 
-        // used for download of production versions
-        String dlProdLink = "https://launchpad.net/raiman/sikulix2013+/";
-        String dlProdLinkSuffix = "/+download/";
-        // used for download of development versions (nightly builds)
-        String dlDevLink = "http://nightly.sikuli.de/";
-
-        sxJythonMaven = "org/python/jython-standalone/"
-                + sxJythonVersion + "/jython-standalone-" + sxJythonVersion + ".jar";
-        sxJython = sxlocalrepo + sxJythonMaven;
-        sxJRubyMaven = "org/jruby/jruby-complete/"
-                + sxJRubyVersion + "/jruby-complete-" + sxJRubyVersion + ".jar";
-        sxJRuby = sxlocalrepo + sxJRubyMaven;
-      } catch (Exception e) {
-        terminate(1, "getSXVERSION: load failed for %s error(%s)", sVersionFile, e.getMessage());
-      }
+      sxJythonMaven = "org/python/jython-standalone/"
+              + sxJythonVersion + "/jython-standalone-" + sxJythonVersion + ".jar";
+      sxJython = sxlocalrepo + sxJythonMaven;
+      sxJRubyMaven = "org/jruby/jruby-complete/"
+              + sxJRubyVersion + "/jruby-complete-" + sxJRubyVersion + ".jar";
+      sxJRuby = sxlocalrepo + sxJRubyMaven;
       tessData.put("eng", "http://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.eng.tar.gz");
 
       sxLibsCheckName = String.format(sxLibsCheckStamp, sxStamp);
@@ -1149,6 +1291,7 @@ public class SX {
   public static Rectangle getAllMonitors() {
     return rAllMonitors;
   }
+
   public static GraphicsDevice getGraphicsDevice(int id) {
     return gdevs[id];
   }
@@ -1367,133 +1510,17 @@ public class SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** handle options">
-  public static void loadOptions(String fpOptions) {
-    error("loadOptions: not yet implemented");
-  }
-
-  public static boolean saveOptions(String fpOptions) {
-    error("saveOptions: not yet implemented");
-    return false;
-  }
-
-  public static boolean saveOptions() {
-    error("saveOptions: not yet implemented");
-    return false;
-  }
-
-  public static boolean isOption(String pName) {
-    return isOption(pName, false);
-  }
-
-  public static boolean isOption(String pName, Boolean bDefault) {
-    if (options == null) {
-      return bDefault;
-    }
-    String pVal = options.getProperty(pName, bDefault.toString()).toLowerCase();
-    if (pVal.isEmpty()) {
-      return bDefault;
-    } else if (pVal.contains("yes") || pVal.contains("true") || pVal.contains("on")) {
-      return true;
-    } else if (pVal.contains("no") || pVal.contains("false") || pVal.contains("off")) {
-      return false;
-    }
-    return true;
-  }
-
-  public static String getOption(String pName) {
-    if (options == null) {
-      return "";
-    }
-    String pVal = options.getProperty(pName, "");
-    return pVal;
-  }
-
-  public static String getOption(String pName, String sDefault) {
-    if (options == null) {
-      options = new Properties();
-      options.setProperty(pName, sDefault);
-      return sDefault;
-    }
-    String pVal = options.getProperty(pName, sDefault);
-    if (pVal.isEmpty()) {
-      options.setProperty(pName, sDefault);
-      return sDefault;
-    }
-    return pVal;
-  }
-
-  public static void setOption(String pName, String sValue) {
-    if (options == null) {
-      options = new Properties();
-    }
-    options.setProperty(pName, sValue);
-  }
-
-  public static int getOptionNumber(String pName) {
-    if (options == null) {
-      return 0;
-    }
-    String pVal = options.getProperty(pName, "0");
-    int nVal = 0;
-    try {
-      nVal = Integer.decode(pVal);
-    } catch (Exception ex) {
-    }
-    return nVal;
-  }
-
-  public static int getOptionNumber(String pName, Integer nDefault) {
-    if (options == null) {
-      return nDefault;
-    }
-    String pVal = options.getProperty(pName, nDefault.toString());
-    int nVal = nDefault;
-    try {
-      nVal = Integer.decode(pVal);
-    } catch (Exception ex) {
-    }
-    return nVal;
-  }
-
-  public static Map<String, String> getOptions() {
-    Map<String, String> mapOptions = new HashMap<String, String>();
-    if (options != null) {
-      Enumeration<?> optionNames = options.propertyNames();
-      String optionName;
-      while (optionNames.hasMoreElements()) {
-        optionName = (String) optionNames.nextElement();
-        mapOptions.put(optionName, getOption(optionName));
-      }
-    }
-    return mapOptions;
-  }
-
-  public static boolean hasOptions() {
-    return options != null && options.size() > 0;
-  }
-
-  public static void dumpOptions() {
-    if (hasOptions()) {
-      p("*** options dump:\n%s", (fOptions == null ? "" : fOptions));
-      for (String sOpt : getOptions().keySet()) {
-        p("%s = %s", sOpt, getOption(sOpt));
-      }
-      p("*** options dump end");
-    }
-  }
-  //</editor-fold>
-
   //<editor-fold desc="*** public features from class Settings (deprecated - now Options)">
+  public static final float FOREVER = Float.POSITIVE_INFINITY;
+  public static boolean TRUE = true;
+  public static boolean FALSE = false;
+
+  // to be in options
   public static String BundlePath = null;
   public static String OcrDataPath = null;
   public static boolean OcrTextSearch = false;
   public static boolean OcrTextRead = false;
   public static String OcrLanguage = "eng";
-
-  public static final float FOREVER = Float.POSITIVE_INFINITY;
-  public static boolean TRUE = true;
-  public static boolean FALSE = false;
 
   public static boolean ThrowException = true; // throw FindFailed exception
   public static float AutoWaitTimeout = 3f; // in seconds

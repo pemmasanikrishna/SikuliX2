@@ -12,9 +12,11 @@ import java.util.Properties;
 
 public class Sikulix extends SX {
 
-  static SXLog log = getLogger("SX.IDE");
+  static SXLog log = null;
 
   public static void main(String[] args) {
+    log = getLogger("SX.IDE", args);
+
     // TODO only works in project context (export resources)
     //String fpExtensionsJEdit = SX.getFolder(SX.getSXEDITOR(), "jEdit").getAbsolutePath();
     String fpExtensionsJEdit = SX.getFolder(SX.fSxProject,
