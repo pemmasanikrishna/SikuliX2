@@ -18,25 +18,37 @@
 
 <hr>
 
+**BE AWARE** The use for scripting and Java programming is only possible after the first nightly builds are available. Currently you might fork the project and make your tests in the project context. Issues and pull requests are only accepted here on Github.
+
+<hr>
+
 Maven module structure for developement
 ---
 
-**sikulixapi**
-
-the API to be used in Java and Java aware scripting languages
-
-**sikulix** 
+**sikulix**
 
 the SikuliX IDE (internally using **[jEdit 5.3.0](http://www.jedit.org))**
- 
+
  - full featured multi-purpose editor
  - SikuliX image handling added via jEdit plugin
  - run scripts (scripting supported internally: JavaScript, (J)Python, (J)Ruby, RobotFramework)
  - everyone may simply add whatever feature needed based on the possibilities of jEdit
 
+**sikulixapi**
+
+the API to be used in Java and Java aware scripting languages
+
+ - the new features will be in **com.sikulix.core** and **com.sikulix.api**
+ - the official API in **org.sikuli.script** will be kept for backwards compatibility, but rerouted to **com.sikulix.api** as needed
+ - new projects using Java should use the API as provided by **com.sikulix.api**
+
+**sikulixcoretest**
+
+basic tests for developement of the new features **com.sikulix.core** and **com.sikulix.api**
+
 **sikulixapitest**
 
-basic api tests for developement (later there will be a seperate regression test package)
+basic tests for **org.sikuli.script** as api regression test (will later be a seperate package)
 
 ---
 
