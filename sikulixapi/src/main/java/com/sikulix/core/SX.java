@@ -252,7 +252,8 @@ public class SX {
 
   static File fSxBaseJar;
   static File fSxBase;
-  static File fSxProject;
+  //TODO getter
+  public static File fSxProject;
   static boolean runningInProject = false;
   static final String fpContent = "sikulixcontent";
 

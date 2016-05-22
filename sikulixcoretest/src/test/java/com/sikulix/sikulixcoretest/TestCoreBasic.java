@@ -30,10 +30,16 @@ public class TestCoreBasic extends Commands {
   public static void setUpClass() {
     log.trace("setUpClass()");
     if (existsFile(getFile(getSXAPP()))) {
-      Content.deleteFileOrFolder(getFolder(getSXAPP()));
-      if (existsFile(getFile(getSXAPP()))) {
-        SX.terminate(1, "setUpClass: could not delete folder SXAPP");
-      }
+      Content.deleteFileOrFolder(getFolder(getSXAPP()), new Content.FileFilter() {
+        @Override
+        public boolean accept(File entry) {
+          if (entry.getAbsolutePath().contains("SX2/Images") ||
+              entry.getAbsolutePath().contains("SX2/Native") ) {
+            return true;
+          }
+          return false;
+        }
+      });
     }
   }
 

@@ -16,19 +16,19 @@
   </parent>
 
   <artifactId>sikulix</artifactId>
-  
-    <dependencies>
-        <dependency>
-            <groupId>com.sikulix</groupId>
-            <artifactId>jedit</artifactId>
-            <version>5.3.0</version>
-            <scope>system</scope>
-            <systemPath>${env.HOME}/Library/Application Support/Sikulix/SX2/Editor/jEdit/jedit-5.3.0.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>com.sikulix</groupId>
-            <artifactId>sikulixapi</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
+
+  <dependencies>
+    <dependency>
+      <groupId>SXEditor</groupId>
+      <artifactId>jEdit</artifactId>
+      <version>5.3.0</version>
+      <systemPath>${project.basedir}/src/main/resources/SXEditor/jedit-5.3.0.jar</systemPath>
+      <scope>system</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.sikulix</groupId>
+      <artifactId>sikulixapi</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 </project>
