@@ -16,6 +16,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
+import com.sikulix.util.Settings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.sikulix.core.SX;
@@ -34,7 +36,7 @@ public class Region {
 
   //<editor-fold defaultstate="collapsed" desc="logging">
   private static final int lvl = 3;
-  private static final Logger logger = LogManager.getLogger("SX.Region");
+  private static final Logger logger = LogManager.getLogger("Settings.Region");
 
   private static void log(int level, String message, Object... args) {
     if (Debug.is(lvl) || level < 0) {
@@ -112,20 +114,20 @@ public class Region {
    */
   private FindFailedResponse findFailedResponse = null;
   /**
-   * Setting {@link Settings}, if exception is thrown if an image is not found
+   * Setting {@link com.sikulix.util.Settings}, if exception is thrown if an image is not found
    */
-  private boolean throwException = SX.ThrowException;
+  private boolean throwException = com.sikulix.util.Settings.ThrowException;
   /**
    * Default time to wait for an image {@link Settings}
    */
-  private double autoWaitTimeout = SX.AutoWaitTimeout;
-  private float waitScanRate = SX.WaitScanRate;
+  private double autoWaitTimeout = Settings.AutoWaitTimeout;
+  private float waitScanRate = Settings.WaitScanRate;
   /**
    * Flag, if an observer is running on this region {@link Settings}
    */
   private boolean observing = false;
-  private float observeScanRate = SX.ObserveScanRate;
-  private int repeatWaitTime = SX.RepeatWaitTime;
+  private float observeScanRate = Settings.ObserveScanRate;
+  private int repeatWaitTime = Settings.RepeatWaitTime;
   /**
    * The {@link Observer} Singleton instance
    */
@@ -211,7 +213,7 @@ public class Region {
   /*
    public Object __enter__() {
    Debug.error("Region: with(__enter__): Trying to make it a Jython Region for with: usage");
-   IScriptRunner runner = SX.getScriptRunner("jython", null, null);
+   IScriptRunner runner = Settings.getScriptRunner("jython", null, null);
    if (runner != null) {
    Object[] jyreg = new Object[]{this};
    if (runner.doSomethingSpecial("createRegionForWith", jyreg)) {
@@ -1400,7 +1402,7 @@ public class Region {
   }
 
   /**
-   * create a region enlarged SX.DefaultPadding pixels on each side
+   * create a region enlarged Settings.DefaultPadding pixels on each side
    *
    * @return the new region
    * @deprecated to be like AWT Rectangle API use grow() instead
@@ -1423,7 +1425,7 @@ public class Region {
   }
 
   /**
-   * create a region enlarged n pixels on each side (n = SX.DefaultPadding = 50 default)
+   * create a region enlarged n pixels on each side (n = Settings.DefaultPadding = 50 default)
    *
    * @return the new region
    */
@@ -2029,7 +2031,7 @@ public class Region {
   }
 
   /**
-   * show the regions Highlight for the given time in seconds (red frame) if 0 - use the global SX.SlowMotionDelay
+   * show the regions Highlight for the given time in seconds (red frame) if 0 - use the global Settings.SlowMotionDelay
    *
    * @param secs time in seconds
    * @return the region itself
@@ -2040,7 +2042,7 @@ public class Region {
 
   /**
    * show the regions Highlight for the given time in seconds (frame of specified color) if 0 - use the global
-   * SX.SlowMotionDelay
+   * Settings.SlowMotionDelay
    *
    * @param secs time in seconds
    * @param color Color of frame (see method highlight(color))
@@ -2089,7 +2091,7 @@ public class Region {
       if (secs < 0) {
         return lastMatch.highlight((float) -secs, color);
       }
-      return lastMatch.highlight(SX.DefaultHighlightTime, color);
+      return lastMatch.highlight(Settings.DefaultHighlightTime, color);
     }
     return this;
   }
@@ -2104,7 +2106,8 @@ public class Region {
    */
   private <PSI> Image getImage(PSI target) {
     if (target instanceof Pattern) {
-      return ((Pattern) target).getImage();
+      //TODO new Pattern class
+      return null; //((Pattern) target).getImage();
     } else if (target instanceof String) {
       return Image.get((String) target);
     } else if (target instanceof Image) {
@@ -2565,7 +2568,7 @@ public class Region {
       found.name = (findVanish ? "vanish_" : "appear_") + begin_s;
     }
     log(lvl, "%s: %.1fs %s %s",
-        found.name, timeout, pattern.getText(), this.toString());
+        found.name, timeout, pattern, this);
 
     Match matchVanish = null;
     if (findVanish) {
@@ -2748,7 +2751,7 @@ public class Region {
    * @return the event's name
    */
   public ObserveEvent onChange(int threshold, Object observer) {
-    return onEvent((threshold > 0 ? threshold : SX.ObserveMinChangedPixels),
+    return onEvent((threshold > 0 ? threshold : Settings.ObserveMinChangedPixels),
         observer, ObserveEvent.Type.CHANGE);
   }
 
@@ -2761,33 +2764,33 @@ public class Region {
    * @return the event's name
    */
   public ObserveEvent onChange(int threshold) {
-    return onEvent((threshold > 0 ? threshold : SX.ObserveMinChangedPixels),
+    return onEvent((threshold > 0 ? threshold : Settings.ObserveMinChangedPixels),
         null, ObserveEvent.Type.CHANGE);
   }
 
   /**
    * a subsequently started observer in this region should wait for changes in the region and notify the given observer
    * about this event <br>
-   * minimum size of changes used: SX.ObserveMinChangedPixels for details about the observe event handler:
+   * minimum size of changes used: Settings.ObserveMinChangedPixels for details about the observe event handler:
    * {@link ObserverCallBack} for details about APPEAR/VANISH/CHANGE events: {@link ObserveEvent}
    *
    * @param observer ObserverCallBack
    * @return the event's name
    */
   public ObserveEvent onChange(Object observer) {
-    return onEvent(SX.ObserveMinChangedPixels, observer, ObserveEvent.Type.CHANGE);
+    return onEvent(Settings.ObserveMinChangedPixels, observer, ObserveEvent.Type.CHANGE);
   }
 
   /**
    * a subsequently started observer in this region should wait for changes in the region success and details about the
    * event can be obtained using @{link Observing}<br>
-   * minimum size of changes used: SX.ObserveMinChangedPixels for details about APPEAR/VANISH/CHANGE events:
+   * minimum size of changes used: Settings.ObserveMinChangedPixels for details about APPEAR/VANISH/CHANGE events:
    * {@link ObserveEvent}
    *
    * @return the event's name
    */
   public ObserveEvent onChange() {
-    return onEvent(SX.ObserveMinChangedPixels, null, ObserveEvent.Type.CHANGE);
+    return onEvent(Settings.ObserveMinChangedPixels, null, ObserveEvent.Type.CHANGE);
   }
 
 
@@ -3142,13 +3145,13 @@ public class Region {
    * @param millisecs value
    */
   public void delayClick(int millisecs) {
-    SX.ClickDelay = millisecs;
+    Settings.ClickDelay = millisecs;
   }
   //</editor-fold>
 
   //<editor-fold defaultstate="collapsed" desc="Mouse actions - drag & drop">
   /**
-   * Drag from region's last match and drop at given target <br>applying SX.DelayAfterDrag and DelayBeforeDrop
+   * Drag from region's last match and drop at given target <br>applying Settings.DelayAfterDrag and DelayBeforeDrop
    * <br> using left mouse button
    *
    * @param <PFRML> Pattern, Filename, Text, Region, Match or Location
@@ -3161,7 +3164,7 @@ public class Region {
   }
 
   /**
-   * Drag from a position and drop to another using left mouse button<br>applying SX.DelayAfterDrag and
+   * Drag from a position and drop to another using left mouse button<br>applying Settings.DelayAfterDrag and
    * DelayBeforeDrop
    *
    * @param <PFRML> Pattern, Filename, Text, Region, Match or Location
@@ -3180,26 +3183,26 @@ public class Region {
       if (r1 != null && r2 != null) {
         Mouse.use(this);
         r1.smoothMove(loc1);
-        r1.delay((int) (SX.DelayBeforeMouseDown * 1000));
+        r1.delay((int) (Settings.DelayBeforeMouseDown * 1000));
         r1.mouseDown(InputEvent.BUTTON1_MASK);
-        double DelayBeforeDrag = SX.DelayBeforeDrag;
+        double DelayBeforeDrag = Settings.DelayBeforeDrag;
         r1.delay((int) (DelayBeforeDrag * 1000));
         r2.smoothMove(loc2);
-        r2.delay((int) (SX.DelayBeforeDrop * 1000));
+        r2.delay((int) (Settings.DelayBeforeDrop * 1000));
         r2.mouseUp(InputEvent.BUTTON1_MASK);
         Mouse.let(this);
         retVal = 1;
       }
     }
-    SX.DelayBeforeMouseDown = SX.DelayValue;
-    SX.DelayBeforeDrag = -SX.DelayValue;
-    SX.DelayBeforeDrop = SX.DelayValue;
+    Settings.DelayBeforeMouseDown = Settings.DelayValue;
+    Settings.DelayBeforeDrag = -Settings.DelayValue;
+    Settings.DelayBeforeDrop = Settings.DelayValue;
     return retVal;
   }
 
   /**
    * Prepare a drag action: move mouse to given target <br>press and hold left mouse button <br >wait
-   * SX.DelayAfterDrag
+   * Settings.DelayAfterDrag
    *
    * @param <PFRML> Pattern, Filename, Text, Region, Match or Location
    * @param target Pattern, Filename, Text, Region, Match or Location
@@ -3214,24 +3217,24 @@ public class Region {
       if (r != null) {
         Mouse.use(this);
         r.smoothMove(loc);
-        r.delay((int) (SX.DelayBeforeMouseDown * 1000));
+        r.delay((int) (Settings.DelayBeforeMouseDown * 1000));
         r.mouseDown(InputEvent.BUTTON1_MASK);
-        double DelayBeforeDrag = SX.DelayBeforeDrag;
+        double DelayBeforeDrag = Settings.DelayBeforeDrag;
         r.delay((int) (DelayBeforeDrag * 1000));
         r.waitForIdle();
         Mouse.let(this);
         retVal = 1;
       }
     }
-    SX.DelayBeforeMouseDown = SX.DelayValue;
-    SX.DelayBeforeDrag = -SX.DelayValue;
-    SX.DelayBeforeDrop = SX.DelayValue;
+    Settings.DelayBeforeMouseDown = Settings.DelayValue;
+    Settings.DelayBeforeDrag = -Settings.DelayValue;
+    Settings.DelayBeforeDrop = Settings.DelayValue;
     return retVal;
   }
 
   /**
    * finalize a drag action with a drop: move mouse to given target <br>
-   * wait SX.DelayBeforeDrop <br>
+   * wait Settings.DelayBeforeDrop <br>
    * before releasing the left mouse button
    *
    * @param <PFRML> Pattern, Filename, Text, Region, Match or Location
@@ -3247,16 +3250,16 @@ public class Region {
       if (r != null) {
         Mouse.use(this);
         r.smoothMove(loc);
-        r.delay((int) (SX.DelayBeforeDrop * 1000));
+        r.delay((int) (Settings.DelayBeforeDrop * 1000));
         r.mouseUp(InputEvent.BUTTON1_MASK);
         r.waitForIdle();
         Mouse.let(this);
         retVal = 1;
       }
     }
-    SX.DelayBeforeMouseDown = SX.DelayValue;
-    SX.DelayBeforeDrag = -SX.DelayValue;
-    SX.DelayBeforeDrop = SX.DelayValue;
+    Settings.DelayBeforeMouseDown = Settings.DelayValue;
+    Settings.DelayBeforeDrag = -Settings.DelayValue;
+    Settings.DelayBeforeDrop = Settings.DelayValue;
     return retVal;
   }
   //</editor-fold>
@@ -3471,8 +3474,8 @@ public class Region {
     String modifier = "";
     int k;
     IRobot robot = getRobotForRegion();
-    int pause = 20 + (SX.TypeDelay > 1 ? 1000 : (int) (SX.TypeDelay * 1000));
-    SX.TypeDelay = 0.0;
+    int pause = 20 + (Settings.TypeDelay > 1 ? 1000 : (int) (Settings.TypeDelay * 1000));
+    Settings.TypeDelay = 0.0;
     robot.typeStarts();
     for (int i = 0; i < text.length(); i++) {
       log(lvl + 1, "write: (%d) %s", i, text.substring(i));
@@ -3722,8 +3725,8 @@ public class Region {
       log(lvl, "%s TYPE \"%s\"", modText, showText);
       profiler.lap("before getting Robot");
       IRobot r = getRobotForRegion();
-      int pause = 20 + (SX.TypeDelay > 1 ? 1000 : (int) (SX.TypeDelay * 1000));
-      SX.TypeDelay = 0.0;
+      int pause = 20 + (Settings.TypeDelay > 1 ? 1000 : (int) (Settings.TypeDelay * 1000));
+      Settings.TypeDelay = 0.0;
       profiler.lap("before typing");
       r.typeStarts();
       for (int i = 0; i < text.length(); i++) {
@@ -3748,7 +3751,7 @@ public class Region {
    * @param millisecs value
    */
   public void delayType(int millisecs) {
-    SX.TypeDelay = millisecs;
+    Settings.TypeDelay = millisecs;
   }
 
   /**
@@ -3803,7 +3806,7 @@ public class Region {
    * @return the text read (utf8 encoded)
    */
   public String text() {
-    if (SX.OcrTextRead) {
+    if (Settings.OcrTextRead) {
       ScreenImage simg = getScreen().capture(x, y, w, h);
       TextRecognizer tr = TextRecognizer.getInstance();
       if (tr == null) {
@@ -3827,7 +3830,7 @@ public class Region {
    * @return a list of matches
    */
   public List<Match> listText() {
-    if (SX.OcrTextRead) {
+    if (Settings.OcrTextRead) {
       ScreenImage simg = getScreen().capture(x, y, w, h);
       TextRecognizer tr = TextRecognizer.getInstance();
       if (tr == null) {

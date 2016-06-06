@@ -12,6 +12,7 @@ import java.util.Date;
 
 import com.sikulix.api.Keys;
 import com.sikulix.core.SX;
+import com.sikulix.util.Settings;
 import org.sikuli.util.Debug;
 import org.sikuli.util.EventObserver;
 import org.sikuli.util.EventSubject;
@@ -88,8 +89,8 @@ public class Screen extends Region implements EventObserver, IScreen {
     if (getNumberScreens() > 1) {
       log(lvl, "initScreens: multi monitor mouse check");
       Location lnow = Mouse.at();
-      float mmd = SX.MoveMouseDelay;
-      SX.MoveMouseDelay = 0f;
+      float mmd = Settings.MoveMouseDelay;
+      Settings.MoveMouseDelay = 0f;
       Location lc = null, lcn = null;
       for (Screen s : screens) {
         lc = s.getCenter();
@@ -103,7 +104,7 @@ public class Screen extends Region implements EventObserver, IScreen {
         }
       }
       Mouse.move(lnow);
-      SX.MoveMouseDelay = mmd;
+      Settings.MoveMouseDelay = mmd;
     }
   }
 
@@ -622,11 +623,11 @@ public class Screen extends Region implements EventObserver, IScreen {
   //<editor-fold defaultstate="collapsed" desc="Visual effects">
   @Override
   public void showTarget(Location loc) {
-    showTarget(loc, SX.SlowMotionDelay);
+    showTarget(loc, Settings.SlowMotionDelay);
   }
 
   protected void showTarget(Location loc, double secs) {
-    if (SX.ShowActions) {
+    if (Settings.ShowActions) {
       ScreenHighlighter overlay = new ScreenHighlighter(this, null);
       overlay.showTarget(loc, (float) secs);
     }

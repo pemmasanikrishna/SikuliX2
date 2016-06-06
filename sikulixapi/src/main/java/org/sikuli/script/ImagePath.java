@@ -17,6 +17,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
+import com.sikulix.util.Settings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.sikulix.core.SX;
@@ -554,7 +556,7 @@ public class ImagePath {
     if (bundleEquals(pURL)) {
       Image.purge(pURL);
       bundlePath = null;
-      SX.BundlePath = null;
+      Settings.BundlePath = null;
       imagePaths.set(0, null);
     }
     Iterator<PathEntry> it = imagePaths.subList(1, imagePaths.size()).iterator();

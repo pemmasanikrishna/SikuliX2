@@ -10,15 +10,16 @@ import com.sikulix.core.SXLog;
 import com.sikulix.scripting.JythonHelper;
 import com.sikulix.scripting.Runner;
 import com.sikulix.util.SikulixFileChooser;
-import org.sikuli.script.App;
 import org.sikuli.script.Key;
+import org.sikuli.util.Debug;
 import org.sikuli.util.hotkey.HotkeyListener;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
+import java.awt.datatransfer.*;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
@@ -76,6 +77,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
+  //<editor-fold desc="SX Commands popat">
   private static Point locPopAt = null;
 
   public static Location popat(Location at) {
@@ -121,7 +123,9 @@ public class Commands extends SX {
     anchor.setVisible(true);
     return anchor;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="SX Commands input one line, password">
   /**
    * request user's input as one line of text <br>
    * with hidden = true: <br>
@@ -136,7 +140,7 @@ public class Commands extends SX {
    */
   public static String input(String msg, String preset, String title, boolean hidden) {
     JFrame anchor = popLocation();
-    String ret = null;
+    String ret = "";
     if (!hidden) {
       if ("".equals(title)) {
         title = "Sikuli input request";
@@ -191,7 +195,9 @@ public class Commands extends SX {
   public static String input(String msg) {
     return input(msg, "", "", false);
   }
+  //</editor-fold>
 
+  //<editor-fold desc="SX Commands multiline input">
   /**
    * Shows a dialog request to enter text in a multiline text field <br>
    * Though not all text might be visible, everything entered is delivered with the returned text <br>
@@ -244,7 +250,9 @@ public class Commands extends SX {
       return "";
     }
   }
+  //</editor-fold>
 
+  //<editor-fold desc="SX Commands popup, popAsk, popError">
   public static void popup(String message) {
     popup(message, "Sikuli");
   }
@@ -287,7 +295,9 @@ public class Commands extends SX {
       anchor.dispose();
     }
   }
+  //</editor-fold>
 
+  //<editor-fold desc="SX Commands popSelect, popFile">
   public static String popSelect(String msg, String[] options, String preset) {
     return popSelect(msg, null, options, preset);
   }
@@ -334,59 +344,9 @@ public class Commands extends SX {
     popat();
     return ret.getAbsolutePath();
   }
-
-  //<editor-fold desc="run something">
-  public static String run(String cmdline) {
-    return run(new String[]{cmdline});
-  }
-  
-  public static String run(String[] cmd) {
-    log.terminate(1, "run: not implemented");
-    return "";
-  }
-
-  public static Object run(Object... args) {
-    String script = args[0].toString();
-    String scriptArgs[] = new String[args.length - 1];
-    if (scriptArgs.length > 0) {
-      for (int i = 1; i < args.length; i++) {
-        scriptArgs[i-1] = args[i].toString();
-      }
-    }
-    return Runner.run(script, scriptArgs);
-  }
   //</editor-fold>
 
-  private static JythonHelper doCompileJythonFolder(JythonHelper jython, File fSource) {
-    String fpSource = Content.slashify(fSource.getAbsolutePath(), false);
-    if (!jython.exec(String.format("compileall.compile_dir(\"%s\"," + "maxlevels = 0, quiet = 1)", fpSource))) {
-      return null;
-    }
-    for (File aFile : fSource.listFiles()) {
-      if (aFile.getName().endsWith(".py")) {
-        aFile.delete();
-      }
-    }
-    return jython;
-  }
-
-  private static class CompileJythonFilter implements Content.FileFilter {
-    
-    JythonHelper jython = null;
-    
-    public CompileJythonFilter(JythonHelper jython) {
-      this.jython = jython;
-    }
-
-    @Override
-    public boolean accept(File entry) {
-      if (jython != null && entry.isDirectory()) {
-        jython = Commands.doCompileJythonFolder(jython, entry);
-      }
-      return false;
-    }
-  }
-
+  //<editor-fold desc="SX Commands compile Jython, build a jar ">
   /**
    * the foo.py files in the given source folder are compiled to JVM-ByteCode-classfiles foo$py.class
    * and stored in the target folder (thus securing your code against changes).<br>
@@ -429,6 +389,36 @@ public class Commands extends SX {
     return false;
   }
 
+  private static JythonHelper doCompileJythonFolder(JythonHelper jython, File fSource) {
+    String fpSource = Content.slashify(fSource.getAbsolutePath(), false);
+    if (!jython.exec(String.format("compileall.compile_dir(\"%s\"," + "maxlevels = 0, quiet = 1)", fpSource))) {
+      return null;
+    }
+    for (File aFile : fSource.listFiles()) {
+      if (aFile.getName().endsWith(".py")) {
+        aFile.delete();
+      }
+    }
+    return jython;
+  }
+
+  private static class CompileJythonFilter implements Content.FileFilter {
+
+    JythonHelper jython = null;
+
+    public CompileJythonFilter(JythonHelper jython) {
+      this.jython = jython;
+    }
+
+    @Override
+    public boolean accept(File entry) {
+      if (jython != null && entry.isDirectory()) {
+        jython = Commands.doCompileJythonFolder(jython, entry);
+      }
+      return false;
+    }
+  }
+
   /**
    * build a jar on the fly at runtime from a folder.<br>
    * special for Jython: if the folder contains a __init__.py on first level,
@@ -459,9 +449,9 @@ public class Commands extends SX {
     }
     return Content.buildJar(targetJar, new String[]{null}, new String[]{sourceFolder}, new String[]{prefix}, null);
   }
+  //</editor-fold>
 
-
-  // ******************************* SX Commands ImagePath handling ****************************
+  //<editor-fold desc="SX Commands ImagePath handling">
   public static boolean setBundlePath(Object... args) {
     return com.sikulix.api.Image.setBundlePath(args);
   }
@@ -481,25 +471,180 @@ public class Commands extends SX {
   public static String[] getImagePath() {
     return com.sikulix.api.Image.getPath();
   }
+  //</editor-fold>
 
-// ******************************* SX Commands Clipboard ****************************
-
+  //<editor-fold desc="SX Commands Clipboard">
   /**
    * @return clipboard content
    */
   public static String getClipboard() {
-    return App.getClipboard();
+    Transferable content = null;
+    try {
+      content = SXClipboard.getSystemClipboard().getContents(null);
+    } catch (Exception ex) {
+      log.error("getClipboard: clipboard not available:\n%s", ex.getMessage());
+    }
+    if (content != null) {
+      try {
+        if (content.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+          return (String) content.getTransferData(DataFlavor.stringFlavor);
+        }
+      } catch (UnsupportedFlavorException ex) {
+        log.error("getClipboard: UnsupportedFlavorException: %s", content);
+      } catch (IOException ex) {
+        log.error("getClipboard: IOException:\n%s", ex.getMessage());
+      }
+    }
+    return "";
   }
 
   /**
    * @param text to set Clipboard content
    */
   public static void setClipboard(String text) {
-    App.setClipboard(text);
+    SXClipboard.putText(SXClipboard.PLAIN, SXClipboard.UTF8, SXClipboard.CHAR_BUFFER, text);
   }
 
-// ******************************* SXCommands Keys ****************************
+  private static class SXClipboard {
 
+    public static final TextType HTML = new TextType("text/html");
+    public static final TextType PLAIN = new TextType("text/plain");
+
+    public static final Charset UTF8 = new Charset("UTF-8");
+    public static final Charset UTF16 = new Charset("UTF-16");
+    public static final Charset UNICODE = new Charset("unicode");
+    public static final Charset US_ASCII = new Charset("US-ASCII");
+
+    public static final TransferType READER = new TransferType(Reader.class);
+    public static final TransferType INPUT_STREAM = new TransferType(InputStream.class);
+    public static final TransferType CHAR_BUFFER = new TransferType(CharBuffer.class);
+    public static final TransferType BYTE_BUFFER = new TransferType(ByteBuffer.class);
+
+    private SXClipboard() {
+    }
+
+    /**
+     * Dumps a given text (either String or StringBuffer) into the Clipboard, with a default MIME type
+     */
+    public static void putText(CharSequence data) {
+      StringSelection copy = new StringSelection(data.toString());
+      getSystemClipboard().setContents(copy, copy);
+    }
+
+    /**
+     * Dumps a given text (either String or StringBuffer) into the Clipboard with a specified MIME type
+     */
+    public static void putText(TextType type, Charset charset, TransferType transferType, CharSequence data) {
+      String mimeType = type + "; charset=" + charset + "; class=" + transferType;
+      TextTransferable transferable = new TextTransferable(mimeType, data.toString());
+      getSystemClipboard().setContents(transferable, transferable);
+    }
+
+    public static java.awt.datatransfer.Clipboard getSystemClipboard() {
+      return Toolkit.getDefaultToolkit().getSystemClipboard();
+    }
+
+    private static class TextTransferable implements Transferable, ClipboardOwner {
+      private String data;
+      private DataFlavor flavor;
+
+      public TextTransferable(String mimeType, String data) {
+        flavor = new DataFlavor(mimeType, "Text");
+        this.data = data;
+      }
+
+      @Override
+      public DataFlavor[] getTransferDataFlavors() {
+        return new DataFlavor[]{flavor, DataFlavor.stringFlavor};
+      }
+
+      @Override
+      public boolean isDataFlavorSupported(DataFlavor flavor) {
+        boolean b = this.flavor.getPrimaryType().equals(flavor.getPrimaryType());
+        return b || flavor.equals(DataFlavor.stringFlavor);
+      }
+
+      @Override
+      public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
+        if (flavor.isRepresentationClassInputStream()) {
+          return new StringReader(data);
+        }
+        else if (flavor.isRepresentationClassReader()) {
+          return new StringReader(data);
+        }
+        else if (flavor.isRepresentationClassCharBuffer()) {
+          return CharBuffer.wrap(data);
+        }
+        else if (flavor.isRepresentationClassByteBuffer()) {
+          return ByteBuffer.wrap(data.getBytes());
+        }
+        else if (flavor.equals(DataFlavor.stringFlavor)){
+          return data;
+        }
+        throw new UnsupportedFlavorException(flavor);
+      }
+
+      @Override
+      public void lostOwnership(java.awt.datatransfer.Clipboard clipboard, Transferable contents) {
+      }
+    }
+
+    /**
+     * Enumeration for the text type property in MIME types
+     */
+    public static class TextType {
+      private String type;
+
+      private TextType(String type) {
+        this.type = type;
+      }
+
+      @Override
+      public String toString() {
+        return type;
+      }
+    }
+
+    /**
+     * Enumeration for the charset property in MIME types (UTF-8, UTF-16, etc.)
+     */
+    public static class Charset {
+      private String name;
+
+      private Charset(String name) {
+        this.name = name;
+      }
+
+      @Override
+      public String toString() {
+        return name;
+      }
+    }
+
+    /**
+     * Enumeration for the transferScriptt type property in MIME types (InputStream, CharBuffer, etc.)
+     */
+    public static class TransferType {
+      private Class dataClass;
+
+      private TransferType(Class streamClass) {
+        this.dataClass = streamClass;
+      }
+
+      public Class getDataClass() {
+        return dataClass;
+      }
+
+      @Override
+      public String toString() {
+        return dataClass.getName();
+      }
+    }
+
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="SX Commands Keys">
   /**
    * get the lock state of the given key
    *
@@ -554,8 +699,29 @@ public class Commands extends SX {
   public static boolean removeHotkey(char key, int modifiers) {
     return Key.removeHotkey(key, modifiers);
   }
+  //</editor-fold>
 
-  // ******************************* SXCommands run something ****************************
+  //<editor-fold desc="SX Commands run something">
+  public static String run(String cmdline) {
+    return run(new String[]{cmdline});
+  }
+
+  public static String run(String[] cmd) {
+    log.terminate(1, "run: not implemented");
+    return "";
+  }
+
+  public static Object run(Object... args) {
+    String script = args[0].toString();
+    String scriptArgs[] = new String[args.length - 1];
+    if (scriptArgs.length > 0) {
+      for (int i = 1; i < args.length; i++) {
+        scriptArgs[i-1] = args[i].toString();
+      }
+    }
+    return Runner.run(script, scriptArgs);
+  }
+
   public static String NL = "\n";
 
   public final static String runCmdError = "*****error*****";
@@ -663,14 +829,5 @@ public class Commands extends SX {
   public static String getLastCommandResult() {
     return lastResult;
   }
-
-  // ******************************* SX Commands cleanup ****************************
-  public void cleanUp(int n) {
-    log.trace("cleanUp: %d", n);
-//    ScreenHighlighter.closeAll();
-//    Observer.cleanUp();
-//    Mouse.reset();
-//    Screen.getPrimaryScreen().getRobot().keyUp();
-//    HotkeyManager.reset();
-  }
+  //</editor-fold>
 }

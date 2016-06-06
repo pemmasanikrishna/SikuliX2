@@ -9,6 +9,7 @@ package org.sikuli.script;
 import java.awt.Rectangle;
 
 import com.sikulix.core.SX;
+import com.sikulix.util.Settings;
 
 /**
  * holds the result of a find operation, is itself the region on the screen,
@@ -224,8 +225,8 @@ public class Match extends Region implements Comparable<Match> {
    */
   protected void setImage(Image img) {
     image = img;
-    if (SX.Highlight) {
-      highlight(SX.DefaultHighlightTime);
+    if (Settings.Highlight) {
+      highlight(Settings.DefaultHighlightTime);
     }
   }
 

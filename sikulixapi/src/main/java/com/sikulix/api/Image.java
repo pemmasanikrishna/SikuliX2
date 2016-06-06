@@ -298,7 +298,7 @@ public class Image extends Visual {
   }
 
   public static int changePath(Object... args) {
-    //TODO implment insertPath()
+    //TODO implment changePath()
     URL url = null;
     return -1;
   }
@@ -407,31 +407,4 @@ public class Image extends Visual {
     return fpName;
   }
 //</editor-fold>
-
-  //<editor-fold defaultstate="collapsed" desc="*** show">
-  @Override
-  public void show() {
-    show(30, 30, 3);
-  }
-
-  @Override
-  public void show(int time) {
-    show(30, 30, time);
-  }
-
-  public void show(int x, int y, int time) {
-    JFrame frImg = new JFrame();
-    frImg.setAlwaysOnTop(true);
-    frImg.setResizable(false);
-    frImg.setUndecorated(true);
-    frImg.setLocation(x, y);
-    frImg.setSize(w, h);
-    Container cp = frImg.getContentPane();
-    cp.add(new JLabel(new ImageIcon(getImageBytes())), BorderLayout.CENTER);
-    frImg.pack();
-    frImg.setVisible(true);
-    SX.pause(time);
-    frImg.dispose();
-  }
-  //</editor-fold>
 }

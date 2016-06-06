@@ -30,7 +30,6 @@ public class Offset extends Visual {
     if (!(vis instanceof Visual)) {
       log.error("Offset: not a Visual: %s", vis);
     } else {
-      clazz = vClazz;
       init((Visual) vis);
     }
   }

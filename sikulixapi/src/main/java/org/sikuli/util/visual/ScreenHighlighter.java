@@ -7,6 +7,7 @@
 package org.sikuli.util.visual;
 
 import com.sikulix.core.SX;
+import com.sikulix.util.Settings;
 import org.sikuli.util.visual.animation.Animator;
 import org.sikuli.util.Debug;
 import java.awt.*;
@@ -113,7 +114,7 @@ public class ScreenHighlighter extends OverlayTransparentWindow implements Mouse
     _opened.remove(this);
     clean();
     try {
-      Thread.sleep((int) (SX.WaitAfterHighlight > 0.3f ? SX.WaitAfterHighlight * 1000 - 300 : 300));
+      Thread.sleep((int) (Settings.WaitAfterHighlight > 0.3f ? Settings.WaitAfterHighlight * 1000 - 300 : 300));
     } catch (InterruptedException e) {
     }
   }

@@ -7,6 +7,7 @@
 package org.sikuli.script;
 
 import com.sikulix.core.SX;
+import com.sikulix.util.Settings;
 import org.sikuli.util.visual.animation.Animator;
 import org.sikuli.util.visual.animation.AnimatorOutQuarticEase;
 import org.sikuli.util.visual.animation.AnimatorTimeBased;
@@ -144,12 +145,12 @@ public class RobotDesktop extends Robot implements IRobot {
 
   @Override
   public void smoothMove(Location dest) {
-    smoothMove(Mouse.at(), dest, (long) (SX.MoveMouseDelay * 1000L));
+    smoothMove(Mouse.at(), dest, (long) (Settings.MoveMouseDelay * 1000L));
   }
 
   @Override
   public void smoothMove(Location src, Location dest, long ms) {
-    Debug.log(4, "RobotDesktop: smoothMove (%.1f): " + src.toString() + "---" + dest.toString(), SX.MoveMouseDelay);
+    Debug.log(4, "RobotDesktop: smoothMove (%.1f): " + src.toString() + "---" + dest.toString(), Settings.MoveMouseDelay);
     if (ms == 0) {
       doMouseMove(dest.x, dest.y);
       checkMousePosition(dest);

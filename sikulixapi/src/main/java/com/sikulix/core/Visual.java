@@ -4,16 +4,22 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.Location;
-import com.sikulix.api.Match;
-import com.sikulix.api.Offset;
-import com.sikulix.api.Region;
+import com.sikulix.api.*;
+import com.sikulix.api.Image;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
+import org.sikuli.basics.Settings;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Rectangle;
 import java.awt.Point;
+import java.awt.Robot;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.ByteArrayInputStream;
@@ -25,7 +31,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class Visual {
+import static sun.plugin.javascript.navig.JSType.Location;
+
+public abstract class Visual implements Comparable<Visual>{
 
   static {
     SX.trace("Visual: loadNative(SX.NATIVES.OPENCV)");
@@ -46,12 +54,12 @@ public abstract class Visual {
     return isRectangle() || isPoint();
   }
 
-  public boolean isRegion() {
-    return vType.REGION.equals(clazz);
-  }
-
   public boolean isRectangle() {
     return isRegion() || isMatch() || isScreen() || isWindow();
+  }
+
+  public boolean isRegion() {
+    return vType.REGION.equals(clazz);
   }
 
   public boolean isLocation() {
@@ -86,9 +94,9 @@ public abstract class Visual {
     return vType.OFFSET.equals(clazz);
   }
 
-  public boolean isDesktop() { return !isRemote(); }
+  public boolean isSpecial() { return !SX.isNull(containingScreen); }
 
-  public boolean isRemote() { return onRemoteScreen; }
+  Object containingScreen = null;
 
   /**
    * @return true if the Visual is useable and/or has valid content
@@ -102,7 +110,7 @@ public abstract class Visual {
   public Integer w = -1;
   public Integer h = -1;
 
-  protected boolean onRemoteScreen = false;
+//  protected boolean onRemoteScreen = false;
 
   public int getX() { return x;}
   public int getY() { return y;}
@@ -168,13 +176,13 @@ public abstract class Visual {
   //</editor-fold>
 
   //<editor-fold desc="lastCapture">
-  private com.sikulix.api.Image lastCapture = null;
+  private Image lastCapture = null;
 
-  public com.sikulix.api.Image getLastCapture() {
+  public Image getLastCapture() {
     return lastCapture;
   }
 
-  public void setLastCapture(com.sikulix.api.Image lastCapture) {
+  public void setLastCapture(Image lastCapture) {
     this.lastCapture = lastCapture;
   }
   //</editor-fold>
@@ -182,6 +190,16 @@ public abstract class Visual {
   //<editor-fold desc="target">
   public enum FindType {
     ONE, ALL, VANISH, ANY, BEST
+  }
+
+  private double waitAfter = 0;
+
+  public double getWaitAfter() {
+    return waitAfter;
+  }
+
+  public void setWaitAfter(double waitAfter) {
+    this.waitAfter = waitAfter;
   }
 
   public Offset getOffset() {
@@ -202,27 +220,27 @@ public abstract class Visual {
     if (vis.isOffset()) {
       target = getCenter().offset((Offset) vis);
     } else {
-      target = new Location(vis.x, vis.y);
+      target = vis.getCenter();
     }
     return this;
   }
 
   public Visual setTarget(int x, int y) {
-    target = new Location(x, y);
+    target = getCenter().offset(x, y);
     return this;
   }
 
   public Location getTarget() {
     if (SX.isNull(target)) {
       target = getCenter();
-      if (!SX.isNull(offset)) {
-        return target.offset(offset);
-      }
     }
-    return target;
+    if (!SX.isNull(offset)) {
+      return target.offset(offset);
+    }
+    return (Location) target;
   }
 
-  private Location target = null;
+  private Visual target = null;
 
   public double getScore() {
     return score;
@@ -232,17 +250,28 @@ public abstract class Visual {
     this.score = score;
   }
 
-  protected double score = -1;
+  private double score = -1;
 
-  public com.sikulix.api.Image getImage() {
+  public double getMinimumScore() {
+    return minimumScore;
+  }
+
+  public void setMinimumScore(double minimumScore) {
+    this.minimumScore = minimumScore;
+  }
+
+  private double minimumScore = -1;
+
+
+  public Image getImage() {
     return image;
   }
 
-  public void setImage(com.sikulix.api.Image img) {
+  public void setImage(Image img) {
     this.image = img;
   }
 
-  protected com.sikulix.api.Image image = null;
+  protected Image image = null;
 
   //</editor-fold>
 
@@ -293,6 +322,7 @@ public abstract class Visual {
       w = _w < 1 ? 1 : _w;
       h = _h < 1 ? 1 : _h;
     }
+    minimumScore = SX.getOptionNumber("Settings.MinSimilarity", 0.7d);
   }
 
   public void init(Rectangle rect) {
@@ -337,6 +367,34 @@ public abstract class Visual {
     Visual vis = null;
     return vis;
   }
+
+  //TODO equals and compare
+  @Override
+  public boolean equals(Object oThat) {
+    if (this == oThat) {
+      return true;
+    }
+    if (!(oThat instanceof Visual)) {
+      return false;
+    }
+    Visual that = (Visual) oThat;
+    return x == that.x && y == that.y;
+  }
+
+  @Override
+  public int compareTo(Visual vis) {
+    if (equals(vis)) {
+      return 0;
+    }
+    if (vis.x > x) {
+      return 1;
+    } else if (vis.x == x) {
+      if (vis.y > y) {
+        return 1;
+      }
+    }
+    return -1;
+  }
   //</editor-fold>
 
   //<editor-fold desc="***** get, set, change">
@@ -359,7 +417,7 @@ public abstract class Visual {
     return new Point(getCenter().x, getCenter().y);
   }
 
-  public void at(int x, int y) {
+  public void at(Integer x, Integer y) {
     this.x = x;
     this.y = y;
     if (!SX.isNull(target)) {
@@ -397,15 +455,15 @@ public abstract class Visual {
    * creates a point at the given offset, might be negative<br>
    * for a rectangle the reference is the center
    *
-   * @param dx x offset
-   * @param dy y offset
+   * @param xoff x offset
+   * @param yoff y offset
    * @return new location
    */
-  public Location offset(Integer dx, Integer dy) {
+  public Location offset(Integer xoff, Integer yoff) {
     if (isPoint()) {
-      return new Location(x + dx, y + dy);
+      return new Location(x + xoff, y + yoff);
     }
-    return getCenter().offset(dx, dy);
+    return getCenter().offset(xoff, yoff);
   }
 
   /**
@@ -413,14 +471,14 @@ public abstract class Visual {
    * negative means the opposite direction<br>
    * for rectangles the reference point is the middle of the left side
    *
-   * @param dx x offset
+   * @param xoff x offset
    * @return new location
    */
-  public Location left(Integer dx) {
+  public Location left(Integer xoff) {
     if (isPoint()) {
-      return new Location(x - dx, y);
+      return new Location(x - xoff, y);
     }
-    return new Location(getCenter().x - (int) (w/2) - dx, y);
+    return new Location(getCenter().x - (int) (w/2) - xoff, y);
   }
 
   /**
@@ -428,14 +486,14 @@ public abstract class Visual {
    * negative means the opposite direction<br>
    * for rectangles the reference point is the middle of the right side
    *
-   * @param dx x offset
+   * @param xoff x offset
    * @return new location
    */
-  public Location right(Integer dx) {
+  public Location right(Integer xoff) {
     if (isPoint()) {
-      return new Location(x + dx, y);
+      return new Location(x + xoff, y);
     }
-    return new Location(getCenter().x + (int) (w/2) + dx, y);
+    return new Location(getCenter().x + (int) (w/2) + xoff, y);
   }
 
   /**
@@ -443,14 +501,14 @@ public abstract class Visual {
    * negative means the opposite direction<br>
    * for rectangles the reference point is the middle of upper side
    *
-   * @param dy y offset
+   * @param yoff y offset
    * @return new location
    */
-  public Location above(Integer dy) {
+  public Location above(Integer yoff) {
     if (isPoint()) {
-      return new Location(x - dy, y);
+      return new Location(x - yoff, y);
     }
-    return new Location(getCenter().x - (int) (h/2) - dy, y);
+    return new Location(getCenter().x - (int) (h/2) - yoff, y);
   }
 
   /**
@@ -458,14 +516,14 @@ public abstract class Visual {
    * negative means the opposite direction<br>
    * for rectangles the reference point is the middle of the lower side
    *
-   * @param dy y offset
+   * @param yoff y offset
    * @return new location
    */
-  public Location below(Integer dy) {
+  public Location below(Integer yoff) {
     if (isPoint()) {
-      return new Location(x - dy, y);
+      return new Location(x - yoff, y);
     }
-    return new Location(getCenter().x - (int) (h/2) - dy, y);
+    return new Location(getCenter().x - (int) (h/2) - yoff, y);
   }
 
   /**
@@ -504,25 +562,34 @@ public abstract class Visual {
   //</editor-fold>
 
   //<editor-fold desc="***** capture/show">
-  public com.sikulix.api.Image capture() {
-    com.sikulix.api.Image img = new com.sikulix.api.Image();
-    if (isDesktop()) {
-      Robot robot = SX.getSXROBOT();
-      img = new com.sikulix.api.Image(robot.createScreenCapture(getRectangle()));
+  public Image capture() {
+    Image img = new Image();
+    if (isSpecial()) {
+      SX.terminate(1, "capture: special not implemented");
     } else {
-      SX.terminate(1, "capture: remote not implemented");
+      Robot robot = SX.getSXROBOT();
+      img = new Image(robot.createScreenCapture(getRectangle()));
     }
     return img;
   }
 
   public void show() {
-    // TODO show()
-    SX.terminate(1, "show(): not yet implemented");
+    show((int) Settings.DefaultHighlightTime);
   }
 
   public void show(int time) {
-    // TODO show()
-    SX.terminate(1, "show(): not yet implemented");
+    JFrame frImg = new JFrame();
+    frImg.setAlwaysOnTop(true);
+    frImg.setResizable(false);
+    frImg.setUndecorated(true);
+    frImg.setLocation(x, y);
+    frImg.setSize(w, h);
+    Container cp = frImg.getContentPane();
+    cp.add(new JLabel(new ImageIcon(getImageBytes())), BorderLayout.CENTER);
+    frImg.pack();
+    frImg.setVisible(true);
+    SX.pause(time);
+    frImg.dispose();
   }
 
   protected BufferedImage getBufferedImage() {
@@ -628,4 +695,47 @@ public abstract class Visual {
     //TODO implement stopObserver()
   }
   //</editor-fold>
+
+  //<editor-fold desc="***** mouse">
+  /**
+   * Move the mouse to this visual's target
+   *
+   * @return this
+   */
+  public Visual hover() {
+    Mouse.move(this.getTarget());
+    return this;
+  }
+
+  /**
+   * Move the mouse to this visual's target and click left
+   *
+   * @return this
+   */
+  public Visual click() {
+    Mouse.get().click(this.getTarget(), "L");
+    return this;
+  }
+
+  /**
+   * Move the mouse to this visual's target and double click left
+   *
+   * @return this
+   */
+  public Visual doubleClick() {
+    Mouse.get().click(this.getTarget(), "LD");
+    return this;
+  }
+
+  /**
+   * Move the mouse to this visual's target and click right
+   *
+   * @return this
+   */
+  public Visual rightClick() {
+    Mouse.get().click(this.getTarget(), "R");
+    return this;
+  }
+  //</editor-fold>
+
 }

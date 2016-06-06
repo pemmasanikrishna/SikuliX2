@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.sikulix.core.SX;
+import com.sikulix.util.Settings;
 import org.apache.logging.log4j.LogManager;
 import org.sikuli.util.Debug;
 
@@ -82,7 +83,7 @@ public class ObserveEvent {
   private Pattern pattern = null;
   private ObserverCallBack callback = null;
   private Object[] vals = null;
-  private int minChanged = SX.ObserveMinChangedPixels;
+  private int minChanged = Settings.ObserveMinChangedPixels;
   
   private long repeatAfter = 0;
   private int count = 0;

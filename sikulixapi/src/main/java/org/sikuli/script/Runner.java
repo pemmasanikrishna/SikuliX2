@@ -11,6 +11,7 @@ import javax.script.ScriptEngineManager;
 
 import com.sikulix.core.Content;
 import com.sikulix.api.Commands;
+import com.sikulix.util.Settings;
 import org.apache.commons.cli.CommandLine;
 import com.sikulix.core.SX;
 import org.sikuli.util.Debug;
@@ -122,7 +123,7 @@ public class Runner {
       cmdValue = cmdLine.getOptionValue(CommandArgsEnum.DEBUG.longname());
       if (cmdValue == null) {
         Debug.setDebugLevel(3);
-        SX.LogTime = true;
+        Settings.LogTime = true;
         if (!Debug.isLogToFile()) {
           Debug.setLogFile("");
         }

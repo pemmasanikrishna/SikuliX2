@@ -3,21 +3,8 @@
  */
 package com.sikulix.core;
 
-import com.sikulix.api.Keys;
-import org.sikuli.script.*;
-import org.sikuli.script.Location;
-import org.sikuli.script.ObserveEvent;
-import org.sikuli.script.ObserverCallBack;
-import org.sikuli.script.Region;
-import org.sikuli.script.Screen;
-import org.sikuli.util.Debug;
+import com.sikulix.api.Mouse;
 
-import java.awt.*;
-
-/**
- *
- * @author RaiMan
- */
 public class Device {
 
   private static SXLog log = SX.getLogger("SX.Device");
@@ -26,21 +13,13 @@ public class Device {
   private Object device = null;
   private String devName = "Device";
 
-  protected boolean inUse = false;
+  public boolean isMouse = false;
+
+  private boolean inUse = false;
   protected boolean keep = false;
   protected Object owner = null;
   private boolean blocked = false;
   private boolean suspended = false;
-  
-  protected boolean isMouse = false;
-  protected Location lastPos = null;
-
-  protected int MouseMovedIgnore = 0;
-  protected int MouseMovedShow = 1;
-  protected int MouseMovedPause = 2;
-  protected int MouseMovedAction = 3;
-  protected int mouseMovedResponse = MouseMovedIgnore;
-  protected boolean MouseMovedHighlight = true;
 
   //<editor-fold desc="*** Callback">
   protected ObserverCallBack mouseMovedCallback = null;
@@ -87,19 +66,7 @@ public class Device {
   //</editor-fold>
 
   //<editor-fold desc="*** Construction">
-  public Device(Mouse m) {
-    device = m;
-    devName = "Mouse";
-  }
-
-  public Device(Keys k) {
-    device = k;
-    devName = "KeyBoard";
-  }
-
-  public Device(Screen s) {
-    device = s;
-    devName = "Screen";
+  public Device() {
   }
   //</editor-fold>
 
@@ -117,14 +84,7 @@ public class Device {
   }
 
 	public boolean isNotLocal(Object owner) {
-		if (owner instanceof Region) {
-      if (((Region) owner).isOtherScreen()) {
-        return true;
-      }
-    } else if (owner instanceof Location) {
-      if (((Location) owner).isOtherScreen()) {
-        return true;
-      }
+		if (owner instanceof Visual) {
     }
 		return false;
 	}
@@ -188,11 +148,11 @@ public class Device {
   //</editor-fold>
 
   //<editor-fold desc="*** coordinate usage">
-  protected boolean use() {
+  public boolean use() {
     return use(null);
   }
 
-  protected synchronized boolean use(Object owner) {
+  public synchronized boolean use(Object owner) {
     if (owner == null) {
       owner = this;
 		} else if (isNotLocal(owner)) {
@@ -209,12 +169,14 @@ public class Device {
     }
     if (!inUse) {
       inUse = true;
-      checkLastPos();
-      checkShouldRunCallback();
-			if (shouldTerminate) {
-				shouldTerminate = false;
-				throw new AssertionError("aborted by unknown source");
-			}
+      if (isMouse) {
+        Mouse.get().checkLastPos();
+        checkShouldRunCallback();
+        if (shouldTerminate) {
+          shouldTerminate = false;
+          throw new AssertionError("aborted by unknown source");
+        }
+      }
       keep = false;
       this.owner = owner;
       log.trace("%s: use start: %s", devName, owner);
@@ -224,7 +186,7 @@ public class Device {
     return false;
   }
 
-  protected synchronized boolean keep(Object ownerGiven) {
+  public synchronized boolean keep(Object ownerGiven) {
     if (ownerGiven == null) {
       ownerGiven = this;
 		} else if (isNotLocal(ownerGiven)) {
@@ -238,11 +200,11 @@ public class Device {
     return false;
   }
 
-  protected boolean let() {
+  public boolean let() {
     return let(null);
   }
 
-  protected synchronized boolean let(Object owner) {
+  public synchronized boolean let(Object owner) {
     if (owner == null) {
       owner = this;
 		} else if (isNotLocal(owner)) {
@@ -254,7 +216,7 @@ public class Device {
         return true;
       }
       if (isMouse) {
-        lastPos = getLocation();
+        Mouse.get().setLastPos();
       }
       inUse = false;
       this.owner = null;
@@ -266,68 +228,7 @@ public class Device {
   }
   //</editor-fold>
 
-  //<editor-fold desc="special for Mouse">
-  protected Location getLocation() {
-    PointerInfo mp = MouseInfo.getPointerInfo();
-    if (mp != null) {
-      return new Location(MouseInfo.getPointerInfo().getLocation());
-    } else {
-      Debug.error("Mouse: not possible to get mouse position (PointerInfo == null)");
-      return null;
-    }
-  }
-
-  private void checkLastPos() {
-    if (lastPos == null) {
-      return;
-    }
-    Location pos = getLocation();
-    if (pos != null && (lastPos.x != pos.x || lastPos.y != pos.y)) {
-      log.debug("%s: moved externally: now (%d,%d) was (%d,%d) (mouseMovedResponse %d)",
-              devName, pos.x, pos.y, lastPos.x, lastPos.y, mouseMovedResponse);
-      if (mouseMovedResponse > 0) {
-        if (MouseMovedHighlight) {
-          showMousePos(pos.getPoint());
-        }
-      }
-      if (mouseMovedResponse == MouseMovedPause) {
-				while (pos.x > 0 && pos.y > 0) {
-					delay(500);
-					pos = getLocation();
-          if (MouseMovedHighlight) {
-    				showMousePos(pos.getPoint());
-          }
-				}
-				if (pos.x < 1) {
-					return;
-				}
-				log.error("Terminating in MouseMovedResponse = Pause");
-				Commands.terminate(1);
-      }
-      if (mouseMovedResponse == MouseMovedAction) {
-//TODO implement 3
-        if (mouseMovedCallback != null) {
-          mouseMovedCallback.happened(new ObserveEvent(ObserveEvent.Type.GENERIC, lastPos, new Location(pos)));
-					if (shouldTerminate) {
-						shouldTerminate = false;
-						throw new AssertionError("aborted by Sikulix.MouseMovedCallBack");
-					}
-        }
-      }
-    }
-  }
-
-  private static void showMousePos(Point pos) {
-    Location lPos = new Location(pos);
-    Region inner = lPos.grow(20).highlight();
-    delay(500);
-    lPos.grow(40).highlight(1);
-    delay(500);
-    inner.highlight();
-  }
-  //</editor-fold>
-
-  protected static void delay(int time) {
+  public static void delay(int time) {
     if (time == 0) {
       return;
     }

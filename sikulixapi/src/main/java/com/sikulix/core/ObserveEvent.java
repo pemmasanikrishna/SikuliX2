@@ -6,6 +6,7 @@ package com.sikulix.core;
 import com.sikulix.api.Match;
 import com.sikulix.api.Pattern;
 import com.sikulix.api.Region;
+import com.sikulix.util.Settings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class ObserveEvent {
   private Pattern pattern = null;
   private ObserverCallBack callback = null;
   private Object[] vals = null;
-  private int minChanged = SX.ObserveMinChangedPixels;
+  private int minChanged = Settings.ObserveMinChangedPixels;
 
   private long repeatAfter = 0;
   private int count = 0;
