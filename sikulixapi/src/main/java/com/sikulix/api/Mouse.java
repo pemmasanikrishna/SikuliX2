@@ -5,6 +5,9 @@ package com.sikulix.api;
 
 import com.sikulix.core.*;
 import com.sikulix.util.Settings;
+import com.sikulix.util.animation.Animator;
+import com.sikulix.util.animation.AnimatorOutQuarticEase;
+import com.sikulix.util.animation.AnimatorTimeBased;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -25,7 +28,6 @@ import java.awt.event.KeyEvent;
 public class Mouse extends Device {
 
   private static SXLog log = SX.getLogger("SX.Mouse");
-  private static int lvl = SXLog.DEBUG;
 
   private static Mouse mouse = null;
 
@@ -73,12 +75,16 @@ public class Mouse extends Device {
   }
 
   public Location getLocation() {
+      return new Location(getLocationPoint());
+  }
+
+  private Point getLocationPoint() {
     PointerInfo mp = MouseInfo.getPointerInfo();
     if (mp != null) {
-      return new Location(MouseInfo.getPointerInfo().getLocation());
+      return mp.getLocation();
     } else {
-      log.error("Mouse: not possible to get mouse position (PointerInfo == null)");
-      return null;
+      log.error("not possible to get mouse position (PointerInfo == null)");
+      return new Point(0,0);
     }
   }
 
@@ -126,12 +132,13 @@ public class Mouse extends Device {
   }
 
   private static void showMousePos(Point pos) {
-    Location lPos = new Location(pos);
-    Region inner = lPos.grow(20).highlight();
-    delay(500);
-    lPos.grow(40).highlight(1);
-    delay(500);
-    inner.highlight();
+    //TODO implement showMousePos (Visual.highlight)
+//    Location lPos = new Location(pos);
+//    Region inner = lPos.grow(20).highlight();
+//    delay(500);
+//    lPos.grow(40).highlight(1);
+//    delay(500);
+//    inner.highlight();
   }
 
   public Location at() {
@@ -287,7 +294,7 @@ public class Mouse extends Device {
     }
   }
 
-  private int click(Location loc, int buttons, Integer modifiers, boolean dblClick, Region region) {
+  private int click(Location loc, int buttons, Integer modifiers, boolean dblClick, Visual vis) {
     if (modifiers == null) {
       modifiers = 0;
     }
@@ -296,32 +303,32 @@ public class Mouse extends Device {
       shouldMove = false;
       loc = at();
     }
-    IRobot r = null;
-    r = Screen.getMouseRobot();
-    if (r == null) {
+    IRobot robot = loc.getDeviceRobot();
+    if (robot == null) {
       return 0;
     }
-    use(region);
+    Point pLoc = loc.getPoint();
+    use(vis);
     log.info("%s", getClickMsg(loc, buttons, modifiers, dblClick));
     if (shouldMove) {
-      r.smoothMove(loc);
+      smoothMove(pLoc, robot);
     }
-    r.pressModifiers(modifiers);
+    robot.pressModifiers(modifiers);
     int pause = Settings.ClickDelay > 1 ? 1 : (int) (Settings.ClickDelay * 1000);
     Settings.ClickDelay = 0.0;
     if (dblClick) {
-      r.mouseDown(buttons);
-      r.mouseUp(buttons);
-      r.mouseDown(buttons);
-      r.mouseUp(buttons);
+      robot.mouseDown(buttons);
+      robot.mouseUp(buttons);
+      robot.mouseDown(buttons);
+      robot.mouseUp(buttons);
     } else {
-      r.mouseDown(buttons);
-      r.delay(pause);
-      r.mouseUp(buttons);
+      robot.mouseDown(buttons);
+      robot.delay(pause);
+      robot.mouseUp(buttons);
     }
-    r.releaseModifiers(modifiers);
-    r.waitForIdle();
-    let(region);
+    robot.releaseModifiers(modifiers);
+    robot.waitForIdle();
+    let(vis);
     return 1;
   }
 
@@ -346,18 +353,17 @@ public class Mouse extends Device {
   }
 
   /**
-   * move the mouse to the given location (local and remote)
+   * move the mouse to the given location
    *
    * @param loc Location
    * @return 1 for success, 0 otherwise
    */
-  public static int move(org.sikuli.script.Location loc) {
+  public int move(Location loc) {
     return move(loc, null);
   }
 
-  public static int move(Visual loc) {
-    //TODO ajust for com.sikulix.core.Location
-    return 0;
+  public int move(Visual vis) {
+    return move(vis.getTarget(), null);
   }
 
   /**
@@ -366,31 +372,65 @@ public class Mouse extends Device {
 	 * @param yoff vertical offset (&lt; 0 up, &gt; 0 down)
    * @return 1 for success, 0 otherwise
 	 */
-  public static int move(int xoff, int yoff) {
+  public int move(int xoff, int yoff) {
     return move(at().offset(xoff, yoff));
   }
 
-  public int move(Location loc, Region region) {
+  public int move(Location loc, Visual vis) {
     if (isSuspended()) {
       return 0;
     }
+    Point pLoc = null;
     if (loc != null) {
-      IRobot r = null;
-      r = Screen.getMouseRobot();
-      if (r == null) {
+      pLoc = loc.getPoint();
+      IRobot robot = loc.getDeviceRobot();
+      if (robot == null) {
         return 0;
       }
-      if (!r.isRemote()) {
-        use(region);
-      }
-      r.smoothMove(loc);
-      r.waitForIdle();
-      if (!r.isRemote()) {
-        let(region);
-      }
+      use(vis);
+      smoothMove(pLoc, robot);
+      let(vis);
       return 1;
     }
     return 0;
+  }
+
+  public void smoothMove(Point dest, IRobot robot) {
+    smoothMove(getLocationPoint(), dest, (long) (Settings.MoveMouseDelay * 1000L), robot);
+  }
+
+  public void smoothMove(Point src, Point dest, long ms, IRobot robot) {
+    int x = dest.x;
+    int y = dest.y;
+    log.trace("smoothMove (%.1f): (%d, %d) to (%d, %d)", Settings.MoveMouseDelay, src.x, src.y, x, y);
+    if (ms == 0) {
+      robot.mouseMove(x, y);
+    } else {
+      Animator aniX = new AnimatorTimeBased(
+              new AnimatorOutQuarticEase(src.x, dest.x, ms));
+      Animator aniY = new AnimatorTimeBased(
+              new AnimatorOutQuarticEase(src.y, dest.y, ms));
+      while (aniX.running()) {
+        x = (int) aniX.step();
+        y = (int) aniY.step();
+        robot.mouseMove(x, y);
+      }
+    }
+    robot.waitForIdle();
+    PointerInfo mp = MouseInfo.getPointerInfo();
+    Point pc;
+    if (mp == null) {
+      log.error("RobotDesktop: checkMousePosition: MouseInfo.getPointerInfo invalid after move to (%d, %d)", x, y);
+    } else {
+      pc = mp.getLocation();
+      if (pc.x != x || pc.y != y) {
+        log.error("RobotDesktop: checkMousePosition: should be (%d, %d)\nbut after move is (%d, %d)"
+                        + "\nPossible cause in case you did not touch the mouse while script was running:\n"
+                        + " Mouse actions are blocked generally or by the frontmost application."
+                        + (SX.isWindows() ? "\nYou might try to run the SikuliX stuff as admin." : ""),
+                x, y, pc.x, pc.y);
+      }
+    }
   }
 
   /**
@@ -398,16 +438,16 @@ public class Mouse extends Device {
    *
    * @param buttons value
    */
-  public static void down(int buttons) {
+  public void down(int buttons) {
     down(buttons, null);
   }
 
-  protected void down(int buttons, Region region) {
+  public void down(int buttons, Visual vis) {
     if (isSuspended()) {
       return;
     }
-    use(region);
-    Screen.getMouseRobot().mouseDown(buttons);
+    use(vis);
+    vis.getDeviceRobot().mouseDown(buttons);
   }
 
   /**
@@ -427,14 +467,12 @@ public class Mouse extends Device {
     up(buttons, null);
   }
 
-  protected void up(int buttons, Region region) {
+  public void up(int buttons, Visual vis) {
     if (isSuspended()) {
       return;
     }
-    Screen.getMouseRobot().mouseUp(buttons);
-    if (region != null) {
-      let(region);
-    }
+    vis.getDeviceRobot().mouseUp(buttons);
+    let(vis);
   }
 
   /**
@@ -448,22 +486,22 @@ public class Mouse extends Device {
     wheel(direction, steps, null);
   }
 
-  protected void wheel(int direction, int steps, Region region) {
-    wheel(direction,steps,region, WHEEL_STEP_DELAY);
+  public void wheel(int direction, int steps, Visual vis) {
+    wheel(direction,steps,vis, WHEEL_STEP_DELAY);
   }
     
-  protected void wheel(int direction, int steps, Region region, int stepDelay) {
+  public void wheel(int direction, int steps, Visual vis, int stepDelay) {
     if (isSuspended()) {
       return;
     }
-    IRobot r = Screen.getMouseRobot();
-    use(region);
+    IRobot r = SX.isNull(vis) ? SX.getLocalRobot() : vis.getDeviceRobot();
+    use(vis);
     log.debug("Region: wheel: %s steps: %d",
             (direction == WHEEL_UP ? "WHEEL_UP" : "WHEEL_DOWN"), steps);
     for (int i = 0; i < steps; i++) {
       r.mouseWheel(direction);
       r.delay(stepDelay);
     }
-    let(region);
+    let(vis);
   }
 }

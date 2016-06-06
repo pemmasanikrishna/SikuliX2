@@ -31,8 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static sun.plugin.javascript.navig.JSType.Location;
-
 public abstract class Visual implements Comparable<Visual>{
 
   static {
@@ -648,6 +646,10 @@ public abstract class Visual implements Comparable<Visual>{
   }
   //</editor-fold>
 
+  public static void fakeHighlight(boolean state) {
+    //TODO implement fakeHighlight
+  }
+
   //<editor-fold desc="**** wait">
   public void wait(double time) {
     SX.pause(time);
@@ -697,13 +699,17 @@ public abstract class Visual implements Comparable<Visual>{
   //</editor-fold>
 
   //<editor-fold desc="***** mouse">
+  public IRobot getDeviceRobot() {
+    //TODO implement special Robots
+    return SX.getLocalRobot();
+  }
   /**
    * Move the mouse to this visual's target
    *
    * @return this
    */
   public Visual hover() {
-    Mouse.move(this.getTarget());
+    Mouse.get().move(this.getTarget());
     return this;
   }
 

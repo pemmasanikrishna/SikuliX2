@@ -4,8 +4,10 @@
 package com.sikulix.core;
 
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
+import com.sikulix.api.Image;
+
+import java.awt.Rectangle;
+import java.awt.Color;
 
 /**
  * INTERNAL USE <br>
@@ -27,16 +29,13 @@ public interface IRobot {
    void mouseMove(int x, int y);
    void mouseDown(int buttons);
    int mouseUp(int buttons);
-   void smoothMove(Point dest);
-   void smoothMove(Point src, Point dest, long ms);
    void mouseWheel(int wheelAmt);
-   BufferedImage captureScreen(Rectangle screenRect);
+   Image captureScreen(Rectangle rect);
    void waitForIdle();
    void delay(int ms);
    void setAutoDelay(int ms);
    Color getColorAt(int x, int y);
    void cleanup();
    boolean isRemote();
-
 }
 

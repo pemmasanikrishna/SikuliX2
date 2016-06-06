@@ -14,6 +14,7 @@ public class Device {
   private String devName = "Device";
 
   public boolean isMouse = false;
+  public boolean isKeys = false;
 
   private boolean inUse = false;
   protected boolean keep = false;

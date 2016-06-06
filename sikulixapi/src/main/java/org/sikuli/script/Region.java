@@ -3178,8 +3178,8 @@ public class Region {
     Location loc2 = getLocationFromTarget(t2);
     int retVal = 0;
     if (loc1 != null && loc2 != null) {
-      IRobot r1 = loc1.getRobotForPoint("drag");
-      IRobot r2 = loc2.getRobotForPoint("drop");
+      IRobot r1 = loc1.getGlobalRobot();
+      IRobot r2 = loc2.getGlobalRobot();
       if (r1 != null && r2 != null) {
         Mouse.use(this);
         r1.smoothMove(loc1);
@@ -3213,7 +3213,7 @@ public class Region {
     Location loc = getLocationFromTarget(target);
     int retVal = 0;
     if (loc != null) {
-      IRobot r = loc.getRobotForPoint("drag");
+      IRobot r = loc.getGlobalRobot();
       if (r != null) {
         Mouse.use(this);
         r.smoothMove(loc);
@@ -3246,7 +3246,7 @@ public class Region {
     Location loc = getLocationFromTarget(target);
     int retVal = 0;
     if (loc != null) {
-      IRobot r = loc.getRobotForPoint("drag");
+      IRobot r = loc.getGlobalRobot();
       if (r != null) {
         Mouse.use(this);
         r.smoothMove(loc);

@@ -36,6 +36,12 @@ public class Image extends Visual {
     init(0, 0, content.width(), content.height());
   }
 
+  public Image(BufferedImage bimg, Rectangle rect) {
+    this();
+    content = makeMat(bimg);
+    init(rect.x, rect.y, content.width(), content.height());
+  }
+
   public Image(Mat mat) {
     this();
     content = mat;

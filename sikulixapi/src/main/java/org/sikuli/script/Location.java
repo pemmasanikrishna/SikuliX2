@@ -9,7 +9,7 @@ package org.sikuli.script;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
-import java.awt.Point;
+import java.awt.*;
 
 /**
  * A point like AWT.Point using global coordinates (x, y).
@@ -21,6 +21,15 @@ public class Location extends com.sikulix.api.Location  {
   private static final SXLog log = SX.getLogger("API.Location");
 
   private IScreen otherScreen = null;
+
+  public static IRobot getGlobalRobot() {
+    //TODO implement for special robots
+    try {
+      return new RobotDesktop();
+    } catch (AWTException e) {
+      return null;
+    }
+  }
 
   //<editor-fold desc="Construction">
   private Location() {}

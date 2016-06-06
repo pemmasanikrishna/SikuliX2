@@ -1788,5 +1788,18 @@ public class SX {
     return SXROBOT;
   }
 
-  static Robot SXROBOT = null;
+  private static Robot SXROBOT = null;
+
+  public static IRobot getLocalRobot() {
+    if (isUnset(SXLOCALROBOT)) {
+      try {
+        SXLOCALROBOT = new LocalRobot();
+      } catch (AWTException e) {
+        terminate(1, "getLocalRobot: not possible: %s", e.getMessage());
+      }
+    }
+    return SXLOCALROBOT;
+  }
+
+  private static IRobot SXLOCALROBOT = null;
 }

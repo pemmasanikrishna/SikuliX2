@@ -96,7 +96,7 @@ public class FindFailedDialog extends JDialog implements ActionListener {
         Pattern pat = (Pattern) target;
         targetTyp = "pattern";
         target = (PatternString) pat.toString();
-        image = pat.getImage();
+        image = new org.sikuli.script.Image(pat.getImage());
       } else if (target instanceof String) {
         image = org.sikuli.script.Image.get((String) target);
         if (image != null) {

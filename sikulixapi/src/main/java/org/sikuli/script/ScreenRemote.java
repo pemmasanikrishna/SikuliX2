@@ -161,7 +161,6 @@ public class ScreenRemote extends Screen implements IScreen {
     return capture(r.x, r.y, r.w, r.h);
   }
 
-  @Override
   public Location newLocation(Location loc) {
     return loc.setOtherScreen(this);
   }
@@ -170,7 +169,6 @@ public class ScreenRemote extends Screen implements IScreen {
     return new Location(x, y).setOtherScreen(this);
   }
 
-  @Override
   public Region newRegion (Location loc, int w, int h) {
     return new Region(loc.x, loc.y, w, h, loc.getScreen());
   }

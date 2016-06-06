@@ -110,7 +110,8 @@ public class Finder {
         this.pattern = pattern;
         similarity = pattern.getSimilar();
         downSim = ((int) ((similarity - downSimDiff) * 100)) / 100.0;
-        img = pattern.getImage();
+        //TODO cast to Image???
+        img = new Image(pattern.getImage());
         mat = img.getMat();
         if (null != img.getLastSeen()) {
           lastSeen = new Region(img.getLastSeen());
@@ -169,8 +170,8 @@ public class Finder {
     public synchronized boolean hasNext(boolean withTrace) {
       boolean success = false;
       if (currentScore < 0) {
-        width = pattern.getImage().getWidth();
-        height = pattern.getImage().getHeight();
+        width = pattern.getImage().getW();
+        height = pattern.getImage().getH();
         givenScore = pattern.getSimilar();
         if (givenScore < 0.95) {
           margin = 4;
@@ -245,7 +246,7 @@ public class Finder {
       String inWhatJSON = !inRegion ? image.toJSON(false) : region.toJSON();
       String[] nameParts = name.split("_");
       String found = String.format(template, nameParts[0], nameParts[1], elapsed,
-          pattern.toJSON(false), inWhat, inWhatJSON, match.toJSON());
+          pattern, inWhat, inWhatJSON, match.toJSON());
       return found;
     }
 
@@ -373,7 +374,8 @@ public class Finder {
       begin_t = new Date().getTime();
       Finder lastSeenFinder = new Finder(probe.lastSeen);
       lastSeenFinder.setUseOriginal();
-      found.pattern = new Pattern(probe.img).similar(probe.lastSeenScore - 0.01);
+      //TODO cast to Pattern???
+      found.pattern = (org.sikuli.script.Pattern) new Pattern(probe.img).similar(probe.lastSeenScore - 0.01);
       lastSeenFinder.find(found);
       if (found.match != null) {
         mFound = found.match;
@@ -675,7 +677,8 @@ public class Finder {
       }
       if (findingText) {
         if (TextRecognizer.getInstance() != null) {
-          pattern = new Pattern((String) target, Pattern.Type.TEXT);
+          //TODO text Pattern ???
+          pattern = new Pattern((String) target);
         }
       }
     } else if (target instanceof Pattern) {
