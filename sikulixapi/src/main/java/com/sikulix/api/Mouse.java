@@ -214,7 +214,7 @@ public class Mouse extends Device {
    */
   public boolean hasMoved() {
     Location pos = getLocation();
-    if (lastPos.x != pos.x || lastPos.y != pos.y) {
+    if (lastPos.x != getLocationPoint().x || lastPos.y != getLocationPoint().y) {
       return true;
     }
     return false;
