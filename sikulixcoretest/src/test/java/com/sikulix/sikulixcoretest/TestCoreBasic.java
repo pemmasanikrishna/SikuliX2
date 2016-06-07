@@ -6,6 +6,8 @@ package com.sikulix.sikulixcoretest;
 
 import com.sikulix.api.Image;
 import com.sikulix.api.Commands;
+import com.sikulix.api.Location;
+import com.sikulix.api.Mouse;
 import com.sikulix.core.*;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -34,7 +36,7 @@ public class TestCoreBasic extends Commands {
         @Override
         public boolean accept(File entry) {
           if (entry.getAbsolutePath().contains("SX2/Images") ||
-              entry.getAbsolutePath().contains("SX2/Native") ) {
+                  entry.getAbsolutePath().contains("SX2/Native")) {
             return true;
           }
           return false;
@@ -120,12 +122,18 @@ public class TestCoreBasic extends Commands {
   }
 
   @Test
-  @Ignore
   public void test_30_popat() {
-    currentTest = "test_30_popat";
-    popat(300,300);
-    popup("testing popat", "testing popat");
-    result = "testing popat";
-    assert true;
+    boolean assertVal = true;
+    if (!SX.isHeadless()) {
+      currentTest = "test_30_popat";
+      popat(300, 300);
+      popup("testing popat", "testing popat");
+      Location loc = Mouse.at();
+      result = String.format("testing popat - clicked at (%d, %d)", loc.x, loc.y);
+      assertVal = loc.x > 250 && loc.x < 350;
+    } else {
+      result = "headless: not testing popat";
+    }
+    assert assertVal;
   }
 }

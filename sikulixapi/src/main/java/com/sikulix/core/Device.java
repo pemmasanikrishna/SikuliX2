@@ -7,32 +7,35 @@ import com.sikulix.api.Mouse;
 
 public class Device {
 
-  private static SXLog log = SX.getLogger("SX.Device");
-  private static int lvl = SXLog.DEBUG;
+  protected static SXLog log = SX.getLogger("SX.Device");
 
-  private Object device = null;
-  private String devName = "Device";
+  protected Device device = null;
+  protected String deviceName = "Device";
 
-  public boolean isMouse = false;
-  public boolean isKeys = false;
+  protected boolean isMouse = false;
+  protected boolean isKeys = false;
 
   private boolean inUse = false;
-  protected boolean keep = false;
+  private boolean keep = false;
   protected Object owner = null;
   private boolean blocked = false;
   private boolean suspended = false;
 
+  //<editor-fold desc="*** Construction">
+  public Device() {}
+
+  public void init() {}
+  //</editor-fold>
+
   //<editor-fold desc="*** Callback">
-  protected ObserverCallBack mouseMovedCallback = null;
-  protected ObserverCallBack callback = null;
-  private  boolean shouldRunCallback = false;
+  private ObserverCallBack callback = null;
+  private boolean shouldRunCallback = false;
+  private boolean shouldTerminate = false;
 
-	static boolean shouldTerminate = false;
-
-	public static void setShouldTerminate() {
-		shouldTerminate = true;
-		log.debug("setShouldTerminate: request issued");
-	}
+  public void setShouldTerminate() {
+    shouldTerminate = true;
+    log.debug("setShouldTerminate: request issued");
+  }
 
   public boolean isShouldRunCallback() {
     return shouldRunCallback;
@@ -53,39 +56,33 @@ public class Device {
   }
 
   /**
-   * what to do if mouse is moved outside Sikuli's mouse protection <br>
+   * set a callback function for handling Device events <br>
    * in case of event the user provided callBack.happened is called
    *
    * @param givenCallBack
    */
-
   public void setCallback(Object givenCallBack) {
     if (givenCallBack != null) {
       callback = new ObserverCallBack(givenCallBack, ObserveEvent.Type.GENERIC);
+    } else {
+      callback = null;
     }
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** Construction">
-  public Device() {
-  }
-  //</editor-fold>
-
   //<editor-fold desc="*** get state">
-  public boolean isInUse() {
+  protected boolean isInUse() {
     return inUse;
   }
-
-  public boolean isSuspended() {
+  protected boolean isSuspended() {
     return suspended;
   }
-
-  public boolean isBlocked() {
+  protected boolean isBlocked() {
     return blocked;
   }
-
-	public boolean isNotLocal(Object owner) {
+	private boolean isNotLocal(Object owner) {
 		if (owner instanceof Visual) {
+      return ((Visual) owner).isSpecial();
     }
 		return false;
 	}
@@ -155,7 +152,7 @@ public class Device {
 
   public synchronized boolean use(Object owner) {
     if (owner == null) {
-      owner = this;
+      owner = device;
 		} else if (isNotLocal(owner)) {
 			return false;
 		}
@@ -175,15 +172,15 @@ public class Device {
         checkShouldRunCallback();
         if (shouldTerminate) {
           shouldTerminate = false;
-          throw new AssertionError("aborted by unknown source");
+          throw new AssertionError(String.format("Device: %s: termination after return from callback", deviceName));
         }
       }
       keep = false;
       this.owner = owner;
-      log.trace("%s: use start: %s", devName, owner);
+      log.trace("%s: use start: %s", deviceName, owner);
       return true;
     }
-    log.error("synch problem - use start: %s", owner);
+    log.error("use synch problem at start: %s", owner);
     return false;
   }
 
@@ -195,7 +192,7 @@ public class Device {
 		}
     if (inUse && owner == ownerGiven) {
       keep = true;
-      log.trace("%s: use keep: %s", devName, ownerGiven);
+      log.trace("%s: use keep: %s", deviceName, ownerGiven);
       return true;
     }
     return false;
@@ -222,7 +219,7 @@ public class Device {
       inUse = false;
       this.owner = null;
       notify();
-      log.trace("%s: use stop: %s", devName, owner);
+      log.trace("%s: use stop: %s", deviceName, owner);
       return true;
     }
     return false;
