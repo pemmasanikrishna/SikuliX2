@@ -167,7 +167,7 @@ public class SX {
       }
 
       //TODO I18n SXGlobal_sxinit_starting=starting
-      trace("sxinit: starting");
+      trace("sxinit: entry");
 
       // *** get SX options
       loadOptions();
@@ -182,8 +182,7 @@ public class SX {
       globalGetMonitors();
 
       //TODO I18n SXGlobal_sxinit_complete=complete %.3f
-      //trace("sxinit: complete", (new Date().getTime() - startTime) / 1000.0f);
-      trace("sxinit: complete %.3f", (new Date().getTime() - startTime) / 1000.0f);
+      trace("sxinit: exit %.3f", (new Date().getTime() - startTime) / 1000.0f);
     }
   }
   //</editor-fold>
