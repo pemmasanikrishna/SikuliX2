@@ -12,12 +12,17 @@
 nightly builds from beginning of July 2016
 <br><br>
 Translation project: [Transifex::SikuliX2](https://www.transifex.com/sikulix/sikulix2/dashboard/)
+<br><br>
+Documentation project: [ReadTheDocs::SikuliX2]() based on [GitHub::SikuliX2-Docs](https://github.com/RaiMan/SikuliX2-Docs)
+<br><br>
+Translation project: [Transifex::SikuliX2](https://www.transifex.com/sikulix/sikulix2/dashboard/)
 <hr>
 **Forking and/or downloading this repo only makes sense:**
 
  - if you want to get a knowledge about the internals of Sikuli
  - if you want to create your own packages containing Sikuli features
  - if you want to contribute.
+
 <hr>
 
 **BE AWARE** The use for scripting and Java programming is only possible after the first nightly builds are available. Currently you might fork the project and make your tests in the project context. Issues and pull requests are only accepted here on Github.
@@ -26,15 +31,6 @@ Translation project: [Transifex::SikuliX2](https://www.transifex.com/sikulix/sik
 
 Maven module structure for developement
 ---
-
-**sikulix**
-
-the SikuliX IDE (internally using **[jEdit 5.3.0](http://www.jedit.org))**
-
- - full featured multi-purpose editor
- - SikuliX image handling added via jEdit plugin
- - run scripts (scripting supported internally: JavaScript, (J)Python, (J)Ruby, RobotFramework)
- - everyone may simply add whatever feature needed based on the possibilities of jEdit
 
 **sikulixapi**
 
@@ -46,11 +42,20 @@ the API to be used in Java and Java aware scripting languages
 
 **sikulixcoretest**
 
-basic tests for developement of the new features **com.sikulix.core** and **com.sikulix.api**
+basic tests for developement of the new packages **com.sikulix.core** and **com.sikulix.api**
 
 **sikulixapitest**
 
-basic tests for **org.sikuli.script** as api regression test (will later be a seperate package)
+basic tests for **org.sikuli.script** as regression test (will later be a seperate package)
+
+**sikulix**
+
+the SikuliX IDE (internally using **[jEdit 5.3.0](http://www.jedit.org))**
+
+ - full featured multi-purpose editor
+ - SikuliX image handling added via jEdit plugin
+ - run scripts (scripting supported internally: JavaScript, (J)Python, (J)Ruby, RobotFramework)
+ - everyone may simply add whatever feature needed based on the possibilities of jEdit
 
 ---
 
