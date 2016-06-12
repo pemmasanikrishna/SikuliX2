@@ -90,6 +90,11 @@ public class Commands extends SX {
     return new Location(locPopAt);
   }
 
+  public static Location popat(Rectangle at) {
+    locPopAt = new Point(at.x + (int) (at.width/2), at.y + (int) (at.height/2));
+    return new Location(locPopAt);
+  }
+
   public static Location popat(int atx, int aty) {
     locPopAt = new Point(atx, aty);
     return new Location(locPopAt);
@@ -336,7 +341,7 @@ public class Commands extends SX {
   }
 
   public static String popFile(String title) {
-    popat(new Screen(0).getCenter());
+    popat(SX.getMonitor());
     JFrame anchor = popLocation();
     SikulixFileChooser fc = new SikulixFileChooser(anchor);
     File ret = fc.show(title);

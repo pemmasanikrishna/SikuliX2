@@ -17,7 +17,7 @@ public class JavaScriptHelper {
   private static SXLog log = SX.getLogger("SX.JavaScriptHelper");
   private static int lvl = SXLog.DEBUG;
 
-  static Screen scr, scrSaved;
+  static Region scr, scrSaved;
 
   /**
    *
@@ -148,19 +148,20 @@ public class JavaScriptHelper {
     int len = args.length;
     int nScreen = -1;
     if (len == 0 || len > 1) {
-      scr = new Screen();
+      scr = new Region(0);
       return new Region();
-    }
-    nScreen = getInteger(args[0], -1);
-    if (nScreen > -1) {
-      scr = new Screen(nScreen);
     } else {
-      Object oReg = args[0];
-      if (oReg instanceof Region) {
-        scr = null;
+      nScreen = getInteger(args[0], -1);
+      if (nScreen > -1) {
+        scr = new Region(nScreen);
+      } else {
+        Object oReg = args[0];
+        if (oReg instanceof Region) {
+          scr = (Region) oReg;
+        }
       }
     }
-    return new Region();
+    return scr;
   }
 //</editor-fold>
 
@@ -483,8 +484,7 @@ public class JavaScriptHelper {
       return aObj;
     }
     if ("S".equals(oType)) {
-      aObj = new Screen(intFromJSON(json, 5));
-      ((Screen) aObj).init(rectFromJSON(json));
+      newObj = new Region(intFromJSON(json, 5));
     } else if ("R".equals(oType)) {
       newObj = new Region(rectFromJSON(json));
     } else if ("M".equals(oType)) {

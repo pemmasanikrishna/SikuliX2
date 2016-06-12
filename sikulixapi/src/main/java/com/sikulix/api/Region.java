@@ -37,6 +37,11 @@ public class Region extends Visual {
     init(x - margin[0], y - margin[1], 2 * margin[0] , 2 * margin[1]);
   }
 
+  public Region(int id) {
+    Rectangle rect = SX.getMonitor(id);
+    init(rect.x, rect.y, rect.width, rect.height);
+  }
+
   public Region(Rectangle rect) {
     clazz = vClazz;
     init(rect);
