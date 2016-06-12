@@ -70,4 +70,4 @@ Prerequisites for development
 
  - **[IntelliJ IDEA CE](https://www.jetbrains.com/idea/)** for Java and everything else
  - **[PyCharm CE](https://www.jetbrains.com/pycharm/)** for special Jython/Python stuff
- - **[RubyMine](https://www.jetbrains.com/ruby/)** for special JRuby/Ruby stuff (special License for OpenSource ptojects)
+ - **[RubyMine](https://www.jetbrains.com/ruby/)** for special JRuby/Ruby stuff (special license for OpenSource projects)
