@@ -66,8 +66,8 @@ Prerequisites for development
  - Maven 3+
  - only 64-Bit Systems supported
 
-**I use for developement:**
+**For developement I use the [JetBrains IDEs](https://www.jetbrains.com)**
 
  - **[IntelliJ IDEA CE](https://www.jetbrains.com/idea/)** for Java and everything else
  - **[PyCharm CE](https://www.jetbrains.com/pycharm/)** for special Jython/Python stuff
- - **[https://www.jetbrains.com/pycharm/](https://www.jetbrains.com/pycharm/)** for special JRuby/Ruby stuff (special License for OpenSource ptojects)
+ - **[RubyMine](https://www.jetbrains.com/ruby/)** for special JRuby/Ruby stuff (special License for OpenSource ptojects)
