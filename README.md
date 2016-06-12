@@ -4,11 +4,14 @@
 [![Join the chat at https://gitter.im/RaiMan/SikuliX2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RaiMan/SikuliX2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 <hr>
-**Version 2.0.0-Beta under developement**<br> 
+**Version 2.0.0 under developement**<br>
 [![Build Status](https://travis-ci.org/RaiMan/SikuliX2.svg?branch=master)](https://travis-ci.org/RaiMan/SikuliX2)
+<br><br>
+nightly builds from beginning of July 2016
+<br><br>
+Translation project: [Transifex::SikuliX2](https://www.transifex.com/sikulix/sikulix2/dashboard/)
 <hr>
-
-**[latest working version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
+**[latest useable version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
 
 **Forking and/or downloading this repo only makes sense:**
 

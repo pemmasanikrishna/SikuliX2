@@ -14,6 +14,9 @@ public class Device {
 
   protected boolean isMouse = false;
   protected boolean isKeys = false;
+  protected boolean isLocalScreen = false;
+  protected boolean isOtherScreen = false;
+
 
   private boolean inUse = false;
   private boolean keep = false;
@@ -23,8 +26,6 @@ public class Device {
 
   //<editor-fold desc="*** Construction">
   public Device() {}
-
-  public void init() {}
   //</editor-fold>
 
   //<editor-fold desc="*** Callback">

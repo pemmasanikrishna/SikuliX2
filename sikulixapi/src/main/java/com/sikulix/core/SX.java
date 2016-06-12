@@ -166,6 +166,7 @@ public class SX {
         checkArgs(args);
       }
 
+      //TODO I18n SXGlobal_sxinit_starting=starting
       trace("sxinit: starting");
 
       // *** get SX options
@@ -180,6 +181,8 @@ public class SX {
       // *** get monitor setup
       globalGetMonitors();
 
+      //TODO I18n SXGlobal_sxinit_complete=complete %.3f
+      //trace("sxinit: complete", (new Date().getTime() - startTime) / 1000.0f);
       trace("sxinit: complete %.3f", (new Date().getTime() - startTime) / 1000.0f);
     }
   }
