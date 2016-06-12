@@ -14,8 +14,6 @@ nightly builds from beginning of July 2016
 Translation project: [Transifex::SikuliX2](https://www.transifex.com/sikulix/sikulix2/dashboard/)
 <br><br>
 Documentation project: [ReadTheDocs::SikuliX2]() based on [GitHub::SikuliX2-Docs](https://github.com/RaiMan/SikuliX2-Docs)
-<br><br>
-Translation project: [Transifex::SikuliX2](https://www.transifex.com/sikulix/sikulix2/dashboard/)
 <hr>
 **Forking and/or downloading this repo only makes sense:**
 
