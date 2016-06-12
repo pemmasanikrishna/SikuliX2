@@ -1,6 +1,8 @@
 [![RaiMan's Stuff](https://raw.github.com/RaiMan/SikuliX-2014-Docs/master/src/main/resources/docs/source/RaiManStuff64.png)](http://sikulix.com) SikuliX2 (version 2.0.x)
 ============
 
+**[latest useable version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
+
 [![Join the chat at https://gitter.im/RaiMan/SikuliX2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RaiMan/SikuliX2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 <hr>
@@ -11,14 +13,11 @@ nightly builds from beginning of July 2016
 <br><br>
 Translation project: [Transifex::SikuliX2](https://www.transifex.com/sikulix/sikulix2/dashboard/)
 <hr>
-**[latest useable version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
-
 **Forking and/or downloading this repo only makes sense:**
 
  - if you want to get a knowledge about the internals of Sikuli
  - if you want to create your own packages containing Sikuli features
  - if you want to contribute.
-
 <hr>
 
 **BE AWARE** The use for scripting and Java programming is only possible after the first nightly builds are available. Currently you might fork the project and make your tests in the project context. Issues and pull requests are only accepted here on Github.
