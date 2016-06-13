@@ -227,6 +227,7 @@ public class SXLog {
     }
     msgPlus = getTranslationGlobal(msgPlus);
     String tKey = "";
+    String msgToTranslate = "";
     if (!SX.isNull(currentProps = translateProps.get(clazz))) {
       tKey = clazz;
       String method = "no_method:";
@@ -237,6 +238,7 @@ public class SXLog {
         method = parts[0];
         tKey += "_" + method;
         msg = msg.substring(method.length() + 1).trim();
+        msgToTranslate = msg;
       }
       if (msg.contains(" ")) {
         parts = msg.split(" ");
@@ -251,7 +253,8 @@ public class SXLog {
         return method + ": " + trans;
       }
     }
-    return "*** " + String.format("%s (%s)", getTranslationGlobal("translation"), tKey) + ": "
+    return "*** " + String.format("%s (%s = %s)", getTranslationGlobal("translation"),
+            tKey, msgToTranslate.replaceAll("%", "#")) + ": "
             + (!SX.isUnset(msgPlus) ? "*** " + msgPlus + ": " : "") + orgMsg;
   }
 
