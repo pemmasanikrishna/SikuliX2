@@ -34,6 +34,7 @@ public class SXLog {
   protected SXLog() {
     init(null, null, -1);
     logger = LogManager.getLogger("SX.Global");
+    getTranslation("sxinit: entry", "");
   }
 
   public SXLog(String className, String[] args, int level) {
@@ -169,12 +170,13 @@ public class SXLog {
   }
 
   private void log(int level, String message, Object... args) {
+    String msgPlus = "";
     if (level == FATAL) {
-      message = "*** terminating: " + message;
+      msgPlus = "terminating";
     }
     if (shouldLog(level)) {
-      message = getTranslation(message);
-      message = String.format(message, args).replaceAll("\\n", " ");
+      message = getTranslation(message, msgPlus);
+       message = String.format(message, args).replaceAll("\\n", " ");
       if (level == DEBUG) {
         logger.debug(message, args);
       } else if (level > DEBUG) {
@@ -191,36 +193,78 @@ public class SXLog {
 
   private static Map<String, Properties> translateProps = new HashMap<>();
 
-  private String getTranslation(String msg) {
+  private boolean translation = true;
+
+  public void setTranslation(boolean state) {
+    translation = state;
+  }
+
+  private String getTranslation(String msg, String msgPlus) {
+    if (!translation) {
+      return (!SX.isUnset(msgPlus) ? "*** " + msgPlus + ": " : "") + msg;
+    }
+    String orgMsg = msg;
     String clazz = logger.getName().replaceAll("\\.", "");
-    Properties currentProp = null;
+    Properties currentProps = null;
     if (!translateProps.containsKey(clazz)) {
-      currentProp = new Properties();
+      currentProps = null;
       InputStream isProps = null;
       try {
-        URL xxx = this.getClass().getClassLoader().getResource("/I18n/" + clazz + "_en_US.properties");
-        isProps = new FileInputStream(clazz + "_en_US.properties");
-        currentProp.load(isProps);
+        String resProp = "I18n/" + clazz + "_en_US.properties";
+        isProps = this.getClass().getClassLoader().getResourceAsStream(resProp);
+        if (!SX.isNull(isProps)) {
+          currentProps = new Properties();
+          currentProps.load(isProps);
+        }
       } catch (IOException e) {
-        System.out.println(String.format("SX.Log: getTranslation: missing ressource for %s", clazz));
-        System.exit(1);
+        isProps = null;
       }
-      translateProps.put(clazz, currentProp);
+      if (SX.isNull(isProps)) {
+        System.out.println(String.format("SX.Log: getTranslation: missing ressource for %s", clazz));
+        currentProps = null;
+      }
+      translateProps.put(clazz, currentProps);
     }
-    String tKey = clazz;
-    String[] parts = null;
-    if (msg.contains(":")) {
-      parts = msg.split(":");
-      tKey += "_" + parts[0];
-      msg = msg.substring(parts[0].length() + 1).trim();
+    msgPlus = getTranslationGlobal(msgPlus);
+    String tKey = "";
+    if (!SX.isNull(currentProps = translateProps.get(clazz))) {
+      tKey = clazz;
+      String method = "no_method:";
+      String phrase = "";
+      String[] parts = null;
+      if (msg.contains(":")) {
+        parts = msg.split(":");
+        method = parts[0];
+        tKey += "_" + method;
+        msg = msg.substring(method.length() + 1).trim();
+      }
+      if (msg.contains(" ")) {
+        parts = msg.split(" ");
+        phrase = parts[0].replaceAll(":", "");
+      } else {
+        phrase = msg;
+      }
+      tKey = tKey + "_" + phrase.toLowerCase();
+      tKey = tKey.replaceAll("%", "#");
+      String trans = currentProps.getProperty(tKey);
+      if (!SX.isNull(trans)) {
+        return method + ": " + trans;
+      }
     }
-    if (msg.contains(" ")) {
-      parts = msg.split(" ");
-      tKey += "_" + parts[0];
-    } else {
-      tKey += "_" + msg;
+    return "*** " + String.format("%s (%s)", getTranslationGlobal("translation"), tKey) + ": "
+            + (!SX.isUnset(msgPlus) ? "*** " + msgPlus + ": " : "") + orgMsg;
+  }
+
+  private String getTranslationGlobal(String msg) {
+    if (!SX.isUnset(msg)) {
+      Properties props = translateProps.get("SXGlobal");
+      String transMsgPlus = msg;
+      if (!SX.isNull(props)) {
+        transMsgPlus = props.getProperty("SXGlobal_" + msg.toLowerCase().split(" ")[0]);
+      }
+      msg = transMsgPlus;
     }
-    return "";
+    return msg;
   }
 }
 

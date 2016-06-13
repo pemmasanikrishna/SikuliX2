@@ -17,8 +17,9 @@ public class Run extends Commands {
   public static void main(String[] args) {
 
     log = getLogger("Sikulix", args);
+    log.setTranslation(false);
 
-    terminate(1, "stopped intentionally");
+    log.terminate(1, "stopped intentionally");
 
     log.on(1);
     log.trace("Sikulix starting");

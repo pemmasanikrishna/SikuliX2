@@ -284,16 +284,16 @@ public class SX {
       fSxBaseJar = new File(base);
       String jn = fSxBaseJar.getName();
       fSxBase = fSxBaseJar.getParentFile();
-      debug("runs as %s in:\n%s", jn, fSxBase.getAbsolutePath());
+      debug("sxRunningAs: runs as %s in: %s", jn, fSxBase.getAbsolutePath());
       if (jn.contains("classes")) {
         runningJar = false;
         fSxProject = fSxBase.getParentFile().getParentFile();
-        debug("not jar - supposing Maven project:\n%s", fSxProject);
+        debug("sxRunningAs: not jar - supposing Maven project: %s", fSxProject);
         appType = "in Maven project from classes";
         runningInProject = true;
       } else if ("target".equals(fSxBase.getName())) {
         fSxProject = fSxBase.getParentFile().getParentFile();
-        debug("folder target detected - supposing Maven project:\n%s", fSxProject);
+        debug("sxRunningAs: folder target detected - supposing Maven project: %s", fSxProject);
         appType = "in Maven project from some jar";
         runningInProject = true;
       } else {
@@ -314,7 +314,7 @@ public class SX {
         }
       }
     } else {
-      terminate(1, "no valid Java context for SikuliX available "
+      terminate(1, "sxRunningAs: no valid Java context for SikuliX available "
               + "(java.security.CodeSource.getLocation() is null)");
     }
   }
@@ -340,9 +340,9 @@ public class SX {
       success = false;
     }
     if (!success) {
-      terminate(1, "SX Options not available: %s", urlOptions);
+      terminate(1, "loadOptions: SX Options not available: %s", urlOptions);
     }
-    setSettingsOptions(sxOptions);
+    setOptions(sxOptions);
 
     PropertiesConfiguration extraOptions = null;
 
@@ -353,7 +353,7 @@ public class SX {
       if (!aFile.isDirectory()) {
         if (aFile.exists()) {
           fOptions = aFile;
-          trace("loadOptions: check: %s (from arg -o)", aFile);
+          trace("loadOptions: arg: %s (from arg -o)", aFile);
         } else {
           fnOptions = aFile.getName();
           trace("loadOptions: file name given: %s (from arg -o)", fnOptions);
@@ -385,7 +385,7 @@ public class SX {
         error("loadOptions: Options not valid: %s", cex.getMessage());
       }
       if (!isNull(extraOptions)) {
-        setSettingsOptions(extraOptions);
+        setOptions(extraOptions);
         mergeExtraOptions(sxOptions, extraOptions);
       }
     } else {
@@ -393,7 +393,7 @@ public class SX {
     }
   }
 
-  private static void setSettingsOptions(PropertiesConfiguration someOptions) {
+  private static void setOptions(PropertiesConfiguration someOptions) {
     if (isNull(someOptions) || someOptions.size() == 0) {
       return;
     }
@@ -405,14 +405,14 @@ public class SX {
         sxSettings.add(key);
         continue;
       }
-      trace("Option: %s = %s", key, someOptions.getProperty(key));
+      trace("setOptions: Option: %s = %s", key, someOptions.getProperty(key));
     }
     if (sxSettings.size() > 0) {
       Class cClass = null;
       try {
         cClass = Class.forName("org.sikuli.basics.Settings");
       } catch (ClassNotFoundException e) {
-        error("addOptions: class not accessible: %s", cClass);
+        error("setOptions: class not accessible: %s", cClass);
       }
       if (!isNull(cClass)) {
         for (String sKey : sxSettings) {
@@ -433,10 +433,10 @@ public class SX {
             } else if (ccField.getName() == "String") {
               cField.set(null, someOptions.getString(sKey));
             }
-            trace("Settings from Options: %s = %s", sAttr, someOptions.getProperty(sKey));
+            trace("setOptions: Settings: %s = %s", sAttr, someOptions.getProperty(sKey));
             someOptions.clearProperty(sKey);
           } catch (Exception ex) {
-            error("Settings from Options: not possible: %s = %s", sKey, sxOptions.getProperty(sKey));
+            error("setOptions: Settings: not possible: %s = %s", sKey, sxOptions.getProperty(sKey));
           }
         }
       }
@@ -1144,7 +1144,7 @@ public class SX {
       String sxJythonVersion = sxOptions.getString("sxjython");
       String sxJRubyVersion = sxOptions.getString("sxjruby");
 
-      debug("version: %s build: %s", sxVersion, sxBuild);
+      debug("getSXVERSION: version: %s build: %s", sxVersion, sxBuild);
       sxStamp = String.format("%s_%s", sxVersion, sxBuild);
 
       // used for download of production versions
@@ -1238,7 +1238,7 @@ public class SX {
       gdevs = genv.getScreenDevices();
       nMonitors = gdevs.length;
       if (nMonitors == 0) {
-        terminate(1, "GraphicsEnvironment has no ScreenDevices");
+        terminate(1, "globalGetMonitors: GraphicsEnvironment has no ScreenDevices");
       }
       monitorBounds = new Rectangle[nMonitors];
       rAllMonitors = null;
@@ -1253,17 +1253,17 @@ public class SX {
         if (currentBounds.contains(new Point())) {
           if (mainMonitor < 0) {
             mainMonitor = i;
-            debug("ScreenDevice %d has (0,0) --- will be primary Screen(0)", i);
+            debug("globalGetMonitors: 1#ScreenDevice %d has (0,0) --- will be primary Screen(0)", i);
           } else {
-            debug("ScreenDevice %d too contains (0,0)!", i);
+            debug("globalGetMonitors: 2#ScreenDevice %d too contains (0,0)!", i);
           }
         }
-        debug("Monitor %d: (%d, %d) %d x %d", i,
+        debug("globalGetMonitors: Monitor %d: (%d, %d) %d x %d", i,
                 currentBounds.x, currentBounds.y, currentBounds.width, currentBounds.height);
         monitorBounds[i] = currentBounds;
       }
       if (mainMonitor < 0) {
-        debug("No ScreenDevice has (0,0) --- using 0 as primary: %s", monitorBounds[0]);
+        debug("globalGetMonitors: No ScreenDevice has (0,0) --- using 0 as primary: %s", monitorBounds[0]);
         mainMonitor = 0;
       }
     } else {
