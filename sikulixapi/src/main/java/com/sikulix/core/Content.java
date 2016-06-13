@@ -31,7 +31,7 @@ public class Content {
   private static int lvl = SXLog.DEBUG;
 
   public static void start() {
-    log.trace("class init");
+    log.trace("start: class init");
   }
 
   static final int DOWNLOAD_BUFFER_SIZE = 153600;

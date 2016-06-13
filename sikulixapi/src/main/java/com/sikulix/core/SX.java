@@ -99,7 +99,6 @@ public class SX {
       Runtime.getRuntime().addShutdownHook(new Thread() {
         @Override
         public void run() {
-          trace("final cleanup");
           if (!isUnset(sxLock)) {
             try {
               isRunningFile.close();
@@ -166,7 +165,6 @@ public class SX {
         checkArgs(args);
       }
 
-      //TODO I18n SXGlobal_sxinit_starting=starting
       trace("sxinit: entry");
 
       // *** get SX options

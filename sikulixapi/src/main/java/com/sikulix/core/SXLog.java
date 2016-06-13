@@ -7,6 +7,14 @@ package com.sikulix.core;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
 public class SXLog {
 
   public static final int INFO = 1;
@@ -165,6 +173,7 @@ public class SXLog {
       message = "*** terminating: " + message;
     }
     if (shouldLog(level)) {
+      message = getTranslation(message);
       message = String.format(message, args).replaceAll("\\n", " ");
       if (level == DEBUG) {
         logger.debug(message, args);
@@ -178,6 +187,40 @@ public class SXLog {
         logger.info(message, args);
       }
     }
+  }
+
+  private static Map<String, Properties> translateProps = new HashMap<>();
+
+  private String getTranslation(String msg) {
+    String clazz = logger.getName().replaceAll("\\.", "");
+    Properties currentProp = null;
+    if (!translateProps.containsKey(clazz)) {
+      currentProp = new Properties();
+      InputStream isProps = null;
+      try {
+        URL xxx = this.getClass().getClassLoader().getResource("/I18n/" + clazz + "_en_US.properties");
+        isProps = new FileInputStream(clazz + "_en_US.properties");
+        currentProp.load(isProps);
+      } catch (IOException e) {
+        System.out.println(String.format("SX.Log: getTranslation: missing ressource for %s", clazz));
+        System.exit(1);
+      }
+      translateProps.put(clazz, currentProp);
+    }
+    String tKey = clazz;
+    String[] parts = null;
+    if (msg.contains(":")) {
+      parts = msg.split(":");
+      tKey += "_" + parts[0];
+      msg = msg.substring(parts[0].length() + 1).trim();
+    }
+    if (msg.contains(" ")) {
+      parts = msg.split(" ");
+      tKey += "_" + parts[0];
+    } else {
+      tKey += "_" + msg;
+    }
+    return "";
   }
 }
 

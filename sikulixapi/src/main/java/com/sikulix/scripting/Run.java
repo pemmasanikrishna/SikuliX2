@@ -15,7 +15,11 @@ public class Run extends Commands {
   private static SXLog log = null;
 
   public static void main(String[] args) {
+
     log = getLogger("Sikulix", args);
+
+    terminate(1, "stopped intentionally");
+
     log.on(1);
     log.trace("Sikulix starting");
 
