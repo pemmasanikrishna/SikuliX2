@@ -70,6 +70,7 @@ public class SXLog {
     }
     SX.sxinit(args);
     logger = LogManager.getLogger(className);
+    translation = className.startsWith("SX.");
   }
 
   public void off() {
@@ -193,10 +194,6 @@ public class SXLog {
 
   private boolean translation = true;
 
-  public void setTranslation(boolean state) {
-    translation = state;
-  }
-
   private String getTranslation(String msg, String msgPlus) {
     if (!translation) {
       return (!SX.isUnset(msgPlus) ? "*** " + msgPlus + ": " : "") + msg;
@@ -251,9 +248,12 @@ public class SXLog {
         return method + ": " + trans;
       }
     }
-    return "*** " + String.format("%s (%s = %s)", getTranslationGlobal("translation"),
-            tKey, msgToTranslate.replaceAll("%", "#")) + ": "
-            + (!SX.isUnset(msgPlus) ? "*** " + msgPlus + ": " : "") + orgMsg;
+    String transError = "";
+    if (clazz.startsWith("SX") && currentLogLevel > DEBUG) {
+      transError = "*** " + String.format("%s (%s = %s)", getTranslationGlobal("translation"),
+              tKey, msgToTranslate.replaceAll("%", "#")) + ": ";
+    }
+    return transError + (!SX.isUnset(msgPlus) ? "*** " + msgPlus + ": " : "") + orgMsg;
   }
 
   private String getTranslationGlobal(String msg) {
