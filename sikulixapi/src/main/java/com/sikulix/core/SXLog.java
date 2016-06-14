@@ -7,10 +7,8 @@ package com.sikulix.core;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -210,7 +208,7 @@ public class SXLog {
       currentProps = null;
       InputStream isProps = null;
       try {
-        String resProp = "I18n/" + clazz + "_en_US.properties";
+        String resProp = "i18n/" + clazz + "_en_US.properties";
         isProps = this.getClass().getClassLoader().getResourceAsStream(resProp);
         if (!SX.isNull(isProps)) {
           currentProps = new Properties();

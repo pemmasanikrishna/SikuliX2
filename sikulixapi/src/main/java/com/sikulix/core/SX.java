@@ -179,7 +179,7 @@ public class SX {
       // *** get monitor setup
       globalGetMonitors();
 
-      //TODO I18n SXGlobal_sxinit_complete=complete %.3f
+      //TODO i18n SXGlobal_sxinit_complete=complete %.3f
       trace("sxinit: exit %.3f", (new Date().getTime() - startTime) / 1000.0f);
     }
   }
