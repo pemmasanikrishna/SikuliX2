@@ -73,7 +73,7 @@ public class FileChooser {
 
   private File showFileChooser(String title, int mode, int selectionMode, Object... filters) {
     String last_dir = PreferencesUser.getInstance().get("LAST_OPEN_DIR", "");
-    Debug.log(3,"showFileChooser: %s at %s", title.split(" ")[0], last_dir);
+    log.debug("showFileChooser: %s at %s", title.split(" ")[0], last_dir);
     JFileChooser fchooser = null;
     File fileChoosen = null;
     while (true) {
