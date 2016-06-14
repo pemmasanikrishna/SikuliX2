@@ -16,7 +16,7 @@ public class Run extends Commands {
 
   public static void main(String[] args) {
 
-    log = getLogger("Sikulix", args);
+    log = getLogger("SX.Run", args);
     log.setTranslation(false);
 
     log.terminate(1, "stopped intentionally");

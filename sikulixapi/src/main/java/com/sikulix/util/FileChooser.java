@@ -6,6 +6,7 @@ package com.sikulix.util;
 
 import com.sikulix.core.SX;
 import com.sikulix.api.Commands;
+import com.sikulix.core.SXLog;
 import org.sikuli.util.Debug;
 import org.sikuli.util.PreferencesUser;
 
@@ -17,7 +18,10 @@ import java.io.File;
 
 //import java.io.FilenameFilter;
 
-public class SikulixFileChooser {
+public class FileChooser {
+
+  private static SXLog log = SX.getLogger("SX.FileChooser");
+
   static final int FILES = JFileChooser.FILES_ONLY;
   static final int DIRS = JFileChooser.DIRECTORIES_ONLY;
   static final int DIRSANDFILES = JFileChooser.FILES_AND_DIRECTORIES;
@@ -26,11 +30,11 @@ public class SikulixFileChooser {
   Frame _parent;
   boolean accessingAsFile = false;
 
-  public SikulixFileChooser(Frame parent) {
+  public FileChooser(Frame parent) {
     _parent = parent;
   }
 
-  public SikulixFileChooser(Frame parent, boolean accessingAsFile) {
+  public FileChooser(Frame parent, boolean accessingAsFile) {
     _parent = parent;
     this.accessingAsFile = accessingAsFile;
   }
