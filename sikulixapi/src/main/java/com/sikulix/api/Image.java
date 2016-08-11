@@ -368,6 +368,7 @@ public class Image extends Visual {
       Mat newMat = new Mat();
       Size newS = new Size(w * factor, h * factor);
       Imgproc.resize(content, newMat, newS, 0, 0, Imgproc.INTER_AREA);
+      img = new Image(newMat);
     }
     return img;
   }

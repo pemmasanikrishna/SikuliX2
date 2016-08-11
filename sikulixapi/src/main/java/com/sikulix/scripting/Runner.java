@@ -11,8 +11,8 @@ public class Runner {
 
   private static SXLog log = SX.getLogger("SX.Runner");
 
-  public static Object run(Object... args) {
-    log.terminate(1, "run: %s not implemented");
+  public static Object run(String type, Object... args) {
+    log.terminate(1, "run: %s not implemented", type);
     return null;
   }
 

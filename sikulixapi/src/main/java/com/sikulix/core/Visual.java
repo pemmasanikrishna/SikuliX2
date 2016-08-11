@@ -590,8 +590,8 @@ public abstract class Visual implements Comparable<Visual>{
     frImg.dispose();
   }
 
-  protected BufferedImage getBufferedImage() {
-    return getBufferedImage("png");
+  public BufferedImage getBufferedImage() {
+    return getBufferedImage(dotPNG);
   }
 
   protected BufferedImage getBufferedImage(String type) {

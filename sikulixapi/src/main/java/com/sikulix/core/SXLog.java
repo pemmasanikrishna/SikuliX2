@@ -175,7 +175,7 @@ public class SXLog {
     }
     if (shouldLog(level)) {
       message = getTranslation(message, msgPlus);
-       message = String.format(message, args).replaceAll("\\n", " ");
+      message = String.format(message, args).replaceAll("\\n", " ");
       if (level == DEBUG) {
         logger.debug(message, args);
       } else if (level > DEBUG) {
@@ -193,6 +193,10 @@ public class SXLog {
   private static Map<String, Properties> translateProps = new HashMap<>();
 
   private boolean translation = true;
+
+  public void setTranslation(boolean state) {
+    translation = state;
+  }
 
   private String getTranslation(String msg, String msgPlus) {
     if (!translation) {
