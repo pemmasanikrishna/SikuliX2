@@ -203,13 +203,14 @@ public class SXLog {
       return (!SX.isUnset(msgPlus) ? "*** " + msgPlus + ": " : "") + msg;
     }
     String orgMsg = msg;
-    String clazz = logger.getName().replaceAll("\\.", "");
+    String clazz = logger.getName().replaceAll("\\.", "").toLowerCase();
     Properties currentProps = null;
     if (!translateProps.containsKey(clazz)) {
       currentProps = null;
+      String resProp = "--NotSet--";
       InputStream isProps = null;
       try {
-        String resProp = "i18n/" + clazz + "_en_US.properties";
+        resProp = "i18n/translations/sikulix2." + clazz + "_en_US.properties";
         isProps = this.getClass().getClassLoader().getResourceAsStream(resProp);
         if (!SX.isNull(isProps)) {
           currentProps = new Properties();
@@ -219,7 +220,7 @@ public class SXLog {
         isProps = null;
       }
       if (SX.isNull(isProps)) {
-        System.out.println(String.format("SX.Log: getTranslation: missing ressource for %s", clazz));
+        System.out.println(String.format("SX.Log: getTranslation: missing ressource: %s", resProp));
         currentProps = null;
       }
       translateProps.put(clazz, currentProps);
@@ -253,7 +254,7 @@ public class SXLog {
       }
     }
     String transError = "";
-    if (clazz.startsWith("SX") && currentLogLevel > DEBUG) {
+    if (clazz.startsWith("sx") && currentLogLevel > DEBUG) {
       transError = "*** " + String.format("%s (%s = %s)", getTranslationGlobal("translation"),
               tKey, msgToTranslate.replaceAll("%", "#")) + ": ";
     }

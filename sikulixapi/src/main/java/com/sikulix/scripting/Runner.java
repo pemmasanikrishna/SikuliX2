@@ -11,8 +11,12 @@ public class Runner {
 
   private static SXLog log = SX.getLogger("SX.Runner");
 
+  public static void main(String[] args) {
+    run("js");
+  }
+
   public static Object run(String type, Object... args) {
-    log.terminate(1, "run: %s not implemented", type);
+    log.terminate(1, "run: scripttype %s not implemented", type);
     return null;
   }
 
