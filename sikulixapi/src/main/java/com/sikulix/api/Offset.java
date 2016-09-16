@@ -25,12 +25,13 @@ public class Offset extends Visual {
     init(x, y, 0, 0);
   }
 
-  public Offset(Object vis) {
+  public Offset(Visual vis) {
     this();
-    if (!(vis instanceof Visual)) {
-      log.error("Offset: not a Visual: %s", vis);
-    } else {
-      init((Visual) vis);
-    }
+    init(vis.getCenter());
+  }
+
+  public Offset(Visual visFrom, Visual visTo) {
+    this();
+    init(visTo.getCenter().x - visFrom.getCenter().x, visTo.getCenter().y - visFrom.getCenter().y, 0, 0);
   }
 }

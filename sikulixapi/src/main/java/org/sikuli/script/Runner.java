@@ -266,7 +266,7 @@ public class Runner {
     } else {
       org.sikuli.script.Commands.terminate(1, "ScriptingEngine for JavaScript not available");
     }
-    if (!SX.isUnset(SX.sxGlobalClassNameIDE)) {
+    if (SX.isSet(SX.sxGlobalClassNameIDE)) {
       try {
         cIDE = Class.forName(SX.sxGlobalClassNameIDE);
         mHide = cIDE.getMethod("hideIDE", new Class[0]);

@@ -8,7 +8,7 @@ import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 import com.sikulix.scripting.JythonHelper;
-import com.sikulix.scripting.Runner;
+import com.sikulix.scripting.SXRunner;
 import com.sikulix.util.FileChooser;
 import org.sikuli.script.Key;
 import org.sikuli.util.hotkey.HotkeyListener;
@@ -342,10 +342,13 @@ public class Commands extends SX {
   public static String popFile(String title) {
     popat(SX.getMonitor());
     JFrame anchor = popLocation();
-    FileChooser fc = new FileChooser(anchor);
+    FileChooser fc = new FileChooser(anchor, "something");
     File ret = fc.show(title);
     fc = null;
     popat();
+    if (SX.isNull(ret)) {
+      return "";
+    }
     return ret.getAbsolutePath();
   }
   //</editor-fold>
@@ -723,7 +726,7 @@ public class Commands extends SX {
         scriptArgs[i-1] = args[i].toString();
       }
     }
-    return Runner.run(script, scriptArgs);
+    return SXRunner.run(script, scriptArgs);
   }
 
   public static String NL = "\n";

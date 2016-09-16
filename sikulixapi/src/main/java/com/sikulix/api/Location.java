@@ -27,7 +27,7 @@ public class Location extends Visual {
 
   public Location(Visual vis) {
     clazz = vClazz;
-    init(vis.x, vis.y, 0, 0);
+    init(vis.getCenter());
   }
 
   public Location(Point p) {

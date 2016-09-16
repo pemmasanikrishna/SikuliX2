@@ -11,7 +11,6 @@ import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -82,14 +81,14 @@ public class Image extends Visual {
   //<editor-fold desc="*** get content">
   private URL urlImg = null;
 
-  protected Mat get(String fpImg) {
+  private Mat get(String fpImg) {
     URL url = getURL(fpImg);
     return get(url);
   }
 
-  protected Mat get(URL url) {
+  private Mat get(URL url) {
     Mat mContent = new Mat();
-    if (!SX.isUnset(url)) {
+    if (SX.isSet(url)) {
       urlImg = url;
       if (isCaching()) {
         mContent = imageFiles.get(urlImg);
@@ -165,13 +164,13 @@ public class Image extends Visual {
     return ImageCache > 0;
   }
 
-  public synchronized static void changeCache(Boolean upOrDown, URL urlImg, Mat mat) {
-    if (SX.isUnset(upOrDown) || ImageCache < currentMemory + getMatSize(mat)) {
+  private synchronized static void changeCache(Boolean upOrDown, URL urlImg, Mat mat) {
+    if (SX.isNotSet(upOrDown) || ImageCache < currentMemory + getMatSize(mat)) {
       for (URL url : imageFiles.keySet()) {
         imageFiles.put(url, new Mat());
       }
       currentMemory = 0;
-      if (SX.isUnset(upOrDown)) {
+      if (SX.isNotSet(upOrDown)) {
         return;
       }
     }
@@ -206,7 +205,7 @@ public class Image extends Visual {
       return true;
     }
     URL urlPath = SX.makeURL(args);
-    if (!SX.isUnset(urlPath)) {
+    if (SX.isSet(urlPath)) {
       imagePath.set(0, urlPath);
       return true;
     }
@@ -233,7 +232,7 @@ public class Image extends Visual {
     String sPath;
     for (URL uPath : imagePath) {
       sPath = SX.makePath(uPath);
-      if (!SX.isUnset(filter) && !sPath.contains(filter)) {
+      if (SX.isSet(filter) && !sPath.contains(filter)) {
         continue;
       }
       sPaths[n++] = sPath;
@@ -246,7 +245,7 @@ public class Image extends Visual {
   }
 
   public static int hasPath(String filter) {
-    if (SX.isUnset(filter)) return -1;
+    if (SX.isNotSet(filter)) return -1;
     int n = 0;
     String sPath;
     for (URL uPath : imagePath) {
@@ -271,7 +270,7 @@ public class Image extends Visual {
       return false;
     }
     URL urlPath = SX.makeURL(fpPath);
-    if (!SX.isUnset(urlPath)) {
+    if (SX.isSet(urlPath)) {
       imagePath.set(n, urlPath);
       return true;
     }

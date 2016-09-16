@@ -29,9 +29,15 @@ public class FileChooser {
   static final int LOAD = FileDialog.LOAD;
   Frame _parent;
   boolean accessingAsFile = false;
+  String fileType = "";
 
   public FileChooser(Frame parent) {
     _parent = parent;
+  }
+
+  public FileChooser(Frame parent, String type) {
+    _parent = parent;
+    fileType = type;
   }
 
   public FileChooser(Frame parent, boolean accessingAsFile) {
@@ -115,13 +121,15 @@ public class FileChooser {
         return null;
       }
       fileChoosen = fchooser.getSelectedFile();
-      // folders must contain a valid scriptfile
-      if (mode == FileDialog.LOAD && !isValidScript(fileChoosen)) {
-        Commands.popError("Folder not a valid SikuliX script\nTry again.");
-        last_dir = fileChoosen.getAbsolutePath();
-        continue;
+      if (mode == FileDialog.LOAD) {
+        if (SX.isNotSet(fileType) && !isValidScript(fileChoosen)) {
+          // folders must contain a valid scriptfile
+          Commands.popError("Folder not a valid SikuliX script\nTry again.");
+          last_dir = fileChoosen.getAbsolutePath();
+          continue;
+        }
+        break;
       }
-      break;
     }
     PreferencesUser.getInstance().put("LAST_OPEN_DIR", fileChoosen.getParent());
     return fileChoosen;

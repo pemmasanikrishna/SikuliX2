@@ -18,6 +18,7 @@ public class SXLog {
   public static final int INFO = 1;
   public static final int DEBUG = 3;
   public static final int TRACE = 4;
+  public static final int OFF = 0;
   public static final int ERROR = -1;
   public static final int FATAL = -2;
 
@@ -43,7 +44,7 @@ public class SXLog {
     if (initLogLevel < 0) {
       initLogLevel = 0;
       String logOption = System.getProperty("sikulix.logging");
-      if (!SX.isUnset(logOption)) {
+      if (SX.isSet(logOption)) {
         logOption = logOption.toLowerCase();
         if (logOption.startsWith("q")) {
           initLogLevel = -1;
@@ -90,14 +91,24 @@ public class SXLog {
     logError = true;
   }
 
+  boolean sxComponent = false;
+
+  public void isSX() {
+    sxComponent = true;
+  }
+
   public void on(int level) {
-    if (level > 0 && level <= TRACE) {
-      currentLogLevel = level;
+    if (sxComponent && (isGlobalLogLevel(DEBUG) || isGlobalLogLevel(TRACE))) {
+      currentLogLevel = getGlobalLogLevel();
     } else {
-      if (level < 1) {
-        currentLogLevel = 0;
+      if (level > 0 && level <= TRACE) {
+        currentLogLevel = level;
       } else {
-        currentLogLevel = 1;
+        if (level < 1) {
+          currentLogLevel = 0;
+        } else {
+          currentLogLevel = 1;
+        }
       }
     }
   }
@@ -116,6 +127,14 @@ public class SXLog {
 
   public void globalStop() {
     globalLogLevel = -1;
+  }
+
+  public int getGlobalLogLevel() {
+    return globalLogLevel;
+  }
+
+  public boolean isGlobalLogLevel(int level) {
+    return level == globalLogLevel;
   }
 
   public void p(String msg, Object... args) {
@@ -200,17 +219,22 @@ public class SXLog {
 
   private String getTranslation(String msg, String msgPlus) {
     if (!translation) {
-      return (!SX.isUnset(msgPlus) ? "*** " + msgPlus + ": " : "") + msg;
+      return (SX.isSet(msgPlus) ? "*** " + msgPlus + ": " : "") + msg;
+    }
+    if (msg.startsWith("!")) {
+      return msg.substring(1);
     }
     String orgMsg = msg;
-    String clazz = logger.getName().replaceAll("\\.", "").toLowerCase();
+    String clazz = logger.getName().replaceAll("\\.", "");
     Properties currentProps = null;
     if (!translateProps.containsKey(clazz)) {
       currentProps = null;
       String resProp = "--NotSet--";
       InputStream isProps = null;
       try {
-        resProp = "i18n/translations/sikulix2." + clazz + "_en_US.properties";
+        String language = "en_US";
+        resProp = "i18n/translations/sikulix2." + clazz.toLowerCase() + "_en_usproperties";
+        resProp += "/" + language + ".properties";
         isProps = this.getClass().getClassLoader().getResourceAsStream(resProp);
         if (!SX.isNull(isProps)) {
           currentProps = new Properties();
@@ -243,6 +267,9 @@ public class SXLog {
       if (msg.contains(" ")) {
         parts = msg.split(" ");
         phrase = parts[0].replaceAll(":", "");
+        if (phrase.contains("#")) {
+          phrase = phrase.split("#")[1];
+        }
       } else {
         phrase = msg;
       }
@@ -258,11 +285,11 @@ public class SXLog {
       transError = "*** " + String.format("%s (%s = %s)", getTranslationGlobal("translation"),
               tKey, msgToTranslate.replaceAll("%", "#")) + ": ";
     }
-    return transError + (!SX.isUnset(msgPlus) ? "*** " + msgPlus + ": " : "") + orgMsg;
+    return transError + (SX.isSet(msgPlus) ? "*** " + msgPlus + ": " : "") + orgMsg;
   }
 
   private String getTranslationGlobal(String msg) {
-    if (!SX.isUnset(msg)) {
+    if (SX.isSet(msg)) {
       Properties props = translateProps.get("SXGlobal");
       String transMsgPlus = msg;
       if (!SX.isNull(props)) {

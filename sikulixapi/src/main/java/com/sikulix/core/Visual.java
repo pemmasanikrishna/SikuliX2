@@ -4,8 +4,12 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.*;
 import com.sikulix.api.Image;
+import com.sikulix.api.Region;
+import com.sikulix.api.Match;
+import com.sikulix.api.Location;
+import com.sikulix.api.Offset;
+import com.sikulix.api.Mouse;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 import org.sikuli.basics.Settings;
@@ -347,21 +351,14 @@ public abstract class Visual implements Comparable<Visual>{
     return "";
   }
 
-  /**
-   * check wether the given object is in JSON format as ["ID", ...]
-   *
-   * @param json
-   * @return true if object is in JSON format, false otherwise
-   */
-  public static boolean isJSON(Object json) {
-    if (json instanceof String) {
-      return ((String) json).startsWith("[\"");
-    }
-    return false;
+  public static String toJSON(Object json) {
+    return json.toString();
   }
 
-  public static Object fromJson(Object json) {
-    if (!isJSON(json)) return json;
+  public static Object fromJSON(Object json) {
+    if (!SX.isJSON(json)) {
+      return json;
+    }
     Visual vis = null;
     return vis;
   }

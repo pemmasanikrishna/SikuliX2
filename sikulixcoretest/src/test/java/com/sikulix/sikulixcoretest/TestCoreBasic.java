@@ -9,10 +9,13 @@ import com.sikulix.api.Commands;
 import com.sikulix.api.Location;
 import com.sikulix.api.Mouse;
 import com.sikulix.core.*;
+import com.sikulix.scripting.SXClient;
+import com.sikulix.scripting.SXServer;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import java.io.File;
+import java.io.IOException;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestCoreBasic extends Commands {
@@ -75,11 +78,11 @@ public class TestCoreBasic extends Commands {
   public void test_10_startup() {
     currentTest = "test_10_startup_workdir";
     String workDir = getUSERWORK();
-    if (isUnset(workDir)) {
+    if (isNotSet(workDir)) {
       show();
     }
     result = workDir;
-    assert !isUnset(workDir);
+    assert isSet(workDir);
   }
 
   @Test
@@ -122,14 +125,41 @@ public class TestCoreBasic extends Commands {
   }
 
   @Test
-  public void test_30_popat() {
+  public void test_30_nativeHook() {
+    currentTest = "test_30_nativeHook";
+    NativeHook hook = NativeHook.start();
+    SX.pause(3);
+    hook.stop();
+    result = "NativeHook works";
+    assert true;
+  }
+
+  @Test
+  public void test_40_startServer() {
+    currentTest = "test_40_startServer";
+    result = "Server works";
+    Runnable server = new Runnable() {
+      @Override
+      public void run() {
+        SXServer.start(null);
+      }
+    };
+    new Thread(server).start();
+    SX.pause(3);
+    boolean retVal = SXClient.stopServer();
+    SX.pause(4);
+    assert retVal;
+  }
+
+  @Test
+  public void test_90_popat() {
     boolean assertVal = true;
     if (!SX.isHeadless()) {
-      currentTest = "test_30_popat";
+      currentTest = "test_90_popat";
       popat(300, 300);
       popup("Use mouse to click OK", "testing popat");
       Location loc = Mouse.at();
-      result = String.format("testing popat - clicked at (%d, %d)", loc.x, loc.y);
+      result = String.format("clicked at (%d, %d)", loc.x, loc.y);
       assertVal = loc.x > 300 && loc.x < 450;
     } else {
       result = "headless: not testing popat";
