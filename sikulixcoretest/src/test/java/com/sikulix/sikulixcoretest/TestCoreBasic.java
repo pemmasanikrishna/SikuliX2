@@ -127,10 +127,14 @@ public class TestCoreBasic extends Commands {
   @Test
   public void test_30_nativeHook() {
     currentTest = "test_30_nativeHook";
-    NativeHook hook = NativeHook.start();
-    SX.pause(3);
-    hook.stop();
-    result = "NativeHook works";
+    if (!SX.isHeadless()) {
+      NativeHook hook = NativeHook.start();
+      SX.pause(3);
+      hook.stop();
+      result = "NativeHook works";
+    } else {
+      result = "headless: NativeHook not tested";
+    }
     assert true;
   }
 
