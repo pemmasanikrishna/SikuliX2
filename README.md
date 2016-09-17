@@ -44,7 +44,7 @@ basic tests for developement of the new packages **com.sikulix.core** and **com.
 
 **sikulixapitest**
 
-basic tests for **org.sikuli.script** as regression test (will later be a seperate package)
+(inactive) basic tests for **org.sikuli.script** as regression test (will later be a seperate package)
 
 **sikulix**
 
@@ -54,10 +54,12 @@ the SikuliX IDE (internally using **[jEdit 5.3.0](http://www.jedit.org))**
  - SikuliX image handling added via jEdit plugin
  - run scripts (scripting supported internally: JavaScript, (J)Python, (J)Ruby, RobotFramework)
  - everyone may simply add whatever feature needed based on the possibilities of jEdit
+ - 
+ For tests in the project context the jEdit package has to be [downloaded from here](http://download.sikulix.com/SXEditor.zip), unzipped into the folder `SikulixAppData/SX2/Extension`, so you finally have a folder `SikulixAppData/SX2/Extension/SXEditor`.
 
 ---
 
-Prerequisites for development
+Prerequisites for development and testing
 ---
 
  - a Java JDK 1.7+
@@ -69,3 +71,8 @@ Prerequisites for development
  - **[IntelliJ IDEA CE](https://www.jetbrains.com/idea/)** for Java and everything else
  - **[PyCharm CE](https://www.jetbrains.com/pycharm/)** for special Jython/Python stuff
  - **[RubyMine](https://www.jetbrains.com/ruby/)** for special JRuby/Ruby stuff (special license for OpenSource projects)
+ 
+Be aware for development and testing
+---
+
+ - the so called folder `SikulixAppData`, where SikuliX specific stuff is stored once per machine, for SikuliX2 now is `SikulixAppData/SX2` to allow the parallel usage of SikuliX1 and SikuliX2 on the same machine.
