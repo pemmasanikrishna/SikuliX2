@@ -5,7 +5,8 @@
 package com.sikulix.scripting;
 
 import com.sikulix.api.*;
-import com.sikulix.core.*;
+import com.sikulix.core.SX;
+import com.sikulix.core.SXLog;
 
 import org.sikuli.script.Mouse;
 

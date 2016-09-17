@@ -114,9 +114,9 @@ public class Region {
    */
   private FindFailedResponse findFailedResponse = null;
   /**
-   * Setting {@link com.sikulix.util.Settings}, if exception is thrown if an image is not found
+   * Setting {@link Settings}, if exception is thrown if an image is not found
    */
-  private boolean throwException = com.sikulix.util.Settings.ThrowException;
+  private boolean throwException = Settings.ThrowException;
   /**
    * Default time to wait for an image {@link Settings}
    */

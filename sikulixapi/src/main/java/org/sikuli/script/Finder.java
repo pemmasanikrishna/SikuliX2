@@ -17,15 +17,12 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import com.sikulix.core.SX;
 import com.sikulix.util.Settings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.sikuli.util.Debug;
-
-import static com.sikulix.util.Settings.CheckLastSeen;
 
 public class Finder {
 

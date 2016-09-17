@@ -16,7 +16,7 @@ import java.awt.*;
  * hence modifications might move location out of
  * any screen (not checked as is done with region)
  */
-public class Location extends com.sikulix.api.Location  {
+public class Location extends com.sikulix.api.Location {
 
   private static final SXLog log = SX.getLogger("API.Location");
 

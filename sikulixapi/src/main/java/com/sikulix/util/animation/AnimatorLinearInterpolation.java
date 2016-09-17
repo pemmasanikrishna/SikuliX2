@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2016 - sikulix.com - MIT license
+ */
+
 package com.sikulix.util.animation;
 
 public class AnimatorLinearInterpolation extends AnimatorTimeValueFunction {

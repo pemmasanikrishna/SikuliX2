@@ -1,10 +1,13 @@
 /*
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
+
 package com.sikulix.scripting;
 
 import com.sikulix.api.Commands;
-import com.sikulix.core.*;
+import com.sikulix.core.Content;
+import com.sikulix.core.SX;
+import com.sikulix.core.SXLog;
 
 import java.io.File;
 
@@ -19,7 +22,7 @@ public class SXRun extends Commands {
   public static void main(String[] args) {
 
     log.trace("Sikulix starting");
-    File lastSession = new File(getSXSTORE(), "LastAPIJavaScript.js");
+    File lastSession = new File(SX.getSXSTORE(), "LastAPIJavaScript.js");
     String runSomeJS = "";
     if (lastSession.exists()) {
       runSomeJS = Content.readFileToString(lastSession);

@@ -4,9 +4,9 @@
 
 package com.sikulix.scripting;
 
+import com.sikulix.api.Commands;
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
-import com.sikulix.api.Commands;
 import com.sikulix.core.SXLog;
 
 import java.io.File;

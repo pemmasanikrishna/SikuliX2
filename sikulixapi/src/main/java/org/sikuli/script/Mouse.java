@@ -9,7 +9,6 @@ package org.sikuli.script;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
-import com.sikulix.core.SX;
 import com.sikulix.core.Visual;
 import com.sikulix.util.Settings;
 import org.sikuli.util.Debug;

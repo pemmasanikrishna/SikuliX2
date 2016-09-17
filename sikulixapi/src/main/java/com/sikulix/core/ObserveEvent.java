@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
+
 package com.sikulix.core;
 
 import com.sikulix.api.Match;
 import com.sikulix.api.Pattern;
-import com.sikulix.api.Region;
 import com.sikulix.util.Settings;
+import com.sikulix.api.Region;
 
 import java.io.IOException;
 import java.util.ArrayList;

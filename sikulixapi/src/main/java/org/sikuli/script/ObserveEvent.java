@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.sikulix.core.SX;
 import com.sikulix.util.Settings;
 import org.apache.logging.log4j.LogManager;
 import org.sikuli.util.Debug;

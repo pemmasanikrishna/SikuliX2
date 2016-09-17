@@ -6,7 +6,7 @@ package org.sikuli.util;
 
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
-import org.sikuli.script.RunTime;
+
 import java.awt.Desktop;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;

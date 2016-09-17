@@ -19,13 +19,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>SXEditor</groupId>
-      <artifactId>jEdit</artifactId>
-      <version>5.3.0</version>
-      <systemPath>${project.basedir}/src/main/resources/SXEditor/jedit-5.3.0.jar</systemPath>
-      <scope>system</scope>
-    </dependency>
-    <dependency>
       <groupId>com.sikulix</groupId>
       <artifactId>sikulixapi</artifactId>
       <version>${project.version}</version>

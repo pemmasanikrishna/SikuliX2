@@ -4,10 +4,9 @@
 
 package com.sikulix.util;
 
-import com.sikulix.core.SX;
 import com.sikulix.api.Commands;
+import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import org.sikuli.util.Debug;
 import org.sikuli.util.PreferencesUser;
 
 import javax.swing.*;

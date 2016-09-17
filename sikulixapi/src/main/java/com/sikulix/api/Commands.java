@@ -460,23 +460,23 @@ public class Commands extends SX {
 
   //<editor-fold desc="SX Commands ImagePath handling">
   public static boolean setBundlePath(Object... args) {
-    return com.sikulix.api.Image.setBundlePath(args);
+    return Image.setBundlePath(args);
   }
 
   public static String getBundlePath() {
-    return com.sikulix.api.Image.getBundlePath();
+    return Image.getBundlePath();
   }
 
   public static void addImagePath(Object... args) {
-    com.sikulix.api.Image.addPath(args);
+    Image.addPath(args);
   }
 
   public static void removeImagePath(Object... args) {
-    com.sikulix.api.Image.removePath(args);
+    Image.removePath(args);
   }
 
   public static String[] getImagePath() {
-    return com.sikulix.api.Image.getPath();
+    return Image.getPath();
   }
   //</editor-fold>
 

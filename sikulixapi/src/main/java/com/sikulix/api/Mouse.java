@@ -1,13 +1,14 @@
 /*
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
+
 package com.sikulix.api;
 
 import com.sikulix.core.*;
 import com.sikulix.util.Settings;
 import com.sikulix.util.animation.Animator;
-import com.sikulix.util.animation.AnimatorOutQuarticEase;
 import com.sikulix.util.animation.AnimatorTimeBased;
+import com.sikulix.util.animation.AnimatorOutQuarticEase;
 
 import java.awt.*;
 import java.awt.event.InputEvent;

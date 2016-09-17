@@ -3,8 +3,6 @@
  */
 package org.sikuli.script;
 
-import com.sikulix.core.SX;
-
 public class RunTime {
 
   private static RunTime runTime = null;

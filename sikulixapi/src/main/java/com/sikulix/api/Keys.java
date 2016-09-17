@@ -4,9 +4,9 @@
 
 package com.sikulix.api;
 
-import com.sikulix.core.Device;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
+import com.sikulix.core.Device;
 
 import java.awt.event.InputEvent;
 

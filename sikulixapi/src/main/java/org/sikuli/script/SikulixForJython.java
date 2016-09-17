@@ -12,7 +12,6 @@ import java.io.File;
 import java.net.URL;
 
 import com.sikulix.core.Content;
-import com.sikulix.core.SX;
 import org.sikuli.util.FileManager;
 import com.sikulix.scripting.JythonHelper;
 

@@ -14,7 +14,6 @@ import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
-import com.sikulix.core.SX;
 import com.sikulix.scripting.JythonHelper;
 import com.sikulix.util.Settings;
 

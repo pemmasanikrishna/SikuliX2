@@ -4,6 +4,7 @@ sxbuild=${timestamp}
 sxlocalrepo=${sxrepo}
 sxjython=${sxjython}
 sxjruby=${sxjruby}
+sxjedit=5.3.0
 
 # deprecated use set/getBundlePath()
 Settings.BundlePath = 

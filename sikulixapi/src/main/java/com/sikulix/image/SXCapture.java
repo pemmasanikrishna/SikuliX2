@@ -5,9 +5,9 @@
 package com.sikulix.image;
 
 import com.sikulix.api.Commands;
+import com.sikulix.core.NativeHookCallback;
 import com.sikulix.api.Mouse;
 import com.sikulix.core.NativeHook;
-import com.sikulix.core.NativeHookCallback;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 import org.jnativehook.NativeInputEvent;

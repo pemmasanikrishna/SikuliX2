@@ -13,11 +13,8 @@ import org.sikuli.natives.OSUtil;
 import org.sikuli.natives.SysUtil;
 
 import java.awt.*;
-import java.awt.datatransfer.*;
 import java.io.*;
 import java.net.URI;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;

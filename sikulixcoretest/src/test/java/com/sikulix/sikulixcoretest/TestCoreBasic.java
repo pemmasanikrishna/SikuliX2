@@ -4,24 +4,26 @@
 
 package com.sikulix.sikulixcoretest;
 
-import com.sikulix.api.Image;
 import com.sikulix.api.Commands;
+import com.sikulix.api.Image;
 import com.sikulix.api.Location;
 import com.sikulix.api.Mouse;
-import com.sikulix.core.*;
+import com.sikulix.core.Content;
+import com.sikulix.core.NativeHook;
+import com.sikulix.core.SX;
+import com.sikulix.core.SXLog;
 import com.sikulix.scripting.SXClient;
 import com.sikulix.scripting.SXServer;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
 import java.io.File;
-import java.io.IOException;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestCoreBasic extends Commands {
 
-  static final int logLevel = INFO;
-  static SXLog log = getLogger("TestCoreBasic");
+  static final int logLevel = SX.INFO;
+  static SXLog log = SX.getLogger("TestCoreBasic");
   private Object result = null;
   private String currentTest = "";
   private static int nTest = 0;
@@ -34,8 +36,8 @@ public class TestCoreBasic extends Commands {
   @BeforeClass
   public static void setUpClass() {
     log.trace("setUpClass()");
-    if (existsFile(getFile(getSXAPP()))) {
-      Content.deleteFileOrFolder(getFolder(getSXAPP()), new Content.FileFilter() {
+    if (SX.existsFile(SX.getFolder(SX.getSXAPP()))) {
+      Content.deleteFileOrFolder(SX.getFolder(SX.getSXAPP()), new Content.FileFilter() {
         @Override
         public boolean accept(File entry) {
           if (entry.getAbsolutePath().contains("SX2/Images") ||
@@ -57,7 +59,7 @@ public class TestCoreBasic extends Commands {
   public void setUp() {
     log.trace("setUp");
     if (testLimit && nTest > 0) {
-      terminate(1, "by intention");
+      SX.terminate(1, "by intention");
     }
     log.on(logLevel);
   }
@@ -77,21 +79,21 @@ public class TestCoreBasic extends Commands {
   @Test
   public void test_10_startup() {
     currentTest = "test_10_startup_workdir";
-    String workDir = getUSERWORK();
-    if (isNotSet(workDir)) {
-      show();
+    String workDir = SX.getUSERWORK();
+    if (SX.isNotSet(workDir)) {
+      SX.show();
     }
     result = workDir;
-    assert isSet(workDir);
+    assert SX.isSet(workDir);
   }
 
   @Test
   public void test_11_startup_native_load() {
     currentTest = "test_11_startup_native_load";
     Image img = new Image();
-    File test = getFile(getSXNATIVE(), sxLibsCheckName);
-    result = test.toString();
-    assert (isLinux() ? true : existsFile(test));
+    File test = SX.getFileExists(SX.getSXNATIVE(), SX.sxLibsCheckName);
+    result = SX.sxLibsCheckName;
+    assert !SX.isNull(test) && SX.existsFile(test);
   }
 
   @Test
@@ -99,7 +101,7 @@ public class TestCoreBasic extends Commands {
     currentTest = "test_20_getBundlePath";
     String bundlePath = getBundlePath();
     result = bundlePath;
-    assert existsFile(bundlePath);
+    assert SX.existsFile(bundlePath);
   }
 
   @Test
@@ -108,7 +110,7 @@ public class TestCoreBasic extends Commands {
     String bundlePath = "My Images";
     boolean success = setBundlePath(bundlePath);
     result = getBundlePath();
-    success &= existsFile(result);
+    success &= SX.existsFile(result);
     assert success;
   }
 

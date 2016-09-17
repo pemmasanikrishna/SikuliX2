@@ -4,10 +4,10 @@
 
 package com.sikulix.api;
 
-import com.sikulix.core.Device;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 import com.sikulix.core.Visual;
+import com.sikulix.core.Device;
 
 public class Screen extends Device {
 

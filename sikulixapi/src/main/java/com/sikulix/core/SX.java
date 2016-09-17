@@ -912,7 +912,7 @@ public class SX {
   public static String getSXNATIVE() {
     if (isNotSet(SXNATIVE)) {
       String fBase = getSXAPP();
-      File fDir = getFile(fBase, SXNATIVEdefault);
+      File fDir = getFolder(fBase, SXNATIVEdefault);
       setSXNATIVE(fDir);
     }
     return SXNATIVE;
@@ -993,17 +993,17 @@ public class SX {
   public static String getSXEDITOR() {
     if (isNotSet(SXEDITOR)) {
       String fBase = getSXAPP();
-      File fDir = getFile(fBase, SXEDITORdefault);
+      File fDir = getFolder(fBase, SXEDITORdefault);
       setSXEDITOR(fDir);
     }
     return SXEDITOR;
   }
 
   static String SXEDITOR = "";
-  static String SXEDITORdefault = "Editor";
+  static String SXEDITORdefault = "Extensions/SXEditor";
 
   public static String setSXEDITOR(Object oDir) {
-    File fDir = getFile(oDir, null);
+    File fDir = getFile(oDir);
     if (isSet(fDir)) {
       fDir.mkdirs();
     }
@@ -1103,7 +1103,7 @@ public class SX {
   public static String getSXIMAGES() {
     if (isNotSet(SXIMAGES)) {
       String fBase = getSXAPP();
-      File fDir = getFile(fBase, SXIMAGESdefault);
+      File fDir = getFolder(fBase, SXIMAGESdefault);
       setSXIMAGES(fDir);
     }
     return SXIMAGES;
@@ -1580,7 +1580,7 @@ public class SX {
     p("***** show environment end");
   }
 
-  public static File getFile(Object... args) {
+  private static File getFileMake(Object... args) {
     if (args.length < 1) {
       return null;
     }
@@ -1596,15 +1596,28 @@ public class SX {
       fPath = new File(oPath.toString(), oSub.toString());
     }
     try {
-      return fPath.getCanonicalFile();
+      fPath = fPath.getCanonicalFile();
     } catch (IOException e) {
       error("getFile: %s %s error(%s)", oPath, oSub, e.getMessage());
+    }
+    return fPath;
+  }
+
+  public static File getFile(Object... args) {
+    return getFileMake(args);
+  }
+
+  public static File getFileExists(Object... args) {
+    File fPath = getFileMake(args);
+    if (!isNull(fPath) && !fPath.exists()) {
+      error("getFile: %s error(not available)", fPath);
       return null;
     }
+    return  fPath;
   }
 
   public static File getFolder(Object... args) {
-    File aFile = getFile(args);
+    File aFile = getFileMake(args);
     if (isNotSet(aFile)) {
       return null;
     }

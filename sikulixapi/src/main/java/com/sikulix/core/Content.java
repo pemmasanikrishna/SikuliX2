@@ -2273,10 +2273,10 @@ public class Content {
       if (sEntry.contains(".jdk")) {
         continue;
       }
-      log.info("%2d: %s", n, entry);
       if (isJar && !sEntry.endsWith(".jar")) {
         continue;
       }
+      log.debug("%2d: %s", n, entry);
       if (SX.getFile(entry.getPath()).toString().contains(fpName)) {
         fMatch = new File(entry.getPath());
       }

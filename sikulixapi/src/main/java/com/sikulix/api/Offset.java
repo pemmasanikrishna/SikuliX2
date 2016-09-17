@@ -8,8 +8,6 @@ import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 import com.sikulix.core.Visual;
 
-import java.awt.*;
-
 public class Offset extends Visual {
 
   private static vType vClazz = vType.OFFSET;
