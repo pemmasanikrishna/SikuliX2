@@ -1,1 +1,1 @@
-print("hello");
+Commands.popup("hello");
