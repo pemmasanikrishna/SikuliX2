@@ -262,10 +262,14 @@ public class Commands extends SX {
   }
 
   public static void popup(String message, String title) {
-    JFrame anchor = popLocation();
-    JOptionPane.showMessageDialog(anchor, message, title, JOptionPane.PLAIN_MESSAGE);
-    if (anchor != null) {
-      anchor.dispose();
+    if (SX.isHeadless()) {
+      log.error("running headless: [%s](%s)", message, title);
+    } else {
+      JFrame anchor = popLocation();
+      JOptionPane.showMessageDialog(anchor, message, title, JOptionPane.PLAIN_MESSAGE);
+      if (anchor != null) {
+        anchor.dispose();
+      }
     }
   }
 
