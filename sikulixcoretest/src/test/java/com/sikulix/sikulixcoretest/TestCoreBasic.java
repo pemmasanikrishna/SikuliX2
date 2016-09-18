@@ -4,19 +4,16 @@
 
 package com.sikulix.sikulixcoretest;
 
-import com.sikulix.api.Commands;
+import com.sikulix.api.*;
 import com.sikulix.api.Image;
-import com.sikulix.api.Location;
-import com.sikulix.api.Mouse;
-import com.sikulix.core.Content;
-import com.sikulix.core.NativeHook;
-import com.sikulix.core.SX;
-import com.sikulix.core.SXLog;
+import com.sikulix.core.*;
 import com.sikulix.scripting.SXClient;
 import com.sikulix.scripting.SXServer;
+import org.json.JSONObject;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
+import java.awt.*;
 import java.io.File;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -66,7 +63,7 @@ public class TestCoreBasic extends Commands {
 
   @After
   public void tearDown() {
-    log.info("%2d: result: %s: %s ", nTest++, currentTest, result);
+    log.info("!%2d: result: %s: %s ", nTest++, currentTest, result);
   }
 
   @Test
@@ -143,7 +140,7 @@ public class TestCoreBasic extends Commands {
   @Test
   public void test_40_startServer() {
     currentTest = "test_40_startServer";
-    result = "Server works";
+    result = "Server works\n";
     Runnable server = new Runnable() {
       @Override
       public void run() {
@@ -152,8 +149,14 @@ public class TestCoreBasic extends Commands {
     };
     new Thread(server).start();
     SX.pause(3);
+    Region vis = new Region(300, 300, 500, 500);
+    vis.setLastMatch(new Match(new Region(400, 400, 50, 50), 0.92345678, new Offset(100, 100)));
+    JSONObject jVis = SXJson.makeBean(vis.getVisualForJson());
+    SXClient.postJSON(jVis.toString());
+    SX.pause(1);
     boolean retVal = SXClient.stopServer();
     SX.pause(4);
+    result += jVis.toString(2);
     assert retVal;
   }
 

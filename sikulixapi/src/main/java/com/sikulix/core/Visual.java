@@ -45,6 +45,10 @@ public abstract class Visual implements Comparable<Visual>{
   private static vType vClazz = vType.VISUAL;
   private static SXLog vLog = SX.getLogger("SX." + vClazz.toString());
 
+  public vType getType() {
+    return clazz;
+  }
+
   //<editor-fold desc="***** Visual variants">
   public static enum vType {
     VISUAL, REGION, LOCATION, IMAGE, SCREEN, MATCH, WINDOW, PATTERN, OFFSET
@@ -104,7 +108,12 @@ public abstract class Visual implements Comparable<Visual>{
    * @return true if the Visual is useable and/or has valid content
    */
   public boolean isValid() { return true; };
+
   //</editor-fold>
+
+  public enum FindType {
+    ONE, ALL, VANISH, ANY, BEST
+  }
 
   //<editor-fold desc="x y w h">
   public Integer x = 0;
@@ -153,11 +162,11 @@ public abstract class Visual implements Comparable<Visual>{
     return lastMatch;
   }
 
-  protected void setLastMatch(Match match) {
+  public void setLastMatch(Match match) {
     lastMatch = match;
   }
 
-  public Location getMatch() {
+  public Location getMatchPoint() {
     if (lastMatch != null) {
       return lastMatch.getTarget();
     }
@@ -189,11 +198,7 @@ public abstract class Visual implements Comparable<Visual>{
   }
   //</editor-fold>
 
-  //<editor-fold desc="target">
-  public enum FindType {
-    ONE, ALL, VANISH, ANY, BEST
-  }
-
+  //<editor-fold desc="waitAfter">
   private double waitAfter = 0;
 
   public double getWaitAfter() {
@@ -203,21 +208,30 @@ public abstract class Visual implements Comparable<Visual>{
   public void setWaitAfter(double waitAfter) {
     this.waitAfter = waitAfter;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="offset">
   public Offset getOffset() {
     return offset;
   }
 
   public void setOffset(Offset offset) {
-    this.offset = offset;
+    setOffset(offset.x, offset.y);
   }
 
   public void setOffset(int xoff, int yoff) {
     this.offset = new Offset(xoff, yoff);
   }
 
+  public void setOffset(int[] off) {
+    if (off.length == 2) {
+      this.offset = new Offset(off[0], off[1]);
+    }
+  }
   private Offset offset = null;
+  //</editor-fold>
 
+  //<editor-fold desc="target">
   public Visual setTarget(Visual vis) {
     if (vis.isOffset()) {
       target = getCenter().offset((Offset) vis);
@@ -229,6 +243,13 @@ public abstract class Visual implements Comparable<Visual>{
 
   public Visual setTarget(int x, int y) {
     target = getCenter().offset(x, y);
+    return this;
+  }
+
+  public Visual setTarget(int[] pos) {
+    if (pos.length == 2) {
+      target = getCenter().offset(pos[0], pos[1]);
+    }
     return this;
   }
 
@@ -244,6 +265,9 @@ public abstract class Visual implements Comparable<Visual>{
 
   private Visual target = null;
 
+  //</editor-fold>
+
+  //<editor-fold desc="score">
   public double getScore() {
     return score;
   }
@@ -263,8 +287,9 @@ public abstract class Visual implements Comparable<Visual>{
   }
 
   private double minimumScore = -1;
+  //</editor-fold>
 
-
+  //<editor-fold desc="image">
   public Image getImage() {
     return image;
   }
@@ -274,7 +299,6 @@ public abstract class Visual implements Comparable<Visual>{
   }
 
   protected Image image = null;
-
   //</editor-fold>
 
   //<editor-fold desc="content">
@@ -312,6 +336,10 @@ public abstract class Visual implements Comparable<Visual>{
   //</editor-fold>
 
   //<editor-fold desc="***** construct, info">
+  public VisualFlat getVisualForJson() {
+    return new VisualFlat(this);
+  }
+
   public void init(int _x, int _y, int _w, int _h) {
     x = _x;
     y = _y;
@@ -339,6 +367,35 @@ public abstract class Visual implements Comparable<Visual>{
     init(vis.x, vis.y, vis.w, vis.h);
   }
 
+  public void init(int[] rect) {
+    int _x = 0;
+    int _y = 0;
+    int _w = 0;
+    int _h = 0;
+    switch (rect.length) {
+      case 0:
+        return;
+      case 1:
+        _x = rect[0];
+        break;
+      case 2:
+        _x = rect[0];
+        _y = rect[1];
+        break;
+      case 3:
+        _x = rect[0];
+        _y = rect[1];
+        _w = rect[2];
+        break;
+      default:
+        _x = rect[0];
+        _y = rect[1];
+        _w = rect[2];
+        _h = rect[3];
+    }
+    init(_x, _y, _w, _h);
+  }
+
   @Override
   public String toString() {
     if (isLocation() || isOffset()) {
@@ -349,18 +406,6 @@ public abstract class Visual implements Comparable<Visual>{
 
   protected String toStringPlus() {
     return "";
-  }
-
-  public static String toJSON(Object json) {
-    return json.toString();
-  }
-
-  public static Object fromJSON(Object json) {
-    if (!SX.isJSON(json)) {
-      return json;
-    }
-    Visual vis = null;
-    return vis;
   }
 
   //TODO equals and compare
@@ -612,8 +657,12 @@ public abstract class Visual implements Comparable<Visual>{
     return bytemat.toArray();
   }
 
-  protected byte[] getImageBytes() {
+  public byte[] getImageBytes() {
     return getImageBytes(dotPNG);
+  }
+
+  public static void fakeHighlight(boolean state) {
+    //TODO implement fakeHighlight
   }
   //</editor-fold>
 
@@ -622,6 +671,12 @@ public abstract class Visual implements Comparable<Visual>{
     Rectangle r1 = new Rectangle(x, y, w, h);
     Rectangle r2 = new Rectangle(vis.x, vis.y, vis.w, vis.h);
     return new Region(r1.union(r2));
+  }
+
+  public Region intersection(Visual vis) {
+    Rectangle r1 = new Rectangle(x, y, w, h);
+    Rectangle r2 = new Rectangle(vis.x, vis.y, vis.w, vis.h);
+    return new Region(r1.intersection(r2));
   }
 
   public boolean contains(Visual vis) {
@@ -642,10 +697,6 @@ public abstract class Visual implements Comparable<Visual>{
     return false;
   }
   //</editor-fold>
-
-  public static void fakeHighlight(boolean state) {
-    //TODO implement fakeHighlight
-  }
 
   //<editor-fold desc="**** wait">
   public void wait(double time) {

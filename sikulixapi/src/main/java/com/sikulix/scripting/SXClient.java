@@ -5,6 +5,7 @@
 package com.sikulix.scripting;
 
 import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
@@ -22,7 +23,24 @@ public class SXClient {
   static {
     log = SX.getLogger("SXClient");
     log.isSX();
-    log.on(SXLog.INFO);
+    log.on(SXLog.TRACE);
+  }
+
+  static String urlBase = "http://localhost:8080";
+
+  public static boolean postJSON(String body) {
+    HttpResponse<JsonNode> jsonResponse = null;
+    try {
+      jsonResponse = Unirest.post(urlBase)
+              .header("accept", "application/json")
+              .header("content-type", "application/json")
+              .body(body)
+              .asJson();
+    } catch (UnirestException e) {
+      e.printStackTrace();
+    }
+    log.trace("jsonResponse.getBody(): %s",jsonResponse.getBody().toString());
+    return true;
   }
 
   public static boolean stopServer() {
@@ -36,7 +54,7 @@ public class SXClient {
   }
 
   private static void doStopServer() throws UnirestException, IOException {
-    String url = "http://localhost:8080/stop";
+    String url = urlBase + "/stop";
     GetRequest request = Unirest.get(url);
     try {
       HttpResponse<?> response = request.asString();

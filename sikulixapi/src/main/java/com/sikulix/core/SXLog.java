@@ -194,7 +194,11 @@ public class SXLog {
     }
     if (shouldLog(level)) {
       message = getTranslation(message, msgPlus);
-      message = String.format(message, args).replaceAll("\\n", " ");
+      if (!message.startsWith("!")) {
+        message = String.format(message, args).replaceAll("\\n", " ");
+      } else {
+        message = String.format(message.substring(1), args);
+      }
       if (level == DEBUG) {
         logger.debug(message, args);
       } else if (level > DEBUG) {

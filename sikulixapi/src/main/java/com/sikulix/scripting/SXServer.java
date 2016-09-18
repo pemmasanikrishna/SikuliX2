@@ -9,6 +9,7 @@ import com.sikulix.core.SXLog;
 import fi.iki.elonen.NanoHTTPD;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 public class SXServer extends NanoHTTPD {
@@ -18,7 +19,7 @@ public class SXServer extends NanoHTTPD {
   static {
     log = SX.getLogger("SXServer");
     log.isSX();
-    log.on(SXLog.INFO);
+    log.on(SXLog.TRACE);
   }
 
   static boolean shouldStop = false;
@@ -64,26 +65,53 @@ public class SXServer extends NanoHTTPD {
 
   @Override
   public Response serve(IHTTPSession session) {
+    boolean isImplemented = true;
     String msg = "<html><body><h1>Hello from server</h1>\n";
+    Method method = session.getMethod();
     Map<String, String> parms = session.getParms();
     String uri = session.getUri();
-    if (uri.startsWith("/stop")) {
-      shouldStop = true;
-      log.trace("stopping intentionally");
-      msg += "server is stopping";
-    } else {
-      String ip = session.getRemoteIpAddress();
-      String host = session.getRemoteHostName();
-      String msgResp = String.format("serve: uri(%s)", uri);
-      log.trace("%s", msgResp);
-      msg += msgResp;
-      if (parms.size() > 0) {
-        for (String parm : parms.keySet()) {
-          String msgParm = String.format("serve: parm: %s = %s", parm, parms.get(parm));
-          log.trace("%s", msgParm);
-          msg += "<br>" + msgParm;
+    Map<String, String> headers = session.getHeaders();
+    if (Method.GET.equals(method)) {
+      if (uri.startsWith("/stop")) {
+        shouldStop = true;
+        log.trace("stopping intentionally");
+        msg += "server is stopping";
+      } else {
+        String ip = session.getRemoteIpAddress();
+        String host = session.getRemoteHostName();
+        String msgResp = String.format("serve: uri(%s)", uri);
+        log.trace("%s", msgResp);
+        msg += msgResp;
+        if (parms.size() > 0) {
+          for (String parm : parms.keySet()) {
+            String msgParm = String.format("serve: parm: %s = %s", parm, parms.get(parm));
+            log.trace("%s", msgParm);
+            msg += "<br>" + msgParm;
+          }
         }
       }
+    } else {
+      if (Method.POST.equals(method)) {
+        final HashMap<String, String> bodyFiles = new HashMap<String, String>();
+        String jsonContent = "[\"NOTHING TO SHOW\"]";
+        if ("application/json".equals(headers.get("content-type"))) {
+          try {
+            session.parseBody(bodyFiles);
+            jsonContent = bodyFiles.get("postData");
+          } catch (Exception e) {
+            log.error("POST: not working: %s", e.getMessage());
+          }
+          msg = jsonContent;
+          return newFixedLengthResponse(msg);
+        } else {
+          isImplemented = false;
+        }
+      } else {
+        isImplemented = false;
+      }
+    }
+    if (!isImplemented) {
+      msg += "not implemented: " + uri;
     }
     return newFixedLengthResponse(msg + "</body></html>\n");
   }

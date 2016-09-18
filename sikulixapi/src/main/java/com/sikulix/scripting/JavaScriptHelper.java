@@ -327,7 +327,7 @@ public class JavaScriptHelper {
     int len = args.length;
     Match aMatch;
     if (len == 0 || args[0] == null) {
-      Mouse.move(scr.getMatch());
+      Mouse.move(scr.getMatchPoint());
       return new Location(); // Mouse.at();
     }
     if (len < 4) {
@@ -341,7 +341,7 @@ public class JavaScriptHelper {
           aMatch = wait(args);
           Mouse.move(aMatch.getTarget());
         } catch (Exception ex) {
-          Mouse.move(scr.getMatch());
+          Mouse.move(scr.getMatchPoint());
         }
         return new Location(); // Mouse.at();
       } else if (aObj instanceof Region) {
@@ -351,7 +351,7 @@ public class JavaScriptHelper {
       }
       if (len > 1) {
         if (isNumber(aObj) && isNumber(args[1])) {
-          Location match = scr.getMatch();
+          Location match = scr.getMatchPoint();
           match.translate(getInteger(aObj), getInteger(args[1]));
           Mouse.move(match);
           return new Location(); //Mouse.at();
@@ -365,7 +365,7 @@ public class JavaScriptHelper {
         return  new Location(); //Mouse.at();
       }
     }
-    Mouse.move(scr.getMatch());
+    Mouse.move(scr.getMatchPoint());
     return new Location();  //Mouse.at();
   }
 
