@@ -33,6 +33,7 @@ public class SXRunner {
 
   public static Object runjs(Object... args) {
     log.trace("running JavaScript");
+    String beforeRun = "var Commands = Java.type(\"com.sikulix.api.Commands\");";
     Object script = null;
     Object returnValue = null;
     if (args.length > 0) {
@@ -45,12 +46,14 @@ public class SXRunner {
       script = args[0];
       if (script instanceof String) {
         try {
+          engine.eval(beforeRun);
           returnValue = engine.eval((String) script);
         } catch (ScriptException e) {
           log.error("Nashorn: eval(String): %s", e.getMessage());
         }
       } else if (script instanceof File) {
         try {
+          engine.eval(beforeRun);
           returnValue = engine.eval(new FileReader((File) script));
         } catch (Exception e) {
           log.error("Nashorn: eval(File): %s", e.getMessage());

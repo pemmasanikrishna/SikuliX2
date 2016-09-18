@@ -8,6 +8,7 @@ import com.sikulix.api.*;
 import com.sikulix.api.Image;
 import com.sikulix.core.*;
 import com.sikulix.scripting.SXClient;
+import com.sikulix.scripting.SXRunner;
 import com.sikulix.scripting.SXServer;
 import org.json.JSONObject;
 import org.junit.*;
@@ -158,6 +159,14 @@ public class TestCoreBasic extends Commands {
     SX.pause(4);
     result += jVis.toString(2);
     assert retVal;
+  }
+
+  @Test
+  public void test_50_runJavaScript() {
+    currentTest = "test_50_runJavaScript";
+    result = "JavaScript works";
+    Object objResult = SXRunner.runjs(new File(SX.getUSERWORK(), "target/test-classes/JavaScript/test.js"));
+    assert true;
   }
 
   @Test
