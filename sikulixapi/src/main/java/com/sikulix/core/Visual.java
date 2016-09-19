@@ -42,6 +42,8 @@ public abstract class Visual implements Comparable<Visual>{
     SX.loadNative(SX.NATIVES.OPENCV);
   }
 
+  public static void initClass() {};
+
   private static vType vClazz = vType.VISUAL;
   private static SXLog vLog = SX.getLogger("SX." + vClazz.toString());
 

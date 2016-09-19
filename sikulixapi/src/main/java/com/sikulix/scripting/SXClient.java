@@ -23,7 +23,7 @@ public class SXClient {
   static {
     log = SX.getLogger("SXClient");
     log.isSX();
-    log.on(SXLog.TRACE);
+    //log.on(SXLog.TRACE);
   }
 
   static String urlBase = "http://localhost:8080";

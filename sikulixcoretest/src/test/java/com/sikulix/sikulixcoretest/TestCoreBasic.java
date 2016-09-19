@@ -18,7 +18,7 @@ import java.awt.*;
 import java.io.File;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class TestCoreBasic extends Commands {
+public class TestCoreBasic {
 
   static final int logLevel = SX.INFO;
   static SXLog log = SX.getLogger("TestCoreBasic");
@@ -46,6 +46,7 @@ public class TestCoreBasic extends Commands {
         }
       });
     }
+    Visual.initClass();
   }
 
   @AfterClass
@@ -88,7 +89,6 @@ public class TestCoreBasic extends Commands {
   @Test
   public void test_11_startup_native_load() {
     currentTest = "test_11_startup_native_load";
-    Image img = new Image();
     File test = SX.getFileExists(SX.getSXNATIVE(), SX.sxLibsCheckName);
     result = SX.sxLibsCheckName;
     assert !SX.isNull(test) && SX.existsFile(test);
@@ -97,7 +97,7 @@ public class TestCoreBasic extends Commands {
   @Test
   public void test_20_getBundlePath() {
     currentTest = "test_20_getBundlePath";
-    String bundlePath = getBundlePath();
+    String bundlePath = Commands.getBundlePath();
     result = bundlePath;
     assert SX.existsFile(bundlePath);
   }
@@ -106,8 +106,8 @@ public class TestCoreBasic extends Commands {
   public void test_21_setBundlePath() {
     currentTest = "test_21_setBundlePath";
     String bundlePath = "My Images";
-    boolean success = setBundlePath(bundlePath);
-    result = getBundlePath();
+    boolean success = Commands.setBundlePath(bundlePath);
+    result = Commands.getBundlePath();
     success &= SX.existsFile(result);
     assert success;
   }
@@ -115,7 +115,7 @@ public class TestCoreBasic extends Commands {
   @Test
   public void test_22_getImagePath() {
     currentTest = "test_22_getImagePath";
-    String[] paths = getImagePath();
+    String[] paths = Commands.getImagePath();
     result = "[";
     for (String path : paths) {
       result += path + ", ";
@@ -174,8 +174,8 @@ public class TestCoreBasic extends Commands {
     boolean assertVal = true;
     if (!SX.isHeadless()) {
       currentTest = "test_90_popat";
-      popat(300, 300);
-      popup("Use mouse to click OK", "testing popat");
+      Commands.popat(300, 300);
+      Commands.popup("Use mouse to click OK", "testing popat");
       Location loc = Mouse.at();
       result = String.format("clicked at (%d, %d)", loc.x, loc.y);
       assertVal = loc.x > 300 && loc.x < 450;

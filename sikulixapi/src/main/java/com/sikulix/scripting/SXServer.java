@@ -19,7 +19,7 @@ public class SXServer extends NanoHTTPD {
   static {
     log = SX.getLogger("SXServer");
     log.isSX();
-    log.on(SXLog.TRACE);
+    //log.on(SXLog.TRACE);
   }
 
   static boolean shouldStop = false;
