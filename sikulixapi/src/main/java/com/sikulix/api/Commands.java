@@ -7,6 +7,7 @@ package com.sikulix.api;
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
+import com.sikulix.core.Visual;
 import com.sikulix.scripting.JythonHelper;
 import com.sikulix.scripting.SXRunner;
 import com.sikulix.util.FileChooser;
@@ -27,14 +28,16 @@ public class Commands extends SX {
   private static SXLog log = getLogger("SX.Commands");
 
   //<editor-fold desc="load a jar">
+
   /**
    * add a jar to the scripting environment<br>
    * Jython: added to sys.path<br>
    * JRuby: not yet supported<br>
    * JavaScript: not yet supported<br>
    * if no scripting active (API usage), jar is added to classpath if available
+   *
    * @param fpJar absolute path to a jar (relative: searched according to Extension concept,
-   * but first on sys.path)
+   *              but first on sys.path)
    * @return the absolute path to the jar or null, if not available
    */
   public static String load(String fpJar) {
@@ -48,8 +51,9 @@ public class Commands extends SX {
    * JavaScript: only added to classpath<br>
    * if no scripting is active (API usage), jar is added to classpath if available<br>
    * additionally: fpJar/fpJarImagePath is added to ImagePath (not checked)
-   * @param fpJar absolute path to a jar (relative: searched according to Extension concept,
-   * but first on sys.path)
+   *
+   * @param fpJar          absolute path to a jar (relative: searched according to Extension concept,
+   *                       but first on sys.path)
    * @param fpJarImagePath path relative to jar root inside jar
    * @return the absolute path to the jar or null, if not available
    */
@@ -90,7 +94,7 @@ public class Commands extends SX {
   }
 
   public static Location popat(Rectangle at) {
-    locPopAt = new Point(at.x + (int) (at.width/2), at.y + (int) (at.height/2));
+    locPopAt = new Point(at.x + (int) (at.width / 2), at.y + (int) (at.height / 2));
     return new Location(locPopAt);
   }
 
@@ -122,7 +126,7 @@ public class Commands extends SX {
     JFrame anchor = new JFrame();
     anchor.setAlwaysOnTop(true);
     anchor.setUndecorated(true);
-    anchor.setSize(1,1);
+    anchor.setSize(1, 1);
     anchor.setLocation(locPopAt);
     anchor.setVisible(true);
     return anchor;
@@ -130,6 +134,7 @@ public class Commands extends SX {
   //</editor-fold>
 
   //<editor-fold desc="SX Commands input one line, password">
+
   /**
    * request user's input as one line of text <br>
    * with hidden = true: <br>
@@ -202,12 +207,13 @@ public class Commands extends SX {
   //</editor-fold>
 
   //<editor-fold desc="SX Commands multiline input">
+
   /**
    * Shows a dialog request to enter text in a multiline text field <br>
    * Though not all text might be visible, everything entered is delivered with the returned text <br>
    * The main purpose for this feature is to allow pasting text from somewhere preserving line breaks <br>
    *
-   * @param msg the message to display.
+   * @param msg   the message to display.
    * @param title the title for the dialog (default: Sikuli input request)
    * @param lines the maximum number of lines visible in the text field (default 9)
    * @param width the maximum number of characters visible in one line (default 20)
@@ -263,7 +269,7 @@ public class Commands extends SX {
 
   public static void popup(String message, String title) {
     if (SX.isHeadless()) {
-      log.error("running headless: [%s](%s)", message, title);
+      log.error("running headless: [%s] popup(%s)", title, message);
     } else {
       JFrame anchor = popLocation();
       JOptionPane.showMessageDialog(anchor, message, title, JOptionPane.PLAIN_MESSAGE);
@@ -358,6 +364,7 @@ public class Commands extends SX {
   //</editor-fold>
 
   //<editor-fold desc="SX Commands compile Jython, build a jar ">
+
   /**
    * the foo.py files in the given source folder are compiled to JVM-ByteCode-classfiles foo$py.class
    * and stored in the target folder (thus securing your code against changes).<br>
@@ -367,6 +374,7 @@ public class Commands extends SX {
    * so make sure your code compiles error free. Currently there is no support for running such a jar,
    * it can only be used with load()/import, but you might provide a simple script that does load()/import
    * and then runs something based on available functions in the jar code.
+   *
    * @param fpSource absolute path to a folder/folder-tree containing the stuff to be copied/compiled
    * @param fpTarget the folder that will contain the copied/compiled stuff (folder is first deleted)
    * @return false if anything goes wrong, true means should have worked
@@ -434,9 +442,10 @@ public class Commands extends SX {
    * build a jar on the fly at runtime from a folder.<br>
    * special for Jython: if the folder contains a __init__.py on first level,
    * the folder will be copied to the jar root (hence preserving module folders)
-   * @param targetJar absolute path to the created jar (parent folder must exist, jar is overwritten)
+   *
+   * @param targetJar    absolute path to the created jar (parent folder must exist, jar is overwritten)
    * @param sourceFolder absolute path to a folder, the contained folder structure
-   * will be copied to the jar root level
+   *                     will be copied to the jar root level
    * @return
    */
   public static boolean buildJarFromFolder(String targetJar, String sourceFolder) {
@@ -485,6 +494,7 @@ public class Commands extends SX {
   //</editor-fold>
 
   //<editor-fold desc="SX Commands Clipboard">
+
   /**
    * @return clipboard content
    */
@@ -579,17 +589,13 @@ public class Commands extends SX {
       public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
         if (flavor.isRepresentationClassInputStream()) {
           return new StringReader(data);
-        }
-        else if (flavor.isRepresentationClassReader()) {
+        } else if (flavor.isRepresentationClassReader()) {
           return new StringReader(data);
-        }
-        else if (flavor.isRepresentationClassCharBuffer()) {
+        } else if (flavor.isRepresentationClassCharBuffer()) {
           return CharBuffer.wrap(data);
-        }
-        else if (flavor.isRepresentationClassByteBuffer()) {
+        } else if (flavor.isRepresentationClassByteBuffer()) {
           return ByteBuffer.wrap(data.getBytes());
-        }
-        else if (flavor.equals(DataFlavor.stringFlavor)){
+        } else if (flavor.equals(DataFlavor.stringFlavor)) {
           return data;
         }
         throw new UnsupportedFlavorException(flavor);
@@ -656,6 +662,7 @@ public class Commands extends SX {
   //</editor-fold>
 
   //<editor-fold desc="SX Commands Keys">
+
   /**
    * get the lock state of the given key
    *
@@ -727,7 +734,7 @@ public class Commands extends SX {
     String scriptArgs[] = new String[args.length - 1];
     if (scriptArgs.length > 0) {
       for (int i = 1; i < args.length; i++) {
-        scriptArgs[i-1] = args[i].toString();
+        scriptArgs[i - 1] = args[i].toString();
       }
     }
     return SXRunner.run(script, scriptArgs);
@@ -841,4 +848,94 @@ public class Commands extends SX {
     return lastResult;
   }
   //</editor-fold>
+
+  private static Region defaultScreenRegion = Screen.asRegion(0);
+  private static Region defaultRegion = defaultScreenRegion;
+
+  public static Region use() {
+    defaultRegion = defaultScreenRegion;
+    return defaultRegion;
+  }
+
+  public static Region use(Visual vis) {
+    if (vis.isRectangle()) {
+      if (vis.isRegion()) {
+        defaultRegion = (Region) vis;
+      } else {
+        defaultRegion = new Region(vis);
+      }
+    }
+    return defaultRegion;
+  }
+
+  public static Visual click(Object... args) {
+    Target target = new Target(args);
+    if (target.isValid()) {
+      Visual point = target.getTarget();
+      log.trace("clicking: %s", point);
+      return point;
+    }
+    return null;
+  }
+
+  private static class Target {
+    Visual where = null;
+    Visual what = null;
+    Visual target = null;
+    boolean needFind = false;
+
+    Target(Object... args) {
+      Object args0, args1;
+      Visual vis0, vis1;
+      if (args.length > 0) {
+        args0 = args[0];
+        if (args0 instanceof String) {
+          needFind = true;
+          what = new Pattern((String) args0);
+          log.error("not implemented: target(String)");
+        }
+        if (args0 instanceof Visual) {
+          vis0 = (Visual) args0;
+          if (vis0.isOnScreen()) {
+            target = vis0;
+            where = vis0;
+          } else if (vis0.isPatternOrImage()) {
+            needFind = true;
+            where = defaultRegion;
+            what = new Pattern(vis0);
+            log.error("not implemented: target(Image || Pattern)");
+          }
+        }
+        if (args.length == 2) {
+          args1 = args[1];
+          if (needFind) {
+            if (args1 instanceof Visual) {
+              vis1 = (Visual) args1;
+              if (vis1.isOnScreen()) {
+                where = new Region(vis1);
+              } else if (vis1.isImage()) {
+                where = vis1;
+              }
+            } else if (args1 instanceof String) {
+              where = new Image((String) args1);
+            }
+          }
+        }
+        if (needFind) {
+          log.error("not implemented: Target.find");
+        }
+      }
+    }
+
+    boolean isValid() {
+      return SX.isNotNull(target);
+    }
+
+    Visual getTarget() {
+      if (SX.isNotNull(target)) {
+        return target.getTarget();
+      }
+      return null;
+    }
+  }
 }

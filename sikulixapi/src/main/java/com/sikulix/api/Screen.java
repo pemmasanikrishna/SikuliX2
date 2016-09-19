@@ -36,4 +36,8 @@ public class Screen extends Device {
   public Region asRegion() {
     return (Region) visScreen;
   }
+
+  public static Region asRegion(int id) {
+    return new Screen(id).asRegion();
+  }
 }

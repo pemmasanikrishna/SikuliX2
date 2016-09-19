@@ -80,12 +80,16 @@ public abstract class Visual implements Comparable<Visual>{
     return vType.IMAGE.equals(clazz);
   }
 
-  public boolean isMatch() {
-    return vType.MATCH.equals(clazz);
-  }
-
   public boolean isPattern() {
     return vType.PATTERN.equals(clazz);
+  }
+
+  public boolean isPatternOrImage() {
+    return isPattern() || isImage();
+  }
+
+  public boolean isMatch() {
+    return vType.MATCH.equals(clazz);
   }
 
   public boolean isScreen() {
@@ -338,6 +342,10 @@ public abstract class Visual implements Comparable<Visual>{
   //<editor-fold desc="***** construct, info">
   public VisualFlat getVisualForJson() {
     return new VisualFlat(this);
+  }
+
+  public String asJson() {
+    return SXJson.makeBean(this.getVisualForJson()).toString();
   }
 
   public void init(int _x, int _y, int _w, int _h) {
