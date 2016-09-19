@@ -163,24 +163,29 @@ public class TestCoreBasic {
 
   @Test
   public void test_50_runJavaScript() {
+    boolean assertVal = true;
     currentTest = "test_50_runJavaScript";
+    if (!SX.isLinux()) {
     result = "JavaScript works";
     Object objResult = SXRunner.runjs(new File(SX.getUSERWORK(), "target/test-classes/JavaScript/test.js"));
-    assert true;
+    } else {
+      result = "Linux: not testing";
+    }
+    assert assertVal;
   }
 
   @Test
   public void test_90_popat() {
     boolean assertVal = true;
+    currentTest = "test_90_popat";
     if (!SX.isHeadless()) {
-      currentTest = "test_90_popat";
       Commands.popat(300, 300);
       Commands.popup("Use mouse to click OK", "testing popat");
       Location loc = Mouse.at();
       result = String.format("clicked at (%d, %d)", loc.x, loc.y);
       assertVal = loc.x > 300 && loc.x < 450;
     } else {
-      result = "headless: not testing popat";
+      result = "headless: not testing";
     }
     assert assertVal;
   }
