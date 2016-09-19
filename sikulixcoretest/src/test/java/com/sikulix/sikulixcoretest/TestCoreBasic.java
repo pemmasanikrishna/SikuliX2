@@ -163,6 +163,9 @@ public class TestCoreBasic {
 
   @Test
   public void test_50_runJavaScript() {
+//    log.globalOn(SXLog.TRACE);
+    log.isSX();
+    log.on(SXLog.INFO);
     boolean assertVal = true;
     currentTest = "test_50_runJavaScript";
     if (!SX.isLinux()) {

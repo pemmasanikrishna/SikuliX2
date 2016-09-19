@@ -516,6 +516,41 @@ public abstract class Visual implements Comparable<Visual>{
     return getCenter().offset(xoff, yoff);
   }
 
+  public Location getTopLeft() {
+    if (isPoint()) {
+      return new Location(this);
+    }
+    return new Location(x, y);
+  }
+
+  public Location getTopRight() {
+    if (isPoint()) {
+      return new Location(this);
+    }
+    return new Location(x + w, y);
+  }
+
+  public Location getBottomRight() {
+    if (isPoint()) {
+      return new Location(this);
+    }
+    return new Location(x, y + h);
+  }
+
+  public Location getBottomLeft() {
+    if (isPoint()) {
+      return new Location(this);
+    }
+    return new Location(x, y + h);
+  }
+
+  public Location leftAt() {
+    if (isPoint()) {
+      return new Location(this);
+    }
+    return new Location(x, y + h/2);
+  }
+
   /**
    * creates a point at the given offset to the left<br>
    * negative means the opposite direction<br>
@@ -528,7 +563,14 @@ public abstract class Visual implements Comparable<Visual>{
     if (isPoint()) {
       return new Location(x - xoff, y);
     }
-    return new Location(getCenter().x - (int) (w/2) - xoff, y);
+    return new Location(x - xoff, leftAt().y);
+  }
+
+  public Location rightAt() {
+    if (isPoint()) {
+      return new Location(this);
+    }
+    return new Location(x + w, y + h/2);
   }
 
   /**
@@ -543,7 +585,14 @@ public abstract class Visual implements Comparable<Visual>{
     if (isPoint()) {
       return new Location(x + xoff, y);
     }
-    return new Location(getCenter().x + (int) (w/2) + xoff, y);
+    return new Location(rightAt().x + xoff, rightAt().y);
+  }
+
+  public Location aboveAt() {
+    if (isPoint()) {
+      return new Location(this);
+    }
+    return new Location(x + w/2, y);
   }
 
   /**
@@ -558,7 +607,14 @@ public abstract class Visual implements Comparable<Visual>{
     if (isPoint()) {
       return new Location(x - yoff, y);
     }
-    return new Location(getCenter().x - (int) (h/2) - yoff, y);
+    return new Location(aboveAt().x, y - yoff);
+  }
+
+  public Location belowAt() {
+    if (isPoint()) {
+      return new Location(this);
+    }
+    return new Location(x + w/2, y + h);
   }
 
   /**
@@ -573,7 +629,7 @@ public abstract class Visual implements Comparable<Visual>{
     if (isPoint()) {
       return new Location(x - yoff, y);
     }
-    return new Location(getCenter().x - (int) (h/2) - yoff, y);
+    return new Location(belowAt().x, belowAt().y + yoff);
   }
 
   /**

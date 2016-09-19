@@ -18,7 +18,7 @@ public class SXRunner {
   static SXLog log;
   static {
     log = SX.getLogger("SXRunner");
-    log.on(SXLog.TRACE);
+    log.on(SXLog.INFO);
   }
 
   static ScriptEngine engine = null;

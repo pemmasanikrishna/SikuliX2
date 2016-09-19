@@ -885,6 +885,11 @@ public class Commands extends SX {
     boolean needFind = false;
 
     Target(Object... args) {
+      String form = "Commands.Target: ";
+      for (Object arg: args) {
+        form += "%s, ";
+      }
+      log.trace(form, args);
       Object args0, args1;
       Visual vis0, vis1;
       if (args.length > 0) {
@@ -922,6 +927,7 @@ public class Commands extends SX {
           }
         }
         if (needFind) {
+          target = new Match();
           log.error("not implemented: Target.find");
         }
       }
