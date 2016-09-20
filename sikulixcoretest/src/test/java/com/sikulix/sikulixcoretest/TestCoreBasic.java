@@ -169,8 +169,9 @@ public class TestCoreBasic {
     boolean assertVal = true;
     currentTest = "test_50_runJavaScript";
     if (!SX.isLinux()) {
-    result = "JavaScript works";
-    Object objResult = SXRunner.runjs(new File(SX.getUSERWORK(), "target/test-classes/JavaScript/test.js"));
+      result = "JavaScript works";
+      Commands.setBundlePath("target/test-classes/Images");
+      Object objResult = SXRunner.runjs(new File(SX.getUSERWORK(), "target/test-classes/JavaScript/test.js"));
     } else {
       result = "Linux: not testing";
     }

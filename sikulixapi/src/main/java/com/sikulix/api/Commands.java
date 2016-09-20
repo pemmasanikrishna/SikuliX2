@@ -897,7 +897,6 @@ public class Commands extends SX {
         if (args0 instanceof String) {
           needFind = true;
           what = new Pattern((String) args0);
-          log.error("not implemented: target(String)");
         }
         if (args0 instanceof Visual) {
           vis0 = (Visual) args0;

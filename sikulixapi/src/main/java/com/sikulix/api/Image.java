@@ -4,6 +4,7 @@
 
 package com.sikulix.api;
 
+import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 import com.sikulix.core.Visual;
@@ -100,15 +101,14 @@ public class Image extends Visual {
         mContent = get();
       }
       if (isCaching() && !mContent.empty()) {
-        changeCache(true, urlImg, content);
+        changeCache(true, urlImg, mContent);
       }
     }
     return mContent;
   }
 
   private URL getURL(String fpImg) {
-    URL url = null;
-    //TODO implement path search
+    URL url = searchOnImagePath(fpImg);
     return url;
   }
 
@@ -306,6 +306,81 @@ public class Image extends Visual {
     //TODO implment changePath()
     URL url = null;
     return -1;
+  }
+
+  /**
+   * try to find the given relative image file name on the image path<br>
+   * starting from entry 0, the first found existence is taken<br>
+   * absolute file names are checked for existence
+   *
+   * @param fname relative or absolute filename
+   * @return a valid URL or null if not found/exists
+   */
+  public static URL searchOnImagePath(String fname) {
+    fname = getValidName(fname);
+    URL fURL = null;
+    String proto = "";
+    fname = Content.normalize(fname);
+    if (new File(fname).isAbsolute()) {
+      if (new File(fname).exists()) {
+        fURL = Content.makeURL(fname);
+      }
+    } else {
+      initPath();
+      for (URL path : imagePath) {
+        if (path == null) {
+          continue;
+        }
+        proto = path.getProtocol();
+        if ("file".equals(proto)) {
+          fURL = Content.makeURL(path, fname);
+          if (new File(fURL.getPath()).exists()) {
+            break;
+          }
+        } else if ("jar".equals(proto) || proto.startsWith("http")) {
+          fURL = Content.getURLForContentFromURL(path, fname);
+          if (fURL != null) {
+            break;
+          }
+        } else {
+          log.error("find: URL not supported: " + path);
+          return fURL;
+        }
+        fURL = null;
+      }
+    }
+    if (fURL == null) {
+      log.error("find: does not exist: " + fname);
+    }
+    return fURL;
+  }
+
+  /**
+   * image file types supported by OpenCV highgui.imgread<br>
+   * Windows bitmaps - *.bmp, *.dib (always supported) <br>
+   * JPEG files - *.jpeg, *.jpg, *.jpe (see the *Notes* section)<br>
+   * JPEG 2000 files - *.jp2 (see the *Notes* section) <br>
+   * Portable Network Graphics - *.png (see the *Notes* section) <br>
+   * Portable image format - *.pbm, *.pgm, *.ppm (always supported) <br>
+   * Sun rasters - *.sr, *.ras (always supported) <br>
+   * TIFF files - *.tiff, *.tif (see the *Notes* section)
+   * @param name an image file name
+   * @return the name optionally .png added if no ending
+   */
+  public static String getValidName(String name) {
+    String validEndings = ".bmp.dib.jpeg.jpg.jpe.jp2.png.pbm.pgm.ppm.sr.ras.tiff.tif";
+    String validName = name;
+    String[] parts = validName.split("\\.");
+    if (parts.length == 1) {
+      log.trace("getValidName: supposing PNG: %s", name);
+      validName += ".png";
+    } else {
+      String ending = "." + parts[parts.length - 1];
+      if (validEndings.indexOf(ending) == -1) {
+        log.error("getValidName: image file ending %s not supported: %s", ending, name);
+      }
+    }
+    return validName;
   }
   //</editor-fold>
 
