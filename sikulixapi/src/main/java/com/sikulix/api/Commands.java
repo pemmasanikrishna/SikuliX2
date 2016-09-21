@@ -886,7 +886,7 @@ public class Commands extends SX {
 
     Target(Object... args) {
       String form = "Commands.Target: ";
-      for (Object arg: args) {
+      for (Object arg : args) {
         form += "%s, ";
       }
       log.trace(form, args);
@@ -909,26 +909,29 @@ public class Commands extends SX {
             what = new Pattern(vis0);
             log.error("not implemented: target(Image || Pattern)");
           }
-        }
-        if (args.length == 2) {
-          args1 = args[1];
-          if (needFind) {
-            if (args1 instanceof Visual) {
-              vis1 = (Visual) args1;
-              if (vis1.isOnScreen()) {
-                where = new Region(vis1);
-              } else if (vis1.isImage()) {
-                where = vis1;
+          if (args.length == 2) {
+            args1 = args[1];
+            if (needFind) {
+              if (args1 instanceof Visual) {
+                vis1 = (Visual) args1;
+                if (vis1.isOnScreen()) {
+                  where = new Region(vis1);
+                } else if (vis1.isImage()) {
+                  where = vis1;
+                }
+              } else if (args1 instanceof String) {
+                where = new Image((String) args1);
               }
-            } else if (args1 instanceof String) {
-              where = new Image((String) args1);
             }
           }
+          if (needFind) {
+            target = new Match();
+            log.error("not implemented: Target.find");
+          }
         }
-        if (needFind) {
-          target = new Match();
-          log.error("not implemented: Target.find");
-        }
+      }
+      if (SX.isNull(what) && SX.isNull(where)) {
+        target = defaultRegion;
       }
     }
 
