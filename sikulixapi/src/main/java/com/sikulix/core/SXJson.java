@@ -48,6 +48,10 @@ public class SXJson {
     return new SXJson(bean).theJsonObject;
   }
 
+  public static JSONObject makeObject(String strJson) {
+    return new SXJson(strJson).theJsonObject;
+  }
+
   public static SXJson asArray(Object toArray) {
     SXJson theJson = new SXJson();
     try {

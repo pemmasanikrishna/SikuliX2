@@ -857,12 +857,12 @@ public class Commands extends SX {
     return defaultRegion;
   }
 
-  public static Region use(Visual vis) {
-    if (vis.isRectangle()) {
-      if (vis.isRegion()) {
+  public static Region use(Object vis) {
+    if (vis instanceof Visual && ((Visual) vis).isRectangle()) {
+      if (((Visual) vis).isRegion()) {
         defaultRegion = (Region) vis;
       } else {
-        defaultRegion = new Region(vis);
+        defaultRegion = new Region(((Visual) vis));
       }
     }
     return defaultRegion;
@@ -895,6 +895,9 @@ public class Commands extends SX {
       if (args.length > 0) {
         args0 = args[0];
         if (args0 instanceof String) {
+          if (((String) args0).startsWith("{")) {
+            log.p("JSON");
+          }
           needFind = true;
           what = new Pattern((String) args0);
         }

@@ -5,6 +5,20 @@ var SXLog = Java.type("com.sikulix.core.SXLog");
 var log = SX.getLogger("JavaScriptAPI");
 log.on(SXLog.TRACE);
 
+var refRegion = new Region();
+
+function toJson(obj) {
+  return JSON.stringify(obj);
+}
+
+function fromJson(str) {
+  return JSON.parse(str);
+}
+
+function jsonToJava(str) {
+  return refRegion.fromJson(str);
+}
+
 function use(arg1) {
   log.trace("use(%s)", arg1);
   return Commands.use(arg1);

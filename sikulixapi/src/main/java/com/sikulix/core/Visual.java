@@ -10,6 +10,7 @@ import com.sikulix.api.Match;
 import com.sikulix.api.Location;
 import com.sikulix.api.Offset;
 import com.sikulix.api.Mouse;
+import org.json.JSONObject;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 import org.sikuli.basics.Settings;
@@ -53,7 +54,16 @@ public abstract class Visual implements Comparable<Visual>{
 
   //<editor-fold desc="***** Visual variants">
   public static enum vType {
-    VISUAL, REGION, LOCATION, IMAGE, SCREEN, MATCH, WINDOW, PATTERN, OFFSET
+    VISUAL, REGION, LOCATION, IMAGE, SCREEN, MATCH, WINDOW, PATTERN, OFFSET;
+
+    static vType isType(String strType) {
+      for (vType t : vType.values()) {
+        if (t.toString().equals(strType)) {
+          return t;
+        }
+      }
+      return null;
+    }
   }
 
   public vType clazz;
@@ -346,8 +356,40 @@ public abstract class Visual implements Comparable<Visual>{
     return new VisualFlat(this);
   }
 
-  public String asJson() {
+  public String toJson() {
     return SXJson.makeBean(this.getVisualForJson()).toString();
+  }
+
+  public <T extends Visual> T fromJson(String jsonVis) {
+    JSONObject jobj = SXJson.makeObject(jsonVis);
+    T retval = null;
+    vType type = isValidJson(jobj);
+    if (SX.isNull(type)) {
+      vLog.error("fromJson: not valid: ", jobj);
+    } else {
+      int x, y, w, h;
+      x = jobj.getInt("x");
+      y = jobj.getInt("y");
+      w = jobj.getInt("w");
+      h = jobj.getInt("h");
+      if (vType.REGION.equals(type)) {
+        retval = (T) new Region(x, y, w, h);
+      }
+    }
+    return retval;
+  }
+
+  private vType isValidJson(JSONObject jobj) {
+    vType type = null;
+    if (jobj.has("type")) {
+      type = vType.isType(jobj.getString("type"));
+      if (SX.isNotNull(type)) {
+        if (!(jobj.has("x") && jobj.has("y") && jobj.has("w") && jobj.has("h"))) {
+          type = null;
+        }
+      }
+    }
+    return type;
   }
 
   public void init(int _x, int _y, int _w, int _h) {
