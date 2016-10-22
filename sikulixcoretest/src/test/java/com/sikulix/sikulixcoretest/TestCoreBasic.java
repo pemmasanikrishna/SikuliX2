@@ -5,7 +5,6 @@
 package com.sikulix.sikulixcoretest;
 
 import com.sikulix.api.*;
-import com.sikulix.api.Image;
 import com.sikulix.core.*;
 import com.sikulix.scripting.SXClient;
 import com.sikulix.scripting.SXRunner;
@@ -14,7 +13,6 @@ import org.json.JSONObject;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 
-import java.awt.*;
 import java.io.File;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -46,7 +44,7 @@ public class TestCoreBasic {
         }
       });
     }
-    Visual.initClass();
+    Element.initClass();
   }
 
   @AfterClass

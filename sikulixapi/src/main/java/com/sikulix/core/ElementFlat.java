@@ -4,32 +4,28 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.Match;
-import com.sikulix.api.Offset;
-import com.sikulix.api.Region;
-
-public class VisualFlat {
+public class ElementFlat {
 
   int x = 0;
   int y = 0;
   int w = 0;
   int h = 0;
 
-  VisualFlat lastMatch = null;
+  ElementFlat lastMatch = null;
   double score = 0;
 
   int[] target = null;
 
-  Visual.vType clazz = Visual.vType.VISUAL;
+  Element.eType clazz = Element.eType.ELEMENT;
 
-  public VisualFlat(Visual vis) {
+  public ElementFlat(Element vis) {
     clazz = vis.getType();
     x = vis.x;
     y = vis.y;
     w = vis.w;
     h = vis.h;
     if (vis.isRegion()) {
-      Visual match = vis.getLastMatch();
+      Element match = vis.getLastMatch();
       if (SX.isNotNull(match)) {
         lastMatch = match.getVisualForJson();
       }
@@ -59,12 +55,12 @@ public class VisualFlat {
     return h;
   }
 
-  public VisualFlat getLastMatch() {
+  public ElementFlat getLastMatch() {
     return lastMatch;
   }
 
   public Double getScore() {
-    if (Visual.vType.MATCH.equals(clazz)) {
+    if (Element.eType.MATCH.equals(clazz)) {
       return score;
     }
     return null;

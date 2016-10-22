@@ -69,7 +69,7 @@ public class Finder {
 
     public String name = "";
     public boolean success = false;
-    public Visual.FindType type = Visual.FindType.ONE;
+    public Element.FindType type = Element.FindType.ONE;
 
     public Region region = null;
     private int baseX = 0;
@@ -212,7 +212,7 @@ public class Finder {
     }
   }
 
-  public Finder(Visual vis) {
+  public Finder(Element vis) {
     if (!SX.isNull(vis) && vis.isRectangle()) {
       region = (Region) vis;
       offX = region.x;

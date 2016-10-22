@@ -7,7 +7,7 @@ package com.sikulix.api;
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Visual;
+import com.sikulix.core.Element;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
@@ -19,9 +19,9 @@ import java.net.URL;
 import java.util.*;
 import java.util.List;
 
-public class Image extends Visual {
+public class Image extends Element {
 
-  private static vType vClazz = vType.IMAGE;
+  private static eType vClazz = eType.IMAGE;
   private static SXLog log = SX.getLogger("SX." + vClazz.toString());
 
   //<editor-fold desc="*** construction">
@@ -60,7 +60,7 @@ public class Image extends Visual {
     init(0, 0, content.width(), content.height());
   }
 
-  public Image(Visual vis) {
+  public Image(Element vis) {
     //TODO implement Image(Visual vis)
     this();
   }

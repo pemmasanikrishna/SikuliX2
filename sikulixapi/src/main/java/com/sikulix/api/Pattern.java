@@ -6,11 +6,11 @@ package com.sikulix.api;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Visual;
+import com.sikulix.core.Element;
 
 public class Pattern extends Image {
 
-  private static vType vClazz = vType.PATTERN;
+  private static eType vClazz = eType.PATTERN;
   private static SXLog log = SX.getLogger("SX." + vClazz.toString());
 
   private static double exactAs = 0.99f;
@@ -33,7 +33,7 @@ public class Pattern extends Image {
     this.image = new Image(fpImage);
   }
 
-  public Pattern(Visual vis) {
+  public Pattern(Element vis) {
     this();
     this.image = vis.getImage();
   }

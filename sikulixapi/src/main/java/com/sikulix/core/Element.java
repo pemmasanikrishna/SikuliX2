@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class Visual implements Comparable<Visual>{
+public abstract class Element implements Comparable<Element>{
 
   static {
     SX.trace("Visual: loadNative(SX.NATIVES.OPENCV)");
@@ -45,19 +45,19 @@ public abstract class Visual implements Comparable<Visual>{
 
   public static void initClass() {};
 
-  private static vType vClazz = vType.VISUAL;
-  private static SXLog vLog = SX.getLogger("SX." + vClazz.toString());
+  private static eType eClazz = eType.ELEMENT;
+  private static SXLog eLog = SX.getLogger("SX." + eClazz.toString());
 
-  public vType getType() {
+  public eType getType() {
     return clazz;
   }
 
   //<editor-fold desc="***** Visual variants">
-  public static enum vType {
-    VISUAL, REGION, LOCATION, IMAGE, SCREEN, MATCH, WINDOW, PATTERN, OFFSET;
+  public static enum eType {
+    ELEMENT, REGION, LOCATION, IMAGE, SCREEN, MATCH, WINDOW, PATTERN, OFFSET;
 
-    static vType isType(String strType) {
-      for (vType t : vType.values()) {
+    static eType isType(String strType) {
+      for (eType t : eType.values()) {
         if (t.toString().equals(strType)) {
           return t;
         }
@@ -66,7 +66,7 @@ public abstract class Visual implements Comparable<Visual>{
     }
   }
 
-  public vType clazz;
+  public eType clazz;
 
   public boolean isOnScreen() {
     return isRectangle() || isPoint();
@@ -77,11 +77,11 @@ public abstract class Visual implements Comparable<Visual>{
   }
 
   public boolean isRegion() {
-    return vType.REGION.equals(clazz);
+    return eType.REGION.equals(clazz);
   }
 
   public boolean isLocation() {
-    return vType.LOCATION.equals(clazz);
+    return eType.LOCATION.equals(clazz);
   }
 
   public boolean isPoint() {
@@ -89,11 +89,11 @@ public abstract class Visual implements Comparable<Visual>{
   }
 
   public boolean isImage() {
-    return vType.IMAGE.equals(clazz);
+    return eType.IMAGE.equals(clazz);
   }
 
   public boolean isPattern() {
-    return vType.PATTERN.equals(clazz);
+    return eType.PATTERN.equals(clazz);
   }
 
   public boolean isPatternOrImage() {
@@ -101,19 +101,19 @@ public abstract class Visual implements Comparable<Visual>{
   }
 
   public boolean isMatch() {
-    return vType.MATCH.equals(clazz);
+    return eType.MATCH.equals(clazz);
   }
 
   public boolean isScreen() {
-    return vType.SCREEN.equals(clazz);
+    return eType.SCREEN.equals(clazz);
   }
 
   public boolean isWindow() {
-    return vType.WINDOW.equals(clazz);
+    return eType.WINDOW.equals(clazz);
   }
 
   public boolean isOffset() {
-    return vType.OFFSET.equals(clazz);
+    return eType.OFFSET.equals(clazz);
   }
 
   public boolean isSpecial() { return !SX.isNull(containingScreen); }
@@ -248,7 +248,7 @@ public abstract class Visual implements Comparable<Visual>{
   //</editor-fold>
 
   //<editor-fold desc="target">
-  public Visual setTarget(Visual vis) {
+  public Element setTarget(Element vis) {
     if (vis.isOffset()) {
       target = getCenter().offset((Offset) vis);
     } else {
@@ -257,12 +257,12 @@ public abstract class Visual implements Comparable<Visual>{
     return this;
   }
 
-  public Visual setTarget(int x, int y) {
+  public Element setTarget(int x, int y) {
     target = getCenter().offset(x, y);
     return this;
   }
 
-  public Visual setTarget(int[] pos) {
+  public Element setTarget(int[] pos) {
     if (pos.length == 2) {
       target = getCenter().offset(pos[0], pos[1]);
     }
@@ -279,7 +279,7 @@ public abstract class Visual implements Comparable<Visual>{
     return (Location) target;
   }
 
-  private Visual target = null;
+  private Element target = null;
 
   //</editor-fold>
 
@@ -326,7 +326,7 @@ public abstract class Visual implements Comparable<Visual>{
   protected static Mat makeMat(BufferedImage bImg) {
     Mat aMat = null;
     if (bImg.getType() == BufferedImage.TYPE_INT_RGB) {
-      vLog.trace("makeMat: INT_RGB (%dx%d)", bImg.getWidth(), bImg.getHeight());
+      eLog.trace("makeMat: INT_RGB (%dx%d)", bImg.getWidth(), bImg.getHeight());
       int[] data = ((DataBufferInt) bImg.getRaster().getDataBuffer()).getData();
       ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4);
       IntBuffer intBuffer = byteBuffer.asIntBuffer();
@@ -341,10 +341,10 @@ public abstract class Visual implements Comparable<Visual>{
       Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 3, 2, 2, 3, 1));
       return oMatBGR;
     } else if (bImg.getType() == BufferedImage.TYPE_3BYTE_BGR) {
-      vLog.error("makeMat: 3BYTE_BGR (%dx%d)",
+      eLog.error("makeMat: 3BYTE_BGR (%dx%d)",
               bImg.getWidth(), bImg.getHeight());
     } else {
-      vLog.error("makeMat: Type not supported: %d (%dx%d)",
+      eLog.error("makeMat: Type not supported: %d (%dx%d)",
               bImg.getType(), bImg.getWidth(), bImg.getHeight());
     }
     return aMat;
@@ -352,37 +352,37 @@ public abstract class Visual implements Comparable<Visual>{
   //</editor-fold>
 
   //<editor-fold desc="***** construct, info">
-  public VisualFlat getVisualForJson() {
-    return new VisualFlat(this);
+  public ElementFlat getVisualForJson() {
+    return new ElementFlat(this);
   }
 
   public String toJson() {
     return SXJson.makeBean(this.getVisualForJson()).toString();
   }
 
-  public <T extends Visual> T fromJson(String jsonVis) {
+  public <T extends Element> T fromJson(String jsonVis) {
     JSONObject jobj = SXJson.makeObject(jsonVis);
     T retval = null;
-    vType type = isValidJson(jobj);
+    eType type = isValidJson(jobj);
     if (SX.isNull(type)) {
-      vLog.error("fromJson: not valid: ", jobj);
+      eLog.error("fromJson: not valid: ", jobj);
     } else {
       int x, y, w, h;
       x = jobj.getInt("x");
       y = jobj.getInt("y");
       w = jobj.getInt("w");
       h = jobj.getInt("h");
-      if (vType.REGION.equals(type)) {
+      if (eType.REGION.equals(type)) {
         retval = (T) new Region(x, y, w, h);
       }
     }
     return retval;
   }
 
-  private vType isValidJson(JSONObject jobj) {
-    vType type = null;
+  private eType isValidJson(JSONObject jobj) {
+    eType type = null;
     if (jobj.has("type")) {
-      type = vType.isType(jobj.getString("type"));
+      type = eType.isType(jobj.getString("type"));
       if (SX.isNotNull(type)) {
         if (!(jobj.has("x") && jobj.has("y") && jobj.has("w") && jobj.has("h"))) {
           type = null;
@@ -415,7 +415,7 @@ public abstract class Visual implements Comparable<Visual>{
     init(p.x, p.y, 0, 0);
   }
 
-  public void init(Visual vis) {
+  public void init(Element vis) {
     init(vis.x, vis.y, vis.w, vis.h);
   }
 
@@ -466,15 +466,15 @@ public abstract class Visual implements Comparable<Visual>{
     if (this == oThat) {
       return true;
     }
-    if (!(oThat instanceof Visual)) {
+    if (!(oThat instanceof Element)) {
       return false;
     }
-    Visual that = (Visual) oThat;
+    Element that = (Element) oThat;
     return x == that.x && y == that.y;
   }
 
   @Override
-  public int compareTo(Visual vis) {
+  public int compareTo(Element vis) {
     if (equals(vis)) {
       return 0;
     }
@@ -751,7 +751,7 @@ public abstract class Visual implements Comparable<Visual>{
     try {
       bImg = ImageIO.read(in);
     } catch (IOException ex) {
-      vLog.error("getBufferedImage: %s error(%s)", this, ex.getMessage());
+      eLog.error("getBufferedImage: %s error(%s)", this, ex.getMessage());
     }
     return bImg;
   }
@@ -775,19 +775,19 @@ public abstract class Visual implements Comparable<Visual>{
   //</editor-fold>
 
   //<editor-fold desc="***** combine">
-  public Region union(Visual vis) {
+  public Region union(Element vis) {
     Rectangle r1 = new Rectangle(x, y, w, h);
     Rectangle r2 = new Rectangle(vis.x, vis.y, vis.w, vis.h);
     return new Region(r1.union(r2));
   }
 
-  public Region intersection(Visual vis) {
+  public Region intersection(Element vis) {
     Rectangle r1 = new Rectangle(x, y, w, h);
     Rectangle r2 = new Rectangle(vis.x, vis.y, vis.w, vis.h);
     return new Region(r1.intersection(r2));
   }
 
-  public boolean contains(Visual vis) {
+  public boolean contains(Element vis) {
     if (!isRectangle()) {
       return false;
     }
@@ -811,22 +811,22 @@ public abstract class Visual implements Comparable<Visual>{
     SX.pause(time);
   }
 
-  public Match wait(Visual vis) {
+  public Match wait(Element vis) {
     //TODO implement wait(Visual vis)
     return new Match();
   }
 
-  public Match wait(Visual vis, double time) {
+  public Match wait(Element vis, double time) {
     //TODO implement wait(Visual vis, double time)
     return new Match();
   }
 
-  public boolean waitVanish(Visual vis) {
+  public boolean waitVanish(Element vis) {
     //TODO implement wait(Visual vis)
     return true;
   }
 
-  public boolean waitVanish(Visual vis, double time) {
+  public boolean waitVanish(Element vis, double time) {
     //TODO implement wait(Visual vis, double time)
     return true;
   }
@@ -864,7 +864,7 @@ public abstract class Visual implements Comparable<Visual>{
    *
    * @return this
    */
-  public Visual hover() {
+  public Element hover() {
     Mouse.get().move(this.getTarget());
     return this;
   }
@@ -874,7 +874,7 @@ public abstract class Visual implements Comparable<Visual>{
    *
    * @return this
    */
-  public Visual click() {
+  public Element click() {
     Mouse.get().click(this.getTarget(), "L");
     return this;
   }
@@ -884,7 +884,7 @@ public abstract class Visual implements Comparable<Visual>{
    *
    * @return this
    */
-  public Visual doubleClick() {
+  public Element doubleClick() {
     Mouse.get().click(this.getTarget(), "LD");
     return this;
   }
@@ -894,7 +894,7 @@ public abstract class Visual implements Comparable<Visual>{
    *
    * @return this
    */
-  public Visual rightClick() {
+  public Element rightClick() {
     Mouse.get().click(this.getTarget(), "R");
     return this;
   }

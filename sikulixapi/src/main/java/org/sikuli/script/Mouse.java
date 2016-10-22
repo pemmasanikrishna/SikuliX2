@@ -9,7 +9,7 @@ package org.sikuli.script;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
-import com.sikulix.core.Visual;
+import com.sikulix.core.Element;
 import com.sikulix.util.Settings;
 import org.sikuli.util.Debug;
 
@@ -320,7 +320,7 @@ public class Mouse {
     return move(loc, null);
   }
 
-  public static int move(Visual loc) {
+  public static int move(Element loc) {
     //TODO ajust for com.sikulix.core.Location
     return 0;
   }

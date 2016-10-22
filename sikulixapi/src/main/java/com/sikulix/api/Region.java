@@ -6,14 +6,14 @@ package com.sikulix.api;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Visual;
+import com.sikulix.core.Element;
 
 import java.awt.Rectangle;
 import java.awt.Point;
 
-public class Region extends Visual {
+public class Region extends Element {
 
-  private static vType vClazz = vType.REGION;
+  private static eType vClazz = eType.REGION;
   private static SXLog log = SX.getLogger("SX." + vClazz.toString());
 
   public Region() {
@@ -57,7 +57,7 @@ public class Region extends Visual {
     init(p);
   }
 
-  public Region(Visual vis) {
+  public Region(Element vis) {
     clazz = vClazz;
     init(vis);
   }

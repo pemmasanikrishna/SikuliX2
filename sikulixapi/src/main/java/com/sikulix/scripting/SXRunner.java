@@ -33,7 +33,7 @@ public class SXRunner {
 
   public static Object runjs(Object... args) {
     log.trace("running JavaScript");
-    String beforeRun = "var Commands = Java.type(\"com.sikulix.api.Commands\");";
+    String beforeRun = "";
     String sxapi = new File(SX.getUSERWORK(), "target/test-classes/JavaScript/sxapi.js").getAbsolutePath();
     beforeRun += String.format("load(\"%s\");", sxapi);
     Object script = null;

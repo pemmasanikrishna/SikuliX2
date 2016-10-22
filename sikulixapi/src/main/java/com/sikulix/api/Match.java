@@ -6,13 +6,13 @@ package com.sikulix.api;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Visual;
+import com.sikulix.core.Element;
 
 import java.awt.*;
 
 public class Match extends Region {
 
-  private static vType vClazz = vType.MATCH;
+  private static eType vClazz = eType.MATCH;
   private static SXLog log = SX.getLogger("SX." + vClazz.toString());
 
   public int getIndex() {
@@ -35,7 +35,7 @@ public class Match extends Region {
     init(rect);
   }
 
-  public Match(Visual vis) {
+  public Match(Element vis) {
     clazz = vClazz;
     init(vis);
     if (vis.isMatch()) {
@@ -44,7 +44,7 @@ public class Match extends Region {
     }
   }
 
-  public Match(Visual vis, Double score, Offset off) {
+  public Match(Element vis, Double score, Offset off) {
     clazz = vClazz;
     init(vis);
     setScore(score);

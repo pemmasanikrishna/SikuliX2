@@ -83,8 +83,8 @@ public class Device {
     return blocked;
   }
 	private boolean isNotLocal(Object owner) {
-		if (owner instanceof Visual) {
-      return ((Visual) owner).isSpecial();
+		if (owner instanceof Element) {
+      return ((Element) owner).isSpecial();
     }
 		return false;
 	}

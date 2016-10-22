@@ -7,7 +7,7 @@ package com.sikulix.api;
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Visual;
+import com.sikulix.core.Element;
 import com.sikulix.scripting.JythonHelper;
 import com.sikulix.scripting.SXRunner;
 import com.sikulix.util.FileChooser;
@@ -858,20 +858,20 @@ public class Commands extends SX {
   }
 
   public static Region use(Object vis) {
-    if (vis instanceof Visual && ((Visual) vis).isRectangle()) {
-      if (((Visual) vis).isRegion()) {
+    if (vis instanceof Element && ((Element) vis).isRectangle()) {
+      if (((Element) vis).isRegion()) {
         defaultRegion = (Region) vis;
       } else {
-        defaultRegion = new Region(((Visual) vis));
+        defaultRegion = new Region(((Element) vis));
       }
     }
     return defaultRegion;
   }
 
-  public static Visual click(Object... args) {
+  public static Element click(Object... args) {
     Target target = new Target(args);
     if (target.isValid()) {
-      Visual point = target.getTarget();
+      Element point = target.getTarget();
       log.trace("clicking: %s", point);
       return point;
     }
@@ -879,9 +879,9 @@ public class Commands extends SX {
   }
 
   private static class Target {
-    Visual where = null;
-    Visual what = null;
-    Visual target = null;
+    Element where = null;
+    Element what = null;
+    Element target = null;
     boolean needFind = false;
 
     Target(Object... args) {
@@ -891,7 +891,7 @@ public class Commands extends SX {
       }
       log.trace(form, args);
       Object args0, args1;
-      Visual vis0, vis1;
+      Element vis0, vis1;
       if (args.length > 0) {
         args0 = args[0];
         if (args0 instanceof String) {
@@ -901,8 +901,8 @@ public class Commands extends SX {
           needFind = true;
           what = new Pattern((String) args0);
         }
-        if (args0 instanceof Visual) {
-          vis0 = (Visual) args0;
+        if (args0 instanceof Element) {
+          vis0 = (Element) args0;
           if (vis0.isOnScreen()) {
             target = vis0;
             where = vis0;
@@ -915,8 +915,8 @@ public class Commands extends SX {
           if (args.length == 2) {
             args1 = args[1];
             if (needFind) {
-              if (args1 instanceof Visual) {
-                vis1 = (Visual) args1;
+              if (args1 instanceof Element) {
+                vis1 = (Element) args1;
                 if (vis1.isOnScreen()) {
                   where = new Region(vis1);
                 } else if (vis1.isImage()) {
@@ -942,7 +942,7 @@ public class Commands extends SX {
       return SX.isNotNull(target);
     }
 
-    Visual getTarget() {
+    Element getTarget() {
       if (SX.isNotNull(target)) {
         return target.getTarget();
       }

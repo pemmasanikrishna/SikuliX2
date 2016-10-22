@@ -6,11 +6,10 @@ package com.sikulix.api;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Visual;
 
 public class Window extends Region {
 
-  private static Visual.vType vClazz = Visual.vType.WINDOW;
+  private static eType vClazz = eType.WINDOW;
   private static SXLog log = SX.getLogger("SX." + vClazz.toString());
   //clazz = vClazz;
 

@@ -1,6 +1,7 @@
-var Region = Java.type("com.sikulix.api.Region");
 var SX = Java.type("com.sikulix.core.SX");
 var SXLog = Java.type("com.sikulix.core.SXLog");
+var Commands = Java.type("com.sikulix.api.Commands");
+var Region = Java.type("com.sikulix.api.Region");
 
 var log = SX.getLogger("JavaScriptAPI");
 log.on(SXLog.TRACE);

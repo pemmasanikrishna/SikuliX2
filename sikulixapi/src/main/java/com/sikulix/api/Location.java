@@ -6,13 +6,13 @@ package com.sikulix.api;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Visual;
+import com.sikulix.core.Element;
 
 import java.awt.Point;
 
-public class Location extends Visual {
+public class Location extends Element {
 
-  private static vType vClazz = vType.LOCATION;
+  private static eType vClazz = eType.LOCATION;
   private static SXLog log = SX.getLogger("SX." + vClazz.toString());
 
   public Location() {
@@ -25,7 +25,7 @@ public class Location extends Visual {
     init(x, y, 0, 0);
   }
 
-  public Location(Visual vis) {
+  public Location(Element vis) {
     clazz = vClazz;
     init(vis.getCenter());
   }
