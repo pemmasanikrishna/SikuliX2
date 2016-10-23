@@ -4,30 +4,30 @@
 
 package com.sikulix.core;
 
-public class ElementFlat {
+public class SXElementFlat {
 
   int x = 0;
   int y = 0;
   int w = 0;
   int h = 0;
 
-  ElementFlat lastMatch = null;
+  SXElementFlat lastMatch = null;
   double score = 0;
 
   int[] target = null;
 
-  Element.eType clazz = Element.eType.ELEMENT;
+  SXElement.eType clazz = SXElement.eType.ELEMENT;
 
-  public ElementFlat(Element vis) {
+  public SXElementFlat(SXElement vis) {
     clazz = vis.getType();
     x = vis.x;
     y = vis.y;
     w = vis.w;
     h = vis.h;
     if (vis.isRegion()) {
-      Element match = vis.getLastMatch();
+      SXElement match = vis.getLastMatch();
       if (SX.isNotNull(match)) {
-        lastMatch = match.getVisualForJson();
+        lastMatch = match.getElementForJson();
       }
     } else if (vis.isMatch()) {
       score = vis.getScore();
@@ -55,12 +55,12 @@ public class ElementFlat {
     return h;
   }
 
-  public ElementFlat getLastMatch() {
+  public SXElementFlat getLastMatch() {
     return lastMatch;
   }
 
   public Double getScore() {
-    if (Element.eType.MATCH.equals(clazz)) {
+    if (SXElement.eType.MATCH.equals(clazz)) {
       return score;
     }
     return null;

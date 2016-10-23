@@ -6,7 +6,7 @@ package com.sikulix.api;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Element;
+import com.sikulix.core.SXElement;
 import com.sikulix.core.Device;
 
 public class Screen extends Device {
@@ -14,7 +14,7 @@ public class Screen extends Device {
   private static SXLog log = SX.getLogger("SX.Screen");
 
   private int sNum = 0;
-  private Element visScreen = null;
+  private SXElement visScreen = null;
 
   public Screen() {
     init(SX.getMainMonitorID());

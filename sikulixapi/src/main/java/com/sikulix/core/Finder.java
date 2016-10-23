@@ -34,6 +34,10 @@ public class Finder {
 
   private Mat base = new Mat();
 
+  public enum FindType {
+    ONE, ALL, VANISH, ANY, BEST
+  }
+
   private static class Probe {
 
     public Pattern pattern = null;
@@ -69,7 +73,7 @@ public class Finder {
 
     public String name = "";
     public boolean success = false;
-    public Element.FindType type = Element.FindType.ONE;
+    public FindType type = FindType.ONE;
 
     public Region region = null;
     private int baseX = 0;
@@ -212,13 +216,13 @@ public class Finder {
     }
   }
 
-  public Finder(Element vis) {
-    if (!SX.isNull(vis) && vis.isRectangle()) {
-      region = (Region) vis;
+  public Finder(SXElement elem) {
+    if (!SX.isNull(elem) && elem.isRectangle()) {
+      region = (Region) elem;
       offX = region.x;
       offY = region.y;
     } else {
-      log.error("init: invalid region: %s", vis);
+      log.error("init: invalid region: %s", elem);
     }
   }
 
@@ -277,7 +281,7 @@ public class Finder {
   }
 
   protected boolean find(Found found) {
-    if (found.type.equals(Region.FindType.ANY) || found.type.equals(Region.FindType.BEST)) {
+    if (found.type.equals(FindType.ANY) || found.type.equals(FindType.BEST)) {
       findAny(found);
     } else {
       doFind(found);
@@ -308,7 +312,7 @@ public class Finder {
     Match mFound = null;
     Probe probe = new Probe(found.pattern);
     found.base = base;
-    boolean isIterator = Region.FindType.ALL.equals(found.type);
+    boolean isIterator = FindType.ALL.equals(found.type);
     if (isRegion && !isIterator && !useOriginal && Settings.CheckLastSeen && probe.lastSeen != null) {
       // ****************************** check last seen
       begin_t = new Date().getTime();
@@ -394,7 +398,7 @@ public class Finder {
     if (success) {
       probe.img.setLastMatch(new Match(mFound, mFound.getScore(), null));
       found.match = mFound;
-      if (Region.FindType.ALL.equals(found.type)) {
+      if (FindType.ALL.equals(found.type)) {
         found.result = result;
       }
     }
@@ -424,7 +428,7 @@ public class Finder {
   public void findAny(Found found) {
     log.trace("findBest: enter");
     findAnyCollect(found);
-    if (found.type.equals(Region.FindType.BEST)) {
+    if (found.type.equals(FindType.BEST)) {
       List<Match> mList = Arrays.asList(found.getMatches());
       if (mList != null) {
         Collections.sort(mList, new Comparator<Match>() {

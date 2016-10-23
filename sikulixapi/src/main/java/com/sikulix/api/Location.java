@@ -6,32 +6,32 @@ package com.sikulix.api;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Element;
+import com.sikulix.core.SXElement;
 
 import java.awt.Point;
 
-public class Location extends Element {
+public class Location extends SXElement {
 
-  private static eType vClazz = eType.LOCATION;
-  private static SXLog log = SX.getLogger("SX." + vClazz.toString());
+  private static eType eClazz = eType.LOCATION;
+  private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
   public Location() {
-    clazz = vClazz;
+    clazz = eClazz;
     init(0, 0, 0, 0);
   }
 
   public Location(int x, int y) {
-    clazz = vClazz;
+    clazz = eClazz;
     init(x, y, 0, 0);
   }
 
-  public Location(Element vis) {
-    clazz = vClazz;
-    init(vis.getCenter());
+  public Location(SXElement elem) {
+    clazz = eClazz;
+    init(elem.getCenter());
   }
 
   public Location(Point p) {
-    clazz = vClazz;
+    clazz = eClazz;
     init(p);
   }
 
@@ -43,7 +43,7 @@ public class Location extends Element {
    *          truncated to the integer part
    */
   public Location(double x, double y) {
-    clazz = vClazz;
+    clazz = eClazz;
     init((int) x, (int) y, 0, 0);
   }
 

@@ -6,12 +6,12 @@ package com.sikulix.api;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Element;
+import com.sikulix.core.SXElement;
 
 public class Pattern extends Image {
 
-  private static eType vClazz = eType.PATTERN;
-  private static SXLog log = SX.getLogger("SX." + vClazz.toString());
+  private static eType eClazz = eType.PATTERN;
+  private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
   private static double exactAs = 0.99f;
 
@@ -24,7 +24,7 @@ public class Pattern extends Image {
   }
 
   public Pattern() {
-    clazz = vClazz;
+    clazz = eClazz;
     init(0, 0, 0, 0);
   }
 
@@ -33,9 +33,9 @@ public class Pattern extends Image {
     this.image = new Image(fpImage);
   }
 
-  public Pattern(Element vis) {
+  public Pattern(SXElement elem) {
     this();
-    this.image = vis.getImage();
+    this.image = elem.getImage();
   }
 
   public Pattern similar(double score) {

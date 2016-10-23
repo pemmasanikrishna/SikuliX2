@@ -6,6 +6,13 @@ package com.sikulix.core;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.highgui.Highgui;
+
+import java.util.Base64;
+
+import static org.opencv.highgui.Highgui.CV_LOAD_IMAGE_COLOR;
 
 public class SXJson {
 
@@ -80,4 +87,18 @@ public class SXJson {
     return SX.isNotNull(theJsonArray);
   }
 
+  private String toBase64(Mat image) {
+    MatOfByte mobImage = new MatOfByte();
+    Highgui.imencode("png", image, mobImage);
+    byte[] bImage = mobImage.toArray();
+    String b64Image = Base64.getEncoder().encodeToString(bImage);
+    return b64Image;
+  }
+
+  private Mat fromBase64(String image) {
+    byte[] bImage = Base64.getDecoder().decode(image);
+    Mat mImage = new Mat();
+    mImage.put(0,0,bImage);
+    return Highgui.imdecode(mImage, CV_LOAD_IMAGE_COLOR);
+  }
 }

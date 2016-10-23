@@ -6,15 +6,15 @@ package com.sikulix.api;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Element;
+import com.sikulix.core.SXElement;
 
-public class Offset extends Element {
+public class Offset extends SXElement {
 
-  private static eType vClazz = eType.OFFSET;
-  private static SXLog log = SX.getLogger("SX." + vClazz.toString());
+  private static eType eClazz = eType.OFFSET;
+  private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
   public Offset() {
-    clazz = vClazz;
+    clazz = eClazz;
     init(0, 0, 0, 0);
   }
 
@@ -23,13 +23,13 @@ public class Offset extends Element {
     init(x, y, 0, 0);
   }
 
-  public Offset(Element vis) {
+  public Offset(SXElement elem) {
     this();
-    init(vis.getCenter());
+    init(elem.getCenter());
   }
 
-  public Offset(Element visFrom, Element visTo) {
+  public Offset(SXElement elemFrom, SXElement elemTo) {
     this();
-    init(visTo.getCenter().x - visFrom.getCenter().x, visTo.getCenter().y - visFrom.getCenter().y, 0, 0);
+    init(elemTo.getCenter().x - elemFrom.getCenter().x, elemTo.getCenter().y - elemFrom.getCenter().y, 0, 0);
   }
 }

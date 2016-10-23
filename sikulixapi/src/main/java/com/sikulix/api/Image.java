@@ -7,7 +7,7 @@ package com.sikulix.api;
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.Element;
+import com.sikulix.core.SXElement;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
@@ -19,14 +19,14 @@ import java.net.URL;
 import java.util.*;
 import java.util.List;
 
-public class Image extends Element {
+public class Image extends SXElement {
 
-  private static eType vClazz = eType.IMAGE;
-  private static SXLog log = SX.getLogger("SX." + vClazz.toString());
+  private static eType eClazz = eType.IMAGE;
+  private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
   //<editor-fold desc="*** construction">
   public Image() {
-    clazz = vClazz;
+    clazz = eClazz;
     init(0, 0, 0, 0);
   }
 
@@ -60,13 +60,13 @@ public class Image extends Element {
     init(0, 0, content.width(), content.height());
   }
 
-  public Image(Element vis) {
-    //TODO implement Image(Visual vis)
+  public Image(SXElement elem) {
+    //TODO implement Image(Element elem)
     this();
   }
 
   /**
-   * @return true if the Visual is useable and/or has valid content
+   * @return true if the Element is useable and/or has valid content
    */
   @Override
   public boolean isValid() {

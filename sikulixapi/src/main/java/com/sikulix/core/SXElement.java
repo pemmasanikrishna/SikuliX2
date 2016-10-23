@@ -4,12 +4,8 @@
 
 package com.sikulix.core;
 
+import com.sikulix.api.*;
 import com.sikulix.api.Image;
-import com.sikulix.api.Region;
-import com.sikulix.api.Match;
-import com.sikulix.api.Location;
-import com.sikulix.api.Offset;
-import com.sikulix.api.Mouse;
 import org.json.JSONObject;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
@@ -19,12 +15,8 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.Point;
-import java.awt.Robot;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.ByteArrayInputStream;
@@ -36,25 +28,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class Element implements Comparable<Element>{
+public abstract class SXElement implements Comparable<SXElement>{
 
   static {
-    SX.trace("Visual: loadNative(SX.NATIVES.OPENCV)");
+    SX.trace("Element: loadNative(SX.NATIVES.OPENCV)");
     SX.loadNative(SX.NATIVES.OPENCV);
   }
 
   public static void initClass() {};
 
-  private static eType eClazz = eType.ELEMENT;
+  private static eType eClazz = eType.SXELEMENT;
   private static SXLog eLog = SX.getLogger("SX." + eClazz.toString());
 
   public eType getType() {
     return clazz;
   }
 
-  //<editor-fold desc="***** Visual variants">
+  //<editor-fold desc="variants">
   public static enum eType {
-    ELEMENT, REGION, LOCATION, IMAGE, SCREEN, MATCH, WINDOW, PATTERN, OFFSET;
+    SXELEMENT, ELEMENT, REGION, LOCATION, IMAGE, SCREEN, MATCH, WINDOW, PATTERN, OFFSET;
 
     static eType isType(String strType) {
       for (eType t : eType.values()) {
@@ -121,15 +113,11 @@ public abstract class Element implements Comparable<Element>{
   Object containingScreen = null;
 
   /**
-   * @return true if the Visual is useable and/or has valid content
+   * @return true if the element is useable and/or has valid content
    */
   public boolean isValid() { return true; };
 
   //</editor-fold>
-
-  public enum FindType {
-    ONE, ALL, VANISH, ANY, BEST
-  }
 
   //<editor-fold desc="x y w h">
   public Integer x = 0;
@@ -144,7 +132,7 @@ public abstract class Element implements Comparable<Element>{
   public int getW() { return w;}
   public int getH() { return h;}
 
-  public long getSize() {
+  public long getPixelSize() {
     return w * h;
   }
   //</editor-fold>
@@ -248,7 +236,7 @@ public abstract class Element implements Comparable<Element>{
   //</editor-fold>
 
   //<editor-fold desc="target">
-  public Element setTarget(Element vis) {
+  public SXElement setTarget(SXElement vis) {
     if (vis.isOffset()) {
       target = getCenter().offset((Offset) vis);
     } else {
@@ -257,12 +245,12 @@ public abstract class Element implements Comparable<Element>{
     return this;
   }
 
-  public Element setTarget(int x, int y) {
+  public SXElement setTarget(int x, int y) {
     target = getCenter().offset(x, y);
     return this;
   }
 
-  public Element setTarget(int[] pos) {
+  public SXElement setTarget(int[] pos) {
     if (pos.length == 2) {
       target = getCenter().offset(pos[0], pos[1]);
     }
@@ -279,7 +267,7 @@ public abstract class Element implements Comparable<Element>{
     return (Location) target;
   }
 
-  private Element target = null;
+  private SXElement target = null;
 
   //</editor-fold>
 
@@ -352,15 +340,15 @@ public abstract class Element implements Comparable<Element>{
   //</editor-fold>
 
   //<editor-fold desc="***** construct, info">
-  public ElementFlat getVisualForJson() {
-    return new ElementFlat(this);
+  public SXElementFlat getElementForJson() {
+    return new SXElementFlat(this);
   }
 
   public String toJson() {
-    return SXJson.makeBean(this.getVisualForJson()).toString();
+    return SXJson.makeBean(this.getElementForJson()).toString();
   }
 
-  public <T extends Element> T fromJson(String jsonVis) {
+  public <T extends SXElement> T fromJson(String jsonVis) {
     JSONObject jobj = SXJson.makeObject(jsonVis);
     T retval = null;
     eType type = isValidJson(jobj);
@@ -415,7 +403,7 @@ public abstract class Element implements Comparable<Element>{
     init(p.x, p.y, 0, 0);
   }
 
-  public void init(Element vis) {
+  public void init(SXElement vis) {
     init(vis.x, vis.y, vis.w, vis.h);
   }
 
@@ -466,15 +454,15 @@ public abstract class Element implements Comparable<Element>{
     if (this == oThat) {
       return true;
     }
-    if (!(oThat instanceof Element)) {
+    if (!(oThat instanceof SXElement)) {
       return false;
     }
-    Element that = (Element) oThat;
+    SXElement that = (SXElement) oThat;
     return x == that.x && y == that.y;
   }
 
   @Override
-  public int compareTo(Element vis) {
+  public int compareTo(SXElement vis) {
     if (equals(vis)) {
       return 0;
     }
@@ -674,6 +662,8 @@ public abstract class Element implements Comparable<Element>{
     return new Location(belowAt().x, belowAt().y + yoff);
   }
 
+
+
   /**
    * returns -1, if outside of any screen <br>
    *
@@ -692,7 +682,7 @@ public abstract class Element implements Comparable<Element>{
 
 // TODO getColor() implement more support and make it useable
   /**
-   * Get the color at the given Point (center of visual) for details: see java.awt.Robot and ...Color
+   * Get the color at the given Point (center of element) for details: see java.awt.Robot and ...Color
    *
    * @return The Color of the Point or null if not possible
    */
@@ -775,19 +765,19 @@ public abstract class Element implements Comparable<Element>{
   //</editor-fold>
 
   //<editor-fold desc="***** combine">
-  public Region union(Element vis) {
+  public Region union(SXElement vis) {
     Rectangle r1 = new Rectangle(x, y, w, h);
     Rectangle r2 = new Rectangle(vis.x, vis.y, vis.w, vis.h);
     return new Region(r1.union(r2));
   }
 
-  public Region intersection(Element vis) {
+  public Region intersection(SXElement vis) {
     Rectangle r1 = new Rectangle(x, y, w, h);
     Rectangle r2 = new Rectangle(vis.x, vis.y, vis.w, vis.h);
     return new Region(r1.intersection(r2));
   }
 
-  public boolean contains(Element vis) {
+  public boolean contains(SXElement vis) {
     if (!isRectangle()) {
       return false;
     }
@@ -811,23 +801,23 @@ public abstract class Element implements Comparable<Element>{
     SX.pause(time);
   }
 
-  public Match wait(Element vis) {
-    //TODO implement wait(Visual vis)
+  public Match wait(SXElement vis) {
+    //TODO implement wait(Element vis)
     return new Match();
   }
 
-  public Match wait(Element vis, double time) {
-    //TODO implement wait(Visual vis, double time)
+  public Match wait(SXElement vis, double time) {
+    //TODO implement wait(Element vis, double time)
     return new Match();
   }
 
-  public boolean waitVanish(Element vis) {
-    //TODO implement wait(Visual vis)
+  public boolean waitVanish(SXElement vis) {
+    //TODO implement wait(Element vis)
     return true;
   }
 
-  public boolean waitVanish(Element vis, double time) {
-    //TODO implement wait(Visual vis, double time)
+  public boolean waitVanish(SXElement vis, double time) {
+    //TODO implement wait(Element vis, double time)
     return true;
   }
   //</editor-fold>
@@ -860,43 +850,83 @@ public abstract class Element implements Comparable<Element>{
     return SX.getLocalRobot();
   }
   /**
-   * Move the mouse to this visual's target
+   * Move the mouse to this element's target
    *
    * @return this
    */
-  public Element hover() {
+  public SXElement hover() {
     Mouse.get().move(this.getTarget());
     return this;
   }
 
   /**
-   * Move the mouse to this visual's target and click left
+   * Move the mouse to this element's target and click left
    *
    * @return this
    */
-  public Element click() {
+  public SXElement click() {
     Mouse.get().click(this.getTarget(), "L");
     return this;
   }
 
   /**
-   * Move the mouse to this visual's target and double click left
+   * Move the mouse to this element's target and double click left
    *
    * @return this
    */
-  public Element doubleClick() {
+  public SXElement doubleClick() {
     Mouse.get().click(this.getTarget(), "LD");
     return this;
   }
 
   /**
-   * Move the mouse to this visual's target and click right
+   * Move the mouse to this element's target and click right
    *
    * @return this
    */
-  public Element rightClick() {
+  public SXElement rightClick() {
     Mouse.get().click(this.getTarget(), "R");
     return this;
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="*****  like Selenium: findElement, get..., is...">
+  public Match findElement(By by) {
+    return new Match();
+  }
+
+  public List<Match> findElements(By by) {
+    return new ArrayList<Match>();
+  }
+
+  public String getAttribute(String key) {
+    return "NotAvailable";
+  }
+
+  public Location getLocation() {
+    return getTopLeft();
+  }
+
+  public Region getRect() {
+    return (Region) this;
+  }
+
+  public Dimension getSize() {
+    return new Dimension(w, h);
+  }
+
+  //TODO implement OCR
+  public String getText() {
+    return "NotImplemented";
+  }
+
+  //TODO implement isDisplayed
+  public boolean isDisplayed() {
+    return true;
+  }
+
+  public void sendKeys(CharSequence keys) {
+    write(keys.toString());
   }
   //</editor-fold>
 

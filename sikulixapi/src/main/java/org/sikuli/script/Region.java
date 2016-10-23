@@ -21,7 +21,7 @@ import com.sikulix.util.Settings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.sikulix.core.SX;
-import com.sikulix.core.Element;
+import com.sikulix.core.SXElement;
 import org.sikuli.util.Debug;
 import org.sikuli.util.FindFailedDialog;
 import org.sikuli.util.visual.ScreenHighlighter;
@@ -1409,7 +1409,7 @@ public class Region {
    */
   @Deprecated
   public Region nearby() {
-    return grow(Element.getMargin()[0], Element.getMargin()[1]);
+    return grow(SXElement.getMargin()[0], SXElement.getMargin()[1]);
   }
 
   /**
@@ -1430,7 +1430,7 @@ public class Region {
    * @return the new region
    */
   public Region grow() {
-    return grow(Element.getMargin()[0], Element.getMargin()[1]);
+    return grow(SXElement.getMargin()[0], SXElement.getMargin()[1]);
   }
 
   /**

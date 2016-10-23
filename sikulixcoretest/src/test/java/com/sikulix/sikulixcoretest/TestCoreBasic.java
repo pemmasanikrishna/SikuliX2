@@ -44,7 +44,7 @@ public class TestCoreBasic {
         }
       });
     }
-    Element.initClass();
+    SXElement.initClass();
   }
 
   @AfterClass
@@ -150,7 +150,7 @@ public class TestCoreBasic {
     SX.pause(3);
     Region vis = new Region(300, 300, 500, 500);
     vis.setLastMatch(new Match(new Region(400, 400, 50, 50), 0.92345678, new Offset(100, 100)));
-    JSONObject jVis = SXJson.makeBean(vis.getVisualForJson());
+    JSONObject jVis = SXJson.makeBean(vis.getElementForJson());
     SXClient.postJSON(jVis.toString());
     SX.pause(1);
     boolean retVal = SXClient.stopServer();

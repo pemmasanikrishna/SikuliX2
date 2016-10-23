@@ -41,11 +41,11 @@ public class LocalRobot extends Robot implements IRobot {
   }
 
   private void doMouseDown(int buttons) {
-    Element.fakeHighlight(true);
+    SXElement.fakeHighlight(true);
     setAutoDelay(stdAutoDelay);
     setAutoWaitForIdle(false);
     delay(100);
-    Element.fakeHighlight(false);
+    SXElement.fakeHighlight(false);
     delay(100);
     mousePress(buttons);
     if (stdAutoDelay == 0) {
