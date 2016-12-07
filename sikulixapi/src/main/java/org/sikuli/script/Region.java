@@ -1409,7 +1409,7 @@ public class Region {
    */
   @Deprecated
   public Region nearby() {
-    return grow(SXElement.getMargin()[0], SXElement.getMargin()[1]);
+    return grow(SXElement.getMargin(), SXElement.getMargin());
   }
 
   /**
@@ -1430,7 +1430,7 @@ public class Region {
    * @return the new region
    */
   public Region grow() {
-    return grow(SXElement.getMargin()[0], SXElement.getMargin()[1]);
+    return grow(SXElement.getPadding(), SXElement.getPadding());
   }
 
   /**

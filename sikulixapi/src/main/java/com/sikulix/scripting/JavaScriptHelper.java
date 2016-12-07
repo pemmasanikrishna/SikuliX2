@@ -18,7 +18,7 @@ public class JavaScriptHelper {
   private static SXLog log = SX.getLogger("SX.JavaScriptHelper");
   private static int lvl = SXLog.DEBUG;
 
-  static Region scr, scrSaved;
+  static Element scr, scrSaved;
 
   /**
    *
@@ -116,7 +116,7 @@ public class JavaScriptHelper {
    * @param args
    * @return the used region
    */
-  public static Region use(Object... args) {
+  public static Element use(Object... args) {
     logCmd("use", args);
     scrSaved = null;
     return usex(args);
@@ -128,7 +128,7 @@ public class JavaScriptHelper {
    * @param args see use()
    * @return the used region
    */
-  public static Region use1(Object... args) {
+  public static Element use1(Object... args) {
     logCmd("use1", args);
     scrSaved = scr;
     return usex(args);
@@ -145,20 +145,19 @@ public class JavaScriptHelper {
     }
   }
 
-  private static Region usex(Object... args) {
+  private static Element usex(Object... args) {
     int len = args.length;
     int nScreen = -1;
     if (len == 0 || len > 1) {
-      scr = new Region(0);
-      return new Region();
+      scr = new Element(0);
     } else {
       nScreen = getInteger(args[0], -1);
       if (nScreen > -1) {
-        scr = new Region(nScreen);
+        scr = new Element(nScreen);
       } else {
         Object oReg = args[0];
-        if (oReg instanceof Region) {
-          scr = (Region) oReg;
+        if (oReg instanceof Element) {
+          scr = (Element) oReg;
         }
       }
     }
@@ -318,21 +317,21 @@ public class JavaScriptHelper {
    * @param args
    * @return the evaluated location to where the mouse should have moved
    */
-  public static Location hover(Object... args) {
+  public static Element hover(Object... args) {
     logCmd("hover", args);
     return hoverx(args);
   }
 
-  private static Location hoverx(Object... args) {
+  private static Element hoverx(Object... args) {
     int len = args.length;
     Match aMatch;
     if (len == 0 || args[0] == null) {
       Mouse.move(scr.getMatchPoint());
-      return new Location(); // Mouse.at();
+      return new Element(); // Mouse.at();
     }
     if (len < 4) {
       Object aObj = args[0];
-      Location loc = null;
+      Element loc = null;
       if (isJSON(aObj)) {
         aObj = fromJSON(aObj);
       }
@@ -343,66 +342,66 @@ public class JavaScriptHelper {
         } catch (Exception ex) {
           Mouse.move(scr.getMatchPoint());
         }
-        return new Location(); // Mouse.at();
-      } else if (aObj instanceof Region) {
-        loc = new Location(); //(Region) aObj).getTarget();
-      } else if (aObj instanceof Location) {
-        loc = (Location) aObj;
+        return new Element(); // Mouse.at();
+      } else if (aObj instanceof Element) {
+        loc = new Element(); //(Region) aObj).getTarget();
+      } else if (aObj instanceof Element) {
+        loc = (Element) aObj;
       }
       if (len > 1) {
         if (isNumber(aObj) && isNumber(args[1])) {
-          Location match = scr.getMatchPoint();
+          Element match = scr.getMatchPoint();
           match.translate(getInteger(aObj), getInteger(args[1]));
           Mouse.move(match);
-          return new Location(); //Mouse.at();
+          return new Element(); //Mouse.at();
         } else if (len == 3 && loc != null && isNumber(args[1]) && isNumber(args[2])) {
           //Mouse.move(loc.offset(getInteger(args[1], 0), getInteger(args[2], 0)));
-          return new Location();  //Mouse.at();
+          return new Element();  //Mouse.at();
         }
       }
       if (loc != null) {
         //Mouse.move(loc);
-        return  new Location(); //Mouse.at();
+        return  new Element(); //Mouse.at();
       }
     }
     Mouse.move(scr.getMatchPoint());
-    return new Location();  //Mouse.at();
+    return new Element();  //Mouse.at();
   }
 
   /**
    * move the mouse with hover() and click using the left button
    * @param args see hover()
-   * @return the location, where the click was done
+   * @return the Element, where the click was done
    */
-  public static Location click(Object... args) {
+  public static Element click(Object... args) {
     logCmd("click", args);
     hoverx(args);
     Mouse.click(null, "L");
-    return  new Location(); // Mouse.at();
+    return  new Element(); // Mouse.at();
   }
 
   /**
    * move the mouse with hover() and double click using the left button
    * @param args see hover()
-   * @return the location, where the double click was done
+   * @return the Element, where the double click was done
    */
-  public static Location doubleClick(Object... args) {
+  public static Element doubleClick(Object... args) {
     logCmd("doubleClick", args);
     hoverx(args);
     Mouse.click(null, "LD");
-    return  new Location(); //Mouse.at();
+    return  new Element(); //Mouse.at();
   }
 
   /**
    * move the mouse with hover() and do a right click
    * @param args see hover()
-   * @return the location, where the right click was done
+   * @return the Element, where the right click was done
    */
-  public static Location rightClick(Object... args) {
+  public static Element rightClick(Object... args) {
     logCmd("rightClick", args);
     hoverx(args);
     Mouse.click(null, "R");
-    return  new Location(); //Mouse.at();
+    return  new Element(); //Mouse.at();
   }
 //</editor-fold>
 
@@ -485,9 +484,9 @@ public class JavaScriptHelper {
       return aObj;
     }
     if ("S".equals(oType)) {
-      newObj = new Region(intFromJSON(json, 5));
+      newObj = new Element(intFromJSON(json, 5));
     } else if ("R".equals(oType)) {
-      newObj = new Region(rectFromJSON(json));
+      newObj = new Element(rectFromJSON(json));
     } else if ("M".equals(oType)) {
       Match newMatch = new Match(rectFromJSON(json));
       newMatch.setScore(dblFromJSON(json, 5)/100);
@@ -497,7 +496,7 @@ public class JavaScriptHelper {
     } else if ("P".equals(oType)) {
       newObj = new Pattern(json[1]);
       ((Pattern) newObj).similar(fltFromJSON(json, 2));
-      ((Pattern) newObj).targetOffset(intFromJSON(json, 3), intFromJSON(json, 4));
+      ((Pattern) newObj).setTarget(intFromJSON(json, 3), intFromJSON(json, 4));
     }
     return newObj;
   }

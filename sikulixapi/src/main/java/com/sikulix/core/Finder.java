@@ -4,10 +4,10 @@
 
 package com.sikulix.core;
 
+import com.sikulix.api.Element;
 import com.sikulix.api.Image;
 import com.sikulix.api.Match;
 import com.sikulix.api.Pattern;
-import com.sikulix.api.Region;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.sikuli.basics.Settings;
@@ -27,7 +27,7 @@ public class Finder {
   private Image image = null;
 
   private boolean isRegion = true;
-  private Region region = null;
+  private Element region = null;
   private int offX = 0, offY = 0;
 
   private boolean isMat = false;
@@ -75,7 +75,7 @@ public class Finder {
     public boolean success = false;
     public FindType type = FindType.ONE;
 
-    public Region region = null;
+    public Element region = null;
     private int baseX = 0;
     private int baseY = 0;
     public Image image = null;
@@ -147,7 +147,7 @@ public class Finder {
     public synchronized Match next() {
       Match match = null;
       if (hasNext(false)) {
-        match = new Match(new Region(baseX + currentX, baseY + currentY, width, height), currentScore, null);
+        match = new Match(new Element(baseX + currentX, baseY + currentY, width, height), currentScore, null);
         int newX = Math.max(currentX - margin, 0);
         int newY = Math.max(currentY - margin, 0);
         int newXX = Math.min(newX + 2 * margin, result.cols());
@@ -218,7 +218,7 @@ public class Finder {
 
   public Finder(SXElement elem) {
     if (!SX.isNull(elem) && elem.isRectangle()) {
-      region = (Region) elem;
+      region = (Element) elem;
       offX = region.x;
       offY = region.y;
     } else {
@@ -244,7 +244,7 @@ public class Finder {
 //    base = new Image(bImg, "").getMat();
   }
 
-  protected void setBase(Region reg) {
+  protected void setBase(Element reg) {
     isRegion = true;
     region = reg;
     offX = region.x;
@@ -272,7 +272,7 @@ public class Finder {
     return isRegion;
   }
 
-  public Region getRegion() {
+  public Element getRegion() {
     return region;
   }
 
@@ -359,7 +359,7 @@ public class Finder {
         // ************************************* check after downsized success
         if (base.size().equals(probe.mat.size())) {
           // trust downsized result, if images have same size
-          mFound = new Match(new Region((int) offX, (int) offY, base.width(), base.height()),mMinMax.maxVal, null);
+          mFound = new Match(new Element((int) offX, (int) offY, base.width(), base.height()),mMinMax.maxVal, null);
           success = true;
         } else {
           int maxLocX = (int) (mMinMax.maxLoc.x * rfactor);
@@ -372,7 +372,7 @@ public class Finder {
           result = doFindMatch(probe, base.submat(r), probe.mat);
           mMinMax = Core.minMaxLoc(result);
           if (mMinMax.maxVal > probe.similarity) {
-            mFound = new Match(new Region((int) mMinMax.maxLoc.x + offX + r.x, (int) mMinMax.maxLoc.y + offY + r.y,
+            mFound = new Match(new Element((int) mMinMax.maxLoc.x + offX + r.x, (int) mMinMax.maxLoc.y + offY + r.y,
                     probe.img.w, probe.img.h), mMinMax.maxVal, null);
             success = true;
           }
@@ -386,7 +386,7 @@ public class Finder {
         result = doFindMatch(probe, base, probe.mat);
         mMinMax = Core.minMaxLoc(result);
         if (mMinMax != null && mMinMax.maxVal > probe.similarity) {
-          mFound = new Match(new Region((int) mMinMax.maxLoc.x + offX, (int) mMinMax.maxLoc.y + offY,
+          mFound = new Match(new Element((int) mMinMax.maxLoc.x + offX, (int) mMinMax.maxLoc.y + offY,
               probe.img.w, probe.img.h), mMinMax.maxVal, null);
           success = true;
         }
@@ -517,7 +517,7 @@ public class Finder {
     Match[] mArray;
     Image base;
     Object target;
-    Region reg;
+    Element reg;
     boolean finished = false;
     int subN;
     Found subFound;

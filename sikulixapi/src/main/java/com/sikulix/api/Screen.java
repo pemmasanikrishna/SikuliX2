@@ -14,7 +14,7 @@ public class Screen extends Device {
   private static SXLog log = SX.getLogger("SX.Screen");
 
   private int sNum = 0;
-  private SXElement visScreen = null;
+  private Element screenAsElement = null;
 
   public Screen() {
     init(SX.getMainMonitorID());
@@ -26,18 +26,19 @@ public class Screen extends Device {
   }
 
   private void init(int id) {
-    visScreen = new Region(SX.getMonitor(sNum));
+    screenAsElement = new Element(SX.getMonitor(sNum));
   }
 
-  public static Region all() {
-    return new Region(SX.getAllMonitors());
+  public static Element all() {
+    return new Element(SX.getAllMonitors());
   }
 
-  public Region asRegion() {
-    return (Region) visScreen;
+  public Element asElement() {
+    return screenAsElement;
   }
 
-  public static Region asRegion(int id) {
-    return new Screen(id).asRegion();
+  public static Element asElement(int id) {
+    return new Screen(id).asElement();
   }
 }
+

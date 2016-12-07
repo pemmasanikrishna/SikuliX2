@@ -6,6 +6,7 @@
  */
 package org.sikuli.script;
 
+import com.sikulix.api.Element;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
@@ -16,7 +17,7 @@ import java.awt.*;
  * hence modifications might move location out of
  * any screen (not checked as is done with region)
  */
-public class Location extends com.sikulix.api.Location {
+public class Location extends com.sikulix.api.Element {
 
   private static final SXLog log = SX.getLogger("API.Location");
 
@@ -65,6 +66,10 @@ public class Location extends com.sikulix.api.Location {
     if (loc.isOtherScreen()) {
       otherScreen = loc.getScreen();
     }
+  }
+
+  public Location(Element loc) {
+    init(loc.x, loc.y, 0, 0);
   }
 
   /**

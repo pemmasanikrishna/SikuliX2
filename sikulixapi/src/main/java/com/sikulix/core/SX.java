@@ -4,7 +4,7 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.Location;
+import com.sikulix.api.Element;
 import com.sikulix.scripting.JythonHelper;
 import org.apache.commons.cli.*;
 import org.apache.commons.configuration2.PropertiesConfiguration;
@@ -1726,10 +1726,10 @@ public class SX {
     }
   }
 
-  public static Location at() {
+  public static Element at() {
     PointerInfo mp = MouseInfo.getPointerInfo();
     if (mp != null) {
-      return new Location(MouseInfo.getPointerInfo().getLocation());
+      return new Element(MouseInfo.getPointerInfo().getLocation());
     } else {
       error("not possible to get mouse position (PointerInfo == null)");
       return null;

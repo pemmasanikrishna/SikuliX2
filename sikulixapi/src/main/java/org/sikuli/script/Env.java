@@ -6,8 +6,8 @@
  */
 package org.sikuli.script;
 
+import com.sikulix.api.Element;
 import com.sikulix.core.SX;
-import com.sikulix.api.Location;
 
 /**
  * features moved to other classes, details below with the methods
@@ -37,7 +37,7 @@ public class Env {
    */
   @Deprecated
   public static Location getMouseLocation() {
-    return SX.at();
+    return new Location(SX.at());
   }
 
   /**
