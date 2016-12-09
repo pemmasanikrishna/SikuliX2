@@ -348,8 +348,8 @@ public abstract class SXElement implements Comparable<SXElement>{
     return SXJson.makeBean(this.getElementForJson()).toString();
   }
 
-  public <T extends SXElement> T fromJson(String jsonVis) {
-    JSONObject jobj = SXJson.makeObject(jsonVis);
+  public <T extends SXElement> T fromJson(String jsonElem) {
+    JSONObject jobj = SXJson.makeObject(jsonElem);
     T retval = null;
     eType type = isValidJson(jobj);
     if (SX.isNull(type)) {
