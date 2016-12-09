@@ -4,10 +4,8 @@
 
 package com.sikulix.core;
 
-import org.sikuli.script.Commands;
-import org.sikuli.script.ImagePath;
-import org.sikuli.util.PreferencesUser;
-import org.sikuli.util.visual.SplashFrame;
+import org.sikuli.basics.PreferencesUser;
+import org.sikuli.basics.SplashFrame;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -537,7 +535,7 @@ public class Content {
   }
   
   public static String saveTimedImage(BufferedImage img) {
-    return saveTimedImage(img, ImagePath.getBundlePath(), null);
+    return saveTimedImage(img, com.sikulix.api.Image.getBundlePath(), null);
   }
 
   public static String saveTimedImage(BufferedImage img, String path) {
@@ -1117,8 +1115,7 @@ public class Content {
       if (!jarPath.endsWith(".jar")) RunningFromJar = "N";
       jarParentPath = Content.slashify((new File(jarPath)).getParent(), true);
     } else {
-      log.error("Fatal Error 101: Not possible to access the jar files!");
-      Commands.terminate(101);
+      SX.terminate(101, "Fatal Error 101: Not possible to access the jar files!");
     }
     return RunningFromJar + jarParentPath;
   }

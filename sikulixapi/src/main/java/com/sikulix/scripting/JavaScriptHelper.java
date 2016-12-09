@@ -8,8 +8,6 @@ import com.sikulix.api.*;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
-import org.sikuli.script.Mouse;
-
 import java.awt.*;
 import java.lang.reflect.Method;
 
@@ -326,7 +324,7 @@ public class JavaScriptHelper {
     int len = args.length;
     Match aMatch;
     if (len == 0 || args[0] == null) {
-      Mouse.move(scr.getMatchPoint());
+      Mouse.get().move(scr.getMatchPoint());
       return new Element(); // Mouse.at();
     }
     if (len < 4) {
@@ -338,9 +336,9 @@ public class JavaScriptHelper {
       if (aObj instanceof String || aObj instanceof Pattern) {
         try {
           aMatch = wait(args);
-          Mouse.move(aMatch.getTarget());
+          Mouse.get().move(aMatch.getTarget());
         } catch (Exception ex) {
-          Mouse.move(scr.getMatchPoint());
+          Mouse.get().move(scr.getMatchPoint());
         }
         return new Element(); // Mouse.at();
       } else if (aObj instanceof Element) {
@@ -352,7 +350,7 @@ public class JavaScriptHelper {
         if (isNumber(aObj) && isNumber(args[1])) {
           Element match = scr.getMatchPoint();
           match.translate(getInteger(aObj), getInteger(args[1]));
-          Mouse.move(match);
+          Mouse.get().move(match);
           return new Element(); //Mouse.at();
         } else if (len == 3 && loc != null && isNumber(args[1]) && isNumber(args[2])) {
           //Mouse.move(loc.offset(getInteger(args[1], 0), getInteger(args[2], 0)));
@@ -364,7 +362,7 @@ public class JavaScriptHelper {
         return  new Element(); //Mouse.at();
       }
     }
-    Mouse.move(scr.getMatchPoint());
+    Mouse.get().move(scr.getMatchPoint());
     return new Element();  //Mouse.at();
   }
 
@@ -376,7 +374,7 @@ public class JavaScriptHelper {
   public static Element click(Object... args) {
     logCmd("click", args);
     hoverx(args);
-    Mouse.click(null, "L");
+    Mouse.get().click(null, "L");
     return  new Element(); // Mouse.at();
   }
 
@@ -388,7 +386,7 @@ public class JavaScriptHelper {
   public static Element doubleClick(Object... args) {
     logCmd("doubleClick", args);
     hoverx(args);
-    Mouse.click(null, "LD");
+    Mouse.get().click(null, "LD");
     return  new Element(); //Mouse.at();
   }
 
@@ -400,7 +398,7 @@ public class JavaScriptHelper {
   public static Element rightClick(Object... args) {
     logCmd("rightClick", args);
     hoverx(args);
-    Mouse.click(null, "R");
+    Mouse.get().click(null, "R");
     return  new Element(); //Mouse.at();
   }
 //</editor-fold>

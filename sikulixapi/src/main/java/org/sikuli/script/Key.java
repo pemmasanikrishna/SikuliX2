@@ -1,20 +1,21 @@
 /*
- * Copyright 2010-2014, Sikuli.org, sikulix.com
+ * Copyright (c) 2010-2016, Sikuli.org, sikulix.com
  * Released under the MIT License.
  *
- * modified RaiMan
  */
 package org.sikuli.script;
 
-import com.sikulix.core.SX;
-import org.sikuli.util.hotkey.HotkeyManager;
-import org.sikuli.util.hotkey.HotkeyListener;
+import com.sikulix.core.HotkeyManager;
+import com.sikulix.core.HotkeyListener;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import org.sikuli.util.Debug;
+
+import com.sikulix.core.SX;
+import org.sikuli.basics.Debug;
+import com.sikulix.util.SysJNA;
 
 /**
  * this class implements an interface to the Java key system
@@ -380,8 +381,8 @@ public class Key {
   public static final char C_DECIMAL = '\ue040'; // VK_DECIMAL
   public static final String CONTEXT = "\ue041";
   public static final char C_CONTEXT = '\ue041'; // VK_CONTEXT_MENU
-  public static final String NEXT = "\ue043";
-  public static final char C_NEXT = '\ue043'; // VK_CONTEXT_MENU
+  public static final String NEXT = "\ue044";
+  public static final char C_NEXT = '\ue044'; // VK_CONTEXT_MENU
 
   public static final char cMax = '\ue050';
   public static final char cMin = '\ue000';
@@ -475,7 +476,7 @@ public class Key {
       return keyTexts.get(key).intValue();
     }
   }
-  
+
   public static void dump() {
     Map<Integer, String> namesVK = new HashMap<Integer, String>();
     for (int i = 0; i < keyVK.length; i += 2) {
@@ -490,7 +491,7 @@ public class Key {
       if (keyN < 1) {
         continue;
       }
-      System.out.println(String.format("%s = %d (%s)", key, keyN, namesVK.get(keyN)));      
+      System.out.println(String.format("%s = %d (%s)", key, keyN, namesVK.get(keyN)));
     }
   }
   //</editor-fold>
@@ -689,7 +690,7 @@ public class Key {
       case Key.C_NEXT:   return new int[]{-KeyEvent.VK_TAB};
 
       default:
-        throw new IllegalArgumentException("Cannot convert character " + key);
+        throw new IllegalArgumentException("Key: Not supported character: " + key);
     }
   }
 
@@ -803,14 +804,20 @@ public class Key {
    * @return true/false
    */
   public static boolean isLockOn(char key) {
-    Toolkit tk = Toolkit.getDefaultToolkit();
+//    Toolkit tk = Toolkit.getDefaultToolkit();
+//        return tk.getLockingKeyState(KeyEvent.VK_SCROLL_LOCK);
+//        return tk.getLockingKeyState(KeyEvent.VK_CAPS_LOCK);
+//        return tk.getLockingKeyState(KeyEvent.VK_NUM_LOCK);
+    if (!SX.isWindows()) {
+      return false;
+    }
     switch (key) {
       case '\ue025':
-        return tk.getLockingKeyState(KeyEvent.VK_SCROLL_LOCK);
+        return SysJNA.WinUser32.isScrollLockOn();
       case '\ue027':
-        return tk.getLockingKeyState(KeyEvent.VK_CAPS_LOCK);
+        return SysJNA.WinUser32.isCapsLockOn();
       case '\ue03B':
-        return tk.getLockingKeyState(KeyEvent.VK_NUM_LOCK);
+        return SysJNA.WinUser32.isNumLockOn();
       default:
         return false;
     }
@@ -1006,8 +1013,8 @@ public class Key {
 //
 //    @Override
 //    public void run() {
-//      BufferedImage image = Image.create("SikuliLogo").get();
-//      Debug.log(3, "KBSetup: %s", image);
+//      BufferedImage img = Image.create("SikuliLogo").get();
+//      Debug.log(3, "KBSetup: %s", img);
 //      Image.dump();
 //      kbSetup = new JFrame("Localized Keyboard Setup");
 //      Container mpwinCP = kbSetup.getContentPane();
@@ -1017,7 +1024,7 @@ public class Key {
 //      kbSetup.pack();
 //      kbSetup.setAlwaysOnTop(true);
 //      kbSetup.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-//      win.setLogo(new ImageIcon(image));
+//      win.setLogo(new ImageIcon(img));
 //      kbSetup.setVisible(true);
 //    }
 //  }

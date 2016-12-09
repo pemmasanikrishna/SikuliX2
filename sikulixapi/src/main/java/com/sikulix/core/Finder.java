@@ -10,7 +10,6 @@ import com.sikulix.api.Match;
 import com.sikulix.api.Pattern;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
-import org.sikuli.basics.Settings;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -313,7 +312,7 @@ public class Finder {
     Probe probe = new Probe(found.pattern);
     found.base = base;
     boolean isIterator = FindType.ALL.equals(found.type);
-    if (isRegion && !isIterator && !useOriginal && Settings.CheckLastSeen && probe.lastSeen != null) {
+    if (isRegion && !isIterator && !useOriginal && SX.isOption("CheckLastSeen") && probe.lastSeen != null) {
       // ****************************** check last seen
       begin_t = new Date().getTime();
       Finder lastSeenFinder = new Finder(probe.lastSeen);

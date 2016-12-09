@@ -10,7 +10,7 @@ import org.apache.commons.cli.*;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.sikuli.util.SysJNA;
+import com.sikulix.util.SysJNA;
 
 import java.awt.*;
 import java.io.*;

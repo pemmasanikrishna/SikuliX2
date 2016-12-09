@@ -9,7 +9,6 @@ import com.sikulix.api.Image;
 import org.json.JSONObject;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
-import org.sikuli.basics.Settings;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -614,7 +613,7 @@ public abstract class SXElement implements Comparable<SXElement>{
 
   //</editor-fold>
 
-  //<editor-fold desc="***** capture/show">
+  //<editor-fold desc="***** capture/show/highlight">
   public Image capture() {
     Image img = new Image();
     if (isSpecial()) {
@@ -627,7 +626,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public void show() {
-    show((int) Settings.DefaultHighlightTime);
+    show((int) SX.getOptionNumber("DefaultHighlightTime"));
   }
 
   public void show(int time) {
@@ -643,6 +642,15 @@ public abstract class SXElement implements Comparable<SXElement>{
     frImg.setVisible(true);
     SX.pause(time);
     frImg.dispose();
+  }
+
+  public void highlight() {
+    highlight((int) SX.getOptionNumber("DefaultHighlightTime"));
+  }
+
+  public void highlight(int time) {
+  //TODO Element.highlight not implemented
+    eLog.error("highlight not implemented");
   }
 
   public BufferedImage getBufferedImage() {

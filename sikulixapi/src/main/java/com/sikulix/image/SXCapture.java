@@ -5,6 +5,8 @@
 package com.sikulix.image;
 
 import com.sikulix.api.Commands;
+import com.sikulix.api.Element;
+import com.sikulix.api.Screen;
 import com.sikulix.core.NativeHookCallback;
 import com.sikulix.api.Mouse;
 import com.sikulix.core.NativeHook;
@@ -13,8 +15,6 @@ import com.sikulix.core.SXLog;
 import org.jnativehook.NativeInputEvent;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.mouse.NativeMouseEvent;
-import org.sikuli.script.Region;
-import org.sikuli.script.Screen;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -131,7 +131,7 @@ public class SXCapture {
   }
 
   public static Object getScreenImage(NativeHook hook) {
-    BufferedImage bImg = new Screen(Mouse.at().getContainingScreenNumber()).capture().getImage();
+    BufferedImage bImg = new Screen(Mouse.at().getContainingScreenNumber()).asElement().capture().getBufferedImage();
     return bImg;
   }
 
@@ -148,7 +148,7 @@ public class SXCapture {
   }
 
   public static void make(NativeHook hook, int x, int y, int w, int h, Object shot) {
-    Screen scr = new Screen(Mouse.at().getContainingScreenNumber());
+    Element scr = new Screen(Mouse.at().getContainingScreenNumber()).asElement();
     Rectangle toCapture = null;
     if (w == 0 && h == 0) {
       toCapture = new Rectangle(x - 50, y - 15, 100, 30);
@@ -164,7 +164,7 @@ public class SXCapture {
     }
   }
 
-  private static BufferedImage getCapture(Screen scr, Rectangle r, Object shot) {
+  private static BufferedImage getCapture(Element scr, Rectangle r, Object shot) {
     float wFactor = r.width / (scr.w * 0.9f);
     float hFactor = r.height / (scr.h * 0.9f);
     float factor = 1 / Math.max(wFactor, hFactor);
@@ -175,7 +175,7 @@ public class SXCapture {
   private static class MakeCapture extends MouseAdapter implements WindowListener, KeyListener {
 
     private NativeHook hook = null;
-    private Screen scr = null;
+    private Element scr = null;
     private BufferedImage shot = null;
     private Rectangle rect = null;
     private JFrame box = null;
@@ -194,7 +194,7 @@ public class SXCapture {
     private int activeSide = TOP;
     private String[] activeSides = new String[]{"TOP", "LEFT", "BOTTOM", "RIGHT"};
 
-    public MakeCapture(NativeHook hook, Screen scr, Rectangle rect, BufferedImage img, Object shot) {
+    public MakeCapture(NativeHook hook, Element scr, Rectangle rect, BufferedImage img, Object shot) {
       this.hook = hook;
       this.scr = scr;
       this.rect = rect;
@@ -393,7 +393,7 @@ public class SXCapture {
           log.trace("action: zoom-in to %s", rectangleToString(newRect));
           zoom(newRect);
         } else if ("-".equals("" + e.getKeyChar())) {
-          Rectangle newRect = zoomOut(rect, scr.getBounds());
+          Rectangle newRect = zoomOut(rect, scr.getRectangle());
           log.trace("action: zoom-out to %s", rectangleToString(newRect));
           zoom(newRect);
         } else if ("s".equals("" + e.getKeyChar())) {
@@ -402,7 +402,7 @@ public class SXCapture {
         } else if ("f".equals("" + e.getKeyChar())) {
           log.info("action: find request");
           box.setVisible(false);
-          new Region(rect).highlight(3);
+          new Element(rect).highlight(3);
           box.setVisible(true);
         } else if ("t".equals("" + e.getKeyChar())) {
           log.info("action: set target");

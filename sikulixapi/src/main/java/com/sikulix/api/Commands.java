@@ -12,7 +12,7 @@ import com.sikulix.scripting.JythonHelper;
 import com.sikulix.scripting.SXRunner;
 import com.sikulix.util.FileChooser;
 import org.sikuli.script.Key;
-import org.sikuli.util.hotkey.HotkeyListener;
+import com.sikulix.core.HotkeyListener;
 
 import javax.swing.*;
 import java.awt.*;

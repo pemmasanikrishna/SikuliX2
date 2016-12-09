@@ -1,8 +1,15 @@
-package org.sikuli.util;
+/*
+ * Copyright (c) 2010-2016, Sikuli.org, sikulix.com
+ * Released under the MIT License.
+ *
+ */
+
+package com.sikulix.util;
 
 import org.bridj.BridJ;
 import org.bridj.Pointer;
 import org.bridj.ann.Library;
+import org.sikuli.basics.Debug;
 
 /**
  * Direct access to system functions via JNI, JNA, BridJ, ...
@@ -73,4 +80,47 @@ public class SysJNA {
     }
   }
 
+  /**
+   * Direct access to Windows API user32.dll via BridJ
+   */
+  @Library("user32")
+  public static class WinUser32 {
+
+    /*
+    https://msdn.microsoft.com/pt-br/library/windows/desktop/dd375731
+    VK_NUM_LOCK 0x90
+    VK_SCROLL 0x91
+    VK_CAPITAL 0x14
+    */
+    private static int WinNumLock = 0x90;
+    private static int WinScrollLock = 0x91;
+    private static int WinCapsLock = 0x14;
+
+    static {
+      BridJ.register();
+    }
+
+    public static boolean isNumLockOn() {
+      int state = GetKeyState(WinNumLock);
+      return state > 0;
+    }
+
+    public static boolean isScrollLockOn() {
+      int state = GetKeyState(WinScrollLock);
+      return state > 0;
+    }
+
+    public static boolean isCapsLockOn() {
+      int state = GetKeyState(WinCapsLock);
+      return state > 0;
+    }
+
+    /*
+    https://msdn.microsoft.com/en-us/library/ms646301(VS.85).aspx
+    SHORT WINAPI GetKeyState(
+      _In_ int nVirtKey
+    );
+     */
+    private static native int GetKeyState(int aVK);
+  }
 }
