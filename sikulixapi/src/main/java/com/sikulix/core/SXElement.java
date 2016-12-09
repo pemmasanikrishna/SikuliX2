@@ -9,7 +9,6 @@ import com.sikulix.api.Image;
 import org.json.JSONObject;
 import org.opencv.core.*;
 import org.opencv.highgui.Highgui;
-import org.sikuli.basics.Settings;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -137,25 +136,16 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
   //</editor-fold>
 
-  //<editor-fold desc="margin">
-  private static int stdW = 50;
-  private static int stdH = 50;
+  //<editor-fold desc="margin/padding">
+  private static int stdM = 50;
+  private static int stdP = 10;
 
-  public static int[] getMargin() {
-    return new int[]{stdW, stdH};
+  public static int getMargin() {
+    return stdM;
   }
 
-  public static void setMargin(int w, int h) {
-    if (w > 0) {
-      stdW = w;
-    }
-    if (h > 0) {
-      stdH = h;
-    }
-  }
-
-  public static void setMargin(int wh) {
-    setMargin(wh, wh);
+  public static int getPadding() {
+    return stdP;
   }
   //</editor-fold>
 
@@ -170,11 +160,12 @@ public abstract class SXElement implements Comparable<SXElement>{
     lastMatch = match;
   }
 
-  public Location getMatchPoint() {
-    if (lastMatch != null) {
+  public Element getMatchPoint() {
+    if (SX.isNotNull(lastMatch)) {
       return lastMatch.getTarget();
+    } else {
+      return getTarget();
     }
-    return getTarget();
   }
   //</editor-fold>
 
@@ -214,34 +205,11 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
   //</editor-fold>
 
-  //<editor-fold desc="offset">
-  public Offset getOffset() {
-    return offset;
-  }
-
-  public void setOffset(Offset offset) {
-    setOffset(offset.x, offset.y);
-  }
-
-  public void setOffset(int xoff, int yoff) {
-    this.offset = new Offset(xoff, yoff);
-  }
-
-  public void setOffset(int[] off) {
-    if (off.length == 2) {
-      this.offset = new Offset(off[0], off[1]);
-    }
-  }
-  private Offset offset = null;
-  //</editor-fold>
-
   //<editor-fold desc="target">
-  public SXElement setTarget(SXElement vis) {
-    if (vis.isOffset()) {
-      target = getCenter().offset((Offset) vis);
-    } else {
-      target = vis.getCenter();
-    }
+  private SXElement target = null;
+
+  public SXElement setTarget(SXElement elem) {
+    target = elem.getCenter();
     return this;
   }
 
@@ -251,24 +219,16 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public SXElement setTarget(int[] pos) {
-    if (pos.length == 2) {
-      target = getCenter().offset(pos[0], pos[1]);
-    }
+    target = getCenter().offset(new Element(pos));
     return this;
   }
 
-  public Location getTarget() {
+  public Element getTarget() {
     if (SX.isNull(target)) {
       target = getCenter();
     }
-    if (!SX.isNull(offset)) {
-      return target.offset(offset);
-    }
-    return (Location) target;
+    return (Element) target;
   }
-
-  private SXElement target = null;
-
   //</editor-fold>
 
   //<editor-fold desc="score">
@@ -361,7 +321,7 @@ public abstract class SXElement implements Comparable<SXElement>{
       w = jobj.getInt("w");
       h = jobj.getInt("h");
       if (eType.REGION.equals(type)) {
-        retval = (T) new Region(x, y, w, h);
+        retval = (T) new Element(x, y, w, h);
       }
     }
     return retval;
@@ -395,18 +355,6 @@ public abstract class SXElement implements Comparable<SXElement>{
     minimumScore = SX.getOptionNumber("Settings.MinSimilarity", 0.7d);
   }
 
-  public void init(Rectangle rect) {
-    init(rect.x, rect.y, rect.width, rect.height);
-  }
-
-  public void init(Point p) {
-    init(p.x, p.y, 0, 0);
-  }
-
-  public void init(SXElement vis) {
-    init(vis.x, vis.y, vis.w, vis.h);
-  }
-
   public void init(int[] rect) {
     int _x = 0;
     int _y = 0;
@@ -435,6 +383,19 @@ public abstract class SXElement implements Comparable<SXElement>{
     }
     init(_x, _y, _w, _h);
   }
+
+  public void init(Rectangle rect) {
+    init(rect.x, rect.y, rect.width, rect.height);
+  }
+
+  public void init(Point p) {
+    init(p.x, p.y, 0, 0);
+  }
+
+  public void init(SXElement elem) {
+    init(elem.x, elem.y, elem.w, elem.h);
+  }
+
 
   @Override
   public String toString() {
@@ -478,22 +439,19 @@ public abstract class SXElement implements Comparable<SXElement>{
   //</editor-fold>
 
   //<editor-fold desc="***** get, set, change">
-  public Region getRegion() {
-    return new Region(x, y, w, h);
+  public Element getRegion() {
+    return new Element(x, y, w, h);
   }
 
   public Rectangle getRectangle() {
     return new Rectangle(x, y, w, h);
   }
 
-  public Location getCenter() {
-    return new Location(x + w/2, y + h/2);
+  public Element getCenter() {
+    return new Element(x + w/2, y + h/2);
   }
 
   public Point getPoint() {
-    if (isPoint()) {
-      return new Point(x, y);
-    }
     return new Point(getCenter().x, getCenter().y);
   }
 
@@ -513,7 +471,7 @@ public abstract class SXElement implements Comparable<SXElement>{
     }
   }
 
-  public void translate(Offset off) {
+  public void translate(Element off) {
     translate(off.x, off.y);
   }
 
@@ -524,11 +482,8 @@ public abstract class SXElement implements Comparable<SXElement>{
    * @param off an offset
    * @return new location
    */
-  public Location offset(Offset off) {
-    if (isPoint()) {
-      return new Location(off.x, off.y);
-    }
-    return getCenter().offset(off);
+  public Element offset(Element off) {
+    return new Element(getCenter().x + off.x, getCenter().y + off.y);
   }
 
   /**
@@ -539,46 +494,28 @@ public abstract class SXElement implements Comparable<SXElement>{
    * @param yoff y offset
    * @return new location
    */
-  public Location offset(Integer xoff, Integer yoff) {
-    if (isPoint()) {
-      return new Location(x + xoff, y + yoff);
-    }
-    return getCenter().offset(xoff, yoff);
+  public Element offset(Integer xoff, Integer yoff) {
+    return new Element(getCenter().x + xoff, getCenter().y + yoff);
   }
 
-  public Location getTopLeft() {
-    if (isPoint()) {
-      return new Location(this);
-    }
-    return new Location(x, y);
+  public Element getTopLeft() {
+    return new Element(x, y);
   }
 
-  public Location getTopRight() {
-    if (isPoint()) {
-      return new Location(this);
-    }
-    return new Location(x + w, y);
+  public Element getTopRight() {
+    return new Element(x + w, y);
   }
 
-  public Location getBottomRight() {
-    if (isPoint()) {
-      return new Location(this);
-    }
-    return new Location(x, y + h);
+  public Element getBottomRight() {
+    return new Element(x, y + h);
   }
 
-  public Location getBottomLeft() {
-    if (isPoint()) {
-      return new Location(this);
-    }
-    return new Location(x, y + h);
+  public Element getBottomLeft() {
+    return new Element(x, y + h);
   }
 
-  public Location leftAt() {
-    if (isPoint()) {
-      return new Location(this);
-    }
-    return new Location(x, y + h/2);
+  public Element leftAt() {
+    return new Element(x, y + h/2);
   }
 
   /**
@@ -589,18 +526,12 @@ public abstract class SXElement implements Comparable<SXElement>{
    * @param xoff x offset
    * @return new location
    */
-  public Location left(Integer xoff) {
-    if (isPoint()) {
-      return new Location(x - xoff, y);
-    }
-    return new Location(x - xoff, leftAt().y);
+  public Element left(Integer xoff) {
+    return new Element(x - xoff, leftAt().y);
   }
 
-  public Location rightAt() {
-    if (isPoint()) {
-      return new Location(this);
-    }
-    return new Location(x + w, y + h/2);
+  public Element rightAt() {
+    return new Element(x + w, y + h/2);
   }
 
   /**
@@ -611,18 +542,12 @@ public abstract class SXElement implements Comparable<SXElement>{
    * @param xoff x offset
    * @return new location
    */
-  public Location right(Integer xoff) {
-    if (isPoint()) {
-      return new Location(x + xoff, y);
-    }
-    return new Location(rightAt().x + xoff, rightAt().y);
+  public Element right(Integer xoff) {
+    return new Element(rightAt().x + xoff, rightAt().y);
   }
 
-  public Location aboveAt() {
-    if (isPoint()) {
-      return new Location(this);
-    }
-    return new Location(x + w/2, y);
+  public Element aboveAt() {
+    return new Element(x + w/2, y);
   }
 
   /**
@@ -633,18 +558,12 @@ public abstract class SXElement implements Comparable<SXElement>{
    * @param yoff y offset
    * @return new location
    */
-  public Location above(Integer yoff) {
-    if (isPoint()) {
-      return new Location(x - yoff, y);
-    }
-    return new Location(aboveAt().x, y - yoff);
+  public Element above(Integer yoff) {
+    return new Element(aboveAt().x, y - yoff);
   }
 
-  public Location belowAt() {
-    if (isPoint()) {
-      return new Location(this);
-    }
-    return new Location(x + w/2, y + h);
+  public Element belowAt() {
+    return new Element(x + w/2, y + h);
   }
 
   /**
@@ -655,14 +574,9 @@ public abstract class SXElement implements Comparable<SXElement>{
    * @param yoff y offset
    * @return new location
    */
-  public Location below(Integer yoff) {
-    if (isPoint()) {
-      return new Location(x - yoff, y);
-    }
-    return new Location(belowAt().x, belowAt().y + yoff);
+  public Element below(Integer yoff) {
+    return new Element(belowAt().x, belowAt().y + yoff);
   }
-
-
 
   /**
    * returns -1, if outside of any screen <br>
@@ -699,7 +613,7 @@ public abstract class SXElement implements Comparable<SXElement>{
 
   //</editor-fold>
 
-  //<editor-fold desc="***** capture/show">
+  //<editor-fold desc="***** capture/show/highlight">
   public Image capture() {
     Image img = new Image();
     if (isSpecial()) {
@@ -712,7 +626,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public void show() {
-    show((int) Settings.DefaultHighlightTime);
+    show((int) SX.getOptionNumber("DefaultHighlightTime"));
   }
 
   public void show(int time) {
@@ -728,6 +642,15 @@ public abstract class SXElement implements Comparable<SXElement>{
     frImg.setVisible(true);
     SX.pause(time);
     frImg.dispose();
+  }
+
+  public void highlight() {
+    highlight((int) SX.getOptionNumber("DefaultHighlightTime"));
+  }
+
+  public void highlight(int time) {
+  //TODO Element.highlight not implemented
+    eLog.error("highlight not implemented");
   }
 
   public BufferedImage getBufferedImage() {
@@ -765,32 +688,32 @@ public abstract class SXElement implements Comparable<SXElement>{
   //</editor-fold>
 
   //<editor-fold desc="***** combine">
-  public Region union(SXElement vis) {
+  public Element union(SXElement elem) {
     Rectangle r1 = new Rectangle(x, y, w, h);
-    Rectangle r2 = new Rectangle(vis.x, vis.y, vis.w, vis.h);
-    return new Region(r1.union(r2));
+    Rectangle r2 = new Rectangle(elem.x, elem.y, elem.w, elem.h);
+    return new Element(r1.union(r2));
   }
 
-  public Region intersection(SXElement vis) {
+  public Element intersection(SXElement elem) {
     Rectangle r1 = new Rectangle(x, y, w, h);
-    Rectangle r2 = new Rectangle(vis.x, vis.y, vis.w, vis.h);
-    return new Region(r1.intersection(r2));
+    Rectangle r2 = new Rectangle(elem.x, elem.y, elem.w, elem.h);
+    return new Element(r1.intersection(r2));
   }
 
-  public boolean contains(SXElement vis) {
+  public boolean contains(SXElement elem) {
     if (!isRectangle()) {
       return false;
     }
-    if (!vis.isRectangle() && !vis.isPoint()) {
+    if (!elem.isRectangle() && !elem.isPoint()) {
       return false;
     }
     Rectangle r1 = new Rectangle(x, y, w, h);
-    Rectangle r2 = new Rectangle(vis.x, vis.y, vis.w, vis.h);
-    if (vis.isRectangle()) {
-      return r1.contains(vis.x, vis.y, vis.w, vis.h);
+    Rectangle r2 = new Rectangle(elem.x, elem.y, elem.w, elem.h);
+    if (elem.isRectangle()) {
+      return r1.contains(elem.x, elem.y, elem.w, elem.h);
     }
-    if (vis.isPoint()) {
-      return r1.contains(vis.x, vis.y);
+    if (elem.isPoint()) {
+      return r1.contains(elem.x, elem.y);
     }
     return false;
   }
@@ -903,12 +826,12 @@ public abstract class SXElement implements Comparable<SXElement>{
     return "NotAvailable";
   }
 
-  public Location getLocation() {
+  public Element getLocation() {
     return getTopLeft();
   }
 
-  public Region getRect() {
-    return (Region) this;
+  public Element getRect() {
+    return (Element) this;
   }
 
   public Dimension getSize() {

@@ -5,9 +5,10 @@
 package com.sikulix.api;
 
 import com.sikulix.core.SX;
+import com.sikulix.core.SXElement;
 import com.sikulix.core.SXLog;
 
-public class Window extends Region {
+public class Window extends SXElement {
 
   private static eType vClazz = eType.WINDOW;
   private static SXLog log = SX.getLogger("SX." + vClazz.toString());

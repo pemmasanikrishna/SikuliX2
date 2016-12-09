@@ -10,7 +10,7 @@ import com.sikulix.core.SXElement;
 
 import java.awt.*;
 
-public class Match extends Region {
+public class Match extends Element {
 
   private static eType eClazz = eType.MATCH;
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
@@ -40,14 +40,14 @@ public class Match extends Region {
     init(elem);
     if (elem.isMatch()) {
       setScore(((Match) elem).getScore());
-      setOffset(elem.getOffset());
+      setTarget(elem.getTarget());
     }
   }
 
-  public Match(SXElement elem, Double score, Offset off) {
+  public Match(SXElement elem, Double score, Element off) {
     clazz = eClazz;
     init(elem);
     setScore(score);
-    setOffset(off);
+    setTarget(off);
   }
 }

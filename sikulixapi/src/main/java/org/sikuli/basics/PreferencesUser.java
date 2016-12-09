@@ -1,12 +1,9 @@
 /*
- * Copyright 2010-2014, Sikuli.org, sikulix.com
+ * Copyright (c) 2010-2016, Sikuli.org, sikulix.com
  * Released under the MIT License.
  *
- * modified RaiMan 2013
  */
-package org.sikuli.util;
-
-import com.sikulix.core.SX;
+package org.sikuli.basics;
 
 import java.awt.Dimension;
 import java.awt.Event;
@@ -19,7 +16,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
-import org.sikuli.script.Sikulix;
+
+import com.sikulix.core.SX;
 
 public class PreferencesUser {
 
@@ -43,7 +41,7 @@ public class PreferencesUser {
 					+ ".log   { color: #09806A; }"
 					+ ".error { color: red; }";
 	static PreferencesUser _instance = null;
-	Preferences pref = Preferences.userNodeForPackage(Sikulix.class);
+	Preferences pref = Preferences.userNodeForPackage(SX.class);
 
   public static PreferencesUser getInstance() {
 		if (_instance == null) {

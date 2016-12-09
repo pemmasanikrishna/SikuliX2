@@ -12,7 +12,7 @@ import com.sikulix.scripting.JythonHelper;
 import com.sikulix.scripting.SXRunner;
 import com.sikulix.util.FileChooser;
 import org.sikuli.script.Key;
-import org.sikuli.util.hotkey.HotkeyListener;
+import com.sikulix.core.HotkeyListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -83,29 +83,24 @@ public class Commands extends SX {
   //<editor-fold desc="SX Commands popat">
   private static Point locPopAt = null;
 
-  public static Location popat(Location at) {
-    locPopAt = new Point(at.x, at.y);
-    return new Location(locPopAt);
-  }
-
-  public static Location popat(Region at) {
+  public static Element popat(Element at) {
     locPopAt = new Point(at.getCenter().x, at.getCenter().y);
-    return new Location(locPopAt);
+    return new Element(locPopAt);
   }
 
-  public static Location popat(Rectangle at) {
+  public static Element popat(Rectangle at) {
     locPopAt = new Point(at.x + (int) (at.width / 2), at.y + (int) (at.height / 2));
-    return new Location(locPopAt);
+    return new Element(locPopAt);
   }
 
-  public static Location popat(int atx, int aty) {
+  public static Element popat(int atx, int aty) {
     locPopAt = new Point(atx, aty);
-    return new Location(locPopAt);
+    return new Element(locPopAt);
   }
 
-  public static Location popat() {
+  public static Element popat() {
     locPopAt = getLocPopAt();
-    return new Location(locPopAt);
+    return new Element(locPopAt);
   }
 
   private static Point getLocPopAt() {
@@ -849,20 +844,20 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  private static Region defaultScreenRegion = Screen.asRegion(0);
-  private static Region defaultRegion = defaultScreenRegion;
+  private static Element defaultScreenRegion = Screen.asElement(0);
+  private static Element defaultRegion = defaultScreenRegion;
 
-  public static Region use() {
+  public static Element use() {
     defaultRegion = defaultScreenRegion;
     return defaultRegion;
   }
 
-  public static Region use(Object vis) {
-    if (vis instanceof SXElement && ((SXElement) vis).isRectangle()) {
-      if (((SXElement) vis).isRegion()) {
-        defaultRegion = (Region) vis;
+  public static Element use(Object elem) {
+    if (elem instanceof SXElement && ((SXElement) elem).isRectangle()) {
+      if (((SXElement) elem).isRegion()) {
+        defaultRegion = (Element) elem;
       } else {
-        defaultRegion = new Region(((SXElement) vis));
+        defaultRegion = new Element(((SXElement) elem));
       }
     }
     return defaultRegion;
@@ -891,7 +886,7 @@ public class Commands extends SX {
       }
       log.trace(form, args);
       Object args0, args1;
-      SXElement vis0, vis1;
+      SXElement elem0, elem1;
       if (args.length > 0) {
         args0 = args[0];
         if (args0 instanceof String) {
@@ -902,25 +897,25 @@ public class Commands extends SX {
           what = new Pattern((String) args0);
         }
         if (args0 instanceof SXElement) {
-          vis0 = (SXElement) args0;
-          if (vis0.isOnScreen()) {
-            target = vis0;
-            where = vis0;
-          } else if (vis0.isPatternOrImage()) {
+          elem0 = (SXElement) args0;
+          if (elem0.isOnScreen()) {
+            target = elem0;
+            where = elem0;
+          } else if (elem0.isPatternOrImage()) {
             needFind = true;
             where = defaultRegion;
-            what = new Pattern(vis0);
+            what = new Pattern(elem0);
             log.error("not implemented: target(Image || Pattern)");
           }
           if (args.length == 2) {
             args1 = args[1];
             if (needFind) {
               if (args1 instanceof SXElement) {
-                vis1 = (SXElement) args1;
-                if (vis1.isOnScreen()) {
-                  where = new Region(vis1);
-                } else if (vis1.isImage()) {
-                  where = vis1;
+                elem1 = (SXElement) args1;
+                if (elem1.isOnScreen()) {
+                  where = new Element(elem1);
+                } else if (elem1.isImage()) {
+                  where = elem1;
                 }
               } else if (args1 instanceof String) {
                 where = new Image((String) args1);

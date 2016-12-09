@@ -68,13 +68,13 @@ public class Mouse extends Device {
   //</editor-fold>
 
   //<editor-fold desc="*** mouse pointer location ***">
-  private Location lastPos = null;
+  private Element lastPos = null;
 
-  public static Location getLocation() {
-      return new Location(getLocationPoint());
+  public static Element getLocation() {
+      return new Element(getLocationPoint());
   }
 
-  public static Location at() {
+  public static Element at() {
     return getLocation();
   }
 
@@ -96,7 +96,7 @@ public class Mouse extends Device {
     if (lastPos == null) {
       return;
     }
-    Location pos = getLocation();
+    Element pos = getLocation();
     if (pos != null && (lastPos.x != pos.x || lastPos.y != pos.y)) {
       log.debug("moved externally: now (%d,%d) was (%d,%d) (movedAction %d)",
               pos.x, pos.y, lastPos.x, lastPos.y, movedAction);
@@ -240,7 +240,7 @@ public class Mouse extends Device {
    * @param args timing parameters
    * @return the location
    */
-  public Location click(Location loc, String action, Integer... args) {
+  public Element click(Element loc, String action, Integer... args) {
     if (isSuspended() || loc.isSpecial()) {
       return null;
     }
@@ -290,7 +290,7 @@ public class Mouse extends Device {
     return loc;
   }
 
-  private int click(Location loc, int buttons, Integer modifiers, boolean dblClick, SXElement vis) {
+  private int click(Element loc, int buttons, Integer modifiers, boolean dblClick, SXElement vis) {
     if (modifiers == null) {
       modifiers = 0;
     }
@@ -328,7 +328,7 @@ public class Mouse extends Device {
     return 1;
   }
 
-  private static String getClickMsg(Location loc, int buttons, int modifiers, boolean dblClick) {
+  private static String getClickMsg(Element loc, int buttons, int modifiers, boolean dblClick) {
     String msg = "";
     if (modifiers != 0) {
       msg += KeyEvent.getKeyModifiersText(modifiers) + "+";
@@ -356,7 +356,7 @@ public class Mouse extends Device {
    * @param loc Location
    * @return 1 for success, 0 otherwise
    */
-  public int move(Location loc) {
+  public int move(Element loc) {
     return move(loc, null);
   }
 
@@ -374,7 +374,7 @@ public class Mouse extends Device {
     return move(at().offset(xoff, yoff));
   }
 
-  public int move(Location loc, SXElement vis) {
+  public int move(Element loc, SXElement vis) {
     if (isSuspended()) {
       return 0;
     }

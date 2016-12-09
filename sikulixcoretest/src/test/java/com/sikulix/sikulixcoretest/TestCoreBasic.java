@@ -4,8 +4,6 @@
 
 package com.sikulix.sikulixcoretest;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
 import com.sikulix.api.*;
 import com.sikulix.core.*;
 import com.sikulix.scripting.SXClient;
@@ -150,15 +148,14 @@ public class TestCoreBasic {
     };
     new Thread(server).start();
     SX.pause(3);
-    Region region = new Region(300, 300, 500, 500);
-    region.setLastMatch(new Match(new Region(400, 400, 50, 50), 0.92345678, new Offset(100, 100)));
-    JSONObject jRegion = SXJson.makeBean(region.getElementForJson());
-    HttpResponse<JsonNode> jsonResponse = SXClient.post("/session/123456789/timeouts", jRegion.toString());
-    jsonResponse = SXClient.get("/notvalid/123456789/timeouts");
-    jsonResponse = SXClient.get("/session/123456789");
+    Region vis = new Region(300, 300, 500, 500);
+    vis.setLastMatch(new Match(new Region(400, 400, 50, 50), 0.92345678, new Offset(100, 100)));
+    JSONObject jVis = SXJson.makeBean(vis.getElementForJson());
+    SXClient.postJSON(jVis.toString());
     SX.pause(1);
     boolean retVal = SXClient.stopServer();
     SX.pause(4);
+    result += jVis.toString(2);
     assert retVal;
   }
 

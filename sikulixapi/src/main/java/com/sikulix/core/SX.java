@@ -1580,77 +1580,6 @@ public class SX {
     p("***** show environment end");
   }
 
-  public static boolean isNull(Object obj) {
-    return null == obj;
-  }
-
-  public static boolean isNotNull(Object obj) {
-    return null != obj;
-  }
-
-  public static boolean isNotSet(Object obj) {
-    if (null != obj && obj instanceof String) {
-      if (((String) obj).isEmpty()) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-    return null == obj;
-  }
-
-  public static boolean isSet(Object obj) {
-    if (null != obj && obj instanceof String) {
-      if (((String) obj).isEmpty()) {
-        return false;
-      } else {
-        return true;
-      }
-    }
-    return null != obj;
-  }
-
-  public static void pause(int time) {
-    try {
-      Thread.sleep(time * 1000);
-    } catch (InterruptedException ex) {
-    }
-  }
-
-  public static void pause(float time) {
-    try {
-      Thread.sleep((int) (time * 1000));
-    } catch (InterruptedException ex) {
-    }
-  }
-
-  public static void pause(double time) {
-    try {
-      Thread.sleep((int) (time * 1000));
-    } catch (InterruptedException ex) {
-    }
-  }
-
-  public static Location at() {
-    PointerInfo mp = MouseInfo.getPointerInfo();
-    if (mp != null) {
-      return new Location(MouseInfo.getPointerInfo().getLocation());
-    } else {
-      error("not possible to get mouse position (PointerInfo == null)");
-      return null;
-    }
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="*** candidates for Content">
-  public static String canonicalPath(File aFile) {
-    try {
-      return aFile.getCanonicalPath();
-    } catch (IOException e) {
-      return aFile.getAbsolutePath();
-    }
-  }
-
   private static File getFileMake(Object... args) {
     if (args.length < 1) {
       return null;
@@ -1746,11 +1675,81 @@ public class SX {
     return (getFile(aPath).exists());
   }
 
+  public static boolean isNull(Object obj) {
+    return null == obj;
+  }
+
+  public static boolean isNotNull(Object obj) {
+    return null != obj;
+  }
+
+  public static boolean isNotSet(Object obj) {
+    if (null != obj && obj instanceof String) {
+      if (((String) obj).isEmpty()) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return null == obj;
+  }
+
+  public static boolean isSet(Object obj) {
+    if (null != obj && obj instanceof String) {
+      if (((String) obj).isEmpty()) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+    return null != obj;
+  }
+
+  public static void pause(int time) {
+    try {
+      Thread.sleep(time * 1000);
+    } catch (InterruptedException ex) {
+    }
+  }
+
+  public static void pause(float time) {
+    try {
+      Thread.sleep((int) (time * 1000));
+    } catch (InterruptedException ex) {
+    }
+  }
+
+  public static void pause(double time) {
+    try {
+      Thread.sleep((int) (time * 1000));
+    } catch (InterruptedException ex) {
+    }
+  }
+
+  public static Location at() {
+    PointerInfo mp = MouseInfo.getPointerInfo();
+    if (mp != null) {
+      return new Location(MouseInfo.getPointerInfo().getLocation());
+    } else {
+      error("not possible to get mouse position (PointerInfo == null)");
+      return null;
+    }
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="*** candidates for Content">
+  public static String canonicalPath(File aFile) {
+    try {
+      return aFile.getCanonicalPath();
+    } catch (IOException e) {
+      return aFile.getAbsolutePath();
+    }
+  }
+
   public static URL makeURL(Object... args) {
     if (args.length < 1) {
       return null;
     }
-    Object arg0 = args[0];
 
     URL url = null;
     String proto = "file:";
@@ -1758,6 +1757,7 @@ public class SX {
 
     String fpMain = "";
 
+    Object arg0 = args[0];
     String fpSub = args.length > 1 ? (String) args[1] : "";
     if (arg0 instanceof File) {
       fpMain = canonicalPath((File) arg0);

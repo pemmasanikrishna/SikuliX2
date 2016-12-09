@@ -7,7 +7,7 @@ package com.sikulix.util;
 import com.sikulix.api.Commands;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import org.sikuli.util.PreferencesUser;
+import org.sikuli.basics.PreferencesUser;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;

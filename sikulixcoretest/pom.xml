@@ -21,7 +21,7 @@
       <groupId>com.sikulix</groupId>
       <artifactId>sikulixapi</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
+      <!--<scope>test</scope>-->
     </dependency>
   </dependencies>
 </project>

@@ -4,10 +4,10 @@
 
 package com.sikulix.core;
 
+import com.sikulix.api.Element;
 import com.sikulix.api.Match;
 import com.sikulix.api.Pattern;
 import com.sikulix.util.Settings;
-import com.sikulix.api.Region;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ public class ObserveEvent {
    */
   private Type type;
   private long time;
-  private Region region = null;
+  private Element region = null;
   private Pattern pattern = null;
   private ObserverCallBack callback = null;
   private Object[] vals = null;
@@ -45,7 +45,7 @@ public class ObserveEvent {
   private ObserveEvent() {
   }
 
-  public ObserveEvent(Region reg, Type type, Object targetOrMinChanges, ObserverCallBack callback) {
+  public ObserveEvent(Element reg, Type type, Object targetOrMinChanges, ObserverCallBack callback) {
     region = reg;
     this.type = type;
     time = new Date().getTime();
@@ -153,7 +153,7 @@ public class ObserveEvent {
    *
    * @return this event's observer's region
    */
-  public Region getRegion() {
+  public Element getRegion() {
     return region;
   }
 

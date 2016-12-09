@@ -56,21 +56,4 @@ public class Pattern extends Image {
     setMinimumScore(exactAs);
     return this;
   }
-
-  @Deprecated
-  public Pattern targetOffset(int xoff, int yoff) {
-    setOffset(xoff, yoff);
-    return this;
-  }
-
-  @Deprecated
-  public Pattern targetOffset(Location loc) {
-    setOffset(loc.x, loc.y);
-    return this;
-  }
-
-  @Deprecated
-  public Location getTargetOffset() {
-    return new Location(getOffset().x, getOffset().y);
-  }
 }
