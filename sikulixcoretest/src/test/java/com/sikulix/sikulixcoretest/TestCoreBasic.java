@@ -148,14 +148,15 @@ public class TestCoreBasic {
     };
     new Thread(server).start();
     SX.pause(3);
-    Region vis = new Region(300, 300, 500, 500);
-    vis.setLastMatch(new Match(new Region(400, 400, 50, 50), 0.92345678, new Offset(100, 100)));
-    JSONObject jVis = SXJson.makeBean(vis.getElementForJson());
-    SXClient.postJSON(jVis.toString());
+    Element vis = new Element(300, 300, 500, 500);
+    vis.setLastMatch(new Match(new Element(400, 400, 50, 50), 0.92345678, new Element(100, 100)));
+    JSONObject jVis = SXJson.makeElement(vis);
+    SXClient.get("/");
+    SXClient.post("/session/12", jVis.toString());
     SX.pause(1);
     boolean retVal = SXClient.stopServer();
     SX.pause(4);
-    result += jVis.toString(2);
+//    result += jVis.toString(2);
     assert retVal;
   }
 
@@ -183,7 +184,7 @@ public class TestCoreBasic {
     if (!SX.isHeadless()) {
       Commands.popat(300, 300);
       Commands.popup("Use mouse to click OK", "testing popat");
-      Location loc = Mouse.at();
+      Element loc = Mouse.at();
       result = String.format("clicked at (%d, %d)", loc.x, loc.y);
       assertVal = loc.x > 300 && loc.x < 450;
     } else {

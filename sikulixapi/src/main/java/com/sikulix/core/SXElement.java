@@ -63,20 +63,16 @@ public abstract class SXElement implements Comparable<SXElement>{
     return isRectangle() || isPoint();
   }
 
+  public boolean isElement() {
+    return eType.ELEMENT.equals(clazz);
+  }
+
   public boolean isRectangle() {
-    return isRegion() || isMatch() || isScreen() || isWindow();
-  }
-
-  public boolean isRegion() {
-    return eType.REGION.equals(clazz);
-  }
-
-  public boolean isLocation() {
-    return eType.LOCATION.equals(clazz);
+    return isElement() || isMatch() || isWindow() || isScreen();
   }
 
   public boolean isPoint() {
-    return isLocation();
+    return isElement() && w == 1 && h == 1;
   }
 
   public boolean isImage() {
@@ -84,11 +80,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public boolean isPattern() {
-    return eType.PATTERN.equals(clazz);
-  }
-
-  public boolean isPatternOrImage() {
-    return isPattern() || isImage();
+    return eType.PATTERN.equals(clazz) || isImage();
   }
 
   public boolean isMatch() {
@@ -101,10 +93,6 @@ public abstract class SXElement implements Comparable<SXElement>{
 
   public boolean isWindow() {
     return eType.WINDOW.equals(clazz);
-  }
-
-  public boolean isOffset() {
-    return eType.OFFSET.equals(clazz);
   }
 
   public boolean isSpecial() { return !SX.isNull(containingScreen); }
@@ -300,12 +288,8 @@ public abstract class SXElement implements Comparable<SXElement>{
   //</editor-fold>
 
   //<editor-fold desc="***** construct, info">
-  public SXElementFlat getElementForJson() {
-    return new SXElementFlat(this);
-  }
-
   public String toJson() {
-    return SXJson.makeBean(this.getElementForJson()).toString();
+    return SXJson.makeElement(this).toString();
   }
 
   public <T extends SXElement> T fromJson(String jsonElem) {
@@ -348,9 +332,6 @@ public abstract class SXElement implements Comparable<SXElement>{
     if (isPoint()) {
       w = _w < 0 ? 0 : _w;
       h = _h < 0 ? 0 : _h;
-    } else if (!isOffset()) {
-      w = _w < 1 ? 1 : _w;
-      h = _h < 1 ? 1 : _h;
     }
     minimumScore = SX.getOptionNumber("Settings.MinSimilarity", 0.7d);
   }
@@ -399,7 +380,7 @@ public abstract class SXElement implements Comparable<SXElement>{
 
   @Override
   public String toString() {
-    if (isLocation() || isOffset()) {
+    if (isPoint()) {
       return String.format("[\"%s\", [%d, %d]]", clazz, x, y);
     }
     return String.format("[\"%s\", [%d, %d, %d, %d]%s]", clazz, x, y, w, h, toStringPlus());

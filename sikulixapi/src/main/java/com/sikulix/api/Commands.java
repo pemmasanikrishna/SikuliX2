@@ -844,7 +844,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  private static Element defaultScreenRegion = Screen.asElement(0);
+  private static Element defaultScreenRegion = (Element) new Screen();
   private static Element defaultRegion = defaultScreenRegion;
 
   public static Element use() {
@@ -854,7 +854,7 @@ public class Commands extends SX {
 
   public static Element use(Object elem) {
     if (elem instanceof SXElement && ((SXElement) elem).isRectangle()) {
-      if (((SXElement) elem).isRegion()) {
+      if (((SXElement) elem).isRectangle()) {
         defaultRegion = (Element) elem;
       } else {
         defaultRegion = new Element(((SXElement) elem));
@@ -901,7 +901,7 @@ public class Commands extends SX {
           if (elem0.isOnScreen()) {
             target = elem0;
             where = elem0;
-          } else if (elem0.isPatternOrImage()) {
+          } else if (elem0.isPattern()) {
             needFind = true;
             where = defaultRegion;
             what = new Pattern(elem0);

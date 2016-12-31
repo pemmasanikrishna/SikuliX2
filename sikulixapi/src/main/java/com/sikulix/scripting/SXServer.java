@@ -25,6 +25,7 @@ public class SXServer extends NanoHTTPD {
 
   static boolean shouldStop = false;
   static SXServer server = null;
+  int currentPort = -1;
 
   public SXServer() throws IOException {
     this(8080);
@@ -32,6 +33,7 @@ public class SXServer extends NanoHTTPD {
 
   public SXServer(int port) throws IOException {
     super(port);
+    currentPort = port;
     start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
     log.trace("started on localhost:%d", port);
   }
@@ -71,21 +73,27 @@ public class SXServer extends NanoHTTPD {
     boolean isError = false;
     String uri = session.getUri();
     Method method = session.getMethod();
+    boolean isGet = Method.GET.equals(method);
+    boolean isDelete = Method.DELETE.equals(method);
+    boolean isPost = Method.POST.equals(method);
     Map<String, String> headers = session.getHeaders();
 
-    String jsonContentTemplate = "[\"%s\", \"%s\", %s]";
-    String jsonContent = "";
-    String jsonContentMsg = uri;
-    String jsonContentLoad = "{}";
-    String jsonContentMsgSorry = "error: " + uri + " not implemented";
-    String jsonContentMsgError = "error: " + uri + " ";
+    String responseTemplate = "{\"sessionId\" : \"%s\", \"status\" : \"%s\", \"value\" : %s}";
+    String responseValue = "";
+    String responseValueContent = "";
+    String responseValueTemplate = "{\"message\" : \"%s(%s)\", \"content\" : %s}";
+    String responseValueMsg = uri;
+    String responseValueMsgSorry = "not implemented: " + uri;
+    String responseValueMsgError = "error: " + uri;
 
     String command = "";
+    int commandStatus = 0;
     boolean isCommandSession = false;
     String sessionID = "";
     String subCommand = "";
     String subCommandParm = "";
     String[] route = uri.split("/");
+
     if (route.length > 1) {
       command = route[1].toLowerCase();
       if ("session".equals(command)) {
@@ -100,51 +108,53 @@ public class SXServer extends NanoHTTPD {
           subCommandParm = route[4].toLowerCase();
         }
       }
-      if (Method.GET.equals(method)) {
-        if (isCommandSession) {
-          if (sessionID.isEmpty()) {
-            jsonContentMsgError += "sessionID missing or not valid";
-            isError = true;
-          } else {
-
-          }
-        } else if (command.startsWith("stop")) {
-          shouldStop = true;
-          log.trace("stopping intentionally");
-          jsonContentMsg = "server is stopping";
-        } else if (command.startsWith("state")) {
-          isImplemented = false;
-        } else if (command.startsWith("sessions")) {
-          isImplemented = false;
-        } else {
-          isImplemented = false;
-        }
-      } else if (Method.POST.equals(method)) {
-        if (isCommandSession) {
-          final HashMap<String, String> bodyFiles = new HashMap<String, String>();
-          if ("application/json".equals(headers.get("content-type"))) {
-            try {
-              session.parseBody(bodyFiles);
-              jsonContentLoad = bodyFiles.get("postData");
-            } catch (Exception e) {
-              log.error("POST: not working: %s", e.getMessage());
-              isImplemented = false;
-            }
-          }
-        } else {
-          isImplemented = false;
-        }
+    } else {
+      isGet = true;
+      command = "state";
+      responseValueMsg = "using GET/state: " + uri;
+    }
+    if (isGet) {
+      if (isCommandSession) {
+        isImplemented = false;
+      } else if (command.startsWith("stop")) {
+        shouldStop = true;
+        log.trace("stopping intentionally");
+        responseValueMsg = "server is stopping";
+      } else if (command.startsWith("state")) {
+        responseValueContent = String.format("\"running on localhost:%d\"", currentPort);
+      } else if (command.startsWith("sessions")) {
+        isImplemented = false;
+      } else {
+        isImplemented = false;
       }
+    } else if (isDelete) {
+
+    } else if (isPost) {
+      final HashMap<String, String> bodyFiles = new HashMap<String, String>();
+      if ("application/json".equals(headers.get("content-type"))) {
+        try {
+          session.parseBody(bodyFiles);
+          responseValueContent = bodyFiles.get("postData");
+        } catch (Exception e) {
+          log.error("POST: invalid: %s", e.getMessage());
+          isImplemented = false;
+        }
+      } else {
+        isImplemented = false;
+      }
+      if (isImplemented) {
+      }
+    } else {
+        isImplemented = false;
     }
     if (!isImplemented) {
-      jsonContent = String.format(jsonContentTemplate, method, jsonContentMsgSorry, "");
-      log.error("serve(): %s", jsonContent);
+      status = Response.Status.NOT_IMPLEMENTED;
+      responseValueMsg = responseValueMsgSorry;
     } else if (isError) {
-      jsonContent = String.format(jsonContentTemplate, method, jsonContentMsgError, "");
-      log.error("serve(): %s", jsonContent);
-    } else {
-      jsonContent = String.format(jsonContentTemplate, method, jsonContentMsg, jsonContentLoad);
+      responseValueMsg = responseValueMsgError;
     }
-    return newFixedLengthResponse(status, "application/json", jsonContent);
+    responseValue = String.format(responseValueTemplate, method, responseValueMsg, responseValueContent);
+    String theResponse = String.format(responseTemplate, sessionID, commandStatus, responseValue);
+    return newFixedLengthResponse(status, "application/json", theResponse);
   }
 }

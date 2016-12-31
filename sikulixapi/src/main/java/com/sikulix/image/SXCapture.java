@@ -131,7 +131,7 @@ public class SXCapture {
   }
 
   public static Object getScreenImage(NativeHook hook) {
-    BufferedImage bImg = new Screen(Mouse.at().getContainingScreenNumber()).asElement().capture().getBufferedImage();
+    BufferedImage bImg = new Screen(Mouse.at().getContainingScreenNumber()).capture().getBufferedImage();
     return bImg;
   }
 
@@ -148,7 +148,7 @@ public class SXCapture {
   }
 
   public static void make(NativeHook hook, int x, int y, int w, int h, Object shot) {
-    Element scr = new Screen(Mouse.at().getContainingScreenNumber()).asElement();
+    Element scr = new Screen(Mouse.at().getContainingScreenNumber());
     Rectangle toCapture = null;
     if (w == 0 && h == 0) {
       toCapture = new Rectangle(x - 50, y - 15, 100, 30);

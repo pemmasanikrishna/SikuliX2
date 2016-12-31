@@ -1,11 +1,12 @@
 //Commands.popup("hello");
-var reg = new Region(100, 200, 300, 400);
-use();
-print("Java:", reg.toJson())
-jreg = jsonToJava(reg.toJson());
-print("Java:", jreg);
-print("JavaScript:", toJson(fromJson(reg.toJson())));
-click(jreg);
-print("clicked: ", click("img.png", reg));
-print("clicked: ", click(10, 10));
+var reg = new Element(100, 200, 300, 400);
+//use();
+print("var reg = new Element(100, 200, 300, 400)");
+print("reg.toJson():", reg.toJson())
+//jreg = jsonToJava(reg.toJson());
+//print("Java:", jreg);
+print("toJson(fromJson(reg.toJson())):", toJson(fromJson(reg.toJson())));
+print("click(reg): ", click(reg));
+print("click(\"img.png\", reg): ", click("img.png", reg));
+print("click(10, 10): ", click(10, 10));
 

@@ -1,12 +1,10 @@
 var SX = Java.type("com.sikulix.core.SX");
 var SXLog = Java.type("com.sikulix.core.SXLog");
 var Commands = Java.type("com.sikulix.api.Commands");
-var Region = Java.type("com.sikulix.api.Region");
+var Element = Java.type("com.sikulix.api.Element");
 
 var log = SX.getLogger("JavaScriptAPI");
 log.on(SXLog.TRACE);
-
-var refRegion = new Region();
 
 function toJson(obj) {
   return JSON.stringify(obj);
@@ -17,7 +15,7 @@ function fromJson(str) {
 }
 
 function jsonToJava(str) {
-  return refRegion.fromJson(str);
+  return null; //refRegion.fromJson(str);
 }
 
 function use(arg1) {

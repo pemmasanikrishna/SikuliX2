@@ -50,7 +50,7 @@ public class SXRunner {
         try {
           engine.eval(beforeRun);
           returnValue = engine.eval((String) script);
-        } catch (ScriptException e) {
+        } catch (Exception e) {
           log.error("Nashorn: eval(String): %s", e.getMessage());
         }
       } else if (script instanceof File) {
