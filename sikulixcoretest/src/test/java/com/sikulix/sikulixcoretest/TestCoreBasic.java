@@ -12,6 +12,7 @@ import com.sikulix.scripting.SXServer;
 import org.json.JSONObject;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
+import org.opencv.core.Mat;
 
 import java.io.File;
 
@@ -44,7 +45,7 @@ public class TestCoreBasic {
         }
       });
     }
-    SXElement.initClass();
+    Commands.setBaseClass();
   }
 
   @AfterClass
@@ -63,6 +64,7 @@ public class TestCoreBasic {
 
   @After
   public void tearDown() {
+    Image.clearPath();
     log.info("!%2d: result: %s: %s ", nTest++, currentTest, result);
   }
 
@@ -93,6 +95,39 @@ public class TestCoreBasic {
   }
 
   @Test
+  public void test_15_elementConstructors() {
+    currentTest = "test_15_elementConstructors";
+    String bundlePath = "target/test-classes";
+    boolean success = Commands.setBundlePath(bundlePath, "Images");
+    assert success;
+    Element elem = new Element();
+    result = "Element();";
+    assert elem instanceof Element;
+    Image img = new Image();
+    result += " Image();";
+    assert img instanceof Image;
+    Target tgt = new Target();
+    result += " Target();";
+    assert tgt instanceof Target;
+    img = new Image("ich.png");
+    result += " Image(\"ich.png\");";
+    assert img instanceof Image;
+    tgt = new Target(img);
+    result += " Target(image);";
+    assert tgt instanceof Target;
+    tgt = new Target(tgt);
+    result += " Target(target);";
+    assert tgt instanceof Target;
+    Mat aMat = tgt.getContent();
+    tgt = new Target(aMat);
+    result += " Target(mat);";
+    assert tgt instanceof Target;
+    tgt = new Target(img, 0.95, new Element(2,3));
+    result += " Target(image, 0.95, new Element(2,3));";
+    assert tgt instanceof Target;
+  }
+
+  @Test
   public void test_20_getBundlePath() {
     currentTest = "test_20_getBundlePath";
     String bundlePath = Commands.getBundlePath();
@@ -101,9 +136,19 @@ public class TestCoreBasic {
   }
 
   @Test
-  public void test_21_setBundlePath() {
-    currentTest = "test_21_setBundlePath";
-    String bundlePath = "My Images";
+  public void test_21_setBundlePathFile() {
+    currentTest = "test_21_setBundlePathFile";
+    String bundlePath = "target/test-classes";
+    boolean success = Commands.setBundlePath(bundlePath, "Images");
+    result = Commands.getBundlePath();
+    success &= SX.existsFile(result);
+    assert success;
+  }
+
+  @Test
+  public void test_22_setBundlePathByClass() {
+    currentTest = "test_22_setBundlePathByClass";
+    String bundlePath = "./Images";
     boolean success = Commands.setBundlePath(bundlePath);
     result = Commands.getBundlePath();
     success &= SX.existsFile(result);
@@ -111,15 +156,39 @@ public class TestCoreBasic {
   }
 
   @Test
-  public void test_22_getImagePath() {
-    currentTest = "test_22_getImagePath";
+  public void test_23_setBundlePathJarByClass() {
+    currentTest = "test_23_setBundlePathJarByClass";
+    String bundlePath = "TestJar/Images";
+    boolean success = Commands.setBundlePath(bundlePath);
+    result = Commands.getBundlePath();
+    success &= SX.existsFile(result);
+    assert success;
+  }
+
+  @Test
+  public void test_24_setBundlePathHttp() {
+    currentTest = "test_24_setBundlePathHttp";
+    String bundlePath = "http://sikulix.com";
+    String subPath = "images";
+    boolean success = Commands.setBundlePath(bundlePath, subPath);
+    result = Commands.getBundlePath();
+    success &= (bundlePath + "/" + subPath).equals(result);
+    assert success;
+  }
+
+  @Test
+  public void test_29_getImagePath() {
+    currentTest = "test_29_getImagePath";
+    Commands.setBundlePath("./Images");
+    Commands.addImagePath("TestJar/Images");
+    Commands.addImagePath("http://sikulix.com/images");
     String[] paths = Commands.getImagePath();
     result = "[";
     for (String path : paths) {
       result += path + ", ";
     }
     result += "]";
-    assert 1 == paths.length;
+    assert 3 == paths.length;
   }
 
   @Test
@@ -149,7 +218,7 @@ public class TestCoreBasic {
     new Thread(server).start();
     SX.pause(3);
     Element vis = new Element(300, 300, 500, 500);
-    vis.setLastMatch(new Match(new Element(400, 400, 50, 50), 0.92345678, new Element(100, 100)));
+    vis.setLastMatch(new Element(new Element(400, 400, 50, 50), 0.92345678, new Element(100, 100)));
     JSONObject jVis = SXJson.makeElement(vis);
     SXClient.get("/");
     SXClient.post("/session/12", jVis.toString());

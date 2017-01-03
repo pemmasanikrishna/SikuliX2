@@ -63,14 +63,14 @@ public class SXJson {
 
     SXElement.eType clazz = SXElement.eType.ELEMENT;
 
-    public SXElementFlat(SXElement vis) {
+    public SXElementFlat(Element vis) {
       clazz = vis.getType();
       x = vis.x;
       y = vis.y;
       w = vis.w;
       h = vis.h;
       if (vis.isRectangle()) {
-        SXElement match = vis.getLastMatch();
+        Element match = vis.getLastMatch();
         if (SX.isNotNull(match)) {
           lastMatch = new SXElementFlat(match);
         }
@@ -104,10 +104,7 @@ public class SXJson {
     }
 
     public Double getScore() {
-      if (SXElement.eType.MATCH.equals(clazz)) {
-        return score;
-      }
-      return null;
+      return score;
     }
 
     public int[] getTarget() {
@@ -115,7 +112,7 @@ public class SXJson {
     }
   }
 
-  public static JSONObject makeElement(SXElement elem) {
+  public static JSONObject makeElement(Element elem) {
     return new SXJson(new SXElementFlat(elem)).theJsonObject;
   }
 

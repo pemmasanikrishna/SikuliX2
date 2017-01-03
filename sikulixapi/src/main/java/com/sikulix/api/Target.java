@@ -1,0 +1,98 @@
+/*
+ * Copyright (c) 2016 - sikulix.com - MIT license
+ */
+
+package com.sikulix.api;
+
+import com.sikulix.core.SX;
+import com.sikulix.core.SXLog;
+import org.opencv.core.Mat;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+
+public class Target extends Image {
+
+  private static eType eClazz = eType.TARGET;
+  private static SXLog log = SX.getLogger("SX." + eClazz.toString());
+
+  private static double exactAs = 0.99f;
+
+  public static void setExactAs(double minimumScore) {
+    exactAs = minimumScore;
+  }
+
+  public static double getExactAs() {
+    return exactAs;
+  }
+
+  //<editor-fold desc="***** construct">
+  public Target() {
+  }
+
+  protected void setClazz() {
+    clazz = eClazz;
+  }
+
+  protected void copy(Element elem) {
+    super.copy(elem);
+  }
+
+  public Target(BufferedImage bimg) {
+    super(bimg);
+  }
+
+  public Target(BufferedImage bimg, Rectangle rect) {
+    super(bimg, rect);
+  }
+
+  public Target(Mat mat) {
+    super(mat);
+  }
+
+  public Target(String fpImage) {
+    super(fpImage);
+  }
+
+  public Target(Target pat) {
+    super(pat);
+  }
+
+  public Target(Image img) {
+    super(img);
+  }
+
+  public Target(Element elem, double score) {
+    super(elem, score);
+  }
+
+  public Target(Element elem, double score, Element off) {
+    super(elem, score, off);
+  }
+
+  public Target(Element elem, Element off) {
+    super(elem, off);
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="***** set, get">
+  public Target similar(double score) {
+    setScore(score);
+    return this;
+  }
+
+  public double getSimilar() {
+    return getScore();
+  }
+
+  /**
+   * sets the minimum wanted similarity score to the value which means exact match (default 0.99)
+   *
+   * @return the Pattern object itself
+   */
+  public Target exact() {
+    setScore(exactAs);
+    return this;
+  }
+  //</editor-fold>
+}

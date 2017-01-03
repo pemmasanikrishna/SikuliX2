@@ -3,6 +3,7 @@
  */
 package com.sikulix.core;
 
+import com.sikulix.api.Element;
 import com.sikulix.api.Image;
 import com.sikulix.api.Keys;
 
@@ -41,11 +42,11 @@ public class LocalRobot extends Robot implements IRobot {
   }
 
   private void doMouseDown(int buttons) {
-    SXElement.fakeHighlight(true);
+    Element.fakeHighlight(true);
     setAutoDelay(stdAutoDelay);
     setAutoWaitForIdle(false);
     delay(100);
-    SXElement.fakeHighlight(false);
+    Element.fakeHighlight(false);
     delay(100);
     mousePress(buttons);
     if (stdAutoDelay == 0) {

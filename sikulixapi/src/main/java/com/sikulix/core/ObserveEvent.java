@@ -5,8 +5,7 @@
 package com.sikulix.core;
 
 import com.sikulix.api.Element;
-import com.sikulix.api.Match;
-import com.sikulix.api.Pattern;
+import com.sikulix.api.Target;
 import com.sikulix.util.Settings;
 
 import java.io.IOException;
@@ -31,7 +30,7 @@ public class ObserveEvent {
   private Type type;
   private long time;
   private Element region = null;
-  private Pattern pattern = null;
+  private Target pattern = null;
   private ObserverCallBack callback = null;
   private Object[] vals = null;
   private int minChanged = Settings.ObserveMinChangedPixels;
@@ -40,7 +39,7 @@ public class ObserveEvent {
   private int count = 0;
   private boolean active = true;
 
-  private List<Match> matchOrChanges = new ArrayList<Match>();
+  private List<Element> matchOrChanges = new ArrayList<Element>();
 
   private ObserveEvent() {
   }
@@ -171,21 +170,21 @@ public class ObserveEvent {
    *
    * @return the observed match (APEAR, VANISH)
    */
-  public Match getMatch() {
+  public Element getMatch() {
     if ((isAppear() || isVanish()) && hasHappened()) {
       return matchOrChanges.get(0);
     }
     return null;
   }
 
-  protected void setMatch(Match m) {
+  protected void setMatch(Element m) {
     matchOrChanges.clear();
     matchOrChanges.add(0, m);
   }
 
   protected void setHappened() {
     matchOrChanges.clear();
-    matchOrChanges.add(0, new Match());
+    matchOrChanges.add(0, new Element());
   }
 
   public void reset() {
@@ -196,14 +195,14 @@ public class ObserveEvent {
    *
    * @return a list of observed changes as matches (CHANGE)
    */
-  public List<Match> getChanges() {
+  public List<Element> getChanges() {
     if (isChange() && hasHappened()) {
       return matchOrChanges;
     }
     return null;
   }
 
-  protected void setChanges(List<Match> c) {
+  protected void setChanges(List<Element> c) {
     if (c != null) {
       matchOrChanges.clear();
       matchOrChanges.addAll(c);
@@ -214,7 +213,7 @@ public class ObserveEvent {
    *
    * @return the used pattern for this event's observing
    */
-  public Pattern getPattern() {
+  public Target getPattern() {
     return pattern;
   }
 

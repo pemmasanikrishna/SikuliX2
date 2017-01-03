@@ -175,28 +175,28 @@ public class JavaScriptHelper {
    * @return the match or throws FindFailed
    * @throws FindFailed
    */
-  public static Match wait(Object... args) throws FindFailed {
+  public static Element wait(Object... args) throws FindFailed {
     logCmd("wait", args);
     Object[] realArgs = waitArgs(args);
-    return waitx((String) realArgs[0], (Pattern) realArgs[1], (Double) realArgs[2], (Float) realArgs[3]);
+    return waitx((String) realArgs[0], (Target) realArgs[1], (Double) realArgs[2], (Float) realArgs[3]);
   }
 
-  private static Match waitx(String image, Pattern pimage, double timeout, float score) throws FindFailed {
+  private static Element waitx(String image, Target pimage, double timeout, float score) throws FindFailed {
     Object aPattern = null;
     if (image != null) {
       if (score > 0) {
-        aPattern = new Pattern(image).similar(score);
+        aPattern = new Target(image).similar(score);
       } else {
-        aPattern = new Pattern(image);
+        aPattern = new Target(image);
       }
     } else if (pimage != null) {
       aPattern = pimage;
     }
     if (aPattern != null) {
       if (timeout > -1.0) {
-        return scr.wait((Pattern) aPattern, timeout);
+        return scr.wait((Target) aPattern, timeout);
       }
-      return scr.wait((Pattern) aPattern);
+      return scr.wait((Target) aPattern);
     }
     return null;
   }
@@ -220,7 +220,7 @@ public class JavaScriptHelper {
       }
       if (aObj instanceof String) {
         realArgs[0] = aObj;
-      } else if (aObj instanceof Pattern) {
+      } else if (aObj instanceof Target) {
         realArgs[1] = aObj;
         if (len > 1 && isNumber(args[1])) {
           realArgs[2] = (Double) getNumber(args[1]);
@@ -265,22 +265,22 @@ public class JavaScriptHelper {
     Object aPattern;
     Object[] realArgs = waitArgs(args);
     String image = (String) realArgs[0];
-    Pattern pimage = (Pattern) realArgs[1];
+    Target pimage = (Target) realArgs[1];
     double timeout = (Double) realArgs[2];
     float score = (Float) realArgs[3];
     if (image != null) {
       if (score > 0) {
-        aPattern = new Pattern(image).similar(score);
+        aPattern = new Target(image).similar(score);
       } else {
-        aPattern = new Pattern(image);
+        aPattern = new Target(image);
       }
     } else {
       aPattern = pimage;
     }
     if (timeout > -1.0) {
-      return scr.waitVanish((Pattern) aPattern, timeout);
+      return scr.waitVanish((Target) aPattern, timeout);
     }
-    return scr.waitVanish((Pattern) aPattern);
+    return scr.waitVanish((Target) aPattern);
   }
 
   /**
@@ -288,15 +288,15 @@ public class JavaScriptHelper {
    * @param args see wait()
    * @return the match or null if not found within wait time (no FindFailed exception)
    */
-  public static Match exists(Object... args) {
+  public static Element exists(Object... args) {
     logCmd("exists", args);
-    Match match = null;
+    Element match = null;
     Object[] realArgs = waitArgs(args);
     if ((Double) realArgs[2] < 0.0) {
       realArgs[2] = 0.0;
     }
     try {
-      match = waitx((String) realArgs[0], (Pattern) realArgs[1], (Double) realArgs[2], (Float) realArgs[3]);
+      match = waitx((String) realArgs[0], (Target) realArgs[1], (Double) realArgs[2], (Float) realArgs[3]);
     } catch (Exception ex) {
       return null;
     }
@@ -322,9 +322,9 @@ public class JavaScriptHelper {
 
   private static Element hoverx(Object... args) {
     int len = args.length;
-    Match aMatch;
+    Element aMatch;
     if (len == 0 || args[0] == null) {
-      Mouse.get().move(scr.getMatchPoint());
+      Mouse.get().move(scr.getTarget());
       return new Element(); // Mouse.at();
     }
     if (len < 4) {
@@ -333,12 +333,12 @@ public class JavaScriptHelper {
       if (isJSON(aObj)) {
         aObj = fromJSON(aObj);
       }
-      if (aObj instanceof String || aObj instanceof Pattern) {
+      if (aObj instanceof String || aObj instanceof Target) {
         try {
           aMatch = wait(args);
           Mouse.get().move(aMatch.getTarget());
         } catch (Exception ex) {
-          Mouse.get().move(scr.getMatchPoint());
+          Mouse.get().move(scr.getTarget());
         }
         return new Element(); // Mouse.at();
       } else if (aObj instanceof Element) {
@@ -348,7 +348,7 @@ public class JavaScriptHelper {
       }
       if (len > 1) {
         if (isNumber(aObj) && isNumber(args[1])) {
-          Element match = scr.getMatchPoint();
+          Element match = scr.getTarget();
           match.translate(getInteger(aObj), getInteger(args[1]));
           Mouse.get().move(match);
           return new Element(); //Mouse.at();
@@ -362,7 +362,7 @@ public class JavaScriptHelper {
         return  new Element(); //Mouse.at();
       }
     }
-    Mouse.get().move(scr.getMatchPoint());
+    Mouse.get().move(scr.getTarget());
     return new Element();  //Mouse.at();
   }
 
@@ -486,15 +486,15 @@ public class JavaScriptHelper {
     } else if ("R".equals(oType)) {
       newObj = new Element(rectFromJSON(json));
     } else if ("M".equals(oType)) {
-      Match newMatch = new Match(rectFromJSON(json));
+      Element newMatch = new Element(rectFromJSON(json));
       newMatch.setScore(dblFromJSON(json, 5)/100);
       newMatch.setTarget(intFromJSON(json, 6), intFromJSON(json, 7));
     } else if ("L".equals(oType)) {
       newObj = null; //new Location(locFromJSON(json));
     } else if ("P".equals(oType)) {
-      newObj = new Pattern(json[1]);
-      ((Pattern) newObj).similar(fltFromJSON(json, 2));
-      ((Pattern) newObj).setTarget(intFromJSON(json, 3), intFromJSON(json, 4));
+      Target newPat = (new Target(json[1])).similar(fltFromJSON(json, 2));
+      newPat.setTarget(intFromJSON(json, 3), intFromJSON(json, 4));
+      newObj = newPat;
     }
     return newObj;
   }

@@ -311,8 +311,8 @@ primary[arg_type]
                 self.xcall_references.append((func_toku, len(self.rpn) + 1))
                 self.rpn += struct.pack("<BHHH",
                     ptgNameXR,
-                    0xadde, // ##PATCHME## index to REF entry in EXTERNSHEET record
-                    0xefbe, // ##PATCHME## one-based index to EXTERNNAME record
+                    0xadde, // ##PATCHME## matchIndex to REF entry in EXTERNSHEET record
+                    0xefbe, // ##PATCHME## one-based matchIndex to EXTERNNAME record
                     0x0000) // unused
         }
         LP arg_count = expr_list[arg_type_list, min_argc, max_argc] RP

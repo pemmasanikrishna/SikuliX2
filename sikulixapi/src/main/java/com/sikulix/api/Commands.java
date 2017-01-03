@@ -26,6 +26,7 @@ import java.util.StringTokenizer;
 public class Commands extends SX {
 
   private static SXLog log = getLogger("SX.Commands");
+  private static String klazz = Commands.class.getName();
 
   //<editor-fold desc="load a jar">
 
@@ -467,6 +468,27 @@ public class Commands extends SX {
   //</editor-fold>
 
   //<editor-fold desc="SX Commands ImagePath handling">
+  private static String baseClass = "";
+
+  public static void setBaseClass() {
+    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+    boolean takeit = false;
+    for (StackTraceElement traceElement : stackTrace) {
+      String tName = traceElement.getClassName();
+      if (takeit) {
+        baseClass = tName;
+        break;
+      }
+      if (tName.equals(klazz)) {
+        takeit = true;
+      }
+    }
+  }
+
+  public static String getBaseClass() {
+    return baseClass;
+  }
+
   public static boolean setBundlePath(Object... args) {
     return Image.setBundlePath(args);
   }
@@ -853,30 +875,41 @@ public class Commands extends SX {
   }
 
   public static Element use(Object elem) {
-    if (elem instanceof SXElement && ((SXElement) elem).isRectangle()) {
+    if (elem instanceof Element && ((Element) elem).isRectangle()) {
       if (((SXElement) elem).isRectangle()) {
         defaultRegion = (Element) elem;
       } else {
-        defaultRegion = new Element(((SXElement) elem));
+        defaultRegion = new Element(((Element) elem));
       }
     }
     return defaultRegion;
   }
 
-  public static SXElement click(Object... args) {
+  public static Element click(Object... args) {
     Target target = new Target(args);
     if (target.isValid()) {
-      SXElement point = target.getTarget();
+      Element point = target.getTarget();
       log.trace("clicking: %s", point);
       return point;
     }
     return null;
   }
 
+  /*
+  (what)
+  Image
+  Pattern
+  Element
+
+  (what, where)
+          Image
+          Element
+   */
+
   private static class Target {
-    SXElement where = null;
-    SXElement what = null;
-    SXElement target = null;
+    com.sikulix.api.Target what = null;
+    Element where = null;
+    Element target = null;
     boolean needFind = false;
 
     Target(Object... args) {
@@ -886,32 +919,29 @@ public class Commands extends SX {
       }
       log.trace(form, args);
       Object args0, args1;
-      SXElement elem0, elem1;
+      Element elem0, elem1;
       if (args.length > 0) {
         args0 = args[0];
         if (args0 instanceof String) {
-          if (((String) args0).startsWith("{")) {
-            log.p("JSON");
-          }
           needFind = true;
-          what = new Pattern((String) args0);
+          what = new com.sikulix.api.Target((String) args0);
         }
-        if (args0 instanceof SXElement) {
-          elem0 = (SXElement) args0;
+        if (args0 instanceof Element) {
+          elem0 = (Element) args0;
           if (elem0.isOnScreen()) {
             target = elem0;
             where = elem0;
-          } else if (elem0.isPattern()) {
+          } else if (elem0.isTarget()) {
             needFind = true;
             where = defaultRegion;
-            what = new Pattern(elem0);
+            what = new com.sikulix.api.Target((com.sikulix.api.Target) args0);
             log.error("not implemented: target(Image || Pattern)");
           }
           if (args.length == 2) {
             args1 = args[1];
             if (needFind) {
-              if (args1 instanceof SXElement) {
-                elem1 = (SXElement) args1;
+              if (args1 instanceof Element) {
+                elem1 = (Element) args1;
                 if (elem1.isOnScreen()) {
                   where = new Element(elem1);
                 } else if (elem1.isImage()) {
@@ -923,7 +953,7 @@ public class Commands extends SX {
             }
           }
           if (needFind) {
-            target = new Match();
+            target = new Element();
             log.error("not implemented: Target.find");
           }
         }
@@ -937,7 +967,7 @@ public class Commands extends SX {
       return SX.isNotNull(target);
     }
 
-    SXElement getTarget() {
+    Element getTarget() {
       if (SX.isNotNull(target)) {
         return target.getTarget();
       }

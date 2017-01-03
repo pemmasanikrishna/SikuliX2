@@ -23,5 +23,11 @@
       <version>${project.version}</version>
       <!--<scope>test</scope>-->
     </dependency>
-  </dependencies>
+    <dependency>
+      <groupId>somegroup</groupId>
+      <artifactId>someartifact</artifactId>
+      <version>1.0</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/testjar.jar</systemPath>
+    </dependency> </dependencies>
 </project>

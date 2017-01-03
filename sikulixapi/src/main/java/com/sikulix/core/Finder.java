@@ -6,8 +6,7 @@ package com.sikulix.core;
 
 import com.sikulix.api.Element;
 import com.sikulix.api.Image;
-import com.sikulix.api.Match;
-import com.sikulix.api.Pattern;
+import com.sikulix.api.Target;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
@@ -39,25 +38,24 @@ public class Finder {
 
   private static class Probe {
 
-    public Pattern pattern = null;
+    public Target pattern = null;
     public double similarity = 0;
     public double downSim = 0;
     public Image img = null;
     public Mat mat = null;
-    public Match lastSeen = null;
+    public Element lastSeen = null;
     public double lastSeenScore = 0;
 
     private boolean valid = false;
 
-    public Probe(Pattern pattern) {
+    public Probe(Target pattern) {
       if (pattern.isValid()) {
         this.pattern = pattern;
         similarity = pattern.getScore();
         downSim = ((int) ((similarity - downSimDiff) * 100)) / 100.0;
-        img = pattern.getImage();
-        mat = img.content;
-        if (null != img.getLastMatch()) {
-          lastSeen = img.getLastMatch();
+        mat = pattern.getContent();
+        if (null != pattern.getLastMatch()) {
+          lastSeen = pattern.getLastMatch();
           lastSeenScore = lastSeen.getScore();
         }
       }
@@ -68,7 +66,7 @@ public class Finder {
     }
   }
 
-  public static class Found implements Iterator<Match> {
+  public static class Found implements Iterator<Element> {
 
     public String name = "";
     public boolean success = false;
@@ -83,12 +81,12 @@ public class Finder {
     public Mat base = null;
 
     public ObserveEvent[] events = null;
-    public Pattern pattern = null;
-    public Pattern[] patterns = null;
+    public Target pattern = null;
+    public Target[] patterns = null;
     public long timeout = 0;
     public long elapsed = -1;
-    public Match match = null;
-    private Match[] matches = null;
+    public Element match = null;
+    private Element[] matches = null;
 
     public Finder finder = null;
 
@@ -113,8 +111,8 @@ public class Finder {
     public synchronized boolean hasNext(boolean withTrace) {
       boolean success = false;
       if (currentScore < 0) {
-        width = pattern.getImage().w;
-        height = pattern.getImage().h;
+        width = pattern.w;
+        height = pattern.h;
         givenScore = pattern.getScore();
         if (givenScore < 0.95) {
           margin = 4;
@@ -143,10 +141,10 @@ public class Finder {
     }
 
     @Override
-    public synchronized Match next() {
-      Match match = null;
+    public synchronized Element next() {
+      Element match = null;
       if (hasNext(false)) {
-        match = new Match(new Element(baseX + currentX, baseY + currentY, width, height), currentScore, null);
+        match = new Element(new Element(baseX + currentX, baseY + currentY, width, height), currentScore);
         int newX = Math.max(currentX - margin, 0);
         int newY = Math.max(currentY - margin, 0);
         int newXX = Math.min(newX + 2 * margin, result.cols());
@@ -158,14 +156,14 @@ public class Finder {
       return match;
     }
 
-    public Match[] getMatches() {
+    public Element[] getMatches() {
       if (matches == null) {
         if (hasNext()) {
-          List<Match> listMatches = new ArrayList<Match>();
+          List<Element> listMatches = new ArrayList<Element>();
           while (hasNext(false)) {
             listMatches.add(next());
           }
-          return (Match[]) listMatches.toArray();
+          return (Element []) listMatches.toArray();
         }
       }
       return matches;
@@ -208,7 +206,7 @@ public class Finder {
   public Finder(Image img) {
     if (img != null && img.isValid()) {
       image = img;
-      base = img.content;
+      base = img.getContent();
       isRegion = false;
     } else {
       log.error("init: invalid image: %s", img);
@@ -248,7 +246,7 @@ public class Finder {
     region = reg;
     offX = region.x;
     offY = region.y;
-    base = region.capture().content;
+    base = region.capture().getContent();
   }
 
   protected long setBase() {
@@ -256,7 +254,7 @@ public class Finder {
       return 0;
     }
     long begin_t = new Date().getTime();
-    base = region.capture().content;
+    base = region.capture().getContent();
     return new Date().getTime() - begin_t;
   }
 
@@ -308,7 +306,7 @@ public class Finder {
     long begin_t = 0;
     Mat result = new Mat();
     Core.MinMaxLocResult mMinMax = null;
-    Match mFound = null;
+    Element mFound = null;
     Probe probe = new Probe(found.pattern);
     found.base = base;
     boolean isIterator = FindType.ALL.equals(found.type);
@@ -317,7 +315,7 @@ public class Finder {
       begin_t = new Date().getTime();
       Finder lastSeenFinder = new Finder(probe.lastSeen);
       lastSeenFinder.setUseOriginal();
-      found.pattern = new Pattern(probe.img).similar(probe.lastSeenScore - 0.01);
+      found.pattern = new Target(probe.pattern).similar(probe.lastSeenScore - 0.01);
       lastSeenFinder.find(found);
       if (found.match != null) {
         mFound = found.match;
@@ -358,7 +356,7 @@ public class Finder {
         // ************************************* check after downsized success
         if (base.size().equals(probe.mat.size())) {
           // trust downsized result, if images have same size
-          mFound = new Match(new Element((int) offX, (int) offY, base.width(), base.height()),mMinMax.maxVal, null);
+          mFound = new Element(new Element((int) offX, (int) offY, base.width(), base.height()),mMinMax.maxVal);
           success = true;
         } else {
           int maxLocX = (int) (mMinMax.maxLoc.x * rfactor);
@@ -371,8 +369,8 @@ public class Finder {
           result = doFindMatch(probe, base.submat(r), probe.mat);
           mMinMax = Core.minMaxLoc(result);
           if (mMinMax.maxVal > probe.similarity) {
-            mFound = new Match(new Element((int) mMinMax.maxLoc.x + offX + r.x, (int) mMinMax.maxLoc.y + offY + r.y,
-                    probe.img.w, probe.img.h), mMinMax.maxVal, null);
+            mFound = new Element(new Element((int) mMinMax.maxLoc.x + offX + r.x, (int) mMinMax.maxLoc.y + offY + r.y,
+                    probe.img.w, probe.img.h), mMinMax.maxVal);
             success = true;
           }
           log.trace("doFind: check after doFindDown %%%.2f(%%%.2f) %d msec",
@@ -385,8 +383,8 @@ public class Finder {
         result = doFindMatch(probe, base, probe.mat);
         mMinMax = Core.minMaxLoc(result);
         if (mMinMax != null && mMinMax.maxVal > probe.similarity) {
-          mFound = new Match(new Element((int) mMinMax.maxLoc.x + offX, (int) mMinMax.maxLoc.y + offY,
-              probe.img.w, probe.img.h), mMinMax.maxVal, null);
+          mFound = new Element(new Element((int) mMinMax.maxLoc.x + offX, (int) mMinMax.maxLoc.y + offY,
+              probe.img.w, probe.img.h), mMinMax.maxVal);
           success = true;
         }
         if (!useOriginal) {
@@ -395,7 +393,7 @@ public class Finder {
       }
     }
     if (success) {
-      probe.img.setLastMatch(new Match(mFound, mFound.getScore(), null));
+      probe.img.setLastMatch(new Element(mFound, mFound.getScore()));
       found.match = mFound;
       if (FindType.ALL.equals(found.type)) {
         found.result = result;
@@ -428,11 +426,11 @@ public class Finder {
     log.trace("findBest: enter");
     findAnyCollect(found);
     if (found.type.equals(FindType.BEST)) {
-      List<Match> mList = Arrays.asList(found.getMatches());
+      List<Element> mList = Arrays.asList(found.getMatches());
       if (mList != null) {
-        Collections.sort(mList, new Comparator<Match>() {
+        Collections.sort(mList, new Comparator<Element>() {
           @Override
-          public int compare(Match m1, Match m2) {
+          public int compare(Element m1, Element m2) {
             double ms = m2.getScore() - m1.getScore();
             if (ms < 0) {
               return -1;
@@ -449,7 +447,7 @@ public class Finder {
 
   private void findAnyCollect(Found found) {
     int targetCount = 0;
-    Pattern[] patterns = null;
+    Target[] patterns = null;
     ObserveEvent[] events = null;
     boolean isEvents = false;
     if (found.patterns != null) {
@@ -459,7 +457,7 @@ public class Finder {
       isEvents = true;
       events = found.events;
       targetCount = events.length;
-      patterns = new Pattern[targetCount];
+      patterns = new Target[targetCount];
       for (int np = 0; np < targetCount; np++) {
         patterns[np] = events[np].getPattern();
       }
@@ -467,11 +465,11 @@ public class Finder {
       log.error("findAnyCollect: found structure invalid");
       return;
     }
-    Match[] mArray = new Match[targetCount];
+    Element[] mArray = new Element[targetCount];
     SubFindRun[] theSubs = new SubFindRun[targetCount];
     int nobj = 0;
     Found subFound = null;
-    for (Pattern pattern  : patterns) {
+    for (Target pattern  : patterns) {
       mArray[nobj] = null;
       theSubs[nobj] = null;
       if (pattern != null) {
@@ -494,13 +492,13 @@ public class Finder {
     log.trace("findAnyCollect: SubFindRuns finished");
     nobj = 0;
     boolean anyMatch = false;
-    for (Match match : mArray) {
+    for (Element match : mArray) {
       if (isEvents) {
         ObserveEvent evt = events[nobj];
         evt.setMatch(match);
         evt.setActive(false);
       } else if (match != null) {
-        match.setIndex(nobj);
+        match.setMatchIndex(nobj);
         anyMatch = true;
       }
       nobj++;
@@ -513,7 +511,7 @@ public class Finder {
 
   private class SubFindRun implements Runnable {
 
-    Match[] mArray;
+    Element[] mArray;
     Image base;
     Object target;
     Element reg;
@@ -521,7 +519,7 @@ public class Finder {
     int subN;
     Found subFound;
 
-    public SubFindRun(Match[] pMArray, int pSubN, Found found) {
+    public SubFindRun(Element[] pMArray, int pSubN, Found found) {
       subN = pSubN;
       mArray = pMArray;
       subFound = found;
@@ -599,17 +597,17 @@ public class Finder {
     log.terminate(1, "setMinChanges");
   }
 
-  protected static Pattern evalTarget(Object target) throws IOException {
+  protected static Target evalTarget(Object target) throws IOException {
     boolean findingText = false;
     Image img = null;
-    Pattern pattern = null;
+    Target pattern = null;
     if (target instanceof String) {
       if (((String) target).startsWith("\t") && ((String) target).endsWith("\t")) {
         findingText = true;
       } else {
         img = new Image((String) target);
         if (img.isValid()) {
-          pattern = new Pattern(img);
+          pattern = new Target(img);
         } else if (img.isText()) {
           findingText = true;
         } else {
@@ -619,15 +617,15 @@ public class Finder {
       if (findingText) {
         log.terminate(1, "//TODO implement findingText");
       }
-    } else if (target instanceof Pattern) {
-      if (((Pattern) target).isValid()) {
-        pattern = (Pattern) target;
+    } else if (target instanceof Target) {
+      if (((Target) target).isValid()) {
+        pattern = (Target) target;
       } else {
         throw new IOException("Region: doFind: Pattern not useable: " + target.toString());
       }
     } else if (target instanceof Image) {
       if (((Image) target).isValid()) {
-        pattern = new Pattern((Image) target);
+        pattern = new Target((Image) target);
       } else {
         throw new IOException("Region: doFind: Image not useable: " + target.toString());
       }

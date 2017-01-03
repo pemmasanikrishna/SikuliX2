@@ -4,6 +4,7 @@
 
 package com.sikulix.core;
 
+import com.sikulix.api.Commands;
 import com.sikulix.api.Element;
 import com.sikulix.scripting.JythonHelper;
 import org.apache.commons.cli.*;
@@ -1646,13 +1647,16 @@ public class SX {
   }
 
   public static URL getJarURL(Object... args) {
-    File aFile = getFile(args);
+    if (args.length == 0) {
+      return null;
+    }
+    File aFile = getFile(args[0]);
     if (isNotSet(aFile)) {
       return null;
     }
     String sSub = "";
-    if (args.length > 2) {
-      sSub = args[2].toString();
+    if (args.length > 1) {
+      sSub = args[1].toString();
     }
     try {
       return new URL("jar:file:" + aFile.toString() + "!/" + sSub);
@@ -1757,49 +1761,102 @@ public class SX {
 
     String fpMain = "";
 
-    Object arg0 = args[0];
-    String fpSub = args.length > 1 ? (String) args[1] : "";
-    if (arg0 instanceof File) {
-      fpMain = canonicalPath((File) arg0);
-    } else if (arg0 instanceof String) {
-      if (((String) arg0).startsWith("http")) {
+    Object objMain = args[0];
+    String strMain = "";
+    String fpSubOrAlt = args.length > 1 ? (String) args[1] : "";
+    if (objMain instanceof File) {
+      fpMain = canonicalPath((File) objMain);
+    } else if (objMain instanceof String) {
+      strMain = (String) objMain;
+      if ((strMain).startsWith("http")) {
         proto = "http:";
-        fpMain = (String) arg0;
+        fpMain = strMain;
       } else {
-        fpMain = canonicalPath(getFile(arg0.toString()));
+        fpMain = canonicalPath(getFile(strMain));
+        // check for class based path
+        if (isSet(strMain) &&
+                ! new File(fpMain).exists() && ! new File(strMain).isAbsolute()) {
+          url = makeURLfromClass(strMain, fpSubOrAlt);
+        }
       }
     }
-    if ("file:".equals(proto)) {
-      if (fpMain.endsWith(".jar")) {
-        if (!existsFile(fpMain)) {
+    if (isNotSet(url)) {
+      if ("file:".equals(proto)) {
+        if (fpMain.endsWith(".jar")) {
+          if (!existsFile(fpMain)) {
+            log.error("makeURL: not exists: %s", fpMain);
+          }
+          fpMain = "file:" + fpMain + "!/";
+          proto = "jar:";
+        }
+      }
+      if (isSet(fpSubOrAlt)) {
+        if ("file:".equals(proto)) {
+          fpMain = canonicalPath(getFile(fpMain, fpSubOrAlt));
+        } else {
+          if (!fpSubOrAlt.startsWith("/") && !fpMain.endsWith("/")) {
+            fpSubOrAlt = "/" + fpSubOrAlt;
+          }
+          fpMain += fpSubOrAlt;
+        }
+      }
+      if ("http:".equals(proto)) {
+        sURL = fpMain;
+      } else {
+        if ("file:".equals(proto) && !existsFile(fpMain)) {
           log.error("makeURL: not exists: %s", fpMain);
         }
-        fpMain = "file:" + fpMain + "!/";
-        proto = "jar:";
+        sURL = proto + fpMain;
+      }
+      try {
+        url = new URL(sURL);
+      } catch (MalformedURLException e) {
+        log.error("makeURL: not valid: %s %s", objMain, (isNotSet(fpSubOrAlt) ? "" : ", " + fpSubOrAlt));
       }
     }
-    if (isSet(fpSub)) {
-      if ("file:".equals(proto)) {
-        fpMain = canonicalPath(getFile(fpMain, fpSub));
-      } else {
-        if (!fpSub.startsWith("/")) {
-          fpSub = "/" + fpSub;
-        }
-        fpMain += fpSub;
+    return url;
+  }
+
+  private static URL makeURLfromClass(String fpMain, String fpAlt) {
+    URL url = null;
+    Class cls = null;
+    String klassName;
+    String fpSubPath = "";
+    int n = fpMain.indexOf("/");
+    if (n > 0) {
+      klassName = fpMain.substring(0, n);
+      if (n < fpMain.length() - 2) {
+        fpSubPath = fpMain.substring(n + 1);
       }
-    }
-    if (!"http:".equals(proto)) {
-      if ("file:".equals(proto) && isNotSet(getFolder(fpMain))) {
-        log.error("makeURL: not exists: %s", fpMain);
-      }
-      sURL = proto + fpMain;
     } else {
-      sURL = fpMain;
+      klassName = fpMain;
+    }
+    if (".".equals(klassName)) {
+      if (isSet(Commands.getBaseClass())) {
+        klassName = Commands.getBaseClass();
+      } else {
+        klassName = sxGlobalClassReference.getName();
+      }
     }
     try {
-      url = new URL(sURL);
-    } catch (MalformedURLException e) {
-      log.error("makeURL: not valid: %s %s", arg0, (isNotSet(fpSub) ? "" : ", " + fpSub));
+      cls = Class.forName(klassName);
+    } catch (ClassNotFoundException ex) {
+      log.error("makeURLfromPath: class %s not found on classpath.", klassName);
+    }
+    if (cls != null) {
+      CodeSource codeSrc = cls.getProtectionDomain().getCodeSource();
+      if (codeSrc != null && codeSrc.getLocation() != null) {
+        url = codeSrc.getLocation();
+        if (url.getPath().endsWith(".jar")) {
+          url = getJarURL(url.getPath(), fpSubPath);
+        } else {
+          if (isNotSet(fpAlt)) {
+            url = getFileURL(url.getPath(), fpSubPath);
+          } else {
+            url = getFileURL(fpAlt);
+          }
+        }
+      }
     }
     return url;
   }
@@ -1812,7 +1869,7 @@ public class SX {
     if ("file".equals(proto) || "jar".equals(proto)) {
       if ("jar".equals(proto)) {
         sPath = sPath.replaceFirst("file:", "");
-        sPath = sPath.replaceFirst("!/", "/");
+        sPath = sPath.split("!/")[0];
       }
       sPath = getFile(sPath).getAbsolutePath();
     } else {

@@ -290,7 +290,7 @@ public class Mouse extends Device {
     return loc;
   }
 
-  private int click(Element loc, int buttons, Integer modifiers, boolean dblClick, SXElement vis) {
+  private int click(Element loc, int buttons, Integer modifiers, boolean dblClick, Element vis) {
     if (modifiers == null) {
       modifiers = 0;
     }
@@ -353,14 +353,10 @@ public class Mouse extends Device {
   /**
    * move the mouse to the given location
    *
-   * @param loc Location
+   * @param vis Location
    * @return 1 for success, 0 otherwise
    */
-  public int move(Element loc) {
-    return move(loc, null);
-  }
-
-  public int move(SXElement vis) {
+  public int move(Element vis) {
     return move(vis.getTarget(), null);
   }
 
@@ -374,7 +370,7 @@ public class Mouse extends Device {
     return move(at().offset(xoff, yoff));
   }
 
-  public int move(Element loc, SXElement vis) {
+  public int move(Element loc, Element vis) {
     if (isSuspended()) {
       return 0;
     }
@@ -442,7 +438,7 @@ public class Mouse extends Device {
     down(buttons, null);
   }
 
-  public void down(int buttons, SXElement vis) {
+  public void down(int buttons, Element vis) {
     if (isSuspended()) {
       return;
     }
@@ -470,7 +466,7 @@ public class Mouse extends Device {
     up(buttons, null);
   }
 
-  public void up(int buttons, SXElement vis) {
+  public void up(int buttons, Element vis) {
     if (isSuspended()) {
       return;
     }
@@ -496,11 +492,11 @@ public class Mouse extends Device {
     wheel(direction, steps, null);
   }
 
-  public void wheel(int direction, int steps, SXElement vis) {
+  public void wheel(int direction, int steps, Element vis) {
     wheel(direction,steps,vis, WHEEL_STEP_DELAY);
   }
     
-  public void wheel(int direction, int steps, SXElement vis, int stepDelay) {
+  public void wheel(int direction, int steps, Element vis, int stepDelay) {
     if (isSuspended()) {
       return;
     }

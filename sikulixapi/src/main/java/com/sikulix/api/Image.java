@@ -19,15 +19,22 @@ import java.net.URL;
 import java.util.*;
 import java.util.List;
 
-public class Image extends SXElement {
+public class Image extends Element {
 
   private static eType eClazz = eType.IMAGE;
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
   //<editor-fold desc="*** construction">
   public Image() {
+  }
+
+  protected void setClazz() {
     clazz = eClazz;
-    init(0, 0, 0, 0);
+  }
+
+  protected void copy(Element elem) {
+    content = elem.content;
+    urlImg = elem.urlImg;
   }
 
   public Image(BufferedImage bimg) {
@@ -60,9 +67,21 @@ public class Image extends SXElement {
     init(0, 0, content.width(), content.height());
   }
 
-  public Image(SXElement elem) {
-    //TODO implement Image(Element elem)
-    this();
+  public Image(Element elem) {
+    super(elem);
+    copy(elem);
+  }
+
+  public Image(Element elem, double score) {
+    super(elem, score);
+  }
+
+  public Image(Element elem, double score, Element off) {
+    super(elem, score, off);
+  }
+
+  public Image(Element elem, Element off) {
+    super(elem, off);
   }
 
   /**
@@ -80,8 +99,6 @@ public class Image extends SXElement {
   //</editor-fold>
 
   //<editor-fold desc="*** get content">
-  private URL urlImg = null;
-
   private Mat get(String fpImg) {
     URL url = getURL(fpImg);
     return get(url);
@@ -198,6 +215,10 @@ public class Image extends SXElement {
     }
   }
 
+  public static void clearPath() {
+    imagePath.clear();
+  }
+
   public static boolean setBundlePath(Object... args) {
     initPath();
     if (args.length == 0) {
@@ -231,7 +252,7 @@ public class Image extends SXElement {
     int n = 0;
     String sPath;
     for (URL uPath : imagePath) {
-      sPath = SX.makePath(uPath);
+      sPath = uPath.toString();
       if (SX.isSet(filter) && !sPath.contains(filter)) {
         continue;
       }
@@ -285,8 +306,15 @@ public class Image extends SXElement {
   }
 
   public static int addPath(Object... args) {
-    log.error("//TODO addPath: not implemented");
-    URL url = null;
+    initPath();
+    if (args.length == 0) {
+      return -1;
+    }
+    URL urlPath = SX.makeURL(args);
+    if (SX.isSet(urlPath)) {
+      imagePath.add(urlPath);
+      return imagePath.size() - 1;
+    }
     return -1;
   }
 

@@ -18,7 +18,7 @@ public class By {
     return new Element();
   }
 
-  static Element pattern(Pattern pattern) {
+  static Element pattern(Target pattern) {
     return new Element();
   }
 
