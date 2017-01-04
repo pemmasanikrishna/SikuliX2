@@ -248,18 +248,18 @@ public class TestCoreBasic {
     assert assertVal;
   }
 
-  @Ignore
+  @Test
   public void test_90_popat() {
     boolean assertVal = true;
     currentTest = "test_90_popat";
-    if (!SX.isHeadless()) {
+    if (!SX.isLinux()) {
       Commands.popat(300, 300);
       Commands.popup("Use mouse to click OK", "testing popat");
       Element loc = Mouse.at();
       result = String.format("clicked at (%d, %d)", loc.x, loc.y);
       assertVal = loc.x > 300 && loc.x < 450;
     } else {
-      result = "headless: not testing";
+      result = "Linux: not testing";
     }
     assert assertVal;
   }
