@@ -102,29 +102,29 @@ public class TestCoreBasic {
     assert success;
     Element elem = new Element();
     result = "Element();";
-    assert elem instanceof Element;
+    assert SXElement.eType.ELEMENT.equals(elem.getType());
     Image img = new Image();
     result += " Image();";
-    assert img instanceof Image;
+    assert SXElement.eType.IMAGE.equals(img.getType());
     Target tgt = new Target();
     result += " Target();";
-    assert tgt instanceof Target;
+    assert SXElement.eType.TARGET.equals(tgt.getType());
     img = new Image("ich.png");
     result += " Image(\"ich.png\");";
-    assert img instanceof Image;
+    assert SXElement.eType.IMAGE.equals(img.getType());
     tgt = new Target(img);
     result += " Target(image);";
-    assert tgt instanceof Target;
+    assert SXElement.eType.TARGET.equals(tgt.getType());
     tgt = new Target(tgt);
     result += " Target(target);";
-    assert tgt instanceof Target;
+    assert SXElement.eType.TARGET.equals(tgt.getType());
     Mat aMat = tgt.getContent();
     tgt = new Target(aMat);
     result += " Target(mat);";
-    assert tgt instanceof Target;
+    assert SXElement.eType.TARGET.equals(tgt.getType());
     tgt = new Target(img, 0.95, new Element(2,3));
     result += " Target(image, 0.95, new Element(2,3));";
-    assert tgt instanceof Target;
+    assert SXElement.eType.TARGET.equals(tgt.getType());
   }
 
   @Test
@@ -246,7 +246,7 @@ public class TestCoreBasic {
     assert assertVal;
   }
 
-  @Test
+  @Ignore
   public void test_90_popat() {
     boolean assertVal = true;
     currentTest = "test_90_popat";
