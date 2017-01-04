@@ -109,22 +109,24 @@ public class TestCoreBasic {
     Target tgt = new Target();
     result += " Target();";
     assert SXElement.eType.TARGET.equals(tgt.getType());
-    img = new Image("ich.png");
-    result += " Image(\"ich.png\");";
-    assert SXElement.eType.IMAGE.equals(img.getType());
-    tgt = new Target(img);
-    result += " Target(image);";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
-    tgt = new Target(tgt);
-    result += " Target(target);";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
-    Mat aMat = tgt.getContent();
-    tgt = new Target(aMat);
-    result += " Target(mat);";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
-    tgt = new Target(img, 0.95, new Element(2,3));
-    result += " Target(image, 0.95, new Element(2,3));";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
+    if (!SX.isLinux()) {
+      img = new Image("ich.png");
+      result += " Image(\"ich.png\");";
+      assert SXElement.eType.IMAGE.equals(img.getType());
+      tgt = new Target(img);
+      result += " Target(image);";
+      assert SXElement.eType.TARGET.equals(tgt.getType());
+      tgt = new Target(tgt);
+      result += " Target(target);";
+      assert SXElement.eType.TARGET.equals(tgt.getType());
+      Mat aMat = tgt.getContent();
+      tgt = new Target(aMat);
+      result += " Target(mat);";
+      assert SXElement.eType.TARGET.equals(tgt.getType());
+      tgt = new Target(img, 0.95, new Element(2, 3));
+      result += " Target(image, 0.95, new Element(2,3));";
+      assert SXElement.eType.TARGET.equals(tgt.getType());
+    }
   }
 
   @Test
