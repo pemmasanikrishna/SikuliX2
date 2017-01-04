@@ -1236,6 +1236,10 @@ public class SX {
     return GraphicsEnvironment.isHeadless();
   }
 
+  public static boolean onTravisCI() {
+    return SX.isSet(System.getenv("TRAVIS"), "true");
+  }
+
   private static void globalGetMonitors() {
     if (!isHeadless()) {
       genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -1707,6 +1711,17 @@ public class SX {
       }
     }
     return null != obj;
+  }
+
+  public static boolean isSet(String var, String val) {
+    if (null != var && null != val) {
+      if (var.isEmpty()) {
+        return false;
+      } else {
+        return val.equals(var);
+      }
+    }
+    return false;
   }
 
   public static void pause(int time) {
