@@ -1,4 +1,4 @@
-[![RaiMan's Stuff](https://raw.github.com/RaiMan/SikuliX-2014-Docs/master/src/main/resources/docs/source/RaiManStuff64.png)](http://sikulix.com) SikuliX2 (version 2.0.x)
+[![RaiMan's Stuff](https://raw.github.com/RaiMan/SikuliX-2014-Docs/master/src/main/resources/docs/source/RaiManStuff64.png)](http://sikulix.com) SikuliX Version 2 - Java API
 ============
 
 **[latest useable version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
@@ -15,8 +15,8 @@ Documentation project: [ReadTheDocs::SikuliX2](http://sikulix2.readthedocs.org/)
 <hr>
 **Forking and/or downloading this repo only makes sense:**
 
- - if you want to get a knowledge about the internals of Sikuli
- - if you want to create your own packages containing Sikuli features
+ - if you want to get a knowledge about the internals of SikuliX
+ - if you want to create your own packages containing SikuliX features
  - if you want to contribute.
 
 <hr>
@@ -25,29 +25,13 @@ Documentation project: [ReadTheDocs::SikuliX2](http://sikulix2.readthedocs.org/)
 
 <hr>
 
-Maven module structure for developement
----
-
 **sikulixapi**
 
 the API to be used in Java and Java aware scripting languages
 
  - the new features will be in **com.sikulix.core** and **com.sikulix.api**
- - the official API in **org.sikuli.script** will be kept for backwards compatibility, but rerouted to **com.sikulix.api** as needed
+ - the current API (up to 1.1.x) in **org.sikuli.script** will be kept for backwards compatibility, but rerouted to **com.sikulix.api** as needed
  - new projects using Java should use the API as provided by **com.sikulix.api**
-
-**sikulix**
-
-the SikuliX IDE (internally using **[jEdit 5.3.0](http://www.jedit.org))**
-
-(will have its own repo)
-
- - full featured multi-purpose editor
- - SikuliX image handling added via jEdit plugin
- - run scripts (scripting supported internally: JavaScript, (J)Python, (J)Ruby, RobotFramework)
- - everyone may simply add whatever feature needed based on the possibilities of jEdit
- 
----
 
 Prerequisites for development and testing
 ---
