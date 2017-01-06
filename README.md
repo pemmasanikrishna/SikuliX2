@@ -25,9 +25,6 @@ Documentation project: [ReadTheDocs::SikuliX2](http://sikulix2.readthedocs.org/)
 
 <hr>
 
-Maven module structure for developement
----
-
 **sikulixapi**
 
 the API to be used in Java and Java aware scripting languages
@@ -36,18 +33,6 @@ the API to be used in Java and Java aware scripting languages
  - the official API in **org.sikuli.script** will be kept for backwards compatibility, but rerouted to **com.sikulix.api** as needed
  - new projects using Java should use the API as provided by **com.sikulix.api**
 
-**sikulix**
-
-the SikuliX IDE (internally using **[jEdit 5.3.0](http://www.jedit.org))**
-
-(will have its own repo)
-
- - full featured multi-purpose editor
- - SikuliX image handling added via jEdit plugin
- - run scripts (scripting supported internally: JavaScript, (J)Python, (J)Ruby, RobotFramework)
- - everyone may simply add whatever feature needed based on the possibilities of jEdit
- 
----
 
 Prerequisites for development and testing
 ---
