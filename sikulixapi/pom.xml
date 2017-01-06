@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Copyright (c) 2016 - sikulix.com - License MIT
+  Copyright (c) 2017 - sikulix.com - License MIT
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -92,6 +92,13 @@
       <groupId>net.coobird</groupId>
       <artifactId>thumbnailator</artifactId>
       <version>0.4.8</version>
+    </dependency>
+    <dependency>
+      <groupId>somegroup</groupId>
+      <artifactId>someartifact</artifactId>
+      <version>1.0</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/testjar.jar</systemPath>
     </dependency>
   </dependencies>
   <build>

@@ -6,9 +6,6 @@ package com.sikulix.sikulixcoretest;
 
 import com.sikulix.api.*;
 import com.sikulix.core.*;
-import com.sikulix.scripting.SXClient;
-import com.sikulix.scripting.SXRunner;
-import com.sikulix.scripting.SXServer;
 import org.json.JSONObject;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -25,6 +22,16 @@ public class TestCoreBasic {
   private String currentTest = "";
   private static int nTest = 0;
   private static boolean testLimit = false;
+
+  private static String defaultImagePath = "Images";
+  private static String mavenRoot = "target/test-classes";
+  private static String mavenImagePath = mavenRoot + "/" + defaultImagePath;
+  private static String jarImagePathDefault = "." + "/" + defaultImagePath;
+  private static String jarImagePathClass = "TestJar" + "/" + defaultImagePath;
+  private static String httpRoot = "http://sikulix.com";
+  private static String httpImagePath = httpRoot + "/" + defaultImagePath;
+  private static String imageNameDefault = "ich";
+  private static String imageDefault = imageNameDefault + ".png";
 
   public TestCoreBasic() {
     log.trace("TestCoreBasic()");
@@ -110,8 +117,8 @@ public class TestCoreBasic {
     result += " Target();";
     assert SXElement.eType.TARGET.equals(tgt.getType());
     if (!SX.isLinux()) {
-      img = new Image("ich.png");
-      result += " Image(\"ich.png\");";
+      img = new Image(imageDefault);
+      result += " Image(image);";
       assert SXElement.eType.IMAGE.equals(img.getType());
       tgt = new Target(img);
       result += " Target(image);";
@@ -140,8 +147,7 @@ public class TestCoreBasic {
   @Test
   public void test_21_setBundlePathFile() {
     currentTest = "test_21_setBundlePathFile";
-    String bundlePath = "target/test-classes";
-    boolean success = Commands.setBundlePath(bundlePath, "Images");
+    boolean success = Commands.setBundlePath(mavenRoot, defaultImagePath);
     result = Commands.getBundlePath();
     success &= SX.existsFile(result);
     assert success;
@@ -150,8 +156,7 @@ public class TestCoreBasic {
   @Test
   public void test_22_setBundlePathByClass() {
     currentTest = "test_22_setBundlePathByClass";
-    String bundlePath = "./Images";
-    boolean success = Commands.setBundlePath(bundlePath);
+    boolean success = Commands.setBundlePath(jarImagePathDefault);
     result = Commands.getBundlePath();
     success &= SX.existsFile(result);
     assert success;
@@ -160,8 +165,7 @@ public class TestCoreBasic {
   @Test
   public void test_23_setBundlePathJarByClass() {
     currentTest = "test_23_setBundlePathJarByClass";
-    String bundlePath = "TestJar/Images";
-    boolean success = Commands.setBundlePath(bundlePath);
+    boolean success = Commands.setBundlePath(jarImagePathClass);
     result = Commands.getBundlePath();
     success &= SX.existsFile(result);
     assert success;
@@ -170,20 +174,18 @@ public class TestCoreBasic {
   @Test
   public void test_24_setBundlePathHttp() {
     currentTest = "test_24_setBundlePathHttp";
-    String bundlePath = "http://sikulix.com";
-    String subPath = "images";
-    boolean success = Commands.setBundlePath(bundlePath, subPath);
+    boolean success = Commands.setBundlePath(httpRoot, defaultImagePath);
     result = Commands.getBundlePath();
-    success &= (bundlePath + "/" + subPath).equals(result);
+    success &= (httpImagePath).equals(result);
     assert success;
   }
 
   @Test
   public void test_29_getImagePath() {
     currentTest = "test_29_getImagePath";
-    Commands.setBundlePath("./Images");
-    Commands.addImagePath("TestJar/Images");
-    Commands.addImagePath("http://sikulix.com/images");
+    Commands.setBundlePath(jarImagePathDefault);
+    Commands.addImagePath(jarImagePathClass);
+    Commands.addImagePath(httpImagePath);
     String[] paths = Commands.getImagePath();
     result = "[";
     for (String path : paths) {
@@ -205,47 +207,6 @@ public class TestCoreBasic {
       result = "headless: NativeHook not tested";
     }
     assert true;
-  }
-
-  @Test
-  public void test_40_startServer() {
-    currentTest = "test_40_startServer";
-    result = "Server works\n";
-    Runnable server = new Runnable() {
-      @Override
-      public void run() {
-        SXServer.start(null);
-      }
-    };
-    new Thread(server).start();
-    SX.pause(3);
-    Element vis = new Element(300, 300, 500, 500);
-    vis.setLastMatch(new Element(new Element(400, 400, 50, 50), 0.92345678, new Element(100, 100)));
-    JSONObject jVis = SXJson.makeElement(vis);
-    SXClient.get("/");
-    SXClient.post("/session/12", jVis.toString());
-    SX.pause(1);
-    boolean retVal = SXClient.stopServer();
-    SX.pause(4);
-//    result += jVis.toString(2);
-    assert retVal;
-  }
-
-  @Test
-  public void test_50_runJavaScript() {
-//    log.globalOn(SXLog.TRACE);
-    log.isSX();
-    log.on(SXLog.INFO);
-    boolean assertVal = true;
-    currentTest = "test_50_runJavaScript";
-    if (!SX.isLinux()) {
-      result = "JavaScript works";
-      Commands.setBundlePath("target/test-classes/Images");
-      Object objResult = SXRunner.runjs(new File(SX.getUSERWORK(), "target/test-classes/JavaScript/test.js"));
-    } else {
-      result = "Linux: not testing";
-    }
-    assert assertVal;
   }
 
   @Test

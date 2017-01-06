@@ -8,22 +8,11 @@ import com.sikulix.core.IRobot;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXElement;
 import com.sikulix.core.SXLog;
-import org.opencv.core.*;
-import org.opencv.highgui.Highgui;
+import org.opencv.core.Mat;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
-import java.awt.Point;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.util.*;
+import java.util.ArrayList;
 
 public class Element extends SXElement {
 
@@ -226,86 +215,6 @@ public class Element extends SXElement {
 
   public void setMatchIndex(int matchIndex) {
     this.matchIndex = matchIndex;
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="***** content/show">
-  final static String PNG = "png";
-  final static String dotPNG = "." + PNG;
-
-  protected static Mat makeMat(BufferedImage bImg) {
-    Mat aMat = null;
-    if (bImg.getType() == BufferedImage.TYPE_INT_RGB) {
-      log.trace("makeMat: INT_RGB (%dx%d)", bImg.getWidth(), bImg.getHeight());
-      int[] data = ((DataBufferInt) bImg.getRaster().getDataBuffer()).getData();
-      ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4);
-      IntBuffer intBuffer = byteBuffer.asIntBuffer();
-      intBuffer.put(data);
-      aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC4);
-      aMat.put(0, 0, byteBuffer.array());
-      Mat oMatBGR = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC3);
-      Mat oMatA = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC1);
-      java.util.List<Mat> mixIn = new ArrayList<Mat>(Arrays.asList(new Mat[]{aMat}));
-      java.util.List<Mat> mixOut = new ArrayList<Mat>(Arrays.asList(new Mat[]{oMatA, oMatBGR}));
-      //A 0 - R 1 - G 2 - B 3 -> A 0 - B 1 - G 2 - R 3
-      Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 3, 2, 2, 3, 1));
-      return oMatBGR;
-    } else if (bImg.getType() == BufferedImage.TYPE_3BYTE_BGR) {
-      log.error("makeMat: 3BYTE_BGR (%dx%d)",
-              bImg.getWidth(), bImg.getHeight());
-    } else {
-      log.error("makeMat: Type not supported: %d (%dx%d)",
-              bImg.getType(), bImg.getWidth(), bImg.getHeight());
-    }
-    return aMat;
-  }
-
-  public BufferedImage getBufferedImage() {
-    return getBufferedImage(dotPNG);
-  }
-
-  protected BufferedImage getBufferedImage(String type) {
-    BufferedImage bImg = null;
-    byte[] bytes = getImageBytes(type);
-    InputStream in = new ByteArrayInputStream(bytes);
-    try {
-      bImg = ImageIO.read(in);
-    } catch (IOException ex) {
-      log.error("getBufferedImage: %s error(%s)", this, ex.getMessage());
-    }
-    return bImg;
-  }
-
-  protected byte[] getImageBytes(String dotType) {
-    MatOfByte bytemat = new MatOfByte();
-    if (SX.isNull(content)) {
-      content = new Mat();
-    }
-    Highgui.imencode(dotType, content, bytemat);
-    return bytemat.toArray();
-  }
-
-  public byte[] getImageBytes() {
-    return getImageBytes(dotPNG);
-  }
-
-  public void show() {
-    show((int) SX.getOptionNumber("DefaultHighlightTime"));
-  }
-
-  public void show(int time) {
-    JFrame frImg = new JFrame();
-    frImg.setAlwaysOnTop(true);
-    frImg.setResizable(false);
-    frImg.setUndecorated(true);
-    frImg.setLocation(x, y);
-    frImg.setSize(w, h);
-    Container cp = frImg.getContentPane();
-    cp.add(new JLabel(new ImageIcon(getImageBytes())), BorderLayout.CENTER);
-    frImg.pack();
-    frImg.setVisible(true);
-    SX.pause(time);
-    frImg.dispose();
   }
   //</editor-fold>
 

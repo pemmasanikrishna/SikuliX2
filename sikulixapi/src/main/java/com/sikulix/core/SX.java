@@ -6,7 +6,7 @@ package com.sikulix.core;
 
 import com.sikulix.api.Commands;
 import com.sikulix.api.Element;
-import com.sikulix.scripting.JythonHelper;
+//import com.sikulix.scripting.JythonHelper;
 import org.apache.commons.cli.*;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
@@ -1579,9 +1579,10 @@ public class SX {
       p("executing jar: %s", fSxBaseJar);
     }
     Content.dumpClassPath("sikulix");
-    if (isJythonReady) {
-      JythonHelper.get().showSysPath();
-    }
+    //TODO ScriptingHelper
+//    if (isJythonReady) {
+//      JythonHelper.get().showSysPath();
+//    }
     p("***** show environment end");
   }
 

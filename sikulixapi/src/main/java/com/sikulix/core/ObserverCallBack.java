@@ -4,7 +4,7 @@
 
 package com.sikulix.core;
 
-import com.sikulix.scripting.JythonHelper;
+//import com.sikulix.scripting.JythonHelper;
 
 import java.lang.reflect.Method;
 import java.util.EventListener;
@@ -38,13 +38,13 @@ public class ObserverCallBack implements EventListener {
   Method doSomethingSpecial = null;
 
 	public ObserverCallBack(Object callback, ObserveEvent.Type obsType) {
+//TODO implement ScriptingHelper
 		this.callback = callback;
 		this.obsType = obsType;
 		if (callback.getClass().getName().contains("org.python")) {
 			scriptRunnerType = "jython";
-			scriptRunner = JythonHelper.get();
+			scriptRunner = null; //JythonHelper.get();
 		} else {
-//TODO implement JRubyHelper
 			try {
 				if (callback.getClass().getName().contains("org.jruby")) {
 					scriptRunnerType = "jruby";
@@ -96,7 +96,7 @@ public class ObserverCallBack implements EventListener {
     boolean success = true;
 		Object[] args = new Object[] {callback, e};
 		if (scriptRunnerType == "jython") {
-			success = ((JythonHelper) scriptRunner).runObserveCallback(args);
+//			success = ((JythonHelper) scriptRunner).runObserveCallback(args);
 		} else {
 			String msg = "IScriptRunner: doSomethingSpecial returned false";
 			try {

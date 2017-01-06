@@ -8,8 +8,8 @@ import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 import com.sikulix.core.SXElement;
-import com.sikulix.scripting.JythonHelper;
-import com.sikulix.scripting.SXRunner;
+//import com.sikulix.scripting.JythonHelper;
+//import com.sikulix.scripting.SXRunner;
 import com.sikulix.util.FileChooser;
 import org.sikuli.script.Key;
 import com.sikulix.core.HotkeyListener;
@@ -27,59 +27,6 @@ public class Commands extends SX {
 
   private static SXLog log = getLogger("SX.Commands");
   private static String klazz = Commands.class.getName();
-
-  //<editor-fold desc="load a jar">
-
-  /**
-   * add a jar to the scripting environment<br>
-   * Jython: added to sys.path<br>
-   * JRuby: not yet supported<br>
-   * JavaScript: not yet supported<br>
-   * if no scripting active (API usage), jar is added to classpath if available
-   *
-   * @param fpJar absolute path to a jar (relative: searched according to Extension concept,
-   *              but first on sys.path)
-   * @return the absolute path to the jar or null, if not available
-   */
-  public static String load(String fpJar) {
-    return load(fpJar, null);
-  }
-
-  /**
-   * add a jar to the scripting environment or to classpath<br>
-   * Jython: added to sys.path<br>
-   * JRuby: only added to classpath<br>
-   * JavaScript: only added to classpath<br>
-   * if no scripting is active (API usage), jar is added to classpath if available<br>
-   * additionally: fpJar/fpJarImagePath is added to ImagePath (not checked)
-   *
-   * @param fpJar          absolute path to a jar (relative: searched according to Extension concept,
-   *                       but first on sys.path)
-   * @param fpJarImagePath path relative to jar root inside jar
-   * @return the absolute path to the jar or null, if not available
-   */
-  public static String load(String fpJar, String fpJarImagePath) {
-    JythonHelper jython = JythonHelper.get();
-    String fpJarFound = null;
-    if (jython != null) {
-      File aFile = jython.existsSysPathJar(fpJar);
-      if (aFile != null) {
-        fpJar = aFile.getAbsolutePath();
-      }
-      fpJarFound = jython.load(fpJar);
-    } else {
-      File fJarFound = SX.asExtension(fpJar);
-      if (fJarFound != null) {
-        fpJarFound = fJarFound.getAbsolutePath();
-        Content.addClassPath(fpJarFound);
-      }
-    }
-    if (fpJarFound != null && fpJarImagePath != null) {
-      addImagePath(fpJarFound, fpJarImagePath);
-    }
-    return fpJarFound;
-  }
-  //</editor-fold>
 
   //<editor-fold desc="SX Commands popat">
   private static Point locPopAt = null;
@@ -361,6 +308,58 @@ public class Commands extends SX {
 
   //<editor-fold desc="SX Commands compile Jython, build a jar ">
 
+  //<editor-fold desc="TODO ScriptingHelper">
+  /**
+   * add a jar to the scripting environment<br>
+   * Jython: added to sys.path<br>
+   * JRuby: not yet supported<br>
+   * JavaScript: not yet supported<br>
+   * if no scripting active (API usage), jar is added to classpath if available
+   *
+   * @param fpJar absolute path to a jar (relative: searched according to Extension concept,
+   *              but first on sys.path)
+   * @return the absolute path to the jar or null, if not available
+   */
+//  public static String load(String fpJar) {
+//    return load(fpJar, null);
+//  }
+
+  /**
+   * add a jar to the scripting environment or to classpath<br>
+   * Jython: added to sys.path<br>
+   * JRuby: only added to classpath<br>
+   * JavaScript: only added to classpath<br>
+   * if no scripting is active (API usage), jar is added to classpath if available<br>
+   * additionally: fpJar/fpJarImagePath is added to ImagePath (not checked)
+   *
+   * @param fpJar          absolute path to a jar (relative: searched according to Extension concept,
+   *                       but first on sys.path)
+   * @param fpJarImagePath path relative to jar root inside jar
+   * @return the absolute path to the jar or null, if not available
+   */
+/*
+  public static String load(String fpJar, String fpJarImagePath) {
+    JythonHelper jython = JythonHelper.get();
+    String fpJarFound = null;
+    if (jython != null) {
+      File aFile = jython.existsSysPathJar(fpJar);
+      if (aFile != null) {
+        fpJar = aFile.getAbsolutePath();
+      }
+      fpJarFound = jython.load(fpJar);
+    } else {
+      File fJarFound = SX.asExtension(fpJar);
+      if (fJarFound != null) {
+        fpJarFound = fJarFound.getAbsolutePath();
+        Content.addClassPath(fpJarFound);
+      }
+    }
+    if (fpJarFound != null && fpJarImagePath != null) {
+      addImagePath(fpJarFound, fpJarImagePath);
+    }
+    return fpJarFound;
+  }
+*/
   /**
    * the foo.py files in the given source folder are compiled to JVM-ByteCode-classfiles foo$py.class
    * and stored in the target folder (thus securing your code against changes).<br>
@@ -375,6 +374,8 @@ public class Commands extends SX {
    * @param fpTarget the folder that will contain the copied/compiled stuff (folder is first deleted)
    * @return false if anything goes wrong, true means should have worked
    */
+
+/*
   public static boolean compileJythonFolder(String fpSource, String fpTarget) {
     JythonHelper jython = JythonHelper.get();
     if (jython != null) {
@@ -433,6 +434,8 @@ public class Commands extends SX {
       return false;
     }
   }
+*/
+  //</editor-fold>
 
   /**
    * build a jar on the fly at runtime from a folder.<br>
@@ -754,7 +757,7 @@ public class Commands extends SX {
         scriptArgs[i - 1] = args[i].toString();
       }
     }
-    return SXRunner.run(script, scriptArgs);
+    return null; //TODO SXRunner.run(script, scriptArgs);
   }
 
   public static String NL = "\n";

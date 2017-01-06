@@ -14,7 +14,7 @@ import java.util.Date;
 
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
-import com.sikulix.scripting.JythonHelper;
+//import com.sikulix.scripting.JythonHelper;
 
 /**
  * Debug is a utility class that wraps println statements and allows more or less command line
@@ -183,10 +183,11 @@ public class Debug {
 		}
 		if (isJython) {
 			Object[] args = new Object[]{privateLogger, mName, type.toString()};
-			if (!JythonHelper.get().checkCallback(args)) {
-				logx(3, "Debug: setLogger: Jython: checkCallback returned: %s", args[0]);
-				return false;
-			}
+			//TODO ScriptingHelper
+//			if (!JythonHelper.get().checkCallback(args)) {
+//				logx(3, "Debug: setLogger: Jython: checkCallback returned: %s", args[0]);
+//				return false;
+//			}
 		}
 		try {
 			if (type == CallbackType.INFO) {
@@ -514,7 +515,7 @@ public class Debug {
 					msg = String.format(prefix + message, args);
 				}
 				if (isJython) {
-					success = JythonHelper.get().runLoggerCallback(new Object[]{privateLogger, pln, msg});
+					success = false; //TODO JythonHelper.get().runLoggerCallback(new Object[]{privateLogger, pln, msg});
 				} else if (isJRuby) {
 					success = false;
 				} else {
