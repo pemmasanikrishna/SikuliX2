@@ -2,11 +2,10 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.sikulixcoretest;
+package com.sikulix.test;
 
 import com.sikulix.api.*;
 import com.sikulix.core.*;
-import org.json.JSONObject;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
