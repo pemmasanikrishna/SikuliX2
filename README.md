@@ -36,25 +36,17 @@ the API to be used in Java and Java aware scripting languages
  - the official API in **org.sikuli.script** will be kept for backwards compatibility, but rerouted to **com.sikulix.api** as needed
  - new projects using Java should use the API as provided by **com.sikulix.api**
 
-**sikulixcoretest**
-
-basic tests for developement of the new packages **com.sikulix.core** and **com.sikulix.api**
-
-**sikulixapitest**
-
-(inactive) basic tests for **org.sikuli.script** as regression test (will later be a seperate package)
-
 **sikulix**
 
 the SikuliX IDE (internally using **[jEdit 5.3.0](http://www.jedit.org))**
+
+(will have its own repo)
 
  - full featured multi-purpose editor
  - SikuliX image handling added via jEdit plugin
  - run scripts (scripting supported internally: JavaScript, (J)Python, (J)Ruby, RobotFramework)
  - everyone may simply add whatever feature needed based on the possibilities of jEdit
- - 
- For tests in the project context the jEdit package has to be [downloaded from here](http://download.sikulix.com/SXEditor.zip), unzipped into the folder `SikulixAppData/SX2/Extension`, so you finally have a folder `SikulixAppData/SX2/Extension/SXEditor`.
-
+ 
 ---
 
 Prerequisites for development and testing
