@@ -1,4 +1,4 @@
-[![RaiMan's Stuff](https://raw.github.com/RaiMan/SikuliX2/master/sikulix2.png)](http://sikulix.com) SikuliX Version 2 - Java API
+[![](https://raw.github.com/RaiMan/SikuliX2/master/sikulix2.png)](http://sikulix.com) SikuliX Version 2 - Java API
 ============
 
 **[latest useable version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
