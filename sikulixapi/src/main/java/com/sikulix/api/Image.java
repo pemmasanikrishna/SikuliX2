@@ -15,6 +15,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -58,6 +59,9 @@ public class Image extends Element {
 
   public Image(Mat mat) {
     this();
+    if (SX.isNull(mat)) {
+      mat = new Mat();
+    }
     content = mat;
     init(0, 0, content.width(), content.height());
   }
@@ -103,6 +107,10 @@ public class Image extends Element {
     //TODO implement isText()
     return false;
   }
+
+  public String getURL() {
+    return urlImg.toString();
+  }
   //</editor-fold>
 
   //<editor-fold desc="*** get content">
@@ -138,16 +146,13 @@ public class Image extends Element {
       String urlProto = urlImg.getProtocol();
       if (urlProto.equals("file")) {
         File imgFile = new File(urlImg.getPath());
-        //TODO curently: alpha channel ignored
         content = Imgcodecs.imread(imgFile.getAbsolutePath());
-      } else if (urlProto.equals("jar")) {
-        //TODO load image from jar
-        log.error("get: not implemented: %s", urlImg);
-      } else if (urlProto.startsWith("http")) {
-        //TODO load image from http
-        log.error("get: not implemented: %s", urlImg);
       } else {
-        log.error("get: not supported: %s", urlImg);
+        try {
+          content = makeMat(ImageIO.read(urlImg));
+        } catch (IOException e) {
+          log.error("load(): %s for %s", e.getMessage(), urlImg);
+        }
       }
       if (isValid()) {
         setAttributes();
@@ -444,13 +449,12 @@ public class Image extends Element {
           continue;
         }
         proto = path.getProtocol();
+        fURL = Content.makeURL(path, fname);
         if ("file".equals(proto)) {
-          fURL = Content.makeURL(path, fname);
           if (new File(fURL.getPath()).exists()) {
             break;
           }
         } else if ("jar".equals(proto) || proto.startsWith("http")) {
-          fURL = Content.getURLForContentFromURL(path, fname);
           if (fURL != null) {
             break;
           }
@@ -501,7 +505,7 @@ public class Image extends Element {
   final static String dotPNG = "." + PNG;
 
   protected static Mat makeMat(BufferedImage bImg) {
-    Mat aMat = null;
+    Mat aMat = new Mat();
     if (bImg.getType() == BufferedImage.TYPE_INT_RGB) {
       log.trace("makeMat: INT_RGB (%dx%d)", bImg.getWidth(), bImg.getHeight());
       int[] data = ((DataBufferInt) bImg.getRaster().getDataBuffer()).getData();
@@ -518,8 +522,19 @@ public class Image extends Element {
       Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 3, 2, 2, 3, 1));
       return oMatBGR;
     } else if (bImg.getType() == BufferedImage.TYPE_3BYTE_BGR) {
-      log.error("makeMat: 3BYTE_BGR (%dx%d)",
-              bImg.getWidth(), bImg.getHeight());
+      log.error("makeMat: 3BYTE_BGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
+    } else if (bImg.getType() == BufferedImage.TYPE_4BYTE_ABGR) {
+      log.trace("makeMat: TYPE_4BYTE_ABGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
+      byte[] data = ((DataBufferByte) bImg.getRaster().getDataBuffer()).getData();
+      aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC4);
+      aMat.put(0, 0, data);
+      Mat oMatBGR = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC3);
+      Mat oMatA = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC1);
+      java.util.List<Mat> mixIn = new ArrayList<Mat>(Arrays.asList(new Mat[]{aMat}));
+      java.util.List<Mat> mixOut = new ArrayList<Mat>(Arrays.asList(new Mat[]{oMatA, oMatBGR}));
+      //A 0 - R 1 - G 2 - B 3 -> A 0 - B 1 - G 2 - R 3
+      Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 1, 2, 2, 3, 3));
+      return oMatBGR;
     } else {
       log.error("makeMat: Type not supported: %d (%dx%d)",
               bImg.getType(), bImg.getWidth(), bImg.getHeight());
@@ -527,48 +542,45 @@ public class Image extends Element {
     return aMat;
   }
 
-  public BufferedImage getBufferedImage() {
-    return getBufferedImage(dotPNG);
-  }
-
-  protected BufferedImage getBufferedImage(String type) {
+  private static BufferedImage getBufferedImage(Mat mat, String type) {
     BufferedImage bImg = null;
-    byte[] bytes = getImageBytes(type);
+    MatOfByte bytemat = new MatOfByte();
+    if (SX.isNull(mat)) {
+      mat = new Mat();
+    }
+    Imgcodecs.imencode(type, mat, bytemat);
+    byte[] bytes = bytemat.toArray();
     InputStream in = new ByteArrayInputStream(bytes);
     try {
       bImg = ImageIO.read(in);
     } catch (IOException ex) {
-      log.error("getBufferedImage: %s error(%s)", this, ex.getMessage());
+      log.error("getBufferedImage: %s error(%s)", mat, ex.getMessage());
     }
     return bImg;
   }
 
-  protected byte[] getImageBytes(String dotType) {
-    MatOfByte bytemat = new MatOfByte();
-    if (SX.isNull(content)) {
-      content = new Mat();
-    }
-    Imgcodecs.imencode(dotType, content, bytemat);
-    return bytemat.toArray();
-  }
-
-  protected byte[] getImageBytes() {
-    return getImageBytes(dotPNG);
-  }
-
   public void show() {
-    show((int) SX.getOptionNumber("DefaultHighlightTime"));
+//    show((int) SX.getOptionNumber("DefaultHighlightTime"));
+    show(3);
   }
 
   public void show(int time) {
+    show(getBufferedImage(content, dotPNG), time);
+  }
+
+  private static void show(Mat mat, int time) {
+    show(getBufferedImage(mat, dotPNG), time);
+  }
+
+  private static void show(BufferedImage bImg, int time) {
     JFrame frImg = new JFrame();
     frImg.setAlwaysOnTop(true);
     frImg.setResizable(false);
     frImg.setUndecorated(true);
-    frImg.setLocation(x, y);
-    frImg.setSize(w, h);
+    frImg.setLocation(100, 100);
+    frImg.setSize(bImg.getWidth(), bImg.getHeight());
     Container cp = frImg.getContentPane();
-    cp.add(new JLabel(new ImageIcon(getImageBytes())), BorderLayout.CENTER);
+    cp.add(new JLabel(new ImageIcon(bImg)), BorderLayout.CENTER);
     frImg.pack();
     frImg.setVisible(true);
     SX.pause(time);

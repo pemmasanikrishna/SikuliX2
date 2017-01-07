@@ -113,6 +113,10 @@ public class SXLog {
     }
   }
 
+  public boolean isLevel(int level) {
+    return currentLogLevel >= level;
+  }
+
   public void globalOn(int level) {
     if (level > 0 && level <= TRACE) {
       globalLogLevel = level;

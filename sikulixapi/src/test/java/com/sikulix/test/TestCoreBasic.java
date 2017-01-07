@@ -27,10 +27,9 @@ public class TestCoreBasic {
   private static String mavenImagePath = mavenRoot + "/" + defaultImagePath;
   private static String jarImagePathDefault = "." + "/" + defaultImagePath;
   private static String jarImagePathClass = "TestJar" + "/" + defaultImagePath;
-  private static String httpRoot = "http://sikulix.com";
+  private static String httpRoot = "https://raw.githubusercontent.com/RaiMan/SikuliX2";
   private static String httpImagePath = httpRoot + "/" + defaultImagePath;
-  private static String imageNameDefault = "white";
-//  private static String imageNameDefault = "ich";
+  private static String imageNameDefault = "sikulix2";
   private static String imageDefault = imageNameDefault + ".png";
 
   public TestCoreBasic() {
@@ -102,41 +101,6 @@ public class TestCoreBasic {
   }
 
   @Test
-  public void test_15_elementConstructors() {
-    currentTest = "test_15_elementConstructors";
-    String bundlePath = "target/test-classes";
-    boolean success = Commands.setBundlePath(bundlePath, "Images");
-    assert success;
-    Element elem = new Element();
-    result = "Element();";
-    assert SXElement.eType.ELEMENT.equals(elem.getType());
-    Image img = new Image();
-    result += " Image();";
-    assert SXElement.eType.IMAGE.equals(img.getType());
-    Target tgt = new Target();
-    result += " Target();";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
-    if (!SX.isLinux()) {
-      img = new Image(imageDefault);
-      result += " Image(image);";
-      assert SXElement.eType.IMAGE.equals(img.getType());
-      tgt = new Target(img);
-      result += " Target(image);";
-      assert SXElement.eType.TARGET.equals(tgt.getType());
-      tgt = new Target(tgt);
-      result += " Target(target);";
-      assert SXElement.eType.TARGET.equals(tgt.getType());
-      Mat aMat = tgt.getContent();
-      tgt = new Target(aMat);
-      result += " Target(mat);";
-      assert SXElement.eType.TARGET.equals(tgt.getType());
-      tgt = new Target(img, 0.95, new Element(2, 3));
-      result += " Target(image, 0.95, new Element(2,3));";
-      assert SXElement.eType.TARGET.equals(tgt.getType());
-    }
-  }
-
-  @Test
   public void test_20_getBundlePath() {
     currentTest = "test_20_getBundlePath";
     String bundlePath = Commands.getBundlePath();
@@ -196,8 +160,87 @@ public class TestCoreBasic {
   }
 
   @Test
-  public void test_30_nativeHook() {
-    currentTest = "test_30_nativeHook";
+  public void test_30_elementConstructors() {
+    currentTest = "test_30_elementConstructors";
+    Element elem = new Element();
+    result = "Element();";
+    assert SXElement.eType.ELEMENT.equals(elem.getType());
+    Image img = new Image();
+    result += " Image();";
+    assert SXElement.eType.IMAGE.equals(img.getType());
+    Target tgt = new Target();
+    result += " Target();";
+    assert SXElement.eType.TARGET.equals(tgt.getType());
+    if (!SX.isLinux()) {
+      tgt = new Target(img);
+      result += " Target(image);";
+      assert SXElement.eType.TARGET.equals(tgt.getType());
+      tgt = new Target(tgt);
+      result += " Target(target);";
+      assert SXElement.eType.TARGET.equals(tgt.getType());
+      Mat aMat = tgt.getContent();
+      tgt = new Target(aMat);
+      result += " Target(mat);";
+      assert SXElement.eType.TARGET.equals(tgt.getType());
+      tgt = new Target(img, 0.95, new Element(2, 3));
+      result += " Target(image, 0.95, new Element(2,3));";
+      assert SXElement.eType.TARGET.equals(tgt.getType());
+    }
+  }
+
+  @Test
+  public void test_31_loadImageFromFile() {
+    currentTest = "test_31_loadImageFromFile";
+    String bundlePath = "target/test-classes";
+    boolean success = Commands.setBundlePath(bundlePath, "Images");
+    result = "BundlePath: " + Commands.getBundlePath();
+    Image img = new Image(imageNameDefault);
+    success &= img.isValid();
+    if (success) {
+      result = "ImageURL: " + img.getURL();
+      if (log.isLevel(SXLog.DEBUG)) {
+        img.show();
+      }
+    }
+    assert success;
+  }
+
+  @Test
+  public void test_32_loadImageFromJarByClass() {
+    currentTest = "test_32_loadImageFromJarByClass";
+    boolean success = Commands.setBundlePath(jarImagePathClass);
+    result = "BundlePath: " + Commands.getBundlePath();
+    Image img = new Image("ich");
+    success &= img.isValid();
+    if (success) {
+      result = "ImageURL: " + img.getURL();
+      if (log.isLevel(SXLog.DEBUG)) {
+        img.show();
+      }
+    }
+    assert success;
+  }
+
+  @Test
+  public void test_33_loadImageFromHttp() {
+    currentTest = "test_33_loadImageFromHttp";
+    boolean success = Commands.setBundlePath(httpRoot, "master");
+    result = "BundlePath: " + Commands.getBundlePath();
+    Image img = new Image(imageNameDefault);
+    success &= img.isValid();
+    if (success) result = "ImageURL: " + img.getURL();
+    if (success) {
+      result = "ImageURL: " + img.getURL();
+      if (log.isLevel(SXLog.DEBUG)) {
+        img.show();
+      }
+    }
+    assert success;
+  }
+
+  @Ignore
+  public void test_50_nativeHook() {
+    currentTest = "test_50_nativeHook";
     if (!SX.isHeadless()) {
       NativeHook hook = NativeHook.start();
       SX.pause(3);
@@ -209,7 +252,7 @@ public class TestCoreBasic {
     assert true;
   }
 
-  @Test
+  @Ignore
   public void test_90_popat() {
     boolean assertVal = true;
     currentTest = "test_90_popat";

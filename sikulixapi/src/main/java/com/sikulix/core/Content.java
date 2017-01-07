@@ -911,21 +911,27 @@ public class Content {
   }
 
   public static URL makeURL(URL path, String fName) {
+    URL url = null;
+    fName = slashify(fName, false);
+    if (fName.startsWith("/")) {
+      fName = fName.substring(1);
+    }
     try {
 			if ("file".equals(path.getProtocol())) {
-				return makeURL(new File(path.getFile(), fName).getAbsolutePath());
+				url = new URL("file:" + new File(path.getFile(), fName).getAbsolutePath());
 			} else if ("jar".equals(path.getProtocol())) {
 				String jp = path.getPath();
-				if (!jp.contains("!/")) {
-					jp += "!/";
-				}
-				String jpu = "jar:" + jp + "/" + fName;
-				return new URL(jpu);
-			}
-      return new URL(path, slashify(fName, false));
+				if (!jp.endsWith("/")) {
+          jp += "/";
+        }
+				url = new URL("jar:" + jp + fName);
+			} else if (path.getProtocol().startsWith("http")) {
+			  url = new URL(path.toString() + "/" + fName);
+      }
     } catch (MalformedURLException ex) {
-      return null;
+      log.error("makeURL: %s for %s + %s", ex.getMessage(), path, fName);
     }
+    return url;
   }
 
   public static URL getURLForContentFromURL(URL uRes, String fName) {
