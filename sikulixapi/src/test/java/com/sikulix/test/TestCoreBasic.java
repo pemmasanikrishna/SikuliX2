@@ -29,7 +29,8 @@ public class TestCoreBasic {
   private static String jarImagePathClass = "TestJar" + "/" + defaultImagePath;
   private static String httpRoot = "http://sikulix.com";
   private static String httpImagePath = httpRoot + "/" + defaultImagePath;
-  private static String imageNameDefault = "ich";
+  private static String imageNameDefault = "white";
+//  private static String imageNameDefault = "ich";
   private static String imageDefault = imageNameDefault + ".png";
 
   public TestCoreBasic() {

@@ -19,13 +19,8 @@ public class Element extends SXElement {
   private static eType eClazz = eType.ELEMENT;
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
-  protected Mat content = null;
-
-  public Mat getContent() {
-    return content;
-  }
-
   protected URL urlImg = null;
+  protected Mat content = null;
 
   private double score = -1;
 

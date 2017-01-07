@@ -4,26 +4,12 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.*;
+import com.sikulix.api.By;
+import com.sikulix.api.Element;
 import org.json.JSONObject;
-import org.opencv.core.*;
-import org.opencv.highgui.Highgui;
 
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 import java.awt.*;
-import java.awt.Point;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public abstract class SXElement implements Comparable<SXElement>{

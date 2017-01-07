@@ -7,9 +7,8 @@ package com.sikulix.api;
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.SXElement;
 import org.opencv.core.*;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import javax.imageio.ImageIO;
@@ -65,13 +64,13 @@ public class Image extends Element {
 
   public Image(String fpImg) {
     this();
-    content = get(fpImg);
+    setContent(fpImg);
     init(0, 0, content.width(), content.height());
   }
 
   public Image(URL url) {
     this();
-    content = get(url);
+    setContent(url);
     init(0, 0, content.width(), content.height());
   }
 
@@ -107,39 +106,40 @@ public class Image extends Element {
   //</editor-fold>
 
   //<editor-fold desc="*** get content">
-  private Mat get(String fpImg) {
-    URL url = searchOnImagePath(fpImg);
-    return get(url);
+  public Mat getContent() {
+    return content;
   }
 
-  private Mat get(URL url) {
-    Mat mContent = new Mat();
+  private void setContent(String fpImg) {
+    URL url = searchOnImagePath(fpImg);
+    setContent(url);
+  }
+
+  private void setContent(URL url) {
     if (SX.isSet(url)) {
       urlImg = url;
       if (isCaching()) {
-        mContent = imageFiles.get(urlImg);
-        if (SX.isNull(mContent)) {
-          mContent = new Mat();
+        content = imageFiles.get(urlImg);
+        if (SX.isNull(content)) {
+          content = new Mat();
         }
       }
-      if (mContent.empty()) {
-        mContent = get();
+      if (content.empty()) {
+        load();
       }
-      if (isCaching() && !mContent.empty()) {
-        changeCache(true, urlImg, mContent);
+      if (isCaching() && !content.empty()) {
+        changeCache(true, urlImg, content);
       }
     }
-    return mContent;
   }
 
-  private Mat get() {
-    Mat mContent = new Mat();
+  private void load() {
     if (urlImg != null) {
       String urlProto = urlImg.getProtocol();
       if (urlProto.equals("file")) {
         File imgFile = new File(urlImg.getPath());
         //TODO curently: alpha channel ignored
-        mContent = Highgui.imread(imgFile.getAbsolutePath());
+        content = Imgcodecs.imread(imgFile.getAbsolutePath());
       } else if (urlProto.equals("jar")) {
         //TODO load image from jar
         log.error("get: not implemented: %s", urlImg);
@@ -149,20 +149,89 @@ public class Image extends Element {
       } else {
         log.error("get: not supported: %s", urlImg);
       }
-      if (!mContent.empty()) {
-        log.debug("get: loaded: (%dx%s) %s", mContent.width(), mContent.height(), urlImg);
+      if (isValid()) {
+        setAttributes();
+        log.debug("get: loaded: (%dx%s) %s", content.width(), content.height(), urlImg);
       } else {
         log.error("get: not loaded: %s", urlImg);
       }
     }
-    return mContent;
+  }
+
+  private final int resizeMinDownSample = 12;
+  private double resizeFactor;
+  private boolean plainColor = false;
+  private boolean blackColor = false;
+  private boolean whiteColor = false;
+  private int[] meanColor = null;
+  private double minThreshhold = 1.0E-5;
+
+  public boolean isPlainColor() {
+    return isValid() && plainColor;
+  }
+
+  public boolean isBlack() {
+    return isValid() && blackColor;
+  }
+
+  public boolean isWhite() {
+    return isValid() && blackColor;
+  }
+
+  public Color getMeanColor() {
+    return new Color(meanColor[2], meanColor[1], meanColor[0]);
+  }
+
+  public boolean isMeanColorEqual(Color otherMeanColor) {
+    double distance = 0;
+    Color col = getMeanColor();
+    int r = (col.getRed() - otherMeanColor.getRed()) *  (col.getRed() - otherMeanColor.getRed());
+    int g = (col.getGreen() - otherMeanColor.getGreen()) *  (col.getGreen() - otherMeanColor.getGreen());
+    int b = (col.getBlue() - otherMeanColor.getBlue()) *  (col.getBlue() - otherMeanColor.getBlue());
+    distance = Math.sqrt(r + g + b);
+    return distance < minThreshhold;
+  }
+
+  public double getResizeFactor() {
+    return isValid() ? resizeFactor : 1;
+  }
+
+  private void setAttributes() {
+    plainColor = false;
+    blackColor = false;
+    resizeFactor = Math.min(((double) content.width()) / resizeMinDownSample,
+            ((double) content.height()) / resizeMinDownSample);
+    resizeFactor = Math.max(1.0, resizeFactor);
+    MatOfDouble pMean = new MatOfDouble();
+    MatOfDouble pStdDev = new MatOfDouble();
+    Core.meanStdDev(content, pMean, pStdDev);
+    double sum = 0.0;
+    double[] arr = pStdDev.toArray();
+    for (int i = 0; i < arr.length; i++) {
+      sum += arr[i];
+    }
+    if (sum < minThreshhold) {
+      plainColor = true;
+    }
+    sum = 0.0;
+    arr = pMean.toArray();
+    meanColor = new int[arr.length];
+    for (int i = 0; i < arr.length; i++) {
+      meanColor[i] = (int) arr[i];
+      sum += arr[i];
+    }
+    if (sum < minThreshhold && plainColor) {
+      blackColor = true;
+    }
+
+    whiteColor = isMeanColorEqual(Color.WHITE);
   }
 
   public Image reset() {
     if (isCaching() && isValid()) {
       changeCache(false, urlImg, content);
     }
-    content = get();
+    load();
     if (isCaching() && !content.empty()) {
       changeCache(true, urlImg, content);
     }
@@ -479,7 +548,7 @@ public class Image extends Element {
     if (SX.isNull(content)) {
       content = new Mat();
     }
-    Highgui.imencode(dotType, content, bytemat);
+    Imgcodecs.imencode(dotType, content, bytemat);
     return bytemat.toArray();
   }
 
@@ -508,51 +577,6 @@ public class Image extends Element {
   //</editor-fold>
 
   //<editor-fold defaultstate="collapsed" desc="*** helpers">
-  private final int resizeMinDownSample = 12;
-  private double resizeFactor;
-  private boolean plainColor = false;
-  private boolean blackColor = false;
-
-  public boolean isPlainColor() {
-    return plainColor;
-  }
-
-  public boolean isBlack() {
-    return blackColor;
-  }
-
-  private void checkProbe() {
-    resizeFactor = Math.min(((double) content.width()) / resizeMinDownSample,
-            ((double) content.height()) / resizeMinDownSample);
-    resizeFactor = Math.max(1.0, resizeFactor);
-
-    MatOfDouble pMean = new MatOfDouble();
-    MatOfDouble pStdDev = new MatOfDouble();
-    Core.meanStdDev(content, pMean, pStdDev);
-    double min = 1.0E-5;
-    plainColor = false;
-    double sum = 0.0;
-    double[] arr = pStdDev.toArray();
-    for (int i = 0; i < arr.length; i++) {
-      sum += arr[i];
-    }
-    if (sum < min) {
-      plainColor = true;
-    }
-    sum = 0.0;
-    arr = pMean.toArray();
-    for (int i = 0; i < arr.length; i++) {
-      sum += arr[i];
-    }
-    if (sum < min && plainColor) {
-      blackColor = true;
-    }
-  }
-
-  public double getResizeFactor() {
-    return resizeFactor;
-  }
-
   /**
    * resize the image's CV-Mat by factor
    *
@@ -607,7 +631,7 @@ public class Image extends Element {
   public String save(String name) {
     String fpName = getValidImageFilename("_" + name);
     File fName = new File(getBundlePath(), fpName);
-    Highgui.imwrite(fName.getAbsolutePath(), content);
+    Imgcodecs.imwrite(fName.getAbsolutePath(), content);
     return fpName;
   }
 //</editor-fold>
