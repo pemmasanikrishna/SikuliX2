@@ -41,28 +41,29 @@ public class Image extends Element {
   }
 
   protected void copy(Element elem) {
-    content = elem.content;
+    if (SX.isNotNull(content) && !content.empty()) {
+      content = elem.content.clone();
+    }
     urlImg = elem.urlImg;
   }
 
   public Image(BufferedImage bimg) {
     this();
+    long start = new Date().getTime();
     content = makeMat(bimg);
-    init(0, 0, content.width(), content.height());
-  }
-
-  public Image(BufferedImage bimg, Rectangle rect) {
-    this();
-    content = makeMat(bimg).submat(new Rect(rect.x, rect.y, rect.width, rect.height));
+    timeToLoad = new Date().getTime() - start;
     init(0, 0, content.width(), content.height());
   }
 
   public Image(Mat mat) {
     this();
     if (SX.isNull(mat)) {
-      mat = new Mat();
+      content = new Mat();
+    } else {
+      long start = new Date().getTime();
+      content = mat.clone();
+      timeToLoad = new Date().getTime() - start;
     }
-    content = mat;
     init(0, 0, content.width(), content.height());
   }
 
@@ -85,14 +86,17 @@ public class Image extends Element {
 
   public Image(Element elem, double score) {
     super(elem, score);
+    copy(elem);
   }
 
   public Image(Element elem, double score, Element off) {
     super(elem, score, off);
+    copy(elem);
   }
 
   public Image(Element elem, Element off) {
     super(elem, off);
+    copy(elem);
   }
 
   /**
@@ -109,6 +113,8 @@ public class Image extends Element {
   //</editor-fold>
 
   //<editor-fold desc="*** get content">
+  public long timeToLoad = -1;
+
   public Mat getContent() {
     return content;
   }
@@ -122,6 +128,7 @@ public class Image extends Element {
     if (SX.isSet(url)) {
       urlImg = url;
       if (urlImg != null) {
+        long start = new Date().getTime();
         String urlProto = urlImg.getProtocol();
         if (urlProto.equals("file")) {
           File imgFile = new File(urlImg.getPath());
@@ -130,9 +137,11 @@ public class Image extends Element {
           try {
             content = makeMat(ImageIO.read(urlImg));
           } catch (IOException e) {
+            content = new Mat();
             log.error("load(): %s for %s", e.getMessage(), urlImg);
           }
         }
+        timeToLoad = new Date().getTime() - start;
         if (isValid()) {
           setAttributes();
           log.debug("get: loaded: (%dx%s) %s", content.width(), content.height(), urlImg);

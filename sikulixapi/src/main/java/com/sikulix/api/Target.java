@@ -42,10 +42,6 @@ public class Target extends Image {
     super(bimg);
   }
 
-  public Target(BufferedImage bimg, Rectangle rect) {
-    super(bimg, rect);
-  }
-
   public Target(Mat mat) {
     super(mat);
   }

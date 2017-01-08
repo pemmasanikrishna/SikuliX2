@@ -17,7 +17,7 @@ public class TestCoreBasic {
 
   static final int logLevel = SX.INFO;
   static SXLog log = SX.getLogger("TestCoreBasic");
-  private Object result = null;
+  private Object result = "";
   private String currentTest = "";
   private static int nTest = 0;
   private static boolean testLimit = false;
@@ -62,6 +62,7 @@ public class TestCoreBasic {
   @Before
   public void setUp() {
     log.trace("setUp");
+    result = null;
     if (testLimit && nTest > 0) {
       SX.terminate(1, "by intention");
     }
@@ -188,16 +189,19 @@ public class TestCoreBasic {
     }
   }
 
+  private String set(String form, Object... args) {
+    return String.format(form, args);
+  }
+
   @Test
   public void test_31_loadImageFromFile() {
     currentTest = "test_31_loadImageFromFile";
-    String bundlePath = "target/test-classes";
-    boolean success = Commands.setBundlePath(bundlePath, "Images");
+    boolean success = Commands.setBundlePath(mavenRoot, "Images");
     result = "BundlePath: " + Commands.getBundlePath();
     Image img = new Image(imageNameDefault);
     success &= img.isValid();
     if (success) {
-      result = "ImageURL: " + img.getURL();
+      result = set("(%s) ImageURL: " + img.getURL(), img.timeToLoad);
       if (log.isLevel(SXLog.DEBUG)) {
         img.show();
       }
@@ -213,7 +217,7 @@ public class TestCoreBasic {
     Image img = new Image(imageNameDefault);
     success &= img.isValid();
     if (success) {
-      result = "ImageURL: " + img.getURL();
+      result = set("(%s) ImageURL: " + img.getURL(), img.timeToLoad);
       if (log.isLevel(SXLog.DEBUG)) {
         img.show();
       }
@@ -228,9 +232,8 @@ public class TestCoreBasic {
     result = "BundlePath: " + Commands.getBundlePath();
     Image img = new Image(imageNameDefault);
     success &= img.isValid();
-    if (success) result = "ImageURL: " + img.getURL();
     if (success) {
-      result = "ImageURL: " + img.getURL();
+      result = set("(%s) ImageURL: " + img.getURL(), img.timeToLoad);
       if (log.isLevel(SXLog.DEBUG)) {
         img.show();
       }
