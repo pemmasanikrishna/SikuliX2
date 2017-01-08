@@ -210,7 +210,7 @@ public class TestCoreBasic {
     currentTest = "test_32_loadImageFromJarByClass";
     boolean success = Commands.setBundlePath(jarImagePathClass);
     result = "BundlePath: " + Commands.getBundlePath();
-    Image img = new Image("ich");
+    Image img = new Image(imageNameDefault);
     success &= img.isValid();
     if (success) {
       result = "ImageURL: " + img.getURL();

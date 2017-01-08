@@ -103,11 +103,6 @@ public class Image extends Element {
     return !content.empty();
   }
 
-  public boolean isText() {
-    //TODO implement isText()
-    return false;
-  }
-
   public String getURL() {
     return urlImg.toString();
   }
@@ -126,41 +121,33 @@ public class Image extends Element {
   private void setContent(URL url) {
     if (SX.isSet(url)) {
       urlImg = url;
-      if (isCaching()) {
-        content = imageFiles.get(urlImg);
-        if (SX.isNull(content)) {
-          content = new Mat();
+      if (urlImg != null) {
+        String urlProto = urlImg.getProtocol();
+        if (urlProto.equals("file")) {
+          File imgFile = new File(urlImg.getPath());
+          content = Imgcodecs.imread(imgFile.getAbsolutePath());
+        } else {
+          try {
+            content = makeMat(ImageIO.read(urlImg));
+          } catch (IOException e) {
+            log.error("load(): %s for %s", e.getMessage(), urlImg);
+          }
         }
-      }
-      if (content.empty()) {
-        load();
-      }
-      if (isCaching() && !content.empty()) {
-        changeCache(true, urlImg, content);
+        if (isValid()) {
+          setAttributes();
+          log.debug("get: loaded: (%dx%s) %s", content.width(), content.height(), urlImg);
+        } else {
+          log.error("get: not loaded: %s", urlImg);
+        }
       }
     }
   }
 
-  private void load() {
-    if (urlImg != null) {
-      String urlProto = urlImg.getProtocol();
-      if (urlProto.equals("file")) {
-        File imgFile = new File(urlImg.getPath());
-        content = Imgcodecs.imread(imgFile.getAbsolutePath());
-      } else {
-        try {
-          content = makeMat(ImageIO.read(urlImg));
-        } catch (IOException e) {
-          log.error("load(): %s for %s", e.getMessage(), urlImg);
-        }
-      }
-      if (isValid()) {
-        setAttributes();
-        log.debug("get: loaded: (%dx%s) %s", content.width(), content.height(), urlImg);
-      } else {
-        log.error("get: not loaded: %s", urlImg);
-      }
+  public Image reset() {
+    if (isValid()) {
+      setContent(urlImg);
     }
+    return this;
   }
 
   private final int resizeMinDownSample = 12;
@@ -188,13 +175,11 @@ public class Image extends Element {
   }
 
   public boolean isMeanColorEqual(Color otherMeanColor) {
-    double distance = 0;
     Color col = getMeanColor();
     int r = (col.getRed() - otherMeanColor.getRed()) *  (col.getRed() - otherMeanColor.getRed());
     int g = (col.getGreen() - otherMeanColor.getGreen()) *  (col.getGreen() - otherMeanColor.getGreen());
     int b = (col.getBlue() - otherMeanColor.getBlue()) *  (col.getBlue() - otherMeanColor.getBlue());
-    distance = Math.sqrt(r + g + b);
-    return distance < minThreshhold;
+    return Math.sqrt(r + g + b) < minThreshhold;
   }
 
   public double getResizeFactor() {
@@ -230,68 +215,6 @@ public class Image extends Element {
     }
 
     whiteColor = isMeanColorEqual(Color.WHITE);
-  }
-
-  public Image reset() {
-    if (isCaching() && isValid()) {
-      changeCache(false, urlImg, content);
-    }
-    load();
-    if (isCaching() && !content.empty()) {
-      changeCache(true, urlImg, content);
-    }
-    return this;
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="*** cache">
-  private static final Map<URL, Mat> imageFiles = Collections.synchronizedMap(new HashMap<URL, Mat>());
-  private static long currentMemory = 0;
-
-  private static int ImageCache = 64;
-  private static final int KB = 1024;
-  private static final int MB = KB * KB;
-
-  /**
-   * set the maximum to be used for the {@link Image} cache
-   * <br>the start up value is 64 (meaning MB)
-   * <br>using 0 switches off caching and clears the cache in that moment
-   *
-   * @param max cache size in MB
-   */
-  public static void setImageCache(int max) {
-    ImageCache = max;
-    if (max == 0) {
-      changeCache(null, null, null);
-    }
-  }
-
-  private static boolean isCaching() {
-    return ImageCache > 0;
-  }
-
-  private synchronized static void changeCache(Boolean upOrDown, URL urlImg, Mat mat) {
-    if (SX.isNotSet(upOrDown) || ImageCache < currentMemory + getMatSize(mat)) {
-      for (URL url : imageFiles.keySet()) {
-        imageFiles.put(url, new Mat());
-      }
-      currentMemory = 0;
-      if (SX.isNotSet(upOrDown)) {
-        return;
-      }
-    }
-    if (upOrDown) {
-      imageFiles.put(urlImg, mat);
-      currentMemory += getMatSize(mat);
-    } else {
-      imageFiles.put(urlImg, new Mat());
-      currentMemory -= getMatSize(mat);
-      currentMemory = currentMemory < 0 ? 0 : currentMemory;
-    }
-  }
-
-  private static long getMatSize(Mat mat) {
-    return mat.channels() * mat.width() * mat.height();
   }
   //</editor-fold>
 

@@ -608,8 +608,6 @@ public class Finder {
         img = new Image((String) target);
         if (img.isValid()) {
           pattern = new Target(img);
-        } else if (img.isText()) {
-          findingText = true;
         } else {
           throw new IOException("Region: doFind: Image not useable: " + target.toString());
         }
