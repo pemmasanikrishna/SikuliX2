@@ -8,7 +8,9 @@ import com.sikulix.core.IRobot;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXElement;
 import com.sikulix.core.SXLog;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
 
 import java.awt.*;
 import java.net.URL;
@@ -20,13 +22,42 @@ public class Element extends SXElement {
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
   protected URL urlImg = null;
-  protected Mat content = null;
 
-  private double score = -1;
+  public Mat getContent() {
+    return content;
+  }
+
+  public Mat getContent(Element elem) {
+    return content.submat(new Rect(elem.x, elem.y, elem.w, elem.h));
+  }
+
+  public void setContent(Mat content) {
+    this.content = content;
+  }
+
+  private Mat content = null;
+
+  protected double resizeFactor;
+  public double getResizeFactor() {
+    return isValid() ? resizeFactor : 1;
+  }
 
   private Element lastMatch = null;
   private java.util.List<Element> lastMatches = new ArrayList<Element>();
   private int matchIndex = -1;
+
+  public Element getLastSeen() {
+    if (SX.isNull(lastSeen)) {
+      return new Element();
+    }
+    return lastSeen;
+  }
+
+  public void setLastSeen(Element lastSeen) {
+    this.lastSeen = lastSeen;
+  }
+
+  private Element lastSeen = null;
 
   //<editor-fold desc="***** construction, info">
   public Element() {
@@ -101,6 +132,25 @@ public class Element extends SXElement {
     init(rect.x, rect.y, rect.width, rect.height);
   }
 
+  public Element(Core.MinMaxLocResult mMinMax, Target target, Rect rect) {
+    setClazz();
+    init((int) mMinMax.maxLoc.x + target.getTarget().x +
+            rect.x, (int) mMinMax.maxLoc.y + target.getTarget().y + rect.y,
+            target.w, target.h);
+    setScore(mMinMax.maxVal);
+  }
+
+  public boolean isMatch() {
+    return score > -1;
+  }
+
+  protected String toStringPlus() {
+    if (isMatch()) {
+      return " %" + score * 100;
+    }
+    return "";
+  }
+
   /**
    * returns -1, if outside of any screen <br>
    *
@@ -117,6 +167,19 @@ public class Element extends SXElement {
     return -1;
   }
   //</editor-fold>
+
+  //<editor-fold desc="***** content">
+  protected boolean plainColor = false;
+  protected boolean blackColor = false;
+  public boolean isPlainColor() {
+    return isValid() && plainColor;
+  }
+
+  public boolean isBlack() {
+    return isValid() && blackColor;
+  }
+  //</editor-fold>
+
 
   //<editor-fold desc="***** capture, highlight">
   public Image capture() {
@@ -185,6 +248,19 @@ public class Element extends SXElement {
   public void setScore(double score) {
     this.score = score;
   }
+
+  private double score = -1;
+
+  public double getWantedScore() {
+    return wantedScore;
+  }
+
+  public void setWantedScore(double wantedScore) {
+    this.wantedScore = wantedScore;
+  }
+
+  private double wantedScore = -1;
+
   //</editor-fold>
 
   //<editor-fold desc="***** lastMatch">

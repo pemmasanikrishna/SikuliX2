@@ -41,8 +41,8 @@ public class Image extends Element {
   }
 
   protected void copy(Element elem) {
-    if (SX.isNotNull(content) && !content.empty()) {
-      content = elem.content.clone();
+    if (SX.isNotNull(getContent()) && !getContent().empty()) {
+      setContent(elem.getContent().clone());
     }
     urlImg = elem.urlImg;
   }
@@ -50,33 +50,33 @@ public class Image extends Element {
   public Image(BufferedImage bimg) {
     this();
     long start = new Date().getTime();
-    content = makeMat(bimg);
+    setContent(makeMat(bimg));
     timeToLoad = new Date().getTime() - start;
-    init(0, 0, content.width(), content.height());
+    init(0, 0, getContent().width(), getContent().height());
   }
 
   public Image(Mat mat) {
     this();
     if (SX.isNull(mat)) {
-      content = new Mat();
+      setContent(new Mat());
     } else {
       long start = new Date().getTime();
-      content = mat.clone();
+      setContent(mat.clone());
       timeToLoad = new Date().getTime() - start;
     }
-    init(0, 0, content.width(), content.height());
+    init(0, 0, getContent().width(), getContent().height());
   }
 
   public Image(String fpImg) {
     this();
     setContent(fpImg);
-    init(0, 0, content.width(), content.height());
+    init(0, 0, getContent().width(), getContent().height());
   }
 
   public Image(URL url) {
     this();
     setContent(url);
-    init(0, 0, content.width(), content.height());
+    init(0, 0, getContent().width(), getContent().height());
   }
 
   public Image(Element elem) {
@@ -104,7 +104,7 @@ public class Image extends Element {
    */
   @Override
   public boolean isValid() {
-    return !content.empty();
+    return !getContent().empty();
   }
 
   public String getURL() {
@@ -114,10 +114,6 @@ public class Image extends Element {
 
   //<editor-fold desc="*** get content">
   public long timeToLoad = -1;
-
-  public Mat getContent() {
-    return content;
-  }
 
   private void setContent(String fpImg) {
     URL url = searchOnImagePath(fpImg);
@@ -132,19 +128,19 @@ public class Image extends Element {
         String urlProto = urlImg.getProtocol();
         if (urlProto.equals("file")) {
           File imgFile = new File(urlImg.getPath());
-          content = Imgcodecs.imread(imgFile.getAbsolutePath());
+          setContent(Imgcodecs.imread(imgFile.getAbsolutePath()));
         } else {
           try {
-            content = makeMat(ImageIO.read(urlImg));
+            setContent(makeMat(ImageIO.read(urlImg)));
           } catch (IOException e) {
-            content = new Mat();
+            setContent(new Mat());
             log.error("load(): %s for %s", e.getMessage(), urlImg);
           }
         }
         timeToLoad = new Date().getTime() - start;
         if (isValid()) {
           setAttributes();
-          log.debug("get: loaded: (%dx%s) %s", content.width(), content.height(), urlImg);
+          log.debug("get: loaded: (%dx%s) %s", getContent().width(), getContent().height(), urlImg);
         } else {
           log.error("get: not loaded: %s", urlImg);
         }
@@ -160,20 +156,9 @@ public class Image extends Element {
   }
 
   private final int resizeMinDownSample = 12;
-  private double resizeFactor;
-  private boolean plainColor = false;
-  private boolean blackColor = false;
   private boolean whiteColor = false;
   private int[] meanColor = null;
   private double minThreshhold = 1.0E-5;
-
-  public boolean isPlainColor() {
-    return isValid() && plainColor;
-  }
-
-  public boolean isBlack() {
-    return isValid() && blackColor;
-  }
 
   public boolean isWhite() {
     return isValid() && blackColor;
@@ -191,19 +176,15 @@ public class Image extends Element {
     return Math.sqrt(r + g + b) < minThreshhold;
   }
 
-  public double getResizeFactor() {
-    return isValid() ? resizeFactor : 1;
-  }
-
   private void setAttributes() {
     plainColor = false;
     blackColor = false;
-    resizeFactor = Math.min(((double) content.width()) / resizeMinDownSample,
-            ((double) content.height()) / resizeMinDownSample);
+    resizeFactor = Math.min(((double) getContent().width()) / resizeMinDownSample,
+            ((double) getContent().height()) / resizeMinDownSample);
     resizeFactor = Math.max(1.0, resizeFactor);
     MatOfDouble pMean = new MatOfDouble();
     MatOfDouble pStdDev = new MatOfDouble();
-    Core.meanStdDev(content, pMean, pStdDev);
+    Core.meanStdDev(getContent(), pMean, pStdDev);
     double sum = 0.0;
     double[] arr = pStdDev.toArray();
     for (int i = 0; i < arr.length; i++) {
@@ -497,7 +478,7 @@ public class Image extends Element {
   }
 
   public void show(int time) {
-    show(getBufferedImage(content, dotPNG), time);
+    show(getBufferedImage(getContent(), dotPNG), time);
   }
 
   private static void show(Mat mat, int time) {
@@ -532,7 +513,7 @@ public class Image extends Element {
     if (isValid()) {
       Mat newMat = new Mat();
       Size newS = new Size(w * factor, h * factor);
-      Imgproc.resize(content, newMat, newS, 0, 0, Imgproc.INTER_AREA);
+      Imgproc.resize(getContent(), newMat, newS, 0, 0, Imgproc.INTER_AREA);
       img = new Image(newMat);
     }
     return img;
@@ -550,7 +531,7 @@ public class Image extends Element {
   public Image getSub(int x, int y, int w, int h) {
     Image img = new Image();
     if (isValid()) {
-      img = new Image(content.submat(new Rect(x, y, w, h)));
+      img = new Image(getContent().submat(new Rect(x, y, w, h)));
     }
     return img;
   }
@@ -575,7 +556,7 @@ public class Image extends Element {
   public String save(String name) {
     String fpName = getValidImageFilename("_" + name);
     File fName = new File(getBundlePath(), fpName);
-    Imgcodecs.imwrite(fName.getAbsolutePath(), content);
+    Imgcodecs.imwrite(fName.getAbsolutePath(), getContent());
     return fpName;
   }
 //</editor-fold>

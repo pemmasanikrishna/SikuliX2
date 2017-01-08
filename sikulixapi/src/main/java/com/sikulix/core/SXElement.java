@@ -81,8 +81,8 @@ public abstract class SXElement implements Comparable<SXElement>{
    * @return true if the element is useable and/or has valid content
    */
   public boolean isValid() {
-    //TODO SXElement valid
-    return true; };
+    return w > 0 && h > 0;
+  };
 
   //</editor-fold>
 

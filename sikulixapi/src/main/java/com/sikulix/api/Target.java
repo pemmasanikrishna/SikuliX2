@@ -8,23 +8,12 @@ import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 import org.opencv.core.Mat;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class Target extends Image {
 
   private static eType eClazz = eType.TARGET;
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
-
-  private static double exactAs = 0.99f;
-
-  public static void setExactAs(double minimumScore) {
-    exactAs = minimumScore;
-  }
-
-  public static double getExactAs() {
-    return exactAs;
-  }
 
   //<editor-fold desc="***** construct">
   public Target() {
@@ -72,13 +61,12 @@ public class Target extends Image {
   //</editor-fold>
 
   //<editor-fold desc="***** set, get">
-  public Target similar(double score) {
-    setScore(score);
-    return this;
+  public void similar(double score) {
+    setWantedScore(score);
   }
 
   public double getSimilar() {
-    return getScore();
+    return getWantedScore();
   }
 
   /**
@@ -90,5 +78,15 @@ public class Target extends Image {
     setScore(exactAs);
     return this;
   }
+
+  public static void setExactAs(double minimumScore) {
+    exactAs = minimumScore;
+  }
+
+  public static double getExactAs() {
+    return exactAs;
+  }
+
+  private static double exactAs = 0.99f;
   //</editor-fold>
 }

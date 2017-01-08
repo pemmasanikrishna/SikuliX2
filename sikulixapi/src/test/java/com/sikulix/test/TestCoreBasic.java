@@ -11,10 +11,12 @@ import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
 
 import java.io.File;
+import java.util.Date;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestCoreBasic {
 
+  //<editor-fold desc="housekeeping">
   static final int logLevel = SX.INFO;
   static SXLog log = SX.getLogger("TestCoreBasic");
   private Object result = "";
@@ -34,6 +36,24 @@ public class TestCoreBasic {
 
   public TestCoreBasic() {
     log.trace("TestCoreBasic()");
+  }
+
+  private String set(String form, Object... args) {
+    return String.format(form, args);
+  }
+
+  long startTime = -1;
+  private void start() {
+    startTime = new Date().getTime();
+  }
+
+  private String end() {
+    String duration = "";
+    if (startTime > 0) {
+      duration = "(" + (new Date().getTime() - startTime) + ") ";
+      startTime = -1;
+    }
+    return duration;
   }
 
   @BeforeClass
@@ -63,6 +83,7 @@ public class TestCoreBasic {
   public void setUp() {
     log.trace("setUp");
     result = null;
+    startTime = -1;
     if (testLimit && nTest > 0) {
       SX.terminate(1, "by intention");
     }
@@ -74,7 +95,9 @@ public class TestCoreBasic {
     Image.clearPath();
     log.info("!%2d: result: %s: %s ", nTest++, currentTest, result);
   }
+  //</editor-fold>
 
+  //<editor-fold desc="running">
   @Test
   public void test_00_play() {
     currentTest = "test_00_play";
@@ -189,10 +212,6 @@ public class TestCoreBasic {
     }
   }
 
-  private String set(String form, Object... args) {
-    return String.format(form, args);
-  }
-
   @Test
   public void test_31_loadImageFromFile() {
     currentTest = "test_31_loadImageFromFile";
@@ -240,7 +259,79 @@ public class TestCoreBasic {
     }
     assert success;
   }
+  //</editor-fold>
 
+  @Test
+  public void test_40_createFinderFromImage() {
+    currentTest = "test_40_createFinderFromImage";
+    boolean success = Commands.setBundlePath(mavenRoot, "Images");
+    result = "";
+    Image img = new Image(imageNameDefault);
+    success &= img.isValid();
+    if (success) {
+      Finder finder = new Finder(img);
+      success &= finder.isValid();
+    }
+    assert success;
+  }
+
+  @Test
+  public void test_41_findImageInSameImage() {
+    currentTest = "test_41_findImageInSameImage";
+    boolean success = Commands.setBundlePath(mavenRoot, "Images");
+    result = "Not Found";
+    start();
+    Image img = new Image(imageNameDefault);
+    success &= img.isValid();
+    Finder finder = null;
+    if (success) {
+      finder = new Finder(img);
+      success &= finder.isValid();
+    }
+    Element element = null;
+    if (success) {
+      element = finder.find(img);
+      success &= element.isMatch();
+    }
+    if (success) {
+      result = element.toString();
+    }
+    result = end() + result;
+    assert success;
+  }
+
+  @Test
+  public void test_42_findImageInOtherImage() {
+    currentTest = "test_42_findImageInOtherImage";
+    boolean success = Commands.setBundlePath(mavenRoot, "Images");
+    result = "Not Found";
+    start();
+    Image target = new Image(imageNameDefault);
+    success &= target.isValid();
+    Image base = new Image("shot");
+    success &= base.isValid();
+    Finder finder = null;
+    if (success) {
+      finder = new Finder(base);
+      success &= finder.isValid();
+    }
+    Element element = null;
+    if (success) {
+      element = finder.find(target);
+      success &= element.isMatch();
+    }
+    if (success) {
+      result = element.toString();
+    }
+    result = end() + result;
+    if (success) {
+      Mat match = base.getContent(element);
+      new Image(match).show();
+    }
+    assert success;
+  }
+
+  //<editor-fold desc="ignored">
   @Ignore
   public void test_50_nativeHook() {
     currentTest = "test_50_nativeHook";
@@ -270,4 +361,5 @@ public class TestCoreBasic {
     }
     assert assertVal;
   }
+  //</editor-fold>
 }
