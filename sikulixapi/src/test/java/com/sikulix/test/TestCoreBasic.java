@@ -43,6 +43,7 @@ public class TestCoreBasic {
   }
 
   long startTime = -1;
+
   private void start() {
     startTime = new Date().getTime();
   }
@@ -291,7 +292,9 @@ public class TestCoreBasic {
     Element element = null;
     if (success) {
       element = finder.find(img);
-      success &= element.isMatch();
+      success &= element.isMatch() && 0.99 < element.getScore() &&
+              0 == element.x && 0 == element.y &&
+              element.w == (int) img.w && element.h == (int) img.h;
     }
     if (success) {
       result = element.toString();
@@ -325,8 +328,7 @@ public class TestCoreBasic {
     }
     result = end() + result;
     if (success) {
-      Mat match = base.getContent(element);
-      new Image(match).show();
+      base.showMatch();
     }
     assert success;
   }

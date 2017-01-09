@@ -21,6 +21,7 @@ public class Finder {
 
   private static final double downSimDiff = 0.15;
 
+  private Element baseElement = null;
   private Mat base = new Mat();
   private Mat result = new Mat();
 
@@ -29,6 +30,7 @@ public class Finder {
 
   public Finder(Element elem) {
     if (elem != null && elem.isValid()) {
+      baseElement = elem;
       base = elem.getContent();
     } else {
       log.error("init: invalid element: %s", elem);
@@ -40,11 +42,10 @@ public class Finder {
   }
 
   public Element find(Element target) {
-    log.on(SXLog.TRACE);
     FindResult findResult = doFind(target);
     if (SX.isNotNull(findResult) && findResult.hasNext()) {
-      target.setLastMatch(findResult.next());
-      return target.getLastMatch();
+      baseElement.setLastMatch(findResult.next());
+      return baseElement.getLastMatch();
     }
     return null;
   }

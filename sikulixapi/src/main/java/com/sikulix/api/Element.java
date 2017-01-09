@@ -35,6 +35,10 @@ public class Element extends SXElement {
     this.content = content;
   }
 
+  public boolean hasContent() {
+    return SX.isNotNull(content) && !content.empty();
+  }
+
   private Mat content = null;
 
   protected double resizeFactor;
@@ -180,7 +184,6 @@ public class Element extends SXElement {
   }
   //</editor-fold>
 
-
   //<editor-fold desc="***** capture, highlight">
   public Image capture() {
     Image img = new Image();
@@ -204,6 +207,19 @@ public class Element extends SXElement {
 
   public static void fakeHighlight(boolean state) {
     //TODO implement fakeHighlight
+  }
+
+  public void show() {
+//    show((int) SX.getOptionNumber("DefaultHighlightTime"));
+    show(showTime);
+  }
+
+  public void show(int time) {
+    show(this, time);
+  }
+
+  public void showMatch() {
+    show(this, getLastMatch(), showTime);
   }
   //</editor-fold>
 

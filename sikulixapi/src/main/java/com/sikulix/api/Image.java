@@ -41,8 +41,10 @@ public class Image extends Element {
   }
 
   protected void copy(Element elem) {
-    if (SX.isNotNull(getContent()) && !getContent().empty()) {
+    if (elem.hasContent()) {
       setContent(elem.getContent().clone());
+    } else {
+      setContent(new Mat());
     }
     urlImg = elem.urlImg;
   }
@@ -413,94 +415,6 @@ public class Image extends Element {
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** content/show">
-  final static String PNG = "png";
-  final static String dotPNG = "." + PNG;
-
-  protected static Mat makeMat(BufferedImage bImg) {
-    Mat aMat = new Mat();
-    if (bImg.getType() == BufferedImage.TYPE_INT_RGB) {
-      log.trace("makeMat: INT_RGB (%dx%d)", bImg.getWidth(), bImg.getHeight());
-      int[] data = ((DataBufferInt) bImg.getRaster().getDataBuffer()).getData();
-      ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4);
-      IntBuffer intBuffer = byteBuffer.asIntBuffer();
-      intBuffer.put(data);
-      aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC4);
-      aMat.put(0, 0, byteBuffer.array());
-      Mat oMatBGR = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC3);
-      Mat oMatA = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC1);
-      java.util.List<Mat> mixIn = new ArrayList<Mat>(Arrays.asList(new Mat[]{aMat}));
-      java.util.List<Mat> mixOut = new ArrayList<Mat>(Arrays.asList(new Mat[]{oMatA, oMatBGR}));
-      //A 0 - R 1 - G 2 - B 3 -> A 0 - B 1 - G 2 - R 3
-      Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 3, 2, 2, 3, 1));
-      return oMatBGR;
-    } else if (bImg.getType() == BufferedImage.TYPE_3BYTE_BGR) {
-      log.error("makeMat: 3BYTE_BGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
-    } else if (bImg.getType() == BufferedImage.TYPE_4BYTE_ABGR) {
-      log.trace("makeMat: TYPE_4BYTE_ABGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
-      byte[] data = ((DataBufferByte) bImg.getRaster().getDataBuffer()).getData();
-      aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC4);
-      aMat.put(0, 0, data);
-      Mat oMatBGR = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC3);
-      Mat oMatA = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC1);
-      java.util.List<Mat> mixIn = new ArrayList<Mat>(Arrays.asList(new Mat[]{aMat}));
-      java.util.List<Mat> mixOut = new ArrayList<Mat>(Arrays.asList(new Mat[]{oMatA, oMatBGR}));
-      //A 0 - R 1 - G 2 - B 3 -> A 0 - B 1 - G 2 - R 3
-      Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 1, 2, 2, 3, 3));
-      return oMatBGR;
-    } else {
-      log.error("makeMat: Type not supported: %d (%dx%d)",
-              bImg.getType(), bImg.getWidth(), bImg.getHeight());
-    }
-    return aMat;
-  }
-
-  private static BufferedImage getBufferedImage(Mat mat, String type) {
-    BufferedImage bImg = null;
-    MatOfByte bytemat = new MatOfByte();
-    if (SX.isNull(mat)) {
-      mat = new Mat();
-    }
-    Imgcodecs.imencode(type, mat, bytemat);
-    byte[] bytes = bytemat.toArray();
-    InputStream in = new ByteArrayInputStream(bytes);
-    try {
-      bImg = ImageIO.read(in);
-    } catch (IOException ex) {
-      log.error("getBufferedImage: %s error(%s)", mat, ex.getMessage());
-    }
-    return bImg;
-  }
-
-  public void show() {
-//    show((int) SX.getOptionNumber("DefaultHighlightTime"));
-    show(3);
-  }
-
-  public void show(int time) {
-    show(getBufferedImage(getContent(), dotPNG), time);
-  }
-
-  private static void show(Mat mat, int time) {
-    show(getBufferedImage(mat, dotPNG), time);
-  }
-
-  private static void show(BufferedImage bImg, int time) {
-    JFrame frImg = new JFrame();
-    frImg.setAlwaysOnTop(true);
-    frImg.setResizable(false);
-    frImg.setUndecorated(true);
-    frImg.setLocation(100, 100);
-    frImg.setSize(bImg.getWidth(), bImg.getHeight());
-    Container cp = frImg.getContentPane();
-    cp.add(new JLabel(new ImageIcon(bImg)), BorderLayout.CENTER);
-    frImg.pack();
-    frImg.setVisible(true);
-    SX.pause(time);
-    frImg.dispose();
-  }
-  //</editor-fold>
-
   //<editor-fold defaultstate="collapsed" desc="*** helpers">
   /**
    * resize the image's CV-Mat by factor
@@ -534,23 +448,6 @@ public class Image extends Element {
       img = new Image(getContent().submat(new Rect(x, y, w, h)));
     }
     return img;
-  }
-
-  protected static String getValidImageFilename(String fname) {
-    String validEndings = ".png.jpg.jpeg.tiff.bmp";
-    String defaultEnding = ".png";
-    int dot = fname.lastIndexOf(".");
-    String ending = defaultEnding;
-    if (dot > 0) {
-      ending = fname.substring(dot);
-      if (validEndings.contains(ending.toLowerCase())) {
-        return fname;
-      }
-    } else {
-      fname += ending;
-      return fname;
-    }
-    return "";
   }
 
   public String save(String name) {

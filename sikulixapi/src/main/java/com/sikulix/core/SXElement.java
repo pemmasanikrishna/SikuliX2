@@ -4,12 +4,26 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.By;
-import com.sikulix.api.Element;
+import com.sikulix.api.*;
 import org.json.JSONObject;
+import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferInt;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public abstract class SXElement implements Comparable<SXElement>{
@@ -250,7 +264,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public Element getBottomRight() {
-    return new Element(x, y + h);
+    return new Element(x + w, y + h);
   }
 
   public Element getBottomLeft() {
@@ -458,4 +472,129 @@ public abstract class SXElement implements Comparable<SXElement>{
     return "NotImplemented";
   }
   //</editor-fold>
+
+  //<editor-fold desc="utility">
+  final static String PNG = "png";
+  final static String dotPNG = "." + PNG;
+
+  public static int showTime = 3;
+
+  protected static void show(Element elem, int time) {
+    show(elem, null, time);
+  }
+
+  protected static void show(Element elem, Element overlay, int time) {
+    boolean success = elem.isValid();
+    success &= elem.hasContent();
+    if (success) {
+      doShow(elem, overlay, time);
+    }
+  }
+
+  private static org.opencv.core.Point cvPoint(Element elem, int off) {
+    return new org.opencv.core.Point(elem.x + off, elem.y + off);
+  }
+
+  private static void doShow(Element elem, Element overlay, int time) {
+    if (!elem.hasContent()) {
+      return;
+    }
+    Mat imgMat = elem.getContent().clone();
+    if (SX.isNotNull(overlay)) {
+      Imgproc.rectangle(imgMat, cvPoint(overlay, -4), cvPoint(overlay.getBottomRight(), 3),
+              new Scalar(0, 0, 255), 3);
+    }
+    BufferedImage bImg = getBufferedImage(imgMat, dotPNG);
+    JFrame frImg = new JFrame();
+    frImg.setAlwaysOnTop(true);
+    frImg.setResizable(false);
+    frImg.setUndecorated(true);
+    if (SX.isMac()) {
+      frImg.setLocation(1, 23);
+    } else {
+      frImg.setLocation(1, 1);
+    }
+    frImg.setSize(bImg.getWidth(), bImg.getHeight());
+    Container cp = frImg.getContentPane();
+    cp.add(new JLabel(new ImageIcon(bImg)), BorderLayout.CENTER);
+    frImg.pack();
+    frImg.setVisible(true);
+    SX.pause(time);
+    frImg.dispose();
+  }
+
+  protected static Mat makeMat(BufferedImage bImg) {
+    Mat aMat = new Mat();
+    if (bImg.getType() == BufferedImage.TYPE_INT_RGB) {
+      log.trace("makeMat: INT_RGB (%dx%d)", bImg.getWidth(), bImg.getHeight());
+      int[] data = ((DataBufferInt) bImg.getRaster().getDataBuffer()).getData();
+      ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 4);
+      IntBuffer intBuffer = byteBuffer.asIntBuffer();
+      intBuffer.put(data);
+      aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC4);
+      aMat.put(0, 0, byteBuffer.array());
+      Mat oMatBGR = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC3);
+      Mat oMatA = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC1);
+      java.util.List<Mat> mixIn = new ArrayList<Mat>(Arrays.asList(new Mat[]{aMat}));
+      java.util.List<Mat> mixOut = new ArrayList<Mat>(Arrays.asList(new Mat[]{oMatA, oMatBGR}));
+      //A 0 - R 1 - G 2 - B 3 -> A 0 - B 1 - G 2 - R 3
+      Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 3, 2, 2, 3, 1));
+      return oMatBGR;
+    } else if (bImg.getType() == BufferedImage.TYPE_3BYTE_BGR) {
+      log.error("makeMat: 3BYTE_BGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
+    } else if (bImg.getType() == BufferedImage.TYPE_4BYTE_ABGR) {
+      log.trace("makeMat: TYPE_4BYTE_ABGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
+      byte[] data = ((DataBufferByte) bImg.getRaster().getDataBuffer()).getData();
+      aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC4);
+      aMat.put(0, 0, data);
+      Mat oMatBGR = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC3);
+      Mat oMatA = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC1);
+      java.util.List<Mat> mixIn = new ArrayList<Mat>(Arrays.asList(new Mat[]{aMat}));
+      java.util.List<Mat> mixOut = new ArrayList<Mat>(Arrays.asList(new Mat[]{oMatA, oMatBGR}));
+      //A 0 - R 1 - G 2 - B 3 -> A 0 - B 1 - G 2 - R 3
+      Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 1, 2, 2, 3, 3));
+      return oMatBGR;
+    } else {
+      log.error("makeMat: Type not supported: %d (%dx%d)",
+              bImg.getType(), bImg.getWidth(), bImg.getHeight());
+    }
+    return aMat;
+  }
+
+  protected static BufferedImage getBufferedImage(Mat mat, String type) {
+    BufferedImage bImg = null;
+    MatOfByte bytemat = new MatOfByte();
+    if (SX.isNull(mat)) {
+      mat = new Mat();
+    }
+    Imgcodecs.imencode(type, mat, bytemat);
+    byte[] bytes = bytemat.toArray();
+    InputStream in = new ByteArrayInputStream(bytes);
+    try {
+      bImg = ImageIO.read(in);
+    } catch (IOException ex) {
+      log.error("getBufferedImage: %s error(%s)", mat, ex.getMessage());
+    }
+    return bImg;
+  }
+
+  protected static String getValidImageFilename(String fname) {
+    String validEndings = ".png.jpg.jpeg.tiff.bmp";
+    String defaultEnding = ".png";
+    int dot = fname.lastIndexOf(".");
+    String ending = defaultEnding;
+    if (dot > 0) {
+      ending = fname.substring(dot);
+      if (validEndings.contains(ending.toLowerCase())) {
+        return fname;
+      }
+    } else {
+      fname += ending;
+      return fname;
+    }
+    return "";
+  }
+  //</editor-fold>
+
+
 }
