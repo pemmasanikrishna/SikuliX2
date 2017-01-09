@@ -125,7 +125,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.sikuli.script.Sikulix</mainClass>
+              <mainClass>com.sikulix.util.SXMain</mainClass>
             </manifest>
           </archive>
         </configuration>
