@@ -2,7 +2,7 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.api;
+package com.sikulix.core;
 
 /**
  * implements the SikuliX FindFailed exception class

@@ -4,7 +4,7 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.Commands;
+import com.sikulix.api.Do;
 import com.sikulix.api.Element;
 //import com.sikulix.scripting.JythonHelper;
 import org.apache.commons.cli.*;
@@ -1848,8 +1848,8 @@ public class SX {
       klassName = fpMain;
     }
     if (".".equals(klassName)) {
-      if (isSet(Commands.getBaseClass())) {
-        klassName = Commands.getBaseClass();
+      if (isSet(Do.getBaseClass())) {
+        klassName = Do.getBaseClass();
       } else {
         klassName = sxGlobalClassReference.getName();
       }

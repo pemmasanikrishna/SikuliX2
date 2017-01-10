@@ -2,11 +2,7 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.api;
-
-import com.sikulix.core.SX;
-import com.sikulix.core.SXLog;
-import com.sikulix.core.Device;
+package com.sikulix.core;
 
 import java.awt.event.InputEvent;
 

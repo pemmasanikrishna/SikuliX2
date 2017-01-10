@@ -5,7 +5,6 @@ package com.sikulix.core;
 
 import com.sikulix.api.Element;
 import com.sikulix.api.Image;
-import com.sikulix.api.Keys;
 
 import java.awt.Robot;
 import java.awt.AWTException;

@@ -4,7 +4,7 @@
 
 package com.sikulix.util;
 
-import com.sikulix.api.Commands;
+import com.sikulix.api.Do;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 import org.sikuli.basics.PreferencesUser;
@@ -123,7 +123,7 @@ public class FileChooser {
       if (mode == FileDialog.LOAD) {
         if (SX.isNotSet(fileType) && !isValidScript(fileChoosen)) {
           // folders must contain a valid scriptfile
-          Commands.popError("Folder not a valid SikuliX script\nTry again.");
+          Do.popError("Folder not a valid SikuliX script\nTry again.");
           last_dir = fileChoosen.getAbsolutePath();
           continue;
         }

@@ -2,9 +2,9 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.api;
+package com.sikulix.core;
 
-import com.sikulix.core.*;
+import com.sikulix.api.Element;
 import com.sikulix.util.Settings;
 import com.sikulix.util.animation.Animator;
 import com.sikulix.util.animation.AnimatorTimeBased;
@@ -43,7 +43,7 @@ public class Mouse extends Device {
       mouse.device = mouse;
       mouse.isMouse = true;
       mouse.deviceName = "Mouse";
-      mouse.lastPos = mouse.at();
+      mouse.lastPos = Element.at();
       mouse.move(mouse.lastPos);
       log.debug("init done");
     }
@@ -60,7 +60,7 @@ public class Mouse extends Device {
     up();
     movedAction = MOVEDIGNORE;
     setCallback(null);
-    lastPos = at();
+    lastPos = Element.at();
     move(lastPos);
     log.debug("reset done");
     return mouse;
@@ -70,33 +70,15 @@ public class Mouse extends Device {
   //<editor-fold desc="*** mouse pointer location ***">
   private Element lastPos = null;
 
-  public static Element getLocation() {
-      return new Element(getLocationPoint());
-  }
-
-  public static Element at() {
-    return getLocation();
-  }
-
-  private static Point getLocationPoint() {
-    PointerInfo mp = MouseInfo.getPointerInfo();
-    if (mp != null) {
-      return mp.getLocation();
-    } else {
-      log.error("not possible to get mouse position (PointerInfo == null)");
-      return new Point(0,0);
-    }
-  }
-
   public void setLastPos() {
-    lastPos = getLocation();
+    lastPos = Element.at();
   }
 
   public void checkLastPos() {
     if (lastPos == null) {
       return;
     }
-    Element pos = getLocation();
+    Element pos = Element.at();
     if (pos != null && (lastPos.x != pos.x || lastPos.y != pos.y)) {
       log.debug("moved externally: now (%d,%d) was (%d,%d) (movedAction %d)",
               pos.x, pos.y, lastPos.x, lastPos.y, movedAction);
@@ -108,7 +90,7 @@ public class Mouse extends Device {
       if (movedAction == MOVEDPAUSE) {
         while (pos.x > 0 && pos.y > 0) {
           delay(500);
-          pos = getLocation();
+          pos = Element.at();
           if (MOVEDHIGHLIGHT) {
             showMousePos(pos.getPoint());
           }
@@ -208,7 +190,7 @@ public class Mouse extends Device {
    * @return true/false
    */
   public boolean hasMoved() {
-    Point pos = getLocationPoint();
+    Element pos = Element.at();
     if (lastPos.x != pos.x || lastPos.y != pos.y) {
       return true;
     }
@@ -297,7 +279,7 @@ public class Mouse extends Device {
     boolean shouldMove = true;
     if (loc == null) {
       shouldMove = false;
-      loc = at();
+      loc = Element.at();
     }
     IRobot robot = loc.getDeviceRobot();
     if (robot == null) {
@@ -367,7 +349,7 @@ public class Mouse extends Device {
    * @return 1 for success, 0 otherwise
 	 */
   public int move(int xoff, int yoff) {
-    return move(at().offset(xoff, yoff));
+    return move(Element.at().offset(xoff, yoff));
   }
 
   public int move(Element loc, Element vis) {
@@ -390,7 +372,7 @@ public class Mouse extends Device {
   }
 
   public void smoothMove(Point dest, IRobot robot) {
-    smoothMove(getLocationPoint(), dest, (long) (Settings.MoveMouseDelay * 1000L), robot);
+    smoothMove(new Point(Element.at().x, Element.at().y), dest, (long) (Settings.MoveMouseDelay * 1000L), robot);
   }
 
   public void smoothMove(Point src, Point dest, long ms, IRobot robot) {

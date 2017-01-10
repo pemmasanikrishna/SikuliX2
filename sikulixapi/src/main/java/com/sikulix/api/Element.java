@@ -4,10 +4,7 @@
 
 package com.sikulix.api;
 
-import com.sikulix.core.IRobot;
-import com.sikulix.core.SX;
-import com.sikulix.core.SXElement;
-import com.sikulix.core.SXLog;
+import com.sikulix.core.*;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
@@ -372,6 +369,16 @@ public class Element extends SXElement {
   //</editor-fold>
 
   //<editor-fold desc="***** mouse">
+  public static Element at() {
+    PointerInfo mp = MouseInfo.getPointerInfo();
+    if (mp != null) {
+      return new Element(mp.getLocation());
+    } else {
+      log.error("MouseInfo.getPointerInfo(): null");
+      return new Element();
+    }
+  }
+
   public IRobot getDeviceRobot() {
     //TODO implement special Robots
     return SX.getLocalRobot();

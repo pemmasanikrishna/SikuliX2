@@ -23,12 +23,13 @@ import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-public class Commands extends SX {
+public class Do {
 
-  private static SXLog log = getLogger("SX.Commands");
-  private static String klazz = Commands.class.getName();
+  private static SXLog log = SX.getLogger("SX.Do");
+  private static String klazz = Do.class.getName();
+  ;
 
-  //<editor-fold desc="SX Commands popat">
+  //<editor-fold desc="SX Do popat">
   private static Point locPopAt = null;
 
   public static Element popat(Element at) {
@@ -52,7 +53,7 @@ public class Commands extends SX {
   }
 
   private static Point getLocPopAt() {
-    Rectangle screen0 = getMonitor();
+    Rectangle screen0 = SX.getMonitor();
     if (null == screen0) {
       return null;
     }
@@ -76,7 +77,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="SX Commands input one line, password">
+  //<editor-fold desc="SX Do input one line, password">
 
   /**
    * request user's input as one line of text <br>
@@ -149,7 +150,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="SX Commands multiline input">
+  //<editor-fold desc="SX Do multiline input">
 
   /**
    * Shows a dialog request to enter text in a multiline text field <br>
@@ -205,7 +206,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="SX Commands popup, popAsk, popError">
+  //<editor-fold desc="SX Do popup, popAsk, popError">
   public static void popup(String message) {
     popup(message, "Sikuli");
   }
@@ -254,7 +255,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="SX Commands popSelect, popFile">
+  //<editor-fold desc="SX Do popSelect, popFile">
   public static String popSelect(String msg, String[] options, String preset) {
     return popSelect(msg, null, options, preset);
   }
@@ -306,7 +307,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="SX Commands compile Jython, build a jar ">
+  //<editor-fold desc="SX Do compile Jython, build a jar ">
 
   //<editor-fold desc="TODO ScriptingHelper">
   /**
@@ -429,7 +430,7 @@ public class Commands extends SX {
     @Override
     public boolean accept(File entry) {
       if (jython != null && entry.isDirectory()) {
-        jython = Commands.doCompileJythonFolder(jython, entry);
+        jython = Do.doCompileJythonFolder(jython, entry);
       }
       return false;
     }
@@ -470,7 +471,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="SX Commands ImagePath handling">
+  //<editor-fold desc="SX Do ImagePath handling">
   private static String baseClass = "";
 
   public static void setBaseClass() {
@@ -513,7 +514,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="SX Commands Clipboard">
+  //<editor-fold desc="SX Do Clipboard">
 
   /**
    * @return clipboard content
@@ -681,7 +682,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="SX Commands Keys">
+  //<editor-fold desc="SX Do Keys">
 
   /**
    * get the lock state of the given key
@@ -739,7 +740,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="SX Commands run something">
+  //<editor-fold desc="SX Do run something">
   public static String run(String cmdline) {
     return run(new String[]{cmdline});
   }
@@ -869,7 +870,7 @@ public class Commands extends SX {
   }
   //</editor-fold>
 
-  private static Element defaultScreenRegion = (Element) new Screen();
+  private static Element defaultScreenRegion = new Element(SX.getMonitor().getBounds());
   private static Element defaultRegion = defaultScreenRegion;
 
   public static Element use() {
@@ -877,14 +878,13 @@ public class Commands extends SX {
     return defaultRegion;
   }
 
-  public static Element use(Object elem) {
-    if (elem instanceof Element && ((Element) elem).isRectangle()) {
-      if (((SXElement) elem).isRectangle()) {
-        defaultRegion = (Element) elem;
-      } else {
-        defaultRegion = new Element(((Element) elem));
-      }
-    }
+  public static Element use(Element elem) {
+    defaultRegion = elem;
+    return defaultRegion;
+  }
+
+  public static Element use(int monitor) {
+    defaultRegion = new Element(SX.getMonitor(monitor).getBounds());
     return defaultRegion;
   }
 
@@ -916,7 +916,7 @@ public class Commands extends SX {
     boolean needFind = false;
 
     Target(Object... args) {
-      String form = "Commands.Target: ";
+      String form = "Do.Target: ";
       for (Object arg : args) {
         form += "%s, ";
       }

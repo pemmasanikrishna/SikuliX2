@@ -4,8 +4,6 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.Mouse;
-
 public class Device {
 
   protected static SXLog log = SX.getLogger("SX.Device");

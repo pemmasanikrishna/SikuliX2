@@ -72,7 +72,7 @@ public class TestCoreBasic {
         }
       });
     }
-    Commands.setBaseClass();
+    Do.setBaseClass();
   }
 
   @AfterClass
@@ -128,7 +128,7 @@ public class TestCoreBasic {
   @Test
   public void test_20_getBundlePath() {
     currentTest = "test_20_getBundlePath";
-    String bundlePath = Commands.getBundlePath();
+    String bundlePath = Do.getBundlePath();
     result = bundlePath;
     assert SX.existsFile(bundlePath);
   }
@@ -136,8 +136,8 @@ public class TestCoreBasic {
   @Test
   public void test_21_setBundlePathFile() {
     currentTest = "test_21_setBundlePathFile";
-    boolean success = Commands.setBundlePath(mavenRoot, defaultImagePath);
-    result = Commands.getBundlePath();
+    boolean success = Do.setBundlePath(mavenRoot, defaultImagePath);
+    result = Do.getBundlePath();
     success &= SX.existsFile(result);
     assert success;
   }
@@ -145,8 +145,8 @@ public class TestCoreBasic {
   @Test
   public void test_22_setBundlePathByClass() {
     currentTest = "test_22_setBundlePathByClass";
-    boolean success = Commands.setBundlePath(jarImagePathDefault);
-    result = Commands.getBundlePath();
+    boolean success = Do.setBundlePath(jarImagePathDefault);
+    result = Do.getBundlePath();
     success &= SX.existsFile(result);
     assert success;
   }
@@ -154,8 +154,8 @@ public class TestCoreBasic {
   @Test
   public void test_23_setBundlePathJarByClass() {
     currentTest = "test_23_setBundlePathJarByClass";
-    boolean success = Commands.setBundlePath(jarImagePathClass);
-    result = Commands.getBundlePath();
+    boolean success = Do.setBundlePath(jarImagePathClass);
+    result = Do.getBundlePath();
     success &= SX.existsFile(result);
     assert success;
   }
@@ -163,8 +163,8 @@ public class TestCoreBasic {
   @Test
   public void test_24_setBundlePathHttp() {
     currentTest = "test_24_setBundlePathHttp";
-    boolean success = Commands.setBundlePath(httpRoot, defaultImagePath);
-    result = Commands.getBundlePath();
+    boolean success = Do.setBundlePath(httpRoot, defaultImagePath);
+    result = Do.getBundlePath();
     success &= (httpImagePath).equals(result);
     assert success;
   }
@@ -172,10 +172,10 @@ public class TestCoreBasic {
   @Test
   public void test_29_getImagePath() {
     currentTest = "test_29_getImagePath";
-    Commands.setBundlePath(jarImagePathDefault);
-    Commands.addImagePath(jarImagePathClass);
-    Commands.addImagePath(httpImagePath);
-    String[] paths = Commands.getImagePath();
+    Do.setBundlePath(jarImagePathDefault);
+    Do.addImagePath(jarImagePathClass);
+    Do.addImagePath(httpImagePath);
+    String[] paths = Do.getImagePath();
     result = "[";
     for (String path : paths) {
       result += path + ", ";
@@ -216,8 +216,8 @@ public class TestCoreBasic {
   @Test
   public void test_31_loadImageFromFile() {
     currentTest = "test_31_loadImageFromFile";
-    boolean success = Commands.setBundlePath(mavenRoot, "Images");
-    result = "BundlePath: " + Commands.getBundlePath();
+    boolean success = Do.setBundlePath(mavenRoot, "Images");
+    result = "BundlePath: " + Do.getBundlePath();
     Image img = new Image(imageNameDefault);
     success &= img.isValid();
     if (success) {
@@ -232,8 +232,8 @@ public class TestCoreBasic {
   @Test
   public void test_32_loadImageFromJarByClass() {
     currentTest = "test_32_loadImageFromJarByClass";
-    boolean success = Commands.setBundlePath(jarImagePathClass);
-    result = "BundlePath: " + Commands.getBundlePath();
+    boolean success = Do.setBundlePath(jarImagePathClass);
+    result = "BundlePath: " + Do.getBundlePath();
     Image img = new Image(imageNameDefault);
     success &= img.isValid();
     if (success) {
@@ -248,8 +248,8 @@ public class TestCoreBasic {
   @Test
   public void test_33_loadImageFromHttp() {
     currentTest = "test_33_loadImageFromHttp";
-    boolean success = Commands.setBundlePath(httpRoot, "master");
-    result = "BundlePath: " + Commands.getBundlePath();
+    boolean success = Do.setBundlePath(httpRoot, "master");
+    result = "BundlePath: " + Do.getBundlePath();
     Image img = new Image(imageNameDefault);
     success &= img.isValid();
     if (success) {
@@ -260,12 +260,11 @@ public class TestCoreBasic {
     }
     assert success;
   }
-  //</editor-fold>
 
   @Test
   public void test_40_createFinderFromImage() {
     currentTest = "test_40_createFinderFromImage";
-    boolean success = Commands.setBundlePath(mavenRoot, "Images");
+    boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "";
     Image img = new Image(imageNameDefault);
     success &= img.isValid();
@@ -279,7 +278,7 @@ public class TestCoreBasic {
   @Test
   public void test_41_findImageInSameImage() {
     currentTest = "test_41_findImageInSameImage";
-    boolean success = Commands.setBundlePath(mavenRoot, "Images");
+    boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
     start();
     Image img = new Image(imageNameDefault);
@@ -306,7 +305,7 @@ public class TestCoreBasic {
   @Test
   public void test_42_findImageInOtherImage() {
     currentTest = "test_42_findImageInOtherImage";
-    boolean success = Commands.setBundlePath(mavenRoot, "Images");
+    boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
     start();
     Image target = new Image(imageNameDefault);
@@ -332,6 +331,7 @@ public class TestCoreBasic {
     }
     assert success;
   }
+  //</editor-fold>
 
   //<editor-fold desc="ignored">
   @Ignore
@@ -353,9 +353,9 @@ public class TestCoreBasic {
     boolean assertVal = true;
     currentTest = "test_90_popat";
     if (!SX.onTravisCI()) {
-      Commands.popat(300, 300);
-      Commands.popup("Use mouse to click OK", "testing popat");
-      Element loc = Mouse.at();
+      Do.popat(300, 300);
+      Do.popup("Use mouse to click OK", "testing popat");
+      Element loc = Element.at();
       result = String.format("clicked at (%d, %d)", loc.x, loc.y);
       assertVal = loc.x > 300 && loc.x < 450;
     } else {
