@@ -4,7 +4,8 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.*;
+import com.sikulix.api.By;
+import com.sikulix.api.Element;
 import org.json.JSONObject;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -487,7 +488,17 @@ public abstract class SXElement implements Comparable<SXElement>{
     boolean success = elem.isValid();
     success &= elem.hasContent();
     if (success) {
-      doShow(elem, overlay, time);
+      List<Element> overlays = new ArrayList<Element>();
+              overlays.add(overlay);
+      doShow(elem, overlays, time);
+    }
+  }
+
+  protected static void showAll(Element elem, List<Element> overlays, int time) {
+    boolean success = elem.isValid();
+    success &= elem.hasContent();
+    if (success) {
+      doShow(elem, overlays, time);
     }
   }
 
@@ -495,14 +506,16 @@ public abstract class SXElement implements Comparable<SXElement>{
     return new org.opencv.core.Point(elem.x + off, elem.y + off);
   }
 
-  private static void doShow(Element elem, Element overlay, int time) {
+  private static void doShow(Element elem, List<Element> overlays, int time) {
     if (!elem.hasContent()) {
       return;
     }
     Mat imgMat = elem.getContent().clone();
-    if (SX.isNotNull(overlay)) {
-      Imgproc.rectangle(imgMat, cvPoint(overlay, -4), cvPoint(overlay.getBottomRight(), 3),
-              new Scalar(0, 0, 255), 3);
+    if (SX.isNotNull(overlays) && overlays.size() > 0) {
+      for (Element overlay : overlays) {
+        Imgproc.rectangle(imgMat, cvPoint(overlay, -4), cvPoint(overlay.getBottomRight(), 3),
+                new Scalar(0, 0, 255), 3);
+      }
     }
     BufferedImage bImg = getBufferedImage(imgMat, dotPNG);
     JFrame frImg = new JFrame();

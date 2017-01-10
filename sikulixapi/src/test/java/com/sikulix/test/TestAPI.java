@@ -12,6 +12,7 @@ import org.opencv.core.Mat;
 
 import java.io.File;
 import java.util.Date;
+import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestAPI {
@@ -301,6 +302,7 @@ public class TestAPI {
     result = end() + result;
     assert success;
   }
+  //</editor-fold>
 
   @Test
   public void test_42_findImageInOtherImage() {
@@ -310,7 +312,7 @@ public class TestAPI {
     start();
     Image target = new Image(imageNameDefault);
     success &= target.isValid();
-    Image base = new Image("shot");
+    Image base = new Image("shot-tile");
     success &= base.isValid();
     Finder finder = null;
     if (success) {
@@ -331,7 +333,37 @@ public class TestAPI {
     }
     assert success;
   }
-  //</editor-fold>
+
+  @Test
+  public void test_43_findAllInImage() {
+    currentTest = "test_43_findAllInImage";
+    boolean success = Do.setBundlePath(mavenRoot, "Images");
+    result = "Not Found";
+    start();
+    Image target = new Image(imageNameDefault);
+    success &= target.isValid();
+    Image base = new Image("shot-tile");
+    int expected = (int) (base.w / 200) * (int) (base.h / 200);
+    success &= base.isValid();
+    Finder finder = null;
+    if (success) {
+      finder = new Finder(base);
+      success &= finder.isValid();
+    }
+    List<Element> elements = null;
+    if (success) {
+      elements = finder.findAll(target);
+      success &= elements.size() == expected;
+    }
+    if (success) {
+      result = String.format(" # = %d in (%d x %d)", elements.size(), base.w, base.h);
+    }
+    result = end() + result;
+    if (success) {
+      base.showMatches();
+    }
+    assert success;
+  }
 
   //<editor-fold desc="ignored">
   @Ignore

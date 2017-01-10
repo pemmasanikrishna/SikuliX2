@@ -218,6 +218,10 @@ public class Element extends SXElement {
   public void showMatch() {
     show(this, getLastMatch(), showTime);
   }
+
+  public void showMatches() {
+    showAll(this, this.getLastMatches(), showTime);
+  }
   //</editor-fold>
 
   //<editor-fold desc="***** lastCapture">

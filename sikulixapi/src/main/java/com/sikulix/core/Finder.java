@@ -37,26 +37,28 @@ public class Finder {
     }
   }
 
+  private enum FindType {
+    ONE, ALL
+  }
+
   public boolean isValid() {
     return !base.empty();
   }
 
   public Element find(Element target) {
-    FindResult findResult = doFind(target);
+    FindResult findResult = doFind(target, FindType.ONE);
     if (SX.isNotNull(findResult) && findResult.hasNext()) {
       baseElement.setLastMatch(findResult.next());
       return baseElement.getLastMatch();
     }
-    return null;
+    return new Element();
   }
 
-  public List<Element> findAll(Target target) {
-    FindResult findResult = doFind(target);
-    if (SX.isNotNull(findResult) && findResult.hasNext()) {
-      target.setLastMatches(findResult.getMatches());
-      return target.getLastMatches();
-    }
-    return null;
+  public List<Element> findAll(Element target) {
+    FindResult findResult = doFind(target, FindType.ALL);
+    List<Element> matches = findResult.getMatches();
+    baseElement.setLastMatches(matches);
+    return matches;
   }
 
   public Element findBest(List<Element> targets) {
@@ -91,9 +93,10 @@ public class Finder {
   private final double[] resizeLevels = new double[]{1f, 0.4f};
   private int resizeMaxLevel = resizeLevels.length - 1;
   private double resizeMinSim = 0.8;
-  private boolean useOriginal = false;
+  private boolean isCheckLastSeen = false;
 
-  private FindResult doFind(Element elem) {
+  private FindResult doFind(Element elem, FindType findType) {
+    log.on(SXLog.TRACE);
     if (!elem.isTarget()) {
       return null;
     }
@@ -105,12 +108,12 @@ public class Finder {
     long begin_t = 0;
     Core.MinMaxLocResult mMinMax = null;
     FindResult findResult = null;
-    if (!useOriginal && SX.isOption("CheckLastSeen") && target.getLastSeen().isValid()) {
+    if (FindType.ONE.equals(findType) && !isCheckLastSeen && SX.isOption("CheckLastSeen") && target.getLastSeen().isValid()) {
       begin_t = new Date().getTime();
       Finder lastSeenFinder = new Finder(target.getLastSeen());
-      lastSeenFinder.useOriginal = true;
+      lastSeenFinder.isCheckLastSeen = true;
       target = new Target(target, target.getLastSeen().getScore() - 0.01);
-      findResult = lastSeenFinder.doFind(target);
+      findResult = lastSeenFinder.doFind(target, FindType.ONE);
       if (findResult.hasNext()) {
         log.trace("doFind: checkLastSeen: success %d msec", new Date().getTime() - begin_t);
         return findResult;
@@ -119,7 +122,7 @@ public class Finder {
       }
     }
     double rfactor = 0;
-    if (target.getResizeFactor() > resizeMinFactor) {
+    if (FindType.ONE.equals(findType) && target.getResizeFactor() > resizeMinFactor) {
       // ************************************************* search in downsized
       begin_t = new Date().getTime();
       double imgFactor = target.getResizeFactor();
@@ -141,7 +144,7 @@ public class Finder {
       }
       log.trace("doFind: down: %.2f%% %d msec", mMinMax.maxVal, new Date().getTime() - begin_t);
     }
-    if (mMinMax != null) {
+    if (FindType.ONE.equals(findType) || mMinMax != null) {
       // ************************************* check after downsized success
       if (base.size().equals(target.getContent().size())) {
         // trust downsized result, if images have same size
@@ -170,11 +173,11 @@ public class Finder {
     begin_t = new Date().getTime();
     result = doFindMatch(target, base, null);
     mMinMax = Core.minMaxLoc(result);
+    if (!isCheckLastSeen || FindType.ALL.equals(findType)) {
+      log.trace("doFind: search in original: %d msec", new Date().getTime() - begin_t);
+    }
     if (mMinMax.maxVal > target.getWantedScore()) {
       return new FindResult(result, target);
-    }
-    if (!useOriginal) {
-      log.trace("doFind: search in original: %d msec", new Date().getTime() - begin_t);
     }
     return null;
   }
