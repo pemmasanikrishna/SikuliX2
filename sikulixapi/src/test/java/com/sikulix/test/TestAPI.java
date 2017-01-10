@@ -14,11 +14,11 @@ import java.io.File;
 import java.util.Date;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class TestCoreBasic {
+public class TestAPI {
 
   //<editor-fold desc="housekeeping">
   static final int logLevel = SX.INFO;
-  static SXLog log = SX.getLogger("TestCoreBasic");
+  static SXLog log = SX.getLogger("TestAPI");
   private Object result = "";
   private String currentTest = "";
   private static int nTest = 0;
@@ -34,8 +34,8 @@ public class TestCoreBasic {
   private static String imageNameDefault = "sikulix2";
   private static String imageDefault = imageNameDefault + ".png";
 
-  public TestCoreBasic() {
-    log.trace("TestCoreBasic()");
+  public TestAPI() {
+    log.trace("TestAPI()");
   }
 
   private String set(String form, Object... args) {
