@@ -29,8 +29,8 @@ Documentation project: [ReadTheDocs::SikuliX2](http://sikulix2.readthedocs.org/)
 
 the API to be used in Java and Java aware scripting languages
 
- - the new features will be in **com.sikulix.core** and **com.sikulix.api**
- - the current API (up to 1.1.x) in **org.sikuli.script** will be kept for backwards compatibility, but rerouted to **com.sikulix.api** as needed
+ - the new public features are in **com.sikulix.api**
+ - the current API (up to 1.1.x) in **org.sikuli.script** will be kept for backwards compatibility, but rerouted to **com.sikulix.api/.core** as needed
  - new projects using Java should use the API as provided by **com.sikulix.api**
 
 Prerequisites for development and testing
