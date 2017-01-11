@@ -1,9 +1,9 @@
 # SX version info
 sxversion=${project.version}
 sxbuild=${timestamp}
-sxlocalrepo=${sxrepo}
-sxjython=${sxjython}
-sxjruby=${sxjruby}
+sxlocalrepo=
+sxjython=2.7.0
+sxjruby=9.1.6.0
 sxjedit=5.3.0
 
 # deprecated use set/getBundlePath()

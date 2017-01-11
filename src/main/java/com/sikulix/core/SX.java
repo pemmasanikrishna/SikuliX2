@@ -1145,8 +1145,8 @@ public class SX {
       sxBuild = sxBuild.replaceAll("_", "");
       sxBuild = sxBuild.replaceAll("\\:", "");
       String sxlocalrepo = Content.slashify(sxOptions.getString("sxlocalrepo"), true);
-//      String sxJythonVersion = sxOptions.getString("sxjython");
-//      String sxJRubyVersion = sxOptions.getString("sxjruby");
+      String sxJythonVersion = sxOptions.getString("sxjython");
+      String sxJRubyVersion = sxOptions.getString("sxjruby");
 
       debug("getSXVERSION: version: %s build: %s", sxVersion, sxBuild);
       sxStamp = String.format("%s_%s", sxVersion, sxBuild);
@@ -1157,12 +1157,12 @@ public class SX {
       // used for download of development versions (nightly builds)
       String dlDevLink = "http://nightly.sikuli.de/";
 
-//      sxJythonMaven = "org/python/jython-standalone/"
-//              + sxJythonVersion + "/jython-standalone-" + sxJythonVersion + ".jar";
-//      sxJython = sxlocalrepo + sxJythonMaven;
-//      sxJRubyMaven = "org/jruby/jruby-complete/"
-//              + sxJRubyVersion + "/jruby-complete-" + sxJRubyVersion + ".jar";
-//      sxJRuby = sxlocalrepo + sxJRubyMaven;
+      sxJythonMaven = "org/python/jython-standalone/"
+              + sxJythonVersion + "/jython-standalone-" + sxJythonVersion + ".jar";
+      sxJython = sxlocalrepo + sxJythonMaven;
+      sxJRubyMaven = "org/jruby/jruby-complete/"
+              + sxJRubyVersion + "/jruby-complete-" + sxJRubyVersion + ".jar";
+      sxJRuby = sxlocalrepo + sxJRubyMaven;
       tessData.put("eng", "http://download.sikulix.com/tesseract-ocr-3.02.eng.tar.gz");
 
       sxLibsCheckName = String.format(sxLibsCheckStamp, sxStamp);
