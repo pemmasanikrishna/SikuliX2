@@ -26,7 +26,7 @@ public class TestAPI {
   private static boolean testLimit = false;
 
   private static String defaultImagePath = "Images";
-  private static String mavenRoot = "target/test-classes";
+  private static String mavenRoot = "target/classes";
   private static String mavenImagePath = mavenRoot + "/" + defaultImagePath;
   private static String jarImagePathDefault = "." + "/" + defaultImagePath;
   private static String jarImagePathClass = "TestJar" + "/" + defaultImagePath;

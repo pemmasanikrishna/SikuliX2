@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -251,6 +252,13 @@ public class Image extends Element {
     }
     URL urlPath = SX.makeURL(args);
     if (SX.isSet(urlPath)) {
+      if ("file".equals(urlPath.getProtocol()) && urlPath.getPath().contains("test-classes")) {
+        try {
+          urlPath = new URL("file", null, 0, urlPath.getPath().replace("test-", ""));
+        } catch (MalformedURLException e) {
+          log.error("setBundlePath: hack(test-classes -> classes) did not work");
+        }
+      }
       imagePath.set(0, urlPath);
       return true;
     }

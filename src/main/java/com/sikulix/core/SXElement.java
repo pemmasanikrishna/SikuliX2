@@ -502,11 +502,11 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   protected static void show(Element elem, Element overlay, int time) {
-    boolean success = elem.isValid();
-    success &= elem.hasContent();
-    if (success) {
+    if (elem.hasContent()) {
       List<Element> overlays = new ArrayList<Element>();
-              overlays.add(overlay);
+      if (SX.isNotNull(overlay)) {
+        overlays.add(overlay);
+      }
       doShow(elem, overlays, time);
     }
   }
