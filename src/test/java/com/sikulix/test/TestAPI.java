@@ -300,7 +300,6 @@ public class TestAPI {
     result = end() + result;
     assert success;
   }
-  //</editor-fold>
 
   @Test
   public void test_42_findImageInOtherImage() {
@@ -363,11 +362,71 @@ public class TestAPI {
     }
     assert success;
   }
+  //</editor-fold>
+
+  @Test
+  public void test_50_captureDefaultScreen() {
+    currentTest = "test_50_captureDefaultScreen";
+    if (!SX.isHeadless()) {
+      start();
+      Image img = Do.capture();
+      result = end() + img.toString();
+      assert img.hasContent();
+    } else {
+      result = "headless: not tested";
+    }
+    assert true;
+  }
+
+  @Test
+  public void test_51_capturePartOfDefaultScreen() {
+    currentTest = "test_51_capturePartOfDefaultScreen";
+    if (!SX.isHeadless()) {
+      start();
+      Image img = Do.capture(new Element(50, 50, 200));
+      result = end() + img.toString();
+      if (img.hasContent()) {
+        if (log.isLevel(SXLog.DEBUG)) {
+          img.show();
+        }
+        assert true;
+        return;
+      }
+      assert false;
+    } else {
+      result = "headless: not tested";
+      assert true;
+    }
+  }
+
+  @Test
+  public void test_52_findInDefaultScreen() {
+    currentTest = "test_52_findInDefaultScreen";
+    if (!SX.isHeadless()) {
+      start();
+      Image base = Do.capture();
+      Image img = Do.capture(new Element(50, 50, 200));
+      Element match = new Element();
+      if (base.hasContent() && img.hasContent()) {
+        Finder finder = new Finder(base);
+        match = finder.find(img);
+        assert match.isValid();
+        result = end() + match.toString();
+        base.showMatch();
+
+        return;
+      }
+      assert false;
+    } else {
+      result = "headless: not tested";
+    }
+    assert true;
+  }
 
   //<editor-fold desc="ignored">
   @Ignore
-  public void test_50_nativeHook() {
-    currentTest = "test_50_nativeHook";
+  public void test_60_nativeHook() {
+    currentTest = "test_60_nativeHook";
     if (!SX.isHeadless()) {
       NativeHook hook = NativeHook.start();
       SX.pause(3);

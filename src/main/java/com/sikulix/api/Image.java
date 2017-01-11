@@ -61,6 +61,7 @@ public class Image extends Element {
     setContent(makeMat(bimg));
     timeToLoad = new Date().getTime() - start;
     init(0, 0, getContent().width(), getContent().height());
+    setAttributes();
   }
 
   public Image(Mat mat) {
@@ -73,6 +74,7 @@ public class Image extends Element {
       timeToLoad = new Date().getTime() - start;
     }
     init(0, 0, getContent().width(), getContent().height());
+    setAttributes();
   }
 
   public Image(String fpImg) {
@@ -200,6 +202,9 @@ public class Image extends Element {
   }
 
   private void setAttributes() {
+    if (!hasContent()) {
+      return;
+    }
     plainColor = false;
     blackColor = false;
     resizeFactor = Math.min(((double) getContent().width()) / resizeMinDownSample,

@@ -4,15 +4,11 @@
 
 package com.sikulix.api;
 
-import com.sikulix.core.Content;
-import com.sikulix.core.SX;
-import com.sikulix.core.SXLog;
-import com.sikulix.core.SXElement;
+import com.sikulix.core.*;
 //import com.sikulix.scripting.JythonHelper;
 //import com.sikulix.scripting.SXRunner;
 import com.sikulix.util.FileChooser;
 import org.sikuli.script.Key;
-import com.sikulix.core.HotkeyListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,7 +23,6 @@ public class Do {
 
   private static SXLog log = SX.getLogger("SX.Do");
   private static String klazz = Do.class.getName();
-  ;
 
   //<editor-fold desc="SX Do popat">
   private static Point locPopAt = null;
@@ -870,8 +865,20 @@ public class Do {
   }
   //</editor-fold>
 
+  //<editor-fold desc="Screen related">
   private static Element defaultScreenRegion = new Element(SX.getMonitor().getBounds());
   private static Element defaultRegion = defaultScreenRegion;
+
+  private static LocalRobot getLocalRobot() {
+    if (SX.isNull(localRobot)) try {
+      localRobot = new LocalRobot();
+    } catch (AWTException e) {
+      log.error("getLocalRobot: %s", e.getMessage());
+    }
+    return localRobot;
+  }
+
+  private static LocalRobot localRobot = null;
 
   public static Element use() {
     defaultRegion = defaultScreenRegion;
@@ -888,6 +895,21 @@ public class Do {
     return defaultRegion;
   }
 
+  public static Image capture() {
+    return capture(defaultRegion);
+  }
+
+  public static Image capture(Element region) {
+    if (SX.isNull(region)) region = defaultRegion;
+    Image imgCapture = new Image();
+    if (!region.isSpecial()) {
+      imgCapture = getLocalRobot().captureScreen(region.getRectangle());
+    }
+    return imgCapture;
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="actions like click">
   public static Element click(Object... args) {
     Target target = new Target(args);
     if (target.isValid()) {
@@ -977,4 +999,5 @@ public class Do {
       return null;
     }
   }
+  //</editor-fold>
 }

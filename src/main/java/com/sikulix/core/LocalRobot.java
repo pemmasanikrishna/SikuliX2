@@ -118,7 +118,7 @@ public class LocalRobot extends Robot implements IRobot {
   @Override
   public Image captureScreen(Rectangle rect) {
     BufferedImage bImg = createScreenCapture(rect);
-    log.trace("RobotDesktop: captureScreen: [%d,%d, %dx%d]",
+    log.trace("captureScreen: [%d,%d, %dx%d]",
             rect.x, rect.y, rect.width, rect.height);
     return new Image(bImg);
   }
