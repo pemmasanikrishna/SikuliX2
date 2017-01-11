@@ -47,6 +47,11 @@ public class Image extends Element {
       setContent(new Mat());
     }
     urlImg = elem.urlImg;
+    setName(elem.getName());
+  }
+
+  protected void initAfter() {
+    initName(eClazz);
   }
 
   public Image(BufferedImage bimg) {
@@ -73,12 +78,14 @@ public class Image extends Element {
     this();
     setContent(fpImg);
     init(0, 0, getContent().width(), getContent().height());
+    setName(getNameFromURL(urlImg));
   }
 
   public Image(URL url) {
     this();
     setContent(url);
     init(0, 0, getContent().width(), getContent().height());
+    setName(getNameFromURL(urlImg));
   }
 
   public Image(Element elem) {
@@ -150,6 +157,19 @@ public class Image extends Element {
     }
   }
 
+  private String getNameFromURL(URL url) {
+    String name = getName();
+    if (SX.isNotNull(url)) {
+      name = url.getPath().replace("file:", "");
+      name = new File(name).getName();
+      int iDot = name.indexOf(".");
+      if (iDot > -1) {
+        name = name.substring(0, iDot);
+      }
+    }
+    return name;
+  }
+
   public Image reset() {
     if (isValid()) {
       setContent(urlImg);
@@ -172,9 +192,9 @@ public class Image extends Element {
 
   public boolean isMeanColorEqual(Color otherMeanColor) {
     Color col = getMeanColor();
-    int r = (col.getRed() - otherMeanColor.getRed()) *  (col.getRed() - otherMeanColor.getRed());
-    int g = (col.getGreen() - otherMeanColor.getGreen()) *  (col.getGreen() - otherMeanColor.getGreen());
-    int b = (col.getBlue() - otherMeanColor.getBlue()) *  (col.getBlue() - otherMeanColor.getBlue());
+    int r = (col.getRed() - otherMeanColor.getRed()) * (col.getRed() - otherMeanColor.getRed());
+    int g = (col.getGreen() - otherMeanColor.getGreen()) * (col.getGreen() - otherMeanColor.getGreen());
+    int b = (col.getBlue() - otherMeanColor.getBlue()) * (col.getBlue() - otherMeanColor.getBlue());
     return Math.sqrt(r + g + b) < minThreshhold;
   }
 
@@ -395,6 +415,7 @@ public class Image extends Element {
    * Portable image format - *.pbm, *.pgm, *.ppm (always supported) <br>
    * Sun rasters - *.sr, *.ras (always supported) <br>
    * TIFF files - *.tiff, *.tif (see the *Notes* section)
+   *
    * @param name an image file name
    * @return the name optionally .png added if no ending
    */
@@ -416,6 +437,7 @@ public class Image extends Element {
   //</editor-fold>
 
   //<editor-fold defaultstate="collapsed" desc="*** helpers">
+
   /**
    * resize the image's CV-Mat by factor
    *

@@ -49,35 +49,6 @@ public class FindResult implements Iterator<Element> {
   private int currentX = -1;
   private int currentY = -1;
 
-//  public synchronized boolean hasNext_old() {
-//    boolean success = false;
-//    if (currentScore < 0) {
-//      width = target.w;
-//      height = target.h;
-//      givenScore = target.getScore();
-//      if (givenScore < 0.95) {
-//        margin = 4;
-//      } else if (givenScore < 0.85) {
-//        margin = 8;
-//      } else if (givenScore < 0.71) {
-//        margin = 16;
-//      }
-//    }
-//    if (resultMinMax == null) {
-//      resultMinMax = Core.minMaxLoc(result);
-//      currentScore = resultMinMax.maxVal;
-//      currentX = (int) resultMinMax.maxLoc.x;
-//      currentY = (int) resultMinMax.maxLoc.y;
-//      if (firstScore == 0) {
-//        firstScore = currentScore;
-//      }
-//    }
-//    if (currentScore > target.getScore() && currentScore > firstScore - scoreMaxDiff) {
-//      success = true;
-//    }
-//    return success;
-//  }
-
   public synchronized boolean hasNext() {
     resultMinMax = Core.minMaxLoc(result);
     currentScore = resultMinMax.maxVal;
@@ -91,20 +62,6 @@ public class FindResult implements Iterator<Element> {
     }
     return false;
   }
-
-//  public synchronized Element next_old() {
-//    Element match = null;
-//    if (hasNext()) {
-//      match = new Element(new Element(currentX + offX , currentY + offY, width, height), currentScore);
-//      int newX = Math.max(currentX - margin, 0);
-//      int newY = Math.max(currentY - margin, 0);
-//      int newXX = Math.min(newX + 2 * margin, result.cols());
-//      int newYY = Math.min(newY + 2 * margin, result.rows());
-//      result.colRange(newX, newXX).rowRange(newY, newYY).setTo(new Scalar(0f));
-//      resultMinMax = null;
-//    }
-//    return match;
-//  }
 
   public synchronized Element next() {
     Element match = null;
@@ -129,15 +86,37 @@ public class FindResult implements Iterator<Element> {
     return 2;
   }
 
+  double bestScore = 0;
+  double meanScore = 0;
+  double stdDevScore = 0;
+
   public List<Element> getMatches() {
     if (hasNext()) {
-      List<Element> listMatches = new ArrayList<Element>();
+      List<Element> matches = new ArrayList<Element>();
+      List<Double> scores = new ArrayList<>();
       while (hasNext()) {
-        listMatches.add(next());
+        Element match = next();
+        meanScore = (meanScore * matches.size() + match.getScore()) / (matches.size() + 1);
+        bestScore = Math.max(bestScore, match.getScore());
+        matches.add(match);
+        scores.add(match.getScore());
       }
-      return listMatches;
+      stdDevScore = calcStdDev(scores, meanScore);
+      return matches;
     }
     return null;
+  }
+
+  public double[] getScores() {
+    return new double[] {bestScore, meanScore, stdDevScore};
+  }
+
+  private static double calcStdDev(List<Double> doubles, double mean) {
+    double stdDev = 0;
+    for (double doubleVal : doubles) {
+      stdDev += (doubleVal - mean) * (doubleVal - mean);
+    }
+    return Math.sqrt(stdDev / doubles.size());
   }
 
   @Override

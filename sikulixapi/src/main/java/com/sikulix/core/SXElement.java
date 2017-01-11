@@ -107,6 +107,16 @@ public abstract class SXElement implements Comparable<SXElement>{
   public Integer w = -1;
   public Integer h = -1;
 
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  private String name = "noName";
+
 //  protected boolean onRemoteScreen = false;
 
   public int getX() { return x;}
@@ -131,6 +141,15 @@ public abstract class SXElement implements Comparable<SXElement>{
       w = _w < 0 ? 0 : _w;
       h = _h < 0 ? 0 : _h;
     }
+    initAfter();
+  }
+
+  protected void initAfter() {
+    initName(eClazz);
+  }
+
+  protected void initName(eType type) {
+    setName(String.format("%s_%04d_%04d_%04dx%04d", type, x, y, w, h));
   }
 
   protected void init(int[] rect) {
@@ -373,13 +392,11 @@ public abstract class SXElement implements Comparable<SXElement>{
       return 0;
     }
     if (elem.x > x) {
-      return 1;
-    } else if (elem.x == x) {
-      if (elem.y > y) {
-        return 1;
-      }
+      return -1;
+    } else if (elem.x == x && elem.y > y) {
+        return -1;
     }
-    return -1;
+    return 1;
   }
   //</editor-fold>
 

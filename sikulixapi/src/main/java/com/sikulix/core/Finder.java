@@ -57,7 +57,10 @@ public class Finder {
   public List<Element> findAll(Element target) {
     FindResult findResult = doFind(target, FindType.ALL);
     List<Element> matches = findResult.getMatches();
+    Collections.sort(matches);
+    Collections.sort(matches);
     baseElement.setLastMatches(matches);
+    baseElement.setLastScores(findResult.getScores());
     return matches;
   }
 

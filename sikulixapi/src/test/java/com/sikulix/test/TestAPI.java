@@ -197,21 +197,19 @@ public class TestAPI {
     Target tgt = new Target();
     result += " Target();";
     assert SXElement.eType.TARGET.equals(tgt.getType());
-    if (!SX.isLinux()) {
-      tgt = new Target(img);
-      result += " Target(image);";
-      assert SXElement.eType.TARGET.equals(tgt.getType());
-      tgt = new Target(tgt);
-      result += " Target(target);";
-      assert SXElement.eType.TARGET.equals(tgt.getType());
-      Mat aMat = tgt.getContent();
-      tgt = new Target(aMat);
-      result += " Target(mat);";
-      assert SXElement.eType.TARGET.equals(tgt.getType());
-      tgt = new Target(img, 0.95, new Element(2, 3));
-      result += " Target(image, 0.95, new Element(2,3));";
-      assert SXElement.eType.TARGET.equals(tgt.getType());
-    }
+    tgt = new Target(img);
+    result += " Target(image);";
+    assert SXElement.eType.TARGET.equals(tgt.getType());
+    tgt = new Target(tgt);
+    result += " Target(target);";
+    assert SXElement.eType.TARGET.equals(tgt.getType());
+    Mat aMat = tgt.getContent();
+    tgt = new Target(aMat);
+    result += " Target(mat);";
+    assert SXElement.eType.TARGET.equals(tgt.getType());
+    tgt = new Target(img, 0.95, new Element(2, 3));
+    result += " Target(image, 0.95, new Element(2,3));";
+    assert SXElement.eType.TARGET.equals(tgt.getType());
   }
 
   @Test
@@ -222,7 +220,7 @@ public class TestAPI {
     Image img = new Image(imageNameDefault);
     success &= img.isValid();
     if (success) {
-      result = set("(%s) ImageURL: " + img.getURL(), img.timeToLoad);
+      result = set("(%s) Image %s from " + img.getURL(), img.timeToLoad, img.getName());
       if (log.isLevel(SXLog.DEBUG)) {
         img.show();
       }
@@ -238,7 +236,7 @@ public class TestAPI {
     Image img = new Image(imageNameDefault);
     success &= img.isValid();
     if (success) {
-      result = set("(%s) ImageURL: " + img.getURL(), img.timeToLoad);
+      result = set("(%s) Image %s from " + img.getURL(), img.timeToLoad, img.getName());
       if (log.isLevel(SXLog.DEBUG)) {
         img.show();
       }
@@ -254,7 +252,7 @@ public class TestAPI {
     Image img = new Image(imageNameDefault);
     success &= img.isValid();
     if (success) {
-      result = set("(%s) ImageURL: " + img.getURL(), img.timeToLoad);
+      result = set("(%s) Image %s from " + img.getURL(), img.timeToLoad, img.getName());
       if (log.isLevel(SXLog.DEBUG)) {
         img.show();
       }
@@ -356,7 +354,8 @@ public class TestAPI {
       success &= elements.size() == expected;
     }
     if (success) {
-      result = String.format(" # = %d in (%d x %d)", elements.size(), base.w, base.h);
+      result = String.format("#%d in (%dx%d) %% %.2f +- %.4f]", elements.size(),
+              base.w, base.h, 100 * base.getLastScores()[0], 100 * base.getLastScores()[2]);
     }
     result = end() + result;
     if (success) {

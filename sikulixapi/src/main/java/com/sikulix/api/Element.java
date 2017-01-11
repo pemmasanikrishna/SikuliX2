@@ -73,6 +73,10 @@ public class Element extends SXElement {
   protected void copy(Element elem) {
   }
 
+  protected void initAfter() {
+    initName(eClazz);
+  }
+
   public Element(int x, int y, int w, int h) {
     setClazz();
     init(x, y, w, h);
@@ -291,6 +295,18 @@ public class Element extends SXElement {
 
   public java.util.List<Element> getLastMatches() {
     return lastMatches;
+  }
+
+  private double[] lastScores = new double[] {-1, -1, -1};
+
+  public void setLastScores(double[] scores) {
+    for (int i = 0; i<scores.length; i++) {
+      lastScores[i] = scores[i];
+    }
+  }
+
+  public double[] getLastScores() {
+    return lastScores;
   }
 
   public void setLastMatches(java.util.List<Element> lastMatches) {

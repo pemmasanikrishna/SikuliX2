@@ -27,6 +27,10 @@ public class Target extends Image {
     super.copy(elem);
   }
 
+  protected void initAfter() {
+    initName(eClazz);
+  }
+
   public Target(BufferedImage bimg) {
     super(bimg);
   }
