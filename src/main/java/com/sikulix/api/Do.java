@@ -11,12 +11,18 @@ import com.sikulix.util.FileChooser;
 import org.sikuli.script.Key;
 
 import javax.swing.*;
-import java.awt.*;
+import java.awt.AWTException;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.datatransfer.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.StringTokenizer;
 
 public class Do {
@@ -868,6 +874,7 @@ public class Do {
   //<editor-fold desc="Screen related">
   private static Element defaultScreenRegion = new Element(SX.getMonitor().getBounds());
   private static Element defaultRegion = defaultScreenRegion;
+  private static Element allMonitorsRegion = new Element(SX.getAllMonitors());
 
   private static LocalRobot getLocalRobot() {
     if (SX.isNull(localRobot)) try {
@@ -879,6 +886,29 @@ public class Do {
   }
 
   private static LocalRobot localRobot = null;
+
+  public static Element on(int monitor) {
+    return getScreenRegion(monitor);
+  }
+
+  private static List<Element> screenRegions = new ArrayList<>();
+
+  private static Element getScreenRegion(int monitor) {
+    if (screenRegions.size() == 0) {
+      for (int i = 0; i < SX.getNumberOfMonitors(); i++) {
+        screenRegions.add(new Element(SX.getMonitor(i)));
+      }
+    }
+    if (monitor > -1 && monitor < SX.getNumberOfMonitors()) {
+      return screenRegions.get(monitor);
+    } else {
+      return screenRegions.get(0);
+    }
+  }
+
+  public static Element all() {
+    return allMonitorsRegion;
+  }
 
   public static Element use() {
     defaultRegion = defaultScreenRegion;
@@ -900,8 +930,11 @@ public class Do {
   }
 
   public static Image capture(Element region) {
-    if (SX.isNull(region)) region = defaultRegion;
+    if (SX.isNull(region)) {
+      region = defaultRegion;
+    }
     Image imgCapture = new Image();
+    //TODO capture special screens
     if (!region.isSpecial()) {
       imgCapture = getLocalRobot().captureScreen(region.getRectangle());
     }
@@ -909,36 +942,56 @@ public class Do {
   }
   //</editor-fold>
 
-  //<editor-fold desc="actions like click">
-  public static Element click(Object... args) {
-    Target target = new Target(args);
-    if (target.isValid()) {
-      Element point = target.getTarget();
-      log.trace("clicking: %s", point);
-      return point;
+  //<editor-fold desc="actions like find, wait, click">
+  public static Element find(Object... args) {
+    Element where = new EvaluateTarget().get(args);
+    if (where.hasMatch()) {
+      return where.getLastMatch();
     }
-    return null;
+    return new Element();
   }
 
-  /*
-  (what)
-  Image
-  Pattern
-  Element
+  public static Element wait(Object args) {
+    EvaluateTarget evalTarget = new EvaluateTarget();
+    Element where = evalTarget.get();
+    if (where.hasMatch()) {
+      return where.getLastMatch();
+    }
+    while (evalTarget.shouldWait()) {
+      evalTarget.repeat();
+      if (where.hasMatch()) {
+        return where.getLastMatch();
+      }
+    }
+    return new Element();
+  }
 
-  (what, where)
-          Image
-          Element
-   */
+  public static List<Element> findAll(Object... args) {
+    Element base = new EvaluateTarget("ALL").get(args);
+    if (base.hasMatches()) {
+      return base.getLastMatches();
+    }
+    return new ArrayList<>();
+  }
 
-  private static class Target {
-    com.sikulix.api.Target what = null;
+  private static class EvaluateTarget {
+    Element what = null;
     Element where = null;
-    Element target = null;
-    boolean needFind = false;
+    double waitTime = -1;
+    Element target = new Element();
+    String type = "";
+    Finder finder = null;
+    long startTime = new Date().getTime();
 
-    Target(Object... args) {
-      String form = "Do.Target: ";
+    protected EvaluateTarget() {
+    }
+
+    protected EvaluateTarget(String type) {
+      this.type = type;
+    }
+
+    protected Element get(Object... args) {
+      String form = "EvaluateTarget: ";
       for (Object arg : args) {
         form += "%s, ";
       }
@@ -948,55 +1001,80 @@ public class Do {
       if (args.length > 0) {
         args0 = args[0];
         if (args0 instanceof String) {
-          needFind = true;
-          what = new com.sikulix.api.Target((String) args0);
+          what = new Image((String) args0);
+        } else if (args0 instanceof Element) {
+          what = (Element) args0;
+        } else {
+          log.error("EvaluateTarget: args0 invalid: %s", args0);
+          what = new Element();
         }
-        if (args0 instanceof Element) {
-          elem0 = (Element) args0;
-          if (elem0.isOnScreen()) {
-            target = elem0;
-            where = elem0;
-          } else if (elem0.isTarget()) {
-            needFind = true;
-            where = defaultRegion;
-            what = new com.sikulix.api.Target((com.sikulix.api.Target) args0);
-            log.error("not implemented: target(Image || Pattern)");
+        if (SX.isNotNull(what) && args.length == 2) {
+          args1 = args[1];
+          if (args1 instanceof String) {
+            where = new Image((String) args1);
+          } else if (args1 instanceof Element) {
+            where = (Element) args1;
+          } else if (args1 instanceof Double) {
+            waitTime = (Double) args1;
+          } else {
+            log.error("EvaluateTarget: args0 invalid: %s", args0);
           }
-          if (args.length == 2) {
-            args1 = args[1];
-            if (needFind) {
-              if (args1 instanceof Element) {
-                elem1 = (Element) args1;
-                if (elem1.isOnScreen()) {
-                  where = new Element(elem1);
-                } else if (elem1.isImage()) {
-                  where = elem1;
-                }
-              } else if (args1 instanceof String) {
-                where = new Image((String) args1);
+        }
+        if (SX.isNotNull(what)) {
+          if (what.isTarget()) {
+            if (SX.isNull(where)) {
+              where = defaultRegion;
+            }
+            if (where.isOnScreen()) {
+              where.capture();
+            }
+            finder = new Finder(where);
+            if (finder.isValid()) {
+              target = where;
+              if (waitTime < 0) {
+                waitTime = Math.max(where.getWaitForMatch(), what.getWaitForThis());
+              }
+              if (type.isEmpty()) {
+                finder.find(what);
+              } else if (type == "ALL") {
+                finder.findAll(what);
               }
             }
-          }
-          if (needFind) {
-            target = new Element();
-            log.error("not implemented: Target.find");
+          } else {
+            target = what;
           }
         }
       }
-      if (SX.isNull(what) && SX.isNull(where)) {
-        target = defaultRegion;
+      return target;
+    }
+
+    protected void repeat() {
+      if (where.isOnScreen()) {
+        where.capture();
+      }
+
+      if (type.isEmpty()) {
+        finder.find(what);
+      } else if (type == "ALL") {
+        finder.findAll(what);
+      }
+      if (where.hasMatch() || where.hasMatches()) {
+        long waitedFor = new Date().getTime() - startTime;
+        what.setLastWaitForThis(waitedFor);
+        where.setLastWaitForMatch(waitedFor);
       }
     }
 
-    boolean isValid() {
-      return SX.isNotNull(target);
+    protected boolean shouldWait() {
+      if (waitTime < 0) {
+        return false;
+      }
+      return startTime + waitTime > new Date().getTime();
     }
 
-    Element getTarget() {
-      if (SX.isNotNull(target)) {
-        return target.getTarget();
-      }
-      return null;
+    @Override
+    public String toString() {
+      return String.format("what: %s, where: %s: wait: %d sec", what, where, waitTime);
     }
   }
   //</editor-fold>

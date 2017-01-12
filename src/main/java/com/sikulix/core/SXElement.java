@@ -29,6 +29,7 @@ import java.util.List;
 
 public abstract class SXElement implements Comparable<SXElement>{
 
+  //<editor-fold desc="housekeeping">
   static {
     SX.trace("SXElement: loadNative(SX.NATIVES.OPENCV)");
     SX.loadNative(SX.NATIVES.OPENCV);
@@ -54,6 +55,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   public eType getType() {
     return clazz;
   }
+  //</editor-fold>
 
   //<editor-fold desc="***** variants">
   public boolean isOnScreen() {
@@ -201,6 +203,50 @@ public abstract class SXElement implements Comparable<SXElement>{
     return "";
   }
 
+  //</editor-fold>
+
+  //<editor-fold desc="waiting times">
+  private double waitForThis = -1;
+  public double getWaitForThis() {
+    if (waitForThis < 0) {
+      waitForThis = SX.getOptionNumber("Settings.AutoWaitTimeout");
+    }
+    return waitForThis;
+  }
+
+  public void setWaitForThis(double waitForThis) {
+    this.waitForThis = waitForThis;
+  }
+
+  private double waitForMatch = -1;
+  public double getWaitForMatch() {
+    if (waitForMatch < 0) {
+      waitForMatch = SX.getOptionNumber("Settings.AutoWaitTimeout");
+    }
+    return waitForMatch;
+  }
+
+  public void setWaitForMatch(double waitForMatch) {
+    this.waitForMatch = waitForMatch;
+  }
+
+  private double lastWaitForThis = 0;
+  public double getLastWaitForThis() {
+    return lastWaitForThis;
+  }
+
+  public void setLastWaitForThis(double lastWaitForThis) {
+    this.lastWaitForThis = lastWaitForThis;
+  }
+
+  private double lastWaitForMatch = 0;
+  public double getLastWaitForMatch() {
+    return lastWaitForMatch;
+  }
+
+  public void setLastWaitForMatch(double lastWaitForMatch) {
+    this.lastWaitForMatch = lastWaitForMatch;
+  }
   //</editor-fold>
 
   //<editor-fold desc="TODO margin/padding">

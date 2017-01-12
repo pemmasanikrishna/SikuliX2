@@ -187,12 +187,16 @@ public class Element extends SXElement {
 
   //<editor-fold desc="***** capture, highlight">
   public Image capture() {
+    content = new Mat();
     Image img = new Image();
     if (isSpecial()) {
       SX.terminate(1, "capture: special not implemented");
     } else {
       Robot robot = SX.getSXROBOT();
       img = new Image(robot.createScreenCapture(getRectangle()));
+    }
+    if (img.hasContent()) {
+      content = img.getContent();
     }
     return img;
   }
@@ -285,6 +289,21 @@ public class Element extends SXElement {
   //</editor-fold>
 
   //<editor-fold desc="***** lastMatch">
+  public void resetMatches() {
+    lastMatch = null;
+    lastMatches = new ArrayList<Element>();
+    matchIndex = -1;
+    lastScores = new double[] {0, 0, 0};
+  }
+
+  public boolean hasMatch() {
+    return SX.isNotNull(lastMatch);
+  }
+
+  public boolean hasMatches() {
+    return lastMatches.size() > 0;
+  }
+
   public Element getLastMatch() {
     return lastMatch;
   }
@@ -297,7 +316,7 @@ public class Element extends SXElement {
     return lastMatches;
   }
 
-  private double[] lastScores = new double[] {-1, -1, -1};
+  private double[] lastScores = new double[] {0, 0, 0};
 
   public void setLastScores(double[] scores) {
     for (int i = 0; i<scores.length; i++) {

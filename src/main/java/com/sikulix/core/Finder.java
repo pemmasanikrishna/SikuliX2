@@ -46,6 +46,7 @@ public class Finder {
   }
 
   public Element find(Element target) {
+    baseElement.resetMatches();
     FindResult findResult = doFind(target, FindType.ONE);
     if (SX.isNotNull(findResult) && findResult.hasNext()) {
       baseElement.setLastMatch(findResult.next());
@@ -55,6 +56,7 @@ public class Finder {
   }
 
   public List<Element> findAll(Element target) {
+    baseElement.resetMatches();
     FindResult findResult = doFind(target, FindType.ALL);
     List<Element> matches = findResult.getMatches();
     Collections.sort(matches);
@@ -145,7 +147,7 @@ public class Finder {
           break;
         }
       }
-      log.trace("doFind: down: %.2f%% %d msec", mMinMax.maxVal, new Date().getTime() - begin_t);
+      log.trace("doFind: down: %%%.2f %d msec", 100 * mMinMax.maxVal, new Date().getTime() - begin_t);
     }
     if (FindType.ONE.equals(findType) || mMinMax != null) {
       // ************************************* check after downsized success
@@ -166,7 +168,7 @@ public class Finder {
           findResult = new FindResult(result, target, new int[]{rectSub.x, rectSub.y});
         }
         if (SX.isNotNull(findResult)) {
-          log.trace("doFind: after down: %.2f%%(%.2f%%) %d msec",
+          log.trace("doFind: after down: %%%.2f(?%%%.2f) %d msec",
                   mMinMax.maxVal * 100, target.getWantedScore() * 100, new Date().getTime() - begin_t);
           return findResult;
         }
@@ -227,11 +229,16 @@ public class Finder {
     log.trace("findAnyCollect: waiting for SubFindRuns");
     nobj = 0;
     boolean all = false;
+    int waitCount = targetCount;
     while (!all) {
       all = true;
       for (SubFindRun sub : theSubs) {
+        if (sub.hasFinished()) {
+          waitCount -= 1;
+        }
         all &= sub.hasFinished();
       }
+      SX.pause((waitCount * 10)/1000);
     }
     log.trace("findAnyCollect: SubFindRuns finished");
     nobj = 0;

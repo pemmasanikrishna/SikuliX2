@@ -11,6 +11,7 @@ import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -282,14 +283,9 @@ public class TestAPI {
     start();
     Image img = new Image(imageNameDefault);
     success &= img.isValid();
-    Finder finder = null;
-    if (success) {
-      finder = new Finder(img);
-      success &= finder.isValid();
-    }
     Element element = null;
     if (success) {
-      element = finder.find(img);
+      element = Do.find(img, img);
       success &= element.isMatch() && 0.99 < element.getScore() &&
               0 == element.x && 0 == element.y &&
               element.w == (int) img.w && element.h == (int) img.h;
@@ -300,9 +296,11 @@ public class TestAPI {
     result = end() + result;
     assert success;
   }
+  //</editor-fold>
 
   @Test
   public void test_42_findImageInOtherImage() {
+    //log.on(SXLog.DEBUG);
     currentTest = "test_42_findImageInOtherImage";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
@@ -311,21 +309,16 @@ public class TestAPI {
     success &= target.isValid();
     Image base = new Image("shot-tile");
     success &= base.isValid();
-    Finder finder = null;
-    if (success) {
-      finder = new Finder(base);
-      success &= finder.isValid();
-    }
     Element element = null;
     if (success) {
-      element = finder.find(target);
+      element = Do.find(target, base);
       success &= element.isMatch();
     }
     if (success) {
       result = element.toString();
     }
     result = end() + result;
-    if (success) {
+    if (success && log.isLevel(SXLog.DEBUG)) {
       base.showMatch();
     }
     assert success;
@@ -333,6 +326,7 @@ public class TestAPI {
 
   @Test
   public void test_43_findAllInImage() {
+    //log.on(SXLog.DEBUG);
     currentTest = "test_43_findAllInImage";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
@@ -347,22 +341,19 @@ public class TestAPI {
       finder = new Finder(base);
       success &= finder.isValid();
     }
-    List<Element> elements = null;
+    List<Element> elements = new ArrayList<>();
     if (success) {
       elements = finder.findAll(target);
       success &= elements.size() == expected;
     }
-    if (success) {
-      result = String.format("#%d in (%dx%d) %% %.2f +- %.4f]", elements.size(),
-              base.w, base.h, 100 * base.getLastScores()[0], 100 * base.getLastScores()[2]);
-    }
+    result = String.format("#%d in (%dx%d) %% %.2f +- %.4f]", elements.size(),
+            base.w, base.h, 100 * base.getLastScores()[0], 100 * base.getLastScores()[2]);
     result = end() + result;
-    if (success) {
+    if (success && log.isLevel(SXLog.DEBUG)) {
       base.showMatches();
     }
     assert success;
   }
-  //</editor-fold>
 
   @Test
   public void test_50_captureDefaultScreen() {
@@ -380,6 +371,7 @@ public class TestAPI {
 
   @Test
   public void test_51_capturePartOfDefaultScreen() {
+    //log.on(SXLog.DEBUG);
     currentTest = "test_51_capturePartOfDefaultScreen";
     if (!SX.isHeadless()) {
       start();
@@ -401,6 +393,7 @@ public class TestAPI {
 
   @Test
   public void test_52_findInDefaultScreen() {
+    //log.on(SXLog.DEBUG);
     currentTest = "test_52_findInDefaultScreen";
     if (!SX.isHeadless()) {
       start();
@@ -412,8 +405,9 @@ public class TestAPI {
         match = finder.find(img);
         assert match.isValid();
         result = end() + match.toString();
-        base.showMatch();
-
+        if (log.isLevel(SXLog.DEBUG)) {
+          base.showMatch();
+        }
         return;
       }
       assert false;
