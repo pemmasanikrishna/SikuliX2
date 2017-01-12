@@ -186,12 +186,12 @@ public class Finder {
   }
 
   private Mat doFindMatch(Element target, Mat base, Mat probe) {
-    Mat result = new Mat();
-    Mat plainBase = base;
-    Mat plainProbe = probe;
     if (SX.isNull(probe)) {
       probe = target.getContent();
     }
+    Mat result = new Mat();
+    Mat plainBase = base;
+    Mat plainProbe = probe;
     if (!target.isPlainColor()) {
       Imgproc.matchTemplate(base, probe, result, Imgproc.TM_CCOEFF_NORMED);
     } else {
