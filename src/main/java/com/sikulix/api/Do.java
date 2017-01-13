@@ -887,6 +887,10 @@ public class Do {
 
   private static LocalRobot localRobot = null;
 
+  public static Element on() {
+    return defaultRegion;
+  }
+
   public static Element on(int monitor) {
     return getScreenRegion(monitor);
   }

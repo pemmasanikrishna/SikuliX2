@@ -296,7 +296,6 @@ public class TestAPI {
     result = end() + result;
     assert success;
   }
-  //</editor-fold>
 
   @Test
   public void test_42_findImageInOtherImage() {
@@ -336,14 +335,9 @@ public class TestAPI {
     Image base = new Image("shot-tile");
     int expected = (int) (base.w / 200) * (int) (base.h / 200);
     success &= base.isValid();
-    Finder finder = null;
-    if (success) {
-      finder = new Finder(base);
-      success &= finder.isValid();
-    }
     List<Element> elements = new ArrayList<>();
     if (success) {
-      elements = finder.findAll(target);
+      elements = Do.findAll(target, base);
       success &= elements.size() == expected;
     }
     result = String.format("#%d in (%dx%d) %% %.2f +- %.4f]", elements.size(),
@@ -397,16 +391,14 @@ public class TestAPI {
     currentTest = "test_52_findInDefaultScreen";
     if (!SX.isHeadless()) {
       start();
-      Image base = Do.capture();
       Image img = Do.capture(new Element(50, 50, 200));
       Element match = new Element();
-      if (base.hasContent() && img.hasContent()) {
-        Finder finder = new Finder(base);
-        match = finder.find(img);
+      if (img.hasContent()) {
+        match = Do.find(img);
         assert match.isValid();
         result = end() + match.toString();
         if (log.isLevel(SXLog.DEBUG)) {
-          base.showMatch();
+          Do.on().showMatch();
         }
         return;
       }
@@ -416,6 +408,7 @@ public class TestAPI {
     }
     assert true;
   }
+  //</editor-fold>
 
   //<editor-fold desc="ignored">
   @Ignore
