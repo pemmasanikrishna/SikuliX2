@@ -1307,7 +1307,7 @@ public class SX {
     return gdevs[id];
   }
 
-  public static Element onMain() {
+  public static Element getMain() {
     return Do.onMain();
   }
 

@@ -23,7 +23,7 @@ public class SXMain {
   static String stars = repeat("*", 50);
 
   public static String repeat(String str, int count) {
-    return String.format("%0" + 50 + "d", 0).replace("0","*");
+    return String.format("%0" + 50 + "d", 0).replace("0", "*");
   }
 
   private static void traceBlock(String message) {
@@ -56,21 +56,29 @@ public class SXMain {
 
     traceBlock("testing: load image from jar");
     Image img = new Image("sikulix2");
+    boolean imgOK = img.hasContent();
     img.show(3);
 
     traceBlock("testing: find image in other image");
     Image base = new Image("shot-tile");
-    boolean success = base.isValid();
-    if (success) {
-      Finder finder = new Finder(base);
-      success &= finder.isValid();
-      if (success) {
-        Element element = finder.find(img);
-        success &= element.isMatch();
+    boolean baseOK = base.hasContent();
+    if (baseOK && imgOK) {
+      Element element = new Element();
+      element = Do.find(img, base);
+      if (element.isMatch()) {
+        base.showMatch();
       }
     }
-    if (success) {
-      base.showMatch();
+
+    traceBlock("testing: find image on primary monitor");
+    if (baseOK && imgOK) {
+      Element element = new Element();
+      base.showContent();
+      element = Do.find(img);
+      SX.pause(5);
+      if (element.isMatch()) {
+        SX.getMain().showMatch();
+      }
     }
   }
 }

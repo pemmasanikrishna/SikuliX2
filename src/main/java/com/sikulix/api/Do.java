@@ -952,34 +952,42 @@ public class Do {
 
   //<editor-fold desc="actions like find, wait, click">
   public static Element find(Object... args) {
+    log.trace("find: start");
     Element where = new EvaluateTarget().get(args);
+    Element match = new Element();
+    where.stopShowing();
     if (where.hasMatch()) {
-      return where.getLastMatch();
+      match =  where.getLastMatch();
     }
-    return new Element();
+    return match;
   }
 
   public static Element wait(Object args) {
     EvaluateTarget evalTarget = new EvaluateTarget();
     Element where = evalTarget.get();
+    Element match = new Element();
     if (where.hasMatch()) {
-      return where.getLastMatch();
-    }
-    while (evalTarget.shouldWait()) {
-      evalTarget.repeat();
-      if (where.hasMatch()) {
-        return where.getLastMatch();
+      match =  where.getLastMatch();
+    } else {
+      while (evalTarget.shouldWait()) {
+        evalTarget.repeat();
+        if (where.hasMatch()) {
+          match =  where.getLastMatch();
+        }
       }
     }
-    return new Element();
+    where.stopShowing();
+    return match;
   }
 
   public static List<Element> findAll(Object... args) {
-    Element base = new EvaluateTarget("ALL").get(args);
-    if (base.hasMatches()) {
-      return base.getLastMatches();
+    Element where = new EvaluateTarget().get(args);
+    List<Element> matches = new ArrayList<>();
+    if (where.hasMatches()) {
+      matches = where.getLastMatches();
     }
-    return new ArrayList<>();
+    where.stopShowing();
+    return matches;
   }
 
   private static class EvaluateTarget {

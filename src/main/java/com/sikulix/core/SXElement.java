@@ -545,7 +545,12 @@ public abstract class SXElement implements Comparable<SXElement>{
   public static int showTime = 3;
 
   protected static void show(Element elem, int time) {
-    show(elem, null, time);
+    if(time < 0) {
+      ShowSub sub = new ShowSub(elem);
+      new Thread(sub).start();
+    } else {
+      show(elem, null, time);
+    }
   }
 
   protected static void show(Element elem, Element overlay, int time) {
@@ -579,9 +584,9 @@ public abstract class SXElement implements Comparable<SXElement>{
             cvPoint(elem, off + w, off + h), cvPoint(elem, off, off + h));
   }
 
-  private static void doShow(Element elem, List<Element> overlays, int time) {
+  private static JFrame doShow(Element elem, List<Element> overlays, int time) {
     if (!elem.hasContent()) {
-      return;
+      return null;
     }
     Mat imgMat = elem.getContent().clone();
     if (SX.isNotNull(overlays) && overlays.size() > 0) {
@@ -603,12 +608,14 @@ public abstract class SXElement implements Comparable<SXElement>{
     frImg.setSize(bImg.getWidth(), bImg.getHeight());
     Container cp = frImg.getContentPane();
     JLabel label = new JLabel(new ImageIcon(bImg));
-    Border border = BorderFactory.createMatteBorder(22, 3, 3, 3, Color.green);
-    border = BorderFactory.createTitledBorder(border, elem.toString());
-    label.setBorder(border);
+    if (time > 0) {
+      Border border = BorderFactory.createMatteBorder(22, 3, 3, 3, Color.green);
+      border = BorderFactory.createTitledBorder(border, elem.toString());
+      label.setBorder(border);
+    }
     cp.add(label, BorderLayout.CENTER);
     frImg.pack();
-    Element loc = SX.onMain().getCenter();
+    Element loc = SX.getMain().getCenter();
     loc.translate(-imgMat.width()/2, -imgMat.height()/2);
     if (SX.isMac()) {
       frImg.setLocation(loc.x, loc.y + 22);
@@ -616,8 +623,30 @@ public abstract class SXElement implements Comparable<SXElement>{
       frImg.setLocation(loc.x, loc.y);
     }
     frImg.setVisible(true);
-    SX.pause(time);
-    frImg.dispose();
+    if (time > 0) {
+      SX.pause(time);
+      frImg.dispose();
+      return null;
+    } else {
+      return frImg;
+    }
+  }
+
+  private static class ShowSub implements Runnable {
+
+    Element elem = null;
+
+    public ShowSub(Element elem) {
+      this.elem = elem;
+    }
+
+    @Override
+    public void run() {
+      if (SX.isNotNull(elem) && elem.hasContent()) {
+        JFrame frImg = doShow(elem, null, -1);
+        SX.getMain().setShowing(frImg);
+      }
+    }
   }
 
   protected static Mat makeMat(BufferedImage bImg) {

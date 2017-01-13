@@ -9,6 +9,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
+import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
 import java.util.ArrayList;
@@ -185,7 +186,7 @@ public class Element extends SXElement {
   }
   //</editor-fold>
 
-  //<editor-fold desc="***** capture, highlight">
+  //<editor-fold desc="***** capture, highlight, show">
   public Image capture() {
     content = new Mat();
     Image img = new Image();
@@ -230,6 +231,29 @@ public class Element extends SXElement {
   public void showMatches() {
     showAll(this, this.getLastMatches(), showTime);
   }
+
+  public void showContent() {
+    show(-1);
+  }
+
+  public boolean isShowing() {
+    return SX.isNotNull(showing);
+  }
+
+  public void setShowing(JFrame showing) {
+    this.showing = showing;
+  }
+
+  public void stopShowing() {
+    if (isShowing()) {
+      showing.dispose();
+      showing = null;
+      SX.pause(1);
+    }
+  }
+
+  private JFrame showing = null;
+
   //</editor-fold>
 
   //<editor-fold desc="***** lastCapture">

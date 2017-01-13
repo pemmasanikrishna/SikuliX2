@@ -25,7 +25,7 @@ public class SXLog {
   int initLogLevel = -1;
   int currentLogLevel = -1;
 
-  static int globalLogLevel = -1;
+  static int globalLogLevel = -2;
   boolean logError = true;
 
   Logger logger = null;
@@ -42,24 +42,22 @@ public class SXLog {
 
   private void init(String className, String[] args, int level) {
     if (initLogLevel < 0) {
-      initLogLevel = 0;
-      String logOption = System.getProperty("sikulix.logging");
-      if (SX.isSet(logOption)) {
-        logOption = logOption.toLowerCase();
-        if (logOption.startsWith("q")) {
-          initLogLevel = -1;
-        } else if (logOption.startsWith("d")) {
-          initLogLevel = 3;
-        } else if (logOption.startsWith("t")) {
-          initLogLevel = 4;
+      if (globalLogLevel < -1) {
+        String logOption = System.getProperty("sikulix.logging");
+        if (SX.isSet(logOption)) {
+          logOption = logOption.toLowerCase();
+          if (logOption.startsWith("q")) {
+            globalLogLevel = -1;
+          } else if (logOption.startsWith("d")) {
+            globalLogLevel = 3;
+          } else if (logOption.startsWith("t")) {
+            globalLogLevel = 4;
+          }
+        } else {
+          globalLogLevel = 0;
         }
       }
-      if (initLogLevel < 0) {
-        initLogLevel = 0;
-        globalLogLevel = -1;
-      } else {
-        globalLogLevel = initLogLevel;
-      }
+      initLogLevel = globalLogLevel;
     }
     if (level < 0) {
       currentLogLevel = initLogLevel;
@@ -98,8 +96,8 @@ public class SXLog {
   }
 
   public void on(int level) {
-    if (sxComponent && (isGlobalLogLevel(DEBUG) || isGlobalLogLevel(TRACE))) {
-      currentLogLevel = getGlobalLogLevel();
+    if (globalLogLevel > 0 && level > globalLogLevel) {
+      currentLogLevel = globalLogLevel;
     } else {
       if (level > 0 && level <= TRACE) {
         currentLogLevel = level;
@@ -184,9 +182,6 @@ public class SXLog {
     }
     if (level < 0) {
       return logError;
-    }
-    if (currentLogLevel == 0) {
-      return globalLogLevel >= level;
     }
     return currentLogLevel >= level;
   }

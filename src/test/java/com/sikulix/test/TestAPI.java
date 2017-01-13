@@ -46,7 +46,7 @@ public class TestAPI {
 
   long startTime = -1;
 
-  private void start() {
+  private void  start() {
     startTime = new Date().getTime();
   }
 
@@ -61,6 +61,7 @@ public class TestAPI {
 
   @BeforeClass
   public static void setUpClass() {
+    log.globalOn(SXLog.TRACE);
     log.trace("setUpClass()");
     if (SX.existsFile(SX.getFolder(SX.getSXAPP()))) {
       Content.deleteFileOrFolder(SX.getFolder(SX.getSXAPP()), new Content.FileFilter() {
@@ -386,15 +387,22 @@ public class TestAPI {
   public void test_52_findInDefaultScreen() {
     currentTest = "test_52_findInDefaultScreen";
     if (!SX.isHeadless()) {
-      start();
-      Image img = Do.capture(new Element(50, 50, 200));
-      Element match = new Element();
-      if (img.hasContent()) {
-        match = Do.find(img);
-        assert match.isValid();
-        result = end() + match.toString();
-        Do.on().showMatch();
-        return;
+      result = "Not Found";
+      Do.setBundlePath(mavenRoot, "Images");
+      Image base = new Image("shot-tile");
+      if (base.hasContent()) {
+        base.showContent();
+        SX.pause(2);
+        start();
+        Image img = new Image(imageNameDefault);
+        Element match = new Element();
+        if (img.hasContent()) {
+          match = Do.find(img);
+          assert match.isValid();
+          result = end() + match.toString();
+          SX.getMain().showMatch();
+          return;
+        }
       }
       assert false;
     } else {
@@ -402,6 +410,38 @@ public class TestAPI {
     }
     assert true;
   }
+
+  @Test
+  public void test_53_findAllInDefaultScreen() {
+    currentTest = "test_53_findAllInDefaultScreen";
+    if (!SX.isHeadless()) {
+    boolean success = Do.setBundlePath(mavenRoot, "Images");
+    Image base = new Image("shot-tile");
+    base.showContent();
+    result = "Not Found";
+    start();
+    Image target = new Image(imageNameDefault);
+    success &= target.isValid();
+    int expected = (int) (base.w / 200) * (int) (base.h / 200);
+    success &= base.isValid();
+    List<Element> elements = new ArrayList<>();
+    if (success) {
+      elements = Do.findAll(target);
+      success &= elements.size() == expected;
+    }
+    result = String.format("#%d in (%dx%d) %% %.2f +- %.4f]", elements.size(),
+            base.w, base.h, 100 * base.getLastScores()[0], 100 * base.getLastScores()[2]);
+    result = end() + result;
+    if (success) {
+      SX.getMain().showMatches();
+    }
+    assert success;
+    } else {
+      result = "headless: not tested";
+    }
+    assert true;
+  }
+
   //</editor-fold>
 
   //<editor-fold desc="ignored">
