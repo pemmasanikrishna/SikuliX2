@@ -1307,6 +1307,10 @@ public class SX {
     return gdevs[id];
   }
 
+  public static Element onMain() {
+    return Do.onMain();
+  }
+
   //</editor-fold>
 
   //<editor-fold desc="*** handle native libs">

@@ -49,6 +49,7 @@ public class Image extends Element {
     }
     urlImg = elem.urlImg;
     setName(elem.getName());
+    setAttributes();
   }
 
   protected void initAfter() {

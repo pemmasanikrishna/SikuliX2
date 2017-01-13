@@ -49,7 +49,7 @@ public class FindResult implements Iterator<Element> {
   private int currentX = -1;
   private int currentY = -1;
 
-  public synchronized boolean hasNext() {
+  public boolean hasNext() {
     resultMinMax = Core.minMaxLoc(result);
     currentScore = resultMinMax.maxVal;
     currentX = (int) resultMinMax.maxLoc.x;
@@ -63,7 +63,7 @@ public class FindResult implements Iterator<Element> {
     return false;
   }
 
-  public synchronized Element next() {
+  public Element next() {
     Element match = null;
     if (hasNext()) {
       match = new Element(new Element(currentX + offX , currentY + offY, target.w, target.h), currentScore);

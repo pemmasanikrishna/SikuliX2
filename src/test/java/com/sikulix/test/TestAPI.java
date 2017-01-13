@@ -281,17 +281,19 @@ public class TestAPI {
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
     start();
-    Image img = new Image(imageNameDefault);
-    success &= img.isValid();
+    Image base = new Image(imageNameDefault);
+    success &= base.isValid();
+    Image img = new Image(base);
     Element element = null;
     if (success) {
-      element = Do.find(img, img);
+      element = Do.find(img, base);
       success &= element.isMatch() && 0.99 < element.getScore() &&
               0 == element.x && 0 == element.y &&
-              element.w == (int) img.w && element.h == (int) img.h;
+              element.w == (int) base.w && element.h == (int) base.h;
     }
     if (success) {
       result = element.toString();
+      base.showMatch();
     }
     result = end() + result;
     assert success;
@@ -299,7 +301,6 @@ public class TestAPI {
 
   @Test
   public void test_42_findImageInOtherImage() {
-    //log.on(SXLog.DEBUG);
     currentTest = "test_42_findImageInOtherImage";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
@@ -317,7 +318,7 @@ public class TestAPI {
       result = element.toString();
     }
     result = end() + result;
-    if (success && log.isLevel(SXLog.DEBUG)) {
+    if (success) {
       base.showMatch();
     }
     assert success;
@@ -325,7 +326,6 @@ public class TestAPI {
 
   @Test
   public void test_43_findAllInImage() {
-    //log.on(SXLog.DEBUG);
     currentTest = "test_43_findAllInImage";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
@@ -343,7 +343,7 @@ public class TestAPI {
     result = String.format("#%d in (%dx%d) %% %.2f +- %.4f]", elements.size(),
             base.w, base.h, 100 * base.getLastScores()[0], 100 * base.getLastScores()[2]);
     result = end() + result;
-    if (success && log.isLevel(SXLog.DEBUG)) {
+    if (success) {
       base.showMatches();
     }
     assert success;
@@ -365,16 +365,13 @@ public class TestAPI {
 
   @Test
   public void test_51_capturePartOfDefaultScreen() {
-    //log.on(SXLog.DEBUG);
     currentTest = "test_51_capturePartOfDefaultScreen";
     if (!SX.isHeadless()) {
       start();
       Image img = Do.capture(new Element(50, 50, 200));
       result = end() + img.toString();
       if (img.hasContent()) {
-        if (log.isLevel(SXLog.DEBUG)) {
-          img.show();
-        }
+        img.show();
         assert true;
         return;
       }
@@ -387,7 +384,6 @@ public class TestAPI {
 
   @Test
   public void test_52_findInDefaultScreen() {
-    //log.on(SXLog.DEBUG);
     currentTest = "test_52_findInDefaultScreen";
     if (!SX.isHeadless()) {
       start();
@@ -397,9 +393,7 @@ public class TestAPI {
         match = Do.find(img);
         assert match.isValid();
         result = end() + match.toString();
-        if (log.isLevel(SXLog.DEBUG)) {
-          Do.on().showMatch();
-        }
+        Do.on().showMatch();
         return;
       }
       assert false;

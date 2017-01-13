@@ -891,6 +891,10 @@ public class Do {
     return defaultRegion;
   }
 
+  public static Element onMain() {
+    return defaultScreenRegion;
+  }
+
   public static Element on(int monitor) {
     return getScreenRegion(monitor);
   }

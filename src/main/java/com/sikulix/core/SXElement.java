@@ -13,6 +13,7 @@ import org.opencv.imgproc.Imgproc;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
@@ -566,7 +567,16 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   private static org.opencv.core.Point cvPoint(Element elem, int off) {
-    return new org.opencv.core.Point(elem.x + off, elem.y + off);
+    return cvPoint(elem, off, off);
+  }
+
+  private static org.opencv.core.Point cvPoint(Element elem, int offX, int offY) {
+    return new org.opencv.core.Point(elem.x + offX, elem.y + offY);
+  }
+
+  private static MatOfPoint cvMatOfPoint(Element elem, int off, int w, int h) {
+    return new MatOfPoint(cvPoint(elem, off), cvPoint(elem, off + w, off),
+            cvPoint(elem, off + w, off + h), cvPoint(elem, off, off + h));
   }
 
   private static void doShow(Element elem, List<Element> overlays, int time) {
@@ -576,8 +586,13 @@ public abstract class SXElement implements Comparable<SXElement>{
     Mat imgMat = elem.getContent().clone();
     if (SX.isNotNull(overlays) && overlays.size() > 0) {
       for (Element overlay : overlays) {
+        double score = 100 * overlay.getScore();
+        if (score > 99.99) score = 99.99;
         Imgproc.rectangle(imgMat, cvPoint(overlay, -4), cvPoint(overlay.getBottomRight(), 3),
                 new Scalar(0, 0, 255), 3);
+        Imgproc.fillConvexPoly(imgMat, cvMatOfPoint(overlay, 5, 70, 25), new Scalar(255, 255, 255));
+        Imgproc.putText(imgMat, String.format("%.2f", score), cvPoint(overlay, 12, 24),
+                Core.FONT_HERSHEY_SIMPLEX, 0.6, new Scalar(0, 0, 0), 2);
       }
     }
     BufferedImage bImg = getBufferedImage(imgMat, dotPNG);
@@ -585,15 +600,21 @@ public abstract class SXElement implements Comparable<SXElement>{
     frImg.setAlwaysOnTop(true);
     frImg.setResizable(false);
     frImg.setUndecorated(true);
-    if (SX.isMac()) {
-      frImg.setLocation(1, 23);
-    } else {
-      frImg.setLocation(1, 1);
-    }
     frImg.setSize(bImg.getWidth(), bImg.getHeight());
     Container cp = frImg.getContentPane();
-    cp.add(new JLabel(new ImageIcon(bImg)), BorderLayout.CENTER);
+    JLabel label = new JLabel(new ImageIcon(bImg));
+    Border border = BorderFactory.createMatteBorder(22, 3, 3, 3, Color.green);
+    border = BorderFactory.createTitledBorder(border, elem.toString());
+    label.setBorder(border);
+    cp.add(label, BorderLayout.CENTER);
     frImg.pack();
+    Element loc = SX.onMain().getCenter();
+    loc.translate(-imgMat.width()/2, -imgMat.height()/2);
+    if (SX.isMac()) {
+      frImg.setLocation(loc.x, loc.y + 22);
+    } else {
+      frImg.setLocation(loc.x, loc.y);
+    }
     frImg.setVisible(true);
     SX.pause(time);
     frImg.dispose();
