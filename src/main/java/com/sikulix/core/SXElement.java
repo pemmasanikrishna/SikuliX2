@@ -447,6 +447,15 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
   //</editor-fold>
 
+  private static int growDefault = 20;
+  public SXElement grow() {
+    x -= growDefault;
+    y -= growDefault;
+    w += 2 * growDefault;
+    h += 2 * growDefault;
+    return this;
+  }
+
   //<editor-fold desc="***** move">
   protected Element target = null;
 

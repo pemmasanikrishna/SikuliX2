@@ -248,11 +248,19 @@ public class Element extends SXElement {
     if (isShowing()) {
       showing.dispose();
       showing = null;
-      SX.pause(1);
     }
   }
 
+  public Element whereShowing() {
+    if (!isShowing()) {
+      return new Element();
+    }
+    Point location = showing.getLocation();
+    return new Element(location.x, location.y, showing.getWidth(), showing.getHeight());
+  }
+
   private JFrame showing = null;
+
 
   //</editor-fold>
 

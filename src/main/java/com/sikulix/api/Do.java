@@ -476,6 +476,7 @@ public class Do {
   private static String baseClass = "";
 
   public static void setBaseClass() {
+    log.trace("setBaseClass: start");
     StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
     boolean takeit = false;
     for (StackTraceElement traceElement : stackTrace) {
@@ -959,6 +960,7 @@ public class Do {
     if (where.hasMatch()) {
       match =  where.getLastMatch();
     }
+    log.trace("find: end");
     return match;
   }
 
@@ -981,12 +983,14 @@ public class Do {
   }
 
   public static List<Element> findAll(Object... args) {
-    Element where = new EvaluateTarget().get(args);
+    log.trace("findAll: start");
+    Element where = new EvaluateTarget("ALL").get(args);
     List<Element> matches = new ArrayList<>();
+    where.stopShowing();
     if (where.hasMatches()) {
       matches = where.getLastMatches();
     }
-    where.stopShowing();
+    log.trace("findAll: end");
     return matches;
   }
 

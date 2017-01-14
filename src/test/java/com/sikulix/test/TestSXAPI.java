@@ -16,11 +16,11 @@ import java.util.Date;
 import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class TestAPI {
+public class TestSXAPI {
 
   //<editor-fold desc="housekeeping">
   static final int logLevel = SX.INFO;
-  static SXLog log = SX.getLogger("TestAPI");
+  static SXLog log = SX.getLogger("TestSXAPI");
   private Object result = "";
   private String currentTest = "";
   private static int nTest = 0;
@@ -36,7 +36,7 @@ public class TestAPI {
   private static String imageNameDefault = "sikulix2";
   private static String imageDefault = imageNameDefault + ".png";
 
-  public TestAPI() {
+  public TestSXAPI() {
     log.trace("TestAPI()");
   }
 
@@ -46,8 +46,9 @@ public class TestAPI {
 
   long startTime = -1;
 
-  private void  start() {
+  private void start() {
     startTime = new Date().getTime();
+    log.trace("local timer start");
   }
 
   private String end() {
@@ -56,13 +57,12 @@ public class TestAPI {
       duration = "(" + (new Date().getTime() - startTime) + ") ";
       startTime = -1;
     }
+    log.trace("local timer end");
     return duration;
   }
 
   @BeforeClass
   public static void setUpClass() {
-    log.globalOn(SXLog.TRACE);
-    log.trace("setUpClass()");
     if (SX.existsFile(SX.getFolder(SX.getSXAPP()))) {
       Content.deleteFileOrFolder(SX.getFolder(SX.getSXAPP()), new Content.FileFilter() {
         @Override
@@ -80,22 +80,26 @@ public class TestAPI {
 
   @AfterClass
   public static void tearDownClass() {
-    log.trace("tearDownClass()");
   }
 
   @Before
   public void setUp() {
-    log.trace("setUp");
     result = null;
     startTime = -1;
     if (testLimit && nTest > 0) {
       SX.terminate(1, "by intention");
     }
     log.on(logLevel);
+    if (log.isLevel(SXLog.TRACE)) {
+      log.startTimer();
+    }
   }
 
   @After
   public void tearDown() {
+    if (log.isLevel(SXLog.TRACE)) {
+      log.stopTimer();
+    }
     Image.clearPath();
     log.info("!%2d: result: %s: %s ", nTest++, currentTest, result);
   }
@@ -353,96 +357,109 @@ public class TestAPI {
   @Test
   public void test_50_captureDefaultScreen() {
     currentTest = "test_50_captureDefaultScreen";
-    if (!SX.isHeadless()) {
-      start();
-      Image img = Do.capture();
-      result = end() + img.toString();
-      assert img.hasContent();
-    } else {
-      result = "headless: not tested";
+    prepareDefaultScreen();
+    if (isHeadless) {
+      return;
     }
-    assert true;
+    start();
+    Image img = Do.capture();
+    result = end() + img.toString();
+    assert img.hasContent();
   }
+
 
   @Test
   public void test_51_capturePartOfDefaultScreen() {
     currentTest = "test_51_capturePartOfDefaultScreen";
-    if (!SX.isHeadless()) {
-      start();
-      Image img = Do.capture(new Element(50, 50, 200));
-      result = end() + img.toString();
-      if (img.hasContent()) {
-        img.show();
-        assert true;
-        return;
-      }
-      assert false;
-    } else {
-      result = "headless: not tested";
-      assert true;
+    assert prepareDefaultScreen(imageNameDefault);
+    if (isHeadless) {
+      return;
     }
+    start();
+    Image img = Do.capture((Element) elemDisplayed.grow());
+    result = end() + img.toString();
+    SX.getMain().stopShowing();
+    if (img.hasContent()) {
+      img.show();
+      return;
+    }
+    assert false;
+  }
+
+  Image base = null;
+  Image img = null;
+  Element match = null;
+  List<Element> matches = new ArrayList<>();
+  boolean isHeadless = false;
+  Element elemDisplayed = null;
+  int showPause = 3;
+
+  private void prepareDefaultScreen() {
+    prepareDefaultScreen(null, null);
+  }
+
+  private boolean prepareDefaultScreen(String fnImg) {
+    return prepareDefaultScreen(fnImg, null);
+  }
+
+  private boolean prepareDefaultScreen(String fnBase, String fnImg) {
+    result = "headless: not tested";
+    if (!SX.isHeadless()) {
+      if (SX.isNull(fnBase)) {
+        return true;
+      }
+      Do.setBundlePath(mavenRoot, "Images");
+      base = new Image(fnBase);
+      if (base.hasContent()) {
+        base.showContent();
+        SX.pause(showPause);
+        elemDisplayed = SX.getMain().whereShowing();
+        if (SX.isNull(fnImg)) {
+          return true;
+        }
+        result = "Not Found";
+        start();
+        img = new Image(fnImg);
+        if (img.hasContent()) {
+          return true;
+        }
+      }
+      return false;
+    }
+    isHeadless = true;
+    return true;
   }
 
   @Test
   public void test_52_findInDefaultScreen() {
     currentTest = "test_52_findInDefaultScreen";
-    if (!SX.isHeadless()) {
-      result = "Not Found";
-      Do.setBundlePath(mavenRoot, "Images");
-      Image base = new Image("shot-tile");
-      if (base.hasContent()) {
-        base.showContent();
-        SX.pause(2);
-        start();
-        Image img = new Image(imageNameDefault);
-        Element match = new Element();
-        if (img.hasContent()) {
-          match = Do.find(img);
-          assert match.isValid();
-          result = end() + match.toString();
-          SX.getMain().showMatch();
-          return;
-        }
-      }
-      assert false;
-    } else {
-      result = "headless: not tested";
+    assert prepareDefaultScreen("shot", imageNameDefault);
+    if (isHeadless) {
+      return;
     }
-    assert true;
+    match = Do.find(img);
+    result = end() + match.toString();
+    assert match.isValid();
+    SX.getMain().showMatch();
   }
 
   @Test
   public void test_53_findAllInDefaultScreen() {
     currentTest = "test_53_findAllInDefaultScreen";
-    if (!SX.isHeadless()) {
-    boolean success = Do.setBundlePath(mavenRoot, "Images");
-    Image base = new Image("shot-tile");
-    base.showContent();
-    result = "Not Found";
-    start();
-    Image target = new Image(imageNameDefault);
-    success &= target.isValid();
+    assert prepareDefaultScreen("shot-tile", imageNameDefault);
+    if (isHeadless) {
+      return;
+    }
     int expected = (int) (base.w / 200) * (int) (base.h / 200);
-    success &= base.isValid();
-    List<Element> elements = new ArrayList<>();
-    if (success) {
-      elements = Do.findAll(target);
-      success &= elements.size() == expected;
-    }
-    result = String.format("#%d in (%dx%d) %% %.2f +- %.4f]", elements.size(),
-            base.w, base.h, 100 * base.getLastScores()[0], 100 * base.getLastScores()[2]);
+    matches = Do.findAll(img);
+    assert matches.size() == expected;
+    result = String.format("#%d in (%dx%d) %% %.2f +- %.4f]", matches.size(),
+            base.w, base.h, 100 * SX.getMain().getLastScores()[0], 100 * SX.getMain().getLastScores()[2]);
     result = end() + result;
-    if (success) {
-      SX.getMain().showMatches();
-    }
-    assert success;
-    } else {
-      result = "headless: not tested";
-    }
-    assert true;
+    SX.getMain().showMatches();
   }
 
-  //</editor-fold>
+//</editor-fold>
 
   //<editor-fold desc="ignored">
   @Ignore

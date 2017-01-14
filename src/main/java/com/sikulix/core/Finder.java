@@ -101,10 +101,10 @@ public class Finder {
   private boolean isCheckLastSeen = false;
 
   private FindResult doFind(Element elem, FindType findType) {
-    log.on(SXLog.TRACE);
     if (!elem.isTarget()) {
       return null;
     }
+    log.trace("doFind: start");
     Element target = elem;
     if (target.getWantedScore() < 0) {
       target.setWantedScore(0.8);
@@ -170,21 +170,23 @@ public class Finder {
         if (SX.isNotNull(findResult)) {
           log.trace("doFind: after down: %%%.2f(?%%%.2f) %d msec",
                   mMinMax.maxVal * 100, target.getWantedScore() * 100, new Date().getTime() - begin_t);
-          return findResult;
         }
       }
     }
     // ************************************** search in original
-    begin_t = new Date().getTime();
-    result = doFindMatch(target, base, null);
-    mMinMax = Core.minMaxLoc(result);
-    if (!isCheckLastSeen || FindType.ALL.equals(findType)) {
-      log.trace("doFind: search in original: %d msec", new Date().getTime() - begin_t);
+    if (SX.isNull(findResult)) {
+      begin_t = new Date().getTime();
+      result = doFindMatch(target, base, null);
+      mMinMax = Core.minMaxLoc(result);
+      if (!isCheckLastSeen || FindType.ALL.equals(findType)) {
+        log.trace("doFind: search in original: %d msec", new Date().getTime() - begin_t);
+      }
+      if (mMinMax.maxVal > target.getWantedScore()) {
+        findResult = new FindResult(result, target);
+      }
     }
-    if (mMinMax.maxVal > target.getWantedScore()) {
-      return new FindResult(result, target);
-    }
-    return null;
+    log.trace("doFind: end");
+    return findResult;
   }
 
   private Mat doFindMatch(Element target, Mat base, Mat probe) {
@@ -238,7 +240,7 @@ public class Finder {
         }
         all &= sub.hasFinished();
       }
-      SX.pause((waitCount * 10)/1000);
+      SX.pause((waitCount * 10) / 1000);
     }
     log.trace("findAnyCollect: SubFindRuns finished");
     nobj = 0;

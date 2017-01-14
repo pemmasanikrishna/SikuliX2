@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -22,13 +23,32 @@ public class SXLog {
   public static final int ERROR = -1;
   public static final int FATAL = -2;
 
-  int initLogLevel = -1;
-  int currentLogLevel = -1;
+  int initLevel = -1;
+  int currentLevel = -1;
 
-  static int globalLogLevel = -2;
+  static int globalLevel = -2;
+  static int globalLevelSaved = -1;
+
   boolean logError = true;
 
   Logger logger = null;
+
+  static long globalStart = 0;
+  static long globalLap = 0;
+
+  public void startTimer() {
+    globalStart = new Date().getTime();
+    globalLap = globalStart;
+    globalLevelSaved = globalLevel;
+    globalLevel = TRACE;
+    trace("global timer start");
+  }
+
+  public void stopTimer() {
+    globalStart = 0;
+    globalLevel = globalLevelSaved;
+    trace("global timer end");
+  }
 
   protected SXLog() {
     init(null, null, -1);
@@ -41,44 +61,83 @@ public class SXLog {
   }
 
   private void init(String className, String[] args, int level) {
-    if (initLogLevel < 0) {
-      if (globalLogLevel < -1) {
-        String logOption = System.getProperty("sikulix.logging");
-        if (SX.isSet(logOption)) {
-          logOption = logOption.toLowerCase();
-          if (logOption.startsWith("q")) {
-            globalLogLevel = -1;
-          } else if (logOption.startsWith("d")) {
-            globalLogLevel = 3;
-          } else if (logOption.startsWith("t")) {
-            globalLogLevel = 4;
-          }
-        } else {
-          globalLogLevel = 0;
+    if (globalLevel < ERROR) {
+      String logOption = System.getProperty("sikulix.logging");
+      if (SX.isSet(logOption)) {
+        logOption = logOption.toLowerCase();
+        if (logOption.startsWith("q")) {
+          globalLevel = OFF;
+        } else if (logOption.startsWith("d")) {
+          globalLevel = DEBUG;
+        } else if (logOption.startsWith("t")) {
+          globalLevel = TRACE;
         }
+      } else {
+        globalLevel = ERROR;
       }
-      initLogLevel = globalLogLevel;
     }
-    if (level < 0) {
-      currentLogLevel = initLogLevel;
-    } else {
-      on(level);
-    }
+    on(initLevel);
+    initLevel = currentLevel;
     if (SX.isNull(className)) {
       return;
     }
     SX.sxinit(args);
+    if (className.startsWith("!")) {
+      translation = false;
+      className = className.substring(1);
+    } else {
+      translation = className.startsWith("SX.");
+    }
+    if (className.startsWith("TestSX")) {
+//      globalTranslation = false;
+    }
     logger = LogManager.getLogger(className);
-    translation = className.startsWith("SX.");
+  }
+
+  public void on(int level) {
+    if (sxComponent && (isGlobalLevel(DEBUG) || isGlobalLevel(TRACE))) {
+      currentLevel = globalLevel;
+    } else {
+      if (level > ERROR && level <= TRACE) {
+        currentLevel = level;
+      } else {
+        currentLevel = ERROR;
+      }
+    }
+    errorOn();
+  }
+
+  public void globalOn(int level) {
+    if (level > ERROR && level <= TRACE) {
+      globalLevel = level;
+    } else {
+      globalLevel = ERROR;
+    }
+  }
+
+  public boolean isLevel(int level) {
+    return currentLevel >= level;
+  }
+
+  public boolean isGlobalLevel(int level) {
+    return level >= globalLevel;
   }
 
   public void off() {
-    currentLogLevel = 0;
+    currentLevel = OFF;
+  }
+
+  public void reset() {
+    currentLevel = initLevel;
   }
 
   public void stop() {
-    currentLogLevel = 0;
+    currentLevel = OFF;
     errorOff();
+  }
+
+  public void globalStop() {
+    globalLevel = 0;
   }
 
   public void errorOff() {
@@ -93,50 +152,6 @@ public class SXLog {
 
   public void isSX() {
     sxComponent = true;
-  }
-
-  public void on(int level) {
-    if (globalLogLevel > 0 && level > globalLogLevel) {
-      currentLogLevel = globalLogLevel;
-    } else {
-      if (level > 0 && level <= TRACE) {
-        currentLogLevel = level;
-      } else {
-        if (level < 1) {
-          currentLogLevel = 0;
-        } else {
-          currentLogLevel = 1;
-        }
-      }
-    }
-  }
-
-  public boolean isLevel(int level) {
-    return currentLogLevel >= level;
-  }
-
-  public void globalOn(int level) {
-    if (level > 0 && level <= TRACE) {
-      globalLogLevel = level;
-    } else {
-      if (level < 1) {
-        globalLogLevel = 0;
-      } else {
-        globalLogLevel = 1;
-      }
-    }
-  }
-
-  public void globalStop() {
-    globalLogLevel = -1;
-  }
-
-  public int getGlobalLogLevel() {
-    return globalLogLevel;
-  }
-
-  public boolean isGlobalLogLevel(int level) {
-    return level == globalLogLevel;
   }
 
   public void p(String msg, Object... args) {
@@ -156,6 +171,11 @@ public class SXLog {
   }
 
   public void trace(String message, Object... args) {
+    if (globalStart > 0) {
+      long lap = new Date().getTime();
+      message = "G(" + (lap - globalStart) + " | " + (lap - globalLap) + ") " + message;
+      globalLap = lap;
+    }
     log(TRACE, message, args);
   }
 
@@ -177,13 +197,13 @@ public class SXLog {
     if (level == FATAL) {
       return true;
     }
-    if (globalLogLevel < 0) {
+    if (globalLevel == OFF) {
       return false;
     }
-    if (level < 0) {
+    if (level < OFF || currentLevel == OFF) {
       return logError;
     }
-    return currentLogLevel >= level;
+    return currentLevel >= level || globalLevel >= level;
   }
 
   private void log(int level, String message, Object... args) {
@@ -215,13 +235,14 @@ public class SXLog {
   private static Map<String, Properties> translateProps = new HashMap<>();
 
   private boolean translation = true;
+  private static boolean globalTranslation = true;
 
   public void setTranslation(boolean state) {
     translation = state;
   }
 
   private String getTranslation(String msg, String msgPlus) {
-    if (!translation) {
+    if (!globalTranslation || !translation) {
       return (SX.isSet(msgPlus) ? "*** " + msgPlus + ": " : "") + msg;
     }
     if (msg.startsWith("!")) {
@@ -284,7 +305,7 @@ public class SXLog {
       }
     }
     String transError = "";
-    if (clazz.startsWith("sx") && currentLogLevel > DEBUG) {
+    if (clazz.startsWith("sx") && currentLevel > DEBUG) {
       transError = "*** " + String.format("%s (%s = %s)", getTranslationGlobal("translation"),
               tKey, msgToTranslate.replaceAll("%", "#")) + ": ";
     }
@@ -292,6 +313,9 @@ public class SXLog {
   }
 
   private String getTranslationGlobal(String msg) {
+    if (!globalTranslation) {
+      return msg;
+    }
     if (SX.isSet(msg)) {
       Properties props = translateProps.get("SXGlobal");
       String transMsgPlus = msg;
