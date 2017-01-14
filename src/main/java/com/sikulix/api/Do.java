@@ -958,23 +958,26 @@ public class Do {
     Element match = new Element();
     where.stopShowing();
     if (where.hasMatch()) {
-      match =  where.getLastMatch();
+      match = where.getLastMatch();
     }
     log.trace("find: end");
     return match;
   }
 
-  public static Element wait(Object args) {
+  public static Element wait(Object... args) {
+    log.trace("wait: start");
     EvaluateTarget evalTarget = new EvaluateTarget();
-    Element where = evalTarget.get();
+    Element where = evalTarget.get(args);
     Element match = new Element();
     if (where.hasMatch()) {
-      match =  where.getLastMatch();
+      match = where.getLastMatch();
     } else {
       while (evalTarget.shouldWait()) {
+        log.trace("wait: need to repeat");
         evalTarget.repeat();
         if (where.hasMatch()) {
-          match =  where.getLastMatch();
+          match = where.getLastMatch();
+          break;
         }
       }
     }
@@ -997,11 +1000,14 @@ public class Do {
   private static class EvaluateTarget {
     Element what = null;
     Element where = null;
-    double waitTime = -1;
+    int waitTime = -1;
     Element target = new Element();
     String type = "";
     Finder finder = null;
     long startTime = new Date().getTime();
+    long endTime = startTime;
+    long lastRepeatTime = 0;
+    long repeatPause = (long) (1000 / SX.getOptionNumber("Settings.WaitScanRate", 3));
 
     protected EvaluateTarget() {
     }
@@ -1035,9 +1041,11 @@ public class Do {
           } else if (args1 instanceof Element) {
             where = (Element) args1;
           } else if (args1 instanceof Double) {
-            waitTime = (Double) args1;
+            waitTime = (int) (1000 * (Double) args1);
+          } else if (args1 instanceof Integer) {
+            waitTime = 1000 * (Integer) args1;
           } else {
-            log.error("EvaluateTarget: args0 invalid: %s", args0);
+            log.error("EvaluateTarget: args1 invalid: %s", args0);
           }
         }
         if (SX.isNotNull(what)) {
@@ -1052,9 +1060,11 @@ public class Do {
             if (finder.isValid()) {
               target = where;
               if (waitTime < 0) {
-                waitTime = Math.max(where.getWaitForMatch(), what.getWaitForThis());
+                waitTime = (int) (1000 * Math.max(where.getWaitForMatch(), what.getWaitForThis()));
               }
+              endTime = startTime + waitTime;
               if (type.isEmpty()) {
+                lastRepeatTime = new Date().getTime();
                 finder.find(what);
               } else if (type == "ALL") {
                 finder.findAll(what);
@@ -1069,19 +1079,31 @@ public class Do {
     }
 
     protected void repeat() {
-      if (where.isOnScreen()) {
-        where.capture();
+      long now = new Date().getTime();
+      long repeatDelay = lastRepeatTime + repeatPause - now;
+      if (repeatDelay > 0) {
+        try {
+          Thread.sleep(repeatDelay);
+        } catch (InterruptedException ex) {
+        }
       }
-
-      if (type.isEmpty()) {
-        finder.find(what);
-      } else if (type == "ALL") {
-        finder.findAll(what);
-      }
-      if (where.hasMatch() || where.hasMatches()) {
-        long waitedFor = new Date().getTime() - startTime;
-        what.setLastWaitForThis(waitedFor);
-        where.setLastWaitForMatch(waitedFor);
+      log.trace("EvaluateTarget: repeat: delayed: %d", repeatDelay);
+      lastRepeatTime = new Date().getTime();
+      if (new Date().getTime() < endTime) {
+        if (where.isOnScreen()) {
+          where.capture();
+          finder.refreshBase();
+        }
+        if (type.isEmpty()) {
+          finder.find(what);
+        } else if (type == "ALL") {
+          finder.findAll(what);
+        }
+        if (where.hasMatch() || where.hasMatches()) {
+          long waitedFor = new Date().getTime() - startTime;
+          what.setLastWaitForThis(waitedFor);
+          where.setLastWaitForMatch(waitedFor);
+        }
       }
     }
 
@@ -1089,7 +1111,7 @@ public class Do {
       if (waitTime < 0) {
         return false;
       }
-      return startTime + waitTime > new Date().getTime();
+      return new Date().getTime() < endTime;
     }
 
     @Override

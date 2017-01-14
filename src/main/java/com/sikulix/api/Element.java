@@ -221,7 +221,7 @@ public class Element extends SXElement {
   }
 
   public void show(int time) {
-    show(this, time);
+    show(this, time, 0);
   }
 
   public void showMatch() {
@@ -232,8 +232,12 @@ public class Element extends SXElement {
     showAll(this, this.getLastMatches(), showTime);
   }
 
-  public void showContent() {
-    show(-1);
+  public void showContent(int timeAfter) {
+    show(this, -timeAfter, 0);
+  }
+
+  public void showContent(int timeAfter, int timeBefore) {
+    show(this, -timeAfter, timeBefore);
   }
 
   public boolean isShowing() {

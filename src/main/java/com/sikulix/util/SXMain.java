@@ -73,9 +73,8 @@ public class SXMain {
     traceBlock("testing: find image on primary monitor");
     if (baseOK && imgOK) {
       Element element = new Element();
-      base.showContent();
+      base.showContent(3);
       element = Do.find(img);
-      SX.pause(5);
       if (element.isMatch()) {
         SX.getMain().showMatch();
       }

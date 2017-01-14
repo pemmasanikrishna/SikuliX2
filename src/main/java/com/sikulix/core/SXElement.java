@@ -553,12 +553,13 @@ public abstract class SXElement implements Comparable<SXElement>{
 
   public static int showTime = 3;
 
-  protected static void show(Element elem, int time) {
-    if(time < 0) {
-      ShowSub sub = new ShowSub(elem);
+  protected static void show(Element elem, int timeAfter, int timeBefore) {
+    if(timeAfter < 0) {
+      ShowSub sub = new ShowSub(elem, timeBefore);
       new Thread(sub).start();
+      SX.pause(-timeAfter);
     } else {
-      show(elem, null, time);
+      show(elem, null, timeAfter);
     }
   }
 
@@ -596,6 +597,11 @@ public abstract class SXElement implements Comparable<SXElement>{
   private static JFrame doShow(Element elem, List<Element> overlays, int time) {
     if (!elem.hasContent()) {
       return null;
+    }
+    if (time <0) {
+      log.trace("doShow (background)c: start");
+    } else {
+      log.trace("doShow: start");
     }
     Mat imgMat = elem.getContent().clone();
     if (SX.isNotNull(overlays) && overlays.size() > 0) {
@@ -644,14 +650,17 @@ public abstract class SXElement implements Comparable<SXElement>{
   private static class ShowSub implements Runnable {
 
     Element elem = null;
+    int timeBefore = 0;
 
-    public ShowSub(Element elem) {
+    public ShowSub(Element elem, int timeBefore) {
       this.elem = elem;
+      this.timeBefore = timeBefore;
     }
 
     @Override
     public void run() {
       if (SX.isNotNull(elem) && elem.hasContent()) {
+        SX.pause(timeBefore);
         JFrame frImg = doShow(elem, null, -1);
         SX.getMain().setShowing(frImg);
       }

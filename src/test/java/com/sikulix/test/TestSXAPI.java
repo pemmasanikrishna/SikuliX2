@@ -101,7 +101,63 @@ public class TestSXAPI {
       log.stopTimer();
     }
     Image.clearPath();
+    resetDefaultScreen();
     log.info("!%2d: result: %s: %s ", nTest++, currentTest, result);
+  }
+
+  Image base = null;
+  Image img = null;
+  Element match = new Element();
+  List<Element> matches = new ArrayList<>();
+  boolean isHeadless = false;
+  Element elemDisplayed = new Element();
+  int showPauseAfter = 3;
+  int showPauseBefore = 0;
+
+  private void prepareDefaultScreen() {
+    prepareDefaultScreen(null, null);
+  }
+
+  private boolean prepareDefaultScreen(String fnImg) {
+    return prepareDefaultScreen(fnImg, null);
+  }
+
+  private boolean prepareDefaultScreen(String fnBase, String fnImg) {
+    result = "headless: not tested";
+    if (!SX.isHeadless()) {
+      if (SX.isNull(fnBase)) {
+        return true;
+      }
+      Do.setBundlePath(mavenRoot, "Images");
+      base = new Image(fnBase);
+      if (base.hasContent()) {
+        base.showContent(showPauseAfter, showPauseBefore);
+        elemDisplayed = SX.getMain().whereShowing();
+        if (SX.isNull(fnImg)) {
+          return true;
+        }
+        result = "Not Found";
+        start();
+        img = new Image(fnImg);
+        if (img.hasContent()) {
+          return true;
+        }
+      }
+      return false;
+    }
+    isHeadless = true;
+    return true;
+  }
+
+  private void resetDefaultScreen() {
+    base = null;
+    img = null;
+    match = new Element();
+    matches = new ArrayList<>();
+    isHeadless = false;
+    elemDisplayed = new Element();
+    showPauseAfter = 3;
+    showPauseBefore = 0;
   }
   //</editor-fold>
 
@@ -385,50 +441,7 @@ public class TestSXAPI {
     }
     assert false;
   }
-
-  Image base = null;
-  Image img = null;
-  Element match = null;
-  List<Element> matches = new ArrayList<>();
-  boolean isHeadless = false;
-  Element elemDisplayed = null;
-  int showPause = 3;
-
-  private void prepareDefaultScreen() {
-    prepareDefaultScreen(null, null);
-  }
-
-  private boolean prepareDefaultScreen(String fnImg) {
-    return prepareDefaultScreen(fnImg, null);
-  }
-
-  private boolean prepareDefaultScreen(String fnBase, String fnImg) {
-    result = "headless: not tested";
-    if (!SX.isHeadless()) {
-      if (SX.isNull(fnBase)) {
-        return true;
-      }
-      Do.setBundlePath(mavenRoot, "Images");
-      base = new Image(fnBase);
-      if (base.hasContent()) {
-        base.showContent();
-        SX.pause(showPause);
-        elemDisplayed = SX.getMain().whereShowing();
-        if (SX.isNull(fnImg)) {
-          return true;
-        }
-        result = "Not Found";
-        start();
-        img = new Image(fnImg);
-        if (img.hasContent()) {
-          return true;
-        }
-      }
-      return false;
-    }
-    isHeadless = true;
-    return true;
-  }
+//</editor-fold>
 
   @Test
   public void test_52_findInDefaultScreen() {
@@ -459,7 +472,21 @@ public class TestSXAPI {
     SX.getMain().showMatches();
   }
 
-//</editor-fold>
+  @Test
+  public void test_54_waitForOnDefaultScreen() {
+    currentTest = "test_54_waitForOnDefaultScreen";
+    showPauseBefore = 3;
+    assert prepareDefaultScreen("shot", imageNameDefault);
+    if (isHeadless) {
+      return;
+    }
+    int waitTime = (int) SX.getOptionNumber("Settings.AutoWaitTimeout", 3);
+    match = Do.wait(img, waitTime);
+    result = end() + match.toString();
+    assert match.isValid();
+    SX.getMain().showMatch();
+  }
+
 
   //<editor-fold desc="ignored">
   @Ignore

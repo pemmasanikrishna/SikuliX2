@@ -19,8 +19,6 @@ public class Finder {
 
   private static final SXLog log = SX.getLogger("SX.Finder");
 
-  private static final double downSimDiff = 0.15;
-
   private Element baseElement = null;
   private Mat base = new Mat();
   private Mat result = new Mat();
@@ -35,6 +33,10 @@ public class Finder {
     } else {
       log.error("init: invalid element: %s", elem);
     }
+  }
+
+  public void refreshBase() {
+    base = baseElement.getContent();
   }
 
   private enum FindType {
@@ -99,6 +101,7 @@ public class Finder {
   private int resizeMaxLevel = resizeLevels.length - 1;
   private double resizeMinSim = 0.8;
   private boolean isCheckLastSeen = false;
+  private static final double downSimDiff = 0.15;
 
   private FindResult doFind(Element elem, FindType findType) {
     if (!elem.isTarget()) {
@@ -127,6 +130,9 @@ public class Finder {
       }
     }
     double rfactor = 0;
+    boolean downSizeFound = false;
+    double downSizeScore = 0;
+    double downSizeWantedScore = 0;
     if (FindType.ONE.equals(findType) && target.getResizeFactor() > resizeMinFactor) {
       // ************************************************* search in downsized
       begin_t = new Date().getTime();
@@ -142,14 +148,16 @@ public class Finder {
         Imgproc.resize(target.getContent(), mPattern, sp, 0, 0, Imgproc.INTER_AREA);
         result = doFindMatch(target, mBase, mPattern);
         mMinMax = Core.minMaxLoc(result);
-        double wantedScore = ((int) ((target.getWantedScore() - downSimDiff) * 100)) / 100.0;
-        if (mMinMax.maxVal > wantedScore) {
+        downSizeWantedScore = ((int) ((target.getWantedScore() - downSimDiff) * 100)) / 100.0;
+        downSizeScore = mMinMax.maxVal;
+        if (downSizeScore > downSizeWantedScore) {
+          downSizeFound = true;
           break;
         }
       }
       log.trace("doFind: down: %%%.2f %d msec", 100 * mMinMax.maxVal, new Date().getTime() - begin_t);
     }
-    if (FindType.ONE.equals(findType) || mMinMax != null) {
+    if (FindType.ONE.equals(findType) && downSizeFound) {
       // ************************************* check after downsized success
       if (base.size().equals(target.getContent().size())) {
         // trust downsized result, if images have same size
@@ -174,11 +182,11 @@ public class Finder {
       }
     }
     // ************************************** search in original
-    if (SX.isNull(findResult)) {
+    if (((int) (100 * downSizeScore)) == 0 ) {
       begin_t = new Date().getTime();
       result = doFindMatch(target, base, null);
       mMinMax = Core.minMaxLoc(result);
-      if (!isCheckLastSeen || FindType.ALL.equals(findType)) {
+      if (!isCheckLastSeen) {
         log.trace("doFind: search in original: %d msec", new Date().getTime() - begin_t);
       }
       if (mMinMax.maxVal > target.getWantedScore()) {
