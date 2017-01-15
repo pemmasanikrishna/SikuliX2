@@ -12,29 +12,22 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.awt.image.DataBufferInt;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.util.*;
 import java.util.List;
 
-public class Image extends Element {
+public class Picture extends Element {
 
-  private static eType eClazz = eType.IMAGE;
+  private static eType eClazz = eType.PICTURE;
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
   //<editor-fold desc="*** construction">
-  public Image() {
+  public Picture() {
   }
 
   protected void setClazz() {
@@ -56,7 +49,7 @@ public class Image extends Element {
     initName(eClazz);
   }
 
-  public Image(BufferedImage bimg) {
+  public Picture(BufferedImage bimg) {
     this();
     long start = new Date().getTime();
     setContent(makeMat(bimg));
@@ -65,7 +58,7 @@ public class Image extends Element {
     setAttributes();
   }
 
-  public Image(Mat mat) {
+  public Picture(Mat mat) {
     this();
     if (SX.isNull(mat)) {
       setContent(new Mat());
@@ -78,36 +71,36 @@ public class Image extends Element {
     setAttributes();
   }
 
-  public Image(String fpImg) {
+  public Picture(String fpImg) {
     this();
     setContent(fpImg);
     init(0, 0, getContent().width(), getContent().height());
     setName(getNameFromURL(urlImg));
   }
 
-  public Image(URL url) {
+  public Picture(URL url) {
     this();
     setContent(url);
     init(0, 0, getContent().width(), getContent().height());
     setName(getNameFromURL(urlImg));
   }
 
-  public Image(Element elem) {
+  public Picture(Element elem) {
     super(elem);
     copy(elem);
   }
 
-  public Image(Element elem, double score) {
+  public Picture(Element elem, double score) {
     super(elem, score);
     copy(elem);
   }
 
-  public Image(Element elem, double score, Element off) {
+  public Picture(Element elem, double score, Element off) {
     super(elem, score, off);
     copy(elem);
   }
 
-  public Image(Element elem, Element off) {
+  public Picture(Element elem, Element off) {
     super(elem, off);
     copy(elem);
   }
@@ -174,7 +167,7 @@ public class Image extends Element {
     return name;
   }
 
-  public Image reset() {
+  public Picture reset() {
     if (isValid()) {
       setContent(urlImg);
     }
@@ -458,13 +451,13 @@ public class Image extends Element {
    * @param factor resize factor
    * @return a new inMemory Image
    */
-  public Image resize(float factor) {
-    Image img = new Image();
+  public Picture resize(float factor) {
+    Picture img = new Picture();
     if (isValid()) {
       Mat newMat = new Mat();
       Size newS = new Size(w * factor, h * factor);
       Imgproc.resize(getContent(), newMat, newS, 0, 0, Imgproc.INTER_AREA);
-      img = new Image(newMat);
+      img = new Picture(newMat);
     }
     return img;
   }
@@ -478,10 +471,10 @@ public class Image extends Element {
    * @param h height
    * @return the new image
    */
-  public Image getSub(int x, int y, int w, int h) {
-    Image img = new Image();
+  public Picture getSub(int x, int y, int w, int h) {
+    Picture img = new Picture();
     if (isValid()) {
-      img = new Image(getContent().submat(new Rect(x, y, w, h)));
+      img = new Picture(getContent().submat(new Rect(x, y, w, h)));
     }
     return img;
   }

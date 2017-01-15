@@ -188,14 +188,14 @@ public class Element extends SXElement {
   //</editor-fold>
 
   //<editor-fold desc="***** capture, highlight, show">
-  public Image capture() {
+  public Picture capture() {
     content = new Mat();
-    Image img = new Image();
+    Picture img = new Picture();
     if (isSpecial()) {
       SX.terminate(1, "capture: special not implemented");
     } else {
       Robot robot = SX.getSXROBOT();
-      img = new Image(robot.createScreenCapture(getRectangle()));
+      img = new Picture(robot.createScreenCapture(getRectangle()));
     }
     if (img.hasContent()) {
       content = img.getContent();
@@ -280,13 +280,13 @@ public class Element extends SXElement {
   //</editor-fold>
 
   //<editor-fold desc="***** lastCapture">
-  private Image lastCapture = null;
+  private Picture lastCapture = null;
 
-  public Image getLastCapture() {
+  public Picture getLastCapture() {
     return lastCapture;
   }
 
-  public void setLastCapture(Image lastCapture) {
+  public void setLastCapture(Picture lastCapture) {
     this.lastCapture = lastCapture;
   }
   //</editor-fold>
@@ -484,4 +484,9 @@ public class Element extends SXElement {
     write(keys.toString());
   }
   //</editor-fold>
+
+  public Element find(Object... args) {
+    return Do.find(target, this);
+  }
+
 }

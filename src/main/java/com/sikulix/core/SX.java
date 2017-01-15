@@ -1310,7 +1310,6 @@ public class SX {
   public static Element getMain() {
     return Do.onMain();
   }
-
   //</editor-fold>
 
   //<editor-fold desc="*** handle native libs">

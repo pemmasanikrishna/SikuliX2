@@ -6,8 +6,7 @@ package com.sikulix.util;
 
 import com.sikulix.api.Do;
 import com.sikulix.api.Element;
-import com.sikulix.api.Image;
-import com.sikulix.core.Finder;
+import com.sikulix.api.Picture;
 import com.sikulix.core.NativeHook;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
@@ -55,12 +54,12 @@ public class SXMain {
     log.trace("bundlePath: %s", Do.getBundlePath());
 
     traceBlock("testing: load image from jar");
-    Image img = new Image("sikulix2");
+    Picture img = new Picture("sikulix2");
     boolean imgOK = img.hasContent();
     img.show(3);
 
     traceBlock("testing: find image in other image");
-    Image base = new Image("shot-tile");
+    Picture base = new Picture("shot-tile");
     boolean baseOK = base.hasContent();
     if (baseOK && imgOK) {
       Element element = new Element();

@@ -5,13 +5,11 @@
 package com.sikulix.core;
 
 import com.sikulix.api.Element;
-import com.sikulix.api.Image;
 import com.sikulix.api.Target;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
-import java.lang.annotation.ElementType;
 import java.util.*;
 import java.util.List;
 

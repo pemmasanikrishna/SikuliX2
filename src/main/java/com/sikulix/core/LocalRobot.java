@@ -4,7 +4,7 @@
 package com.sikulix.core;
 
 import com.sikulix.api.Element;
-import com.sikulix.api.Image;
+import com.sikulix.api.Picture;
 
 import java.awt.Robot;
 import java.awt.AWTException;
@@ -116,11 +116,11 @@ public class LocalRobot extends Robot implements IRobot {
   }
 
   @Override
-  public Image captureScreen(Rectangle rect) {
+  public Picture captureScreen(Rectangle rect) {
     BufferedImage bImg = createScreenCapture(rect);
     log.trace("captureScreen: [%d,%d, %dx%d]",
             rect.x, rect.y, rect.width, rect.height);
-    return new Image(bImg);
+    return new Picture(bImg);
   }
 
   @Override

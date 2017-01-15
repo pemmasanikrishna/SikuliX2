@@ -4,6 +4,7 @@
 
 package com.sikulix.core;
 
+import com.sikulix.api.Picture;
 import org.sikuli.basics.PreferencesUser;
 import org.sikuli.basics.SplashFrame;
 
@@ -535,7 +536,7 @@ public class Content {
   }
   
   public static String saveTimedImage(BufferedImage img) {
-    return saveTimedImage(img, com.sikulix.api.Image.getBundlePath(), null);
+    return saveTimedImage(img, Picture.getBundlePath(), null);
   }
 
   public static String saveTimedImage(BufferedImage img, String path) {

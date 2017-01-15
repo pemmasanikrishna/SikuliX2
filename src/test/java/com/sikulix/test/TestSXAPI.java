@@ -100,13 +100,13 @@ public class TestSXAPI {
     if (log.isLevel(SXLog.TRACE)) {
       log.stopTimer();
     }
-    Image.clearPath();
+    Picture.clearPath();
     resetDefaultScreen();
     log.info("!%2d: result: %s: %s ", nTest++, currentTest, result);
   }
 
-  Image base = null;
-  Image img = null;
+  Picture base = null;
+  Picture img = null;
   Element match = new Element();
   List<Element> matches = new ArrayList<>();
   boolean isHeadless = false;
@@ -130,7 +130,7 @@ public class TestSXAPI {
         return true;
       }
       Do.setBundlePath(mavenRoot, "Images");
-      base = new Image(fnBase);
+      base = new Picture(fnBase);
       if (base.hasContent()) {
         base.showContent(showPauseAfter, showPauseBefore, showPauseVanish);
         elemDisplayed = SX.getMain().whereShowing();
@@ -139,7 +139,7 @@ public class TestSXAPI {
         }
         result = "Not Found";
         start();
-        img = new Image(fnImg);
+        img = new Picture(fnImg);
         if (img.hasContent()) {
           return true;
         }
@@ -255,7 +255,7 @@ public class TestSXAPI {
     Element elem = new Element();
     result = "Element();";
     assert SXElement.eType.ELEMENT.equals(elem.getType());
-    Image img = new Image();
+    Picture img = new Picture();
     result += " Image();";
     assert SXElement.eType.IMAGE.equals(img.getType());
     Target tgt = new Target();
@@ -281,7 +281,7 @@ public class TestSXAPI {
     currentTest = "test_31_loadImageFromFile";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "BundlePath: " + Do.getBundlePath();
-    Image img = new Image(imageNameDefault);
+    Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
     if (success) {
       result = set("(%s) Image %s from " + img.getURL(), img.timeToLoad, img.getName());
@@ -297,7 +297,7 @@ public class TestSXAPI {
     currentTest = "test_32_loadImageFromJarByClass";
     boolean success = Do.setBundlePath(jarImagePathClass);
     result = "BundlePath: " + Do.getBundlePath();
-    Image img = new Image(imageNameDefault);
+    Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
     if (success) {
       result = set("(%s) Image %s from " + img.getURL(), img.timeToLoad, img.getName());
@@ -313,7 +313,7 @@ public class TestSXAPI {
     currentTest = "test_33_loadImageFromHttp";
     boolean success = Do.setBundlePath(httpRoot, "master");
     result = "BundlePath: " + Do.getBundlePath();
-    Image img = new Image(imageNameDefault);
+    Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
     if (success) {
       result = set("(%s) Image %s from " + img.getURL(), img.timeToLoad, img.getName());
@@ -329,7 +329,7 @@ public class TestSXAPI {
     currentTest = "test_40_createFinderFromImage";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "";
-    Image img = new Image(imageNameDefault);
+    Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
     if (success) {
       Finder finder = new Finder(img);
@@ -344,9 +344,9 @@ public class TestSXAPI {
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
     start();
-    Image base = new Image(imageNameDefault);
+    Picture base = new Picture(imageNameDefault);
     success &= base.isValid();
-    Image img = new Image(base);
+    Picture img = new Picture(base);
     Element element = null;
     if (success) {
       element = Do.find(img, base);
@@ -368,9 +368,9 @@ public class TestSXAPI {
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
     start();
-    Image target = new Image(imageNameDefault);
+    Picture target = new Picture(imageNameDefault);
     success &= target.isValid();
-    Image base = new Image("shot-tile");
+    Picture base = new Picture("shot-tile");
     success &= base.isValid();
     Element element = null;
     if (success) {
@@ -393,9 +393,9 @@ public class TestSXAPI {
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
     start();
-    Image target = new Image(imageNameDefault);
+    Picture target = new Picture(imageNameDefault);
     success &= target.isValid();
-    Image base = new Image("shot-tile");
+    Picture base = new Picture("shot-tile");
     int expected = (int) (base.w / 200) * (int) (base.h / 200);
     success &= base.isValid();
     List<Element> elements = new ArrayList<>();
@@ -420,7 +420,7 @@ public class TestSXAPI {
       return;
     }
     start();
-    Image img = Do.capture();
+    Picture img = Do.capture();
     result = end() + img.toString();
     assert img.hasContent();
   }
@@ -434,7 +434,7 @@ public class TestSXAPI {
       return;
     }
     start();
-    Image img = Do.capture((Element) elemDisplayed.grow());
+    Picture img = Do.capture((Element) elemDisplayed.grow());
     result = end() + img.toString();
     SX.getMain().stopShowing();
     if (img.hasContent()) {
@@ -491,7 +491,6 @@ public class TestSXAPI {
 
   @Test
   public void test_55_waitVanishOnDefaultScreen() {
-    log.startTimer();
     currentTest = "test_55_waitVanishOnDefaultScreen";
     showPauseVanish = 1;
     assert prepareDefaultScreen("shot", imageNameDefault);
@@ -501,10 +500,22 @@ public class TestSXAPI {
     int waitTime = 5; //(int) SX.getOptionNumber("Settings.AutoWaitTimeout", 3);
     boolean vanished = Do.waitVanish(img, waitTime);
     result = end() + "vanished: " + vanished + " " + SX.getMain().getLastVanish();
-    SX.getMain().showVanish();
     assert vanished && SX.getMain().hasVanish() && !SX.getMain().hasMatch();
+    SX.getMain().showVanish();
   }
 
+  @Test
+  public void test_56_existsOnDefaultScreen() {
+    currentTest = "test_56_existsOnDefaultScreen";
+    assert prepareDefaultScreen("shot", imageNameDefault);
+    if (isHeadless) {
+      return;
+    }
+    boolean isThere = Do.exists(img);
+    result = end() + "exists: " + Do.getLastMatch().toString();
+    assert isThere;
+    SX.getMain().showMatch();
+  }
 
   //<editor-fold desc="ignored">
   @Ignore

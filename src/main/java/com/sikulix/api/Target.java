@@ -10,7 +10,7 @@ import org.opencv.core.Mat;
 
 import java.awt.image.BufferedImage;
 
-public class Target extends Image {
+public class Target extends Picture {
 
   private static eType eClazz = eType.TARGET;
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
@@ -47,7 +47,7 @@ public class Target extends Image {
     super(pat);
   }
 
-  public Target(Image img) {
+  public Target(Picture img) {
     super(img);
   }
 

@@ -37,7 +37,8 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public enum eType {
-    SXELEMENT, ELEMENT, IMAGE, TARGET, SCREEN, WINDOW, PATTERN;
+    SXELEMENT, ELEMENT, PICTURE, TARGET, WINDOW,
+    REGION, MATCH, SCREEN, PATTERN;
 
     static eType isType(String strType) {
       for (eType t : eType.values()) {
@@ -60,31 +61,27 @@ public abstract class SXElement implements Comparable<SXElement>{
 
   //<editor-fold desc="***** variants">
   public boolean isOnScreen() {
-    return isRectangle();
+    return isRectangle() && !isTarget();
   }
 
   public boolean isRectangle() {
-    return isElement() || isWindow() || isScreen();
+    return (isElement() && !isPoint()) || isWindow();
   }
 
   public boolean isPoint() {
-    return isElement() && w == 1 && h == 1;
+    return isElement() && w < 2 && h < 2;
   }
 
   public boolean isElement() {
     return eType.ELEMENT.equals(clazz);
   }
 
-  public boolean isImage() {
-    return eType.IMAGE.equals(clazz);
+  public boolean isPicture() {
+    return eType.PICTURE.equals(clazz);
   }
 
   public boolean isTarget() {
-    return eType.TARGET.equals(clazz) || isImage();
-  }
-
-  public boolean isScreen() {
-    return eType.SCREEN.equals(clazz);
+    return eType.TARGET.equals(clazz) || isPicture();
   }
 
   public boolean isWindow() {
@@ -99,7 +96,7 @@ public abstract class SXElement implements Comparable<SXElement>{
    * @return true if the element is useable and/or has valid content
    */
   public boolean isValid() {
-    return w > 0 && h > 0;
+    return w > 1 && h > 1;
   };
 
   //</editor-fold>
@@ -132,7 +129,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   protected void init() {
-    init(0, 0, 0, 0);
+    //init(0, 0, 0, 0);
   }
 
   protected void init(int _x, int _y, int _w, int _h) {

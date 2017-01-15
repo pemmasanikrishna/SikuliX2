@@ -25,6 +25,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 
+/**
+ * Implements the top level features as static methods to allow the usage somehow like "commands".<br>
+ *   Usage: Do.something(arg1, arg2, ...)<br>
+ */
 public class Do {
 
   private static SXLog log = SX.getLogger("SX.Do");
@@ -496,23 +500,23 @@ public class Do {
   }
 
   public static boolean setBundlePath(Object... args) {
-    return Image.setBundlePath(args);
+    return Picture.setBundlePath(args);
   }
 
   public static String getBundlePath() {
-    return Image.getBundlePath();
+    return Picture.getBundlePath();
   }
 
   public static void addImagePath(Object... args) {
-    Image.addPath(args);
+    Picture.addPath(args);
   }
 
   public static void removeImagePath(Object... args) {
-    Image.removePath(args);
+    Picture.removePath(args);
   }
 
   public static String[] getImagePath() {
-    return Image.getPath();
+    return Picture.getPath();
   }
   //</editor-fold>
 
@@ -873,9 +877,9 @@ public class Do {
   //</editor-fold>
 
   //<editor-fold desc="Screen related">
-  private static Element defaultScreenRegion = new Element(SX.getMonitor().getBounds());
-  private static Element defaultRegion = defaultScreenRegion;
-  private static Element allMonitorsRegion = new Element(SX.getAllMonitors());
+  private static Element defaultScreenAsElement = new Element(SX.getMonitor().getBounds());
+  private static Element defaultElementOnScreen = defaultScreenAsElement;
+  private static Element allMonitorsAsElement = new Element(SX.getAllMonitors());
 
   private static LocalRobot getLocalRobot() {
     if (SX.isNull(localRobot)) try {
@@ -889,68 +893,73 @@ public class Do {
   private static LocalRobot localRobot = null;
 
   public static Element on() {
-    return defaultRegion;
+    return defaultElementOnScreen;
   }
 
   public static Element onMain() {
-    return defaultScreenRegion;
+    return defaultScreenAsElement;
   }
 
   public static Element on(int monitor) {
-    return getScreenRegion(monitor);
+    return getScreenAsElement(monitor);
   }
 
-  private static List<Element> screenRegions = new ArrayList<>();
+  private static List<Element> screensAsElements = new ArrayList<>();
 
-  private static Element getScreenRegion(int monitor) {
-    if (screenRegions.size() == 0) {
+  private static Element getScreenAsElement(int monitor) {
+    if (screensAsElements.size() == 0) {
       for (int i = 0; i < SX.getNumberOfMonitors(); i++) {
-        screenRegions.add(new Element(SX.getMonitor(i)));
+        screensAsElements.add(new Element(SX.getMonitor(i)));
       }
     }
     if (monitor > -1 && monitor < SX.getNumberOfMonitors()) {
-      return screenRegions.get(monitor);
+      return screensAsElements.get(monitor);
     } else {
-      return screenRegions.get(0);
+      return screensAsElements.get(0);
     }
   }
 
   public static Element all() {
-    return allMonitorsRegion;
+    return allMonitorsAsElement;
   }
 
   public static Element use() {
-    defaultRegion = defaultScreenRegion;
-    return defaultRegion;
+    defaultElementOnScreen = defaultScreenAsElement;
+    return defaultElementOnScreen;
   }
 
   public static Element use(Element elem) {
-    defaultRegion = elem;
-    return defaultRegion;
+    defaultElementOnScreen = elem;
+    return defaultElementOnScreen;
   }
 
   public static Element use(int monitor) {
-    defaultRegion = new Element(SX.getMonitor(monitor).getBounds());
-    return defaultRegion;
+    defaultElementOnScreen = new Element(SX.getMonitor(monitor).getBounds());
+    return defaultElementOnScreen;
   }
 
-  public static Image capture() {
-    return capture(defaultRegion);
+  public static Picture capture() {
+    return capture(defaultElementOnScreen);
   }
 
-  public static Image capture(Element region) {
-    if (SX.isNull(region)) {
-      region = defaultRegion;
+  public static Picture capture(Element elem) {
+    if (SX.isNull(elem)) {
+      elem = defaultElementOnScreen;
     }
-    Image imgCapture = new Image();
+    Picture imgCapture = new Picture();
     //TODO capture special screens
-    if (!region.isSpecial()) {
-      imgCapture = getLocalRobot().captureScreen(region.getRectangle());
+    if (!elem.isSpecial()) {
+      imgCapture = getLocalRobot().captureScreen(elem.getRectangle());
     }
     return imgCapture;
   }
   //</editor-fold>
 
+  // find
+  // wait
+  // exists
+  // waitVanish
+  // findAll
   //<editor-fold desc="actions like find, wait, click">
   public static Element find(Object... args) {
     log.trace("find: start");
@@ -983,6 +992,11 @@ public class Do {
     }
     where.stopShowing();
     return match;
+  }
+
+  public static boolean exists(Object... args) {
+    Element match = wait(args);
+    return match.isMatch();
   }
 
   public static boolean waitVanish(Object... args) {
@@ -1022,6 +1036,34 @@ public class Do {
     return matches;
   }
 
+  public static boolean hasMatch() {
+    return defaultElementOnScreen.hasMatch();
+  }
+
+  public static Element getLastMatch() {
+    return defaultElementOnScreen.getLastMatch();
+  }
+
+  public static boolean hasVanish() {
+    return defaultElementOnScreen.hasVanish();
+  }
+
+  public static Element getLastVanish() {
+    return defaultElementOnScreen.getLastVanish();
+  }
+
+  public static boolean hasMatches() {
+    return defaultElementOnScreen.hasMatches();
+  }
+
+  public static List<Element> getLastMatches() {
+    List<Element> matches = defaultElementOnScreen.getLastMatches();
+    if (matches.isEmpty()) {
+      matches = null;
+    }
+    return matches;
+  }
+
   private static class EvaluateTarget {
     Element what = null;
     Element where = null;
@@ -1052,7 +1094,7 @@ public class Do {
       if (args.length > 0) {
         args0 = args[0];
         if (args0 instanceof String) {
-          what = new Image((String) args0);
+          what = new Picture((String) args0);
         } else if (args0 instanceof Element) {
           what = (Element) args0;
         } else {
@@ -1062,7 +1104,7 @@ public class Do {
         if (SX.isNotNull(what) && args.length == 2) {
           args1 = args[1];
           if (args1 instanceof String) {
-            where = new Image((String) args1);
+            where = new Picture((String) args1);
           } else if (args1 instanceof Element) {
             where = (Element) args1;
           } else if (args1 instanceof Double) {
@@ -1076,7 +1118,7 @@ public class Do {
         if (SX.isNotNull(what)) {
           if (what.isTarget()) {
             if (SX.isNull(where)) {
-              where = defaultRegion;
+              where = defaultElementOnScreen;
             }
             if (where.isOnScreen()) {
               where.capture();

@@ -5,7 +5,7 @@
 package com.sikulix.core;
 
 
-import com.sikulix.api.Image;
+import com.sikulix.api.Picture;
 
 import java.awt.Rectangle;
 import java.awt.Color;
@@ -31,7 +31,7 @@ public interface IRobot {
    void mouseDown(int buttons);
    int mouseUp(int buttons);
    void mouseWheel(int wheelAmt);
-   Image captureScreen(Rectangle rect);
+   Picture captureScreen(Rectangle rect);
    void waitForIdle();
    void delay(int ms);
    void setAutoDelay(int ms);
