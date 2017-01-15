@@ -554,8 +554,12 @@ public abstract class SXElement implements Comparable<SXElement>{
   public static int showTime = 3;
 
   protected static void show(Element elem, int timeAfter, int timeBefore) {
+    show(elem, timeAfter, timeBefore, 0);
+  }
+
+  protected static void show(Element elem, int timeAfter, int timeBefore, int timeVanish) {
     if(timeAfter < 0) {
-      ShowSub sub = new ShowSub(elem, timeBefore);
+      ShowSub sub = new ShowSub(elem, timeBefore, timeVanish - timeAfter);
       new Thread(sub).start();
       SX.pause(-timeAfter);
     } else {
@@ -651,10 +655,12 @@ public abstract class SXElement implements Comparable<SXElement>{
 
     Element elem = null;
     int timeBefore = 0;
+    int timeVanish = 0;
 
-    public ShowSub(Element elem, int timeBefore) {
+    public ShowSub(Element elem, int timeBefore, int timeVanish) {
       this.elem = elem;
       this.timeBefore = timeBefore;
+      this.timeVanish = timeVanish;
     }
 
     @Override
@@ -663,7 +669,26 @@ public abstract class SXElement implements Comparable<SXElement>{
         SX.pause(timeBefore);
         JFrame frImg = doShow(elem, null, -1);
         SX.getMain().setShowing(frImg);
+        if (timeVanish > 0) {
+          ShowSubStop subStop = new ShowSubStop(timeVanish);
+          new Thread(subStop).start();
+        }
       }
+    }
+  }
+
+  private static class ShowSubStop implements Runnable {
+
+    int timeVanish = 0;
+
+    public ShowSubStop(int timeVanish) {
+      this.timeVanish = timeVanish;
+    }
+
+    @Override
+    public void run() {
+      SX.pause(timeVanish);
+      SX.getMain().stopShowing();
     }
   }
 

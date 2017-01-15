@@ -45,6 +45,7 @@ public class Element extends SXElement {
   }
 
   private Element lastMatch = null;
+  private Element lastVanish = null;
   private java.util.List<Element> lastMatches = new ArrayList<Element>();
   private int matchIndex = -1;
 
@@ -228,16 +229,26 @@ public class Element extends SXElement {
     show(this, getLastMatch(), showTime);
   }
 
+  public void showVanish() {
+    if (SX.isNotNull(getLastVanish())) {
+      show(this, getLastVanish(), showTime);
+    }
+  }
+
   public void showMatches() {
     showAll(this, this.getLastMatches(), showTime);
   }
 
   public void showContent(int timeAfter) {
-    show(this, -timeAfter, 0);
+    showContent(timeAfter, 0, 0);
   }
 
   public void showContent(int timeAfter, int timeBefore) {
-    show(this, -timeAfter, timeBefore);
+    showContent(timeAfter, timeBefore, 0);
+  }
+
+  public void showContent(int timeAfter, int timeBefore, int timeVanish) {
+    show(this, -timeAfter, timeBefore, timeVanish);
   }
 
   public boolean isShowing() {
@@ -336,6 +347,10 @@ public class Element extends SXElement {
     return SX.isNotNull(lastMatch);
   }
 
+  public boolean hasVanish() {
+    return SX.isNotNull(lastVanish);
+  }
+
   public boolean hasMatches() {
     return lastMatches.size() > 0;
   }
@@ -344,12 +359,23 @@ public class Element extends SXElement {
     return lastMatch;
   }
 
-  public void setLastMatch(Element match) {
-    lastMatch = match;
+  public Element getLastVanish() {
+    return lastVanish;
   }
 
   public java.util.List<Element> getLastMatches() {
     return lastMatches;
+  }
+
+  public void setLastMatch(Element match) {
+    lastMatch = match;
+  }
+
+  public void setLastVanish(Element match) {
+    if (SX.isNotNull(match)) {
+      lastMatch = null;
+      lastVanish = match;
+    }
   }
 
   private double[] lastScores = new double[] {0, 0, 0};
@@ -374,56 +400,6 @@ public class Element extends SXElement {
 
   public void setMatchIndex(int matchIndex) {
     this.matchIndex = matchIndex;
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="***** find, wait">
-  private double waitAfter = 0;
-
-  public double getWaitAfter() {
-    return waitAfter;
-  }
-
-  public void setWaitAfter(double waitAfter) {
-    this.waitAfter = waitAfter;
-  }
-
-  public void wait(double time) {
-    SX.pause(time);
-  }
-
-  public Element find(Image img) {
-    return wait(img, 0);
-  }
-
-  public Element wait(Image img) {
-    //TODO implement wait(Image)
-    return null;
-  }
-
-  public Element wait(Image img, double time) {
-    //TODO implement wait(Image, time)
-    return null;
-  }
-
-  public boolean waitVanish(Image img) {
-    //TODO implement waitVanish(Image)
-    return true;
-  }
-
-  public boolean waitVanish(Image img, double time) {
-    //TODO implement waitVanish(Image, time)
-    return true;
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="***** observe">
-  public void stopObserver() {
-    stopObserver("");
-  }
-
-  public void stopObserver(String text) {
-    //TODO implement stopObserver()
   }
   //</editor-fold>
 

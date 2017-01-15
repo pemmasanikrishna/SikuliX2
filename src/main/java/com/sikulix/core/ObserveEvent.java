@@ -252,7 +252,7 @@ public class ObserveEvent {
    * stops the observer
    */
   public void stopObserver() {
-    region.stopObserver();
+//    region.stopObserver();
   }
 
   /**
@@ -260,7 +260,7 @@ public class ObserveEvent {
    * @param text text
    */
   public void stopObserver(String text) {
-    region.stopObserver(text);
+    //region.stopObserver(text);
   }
 
   @Override

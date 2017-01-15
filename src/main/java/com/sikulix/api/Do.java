@@ -985,6 +985,31 @@ public class Do {
     return match;
   }
 
+  public static boolean waitVanish(Object... args) {
+    log.trace("waitVanish: start");
+    EvaluateTarget evalTarget = new EvaluateTarget();
+    Element where = evalTarget.get(args);
+    where.setLastVanish(null);
+    Element match = new Element();
+    boolean vanished = false;
+    if (where.hasMatch()) {
+      match = where.getLastMatch();
+      where.setLastVanish(match);
+      while (!vanished && evalTarget.shouldWait()) {
+        log.trace("wait: need to repeat");
+        evalTarget.repeat();
+        if (where.hasMatch()) {
+          match = where.getLastMatch();
+          where.setLastVanish(match);
+        } else {
+          vanished = true;
+        }
+      }
+    }
+    where.stopShowing();
+    return vanished;
+  }
+
   public static List<Element> findAll(Object... args) {
     log.trace("findAll: start");
     Element where = new EvaluateTarget("ALL").get(args);

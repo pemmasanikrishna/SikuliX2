@@ -113,6 +113,7 @@ public class TestSXAPI {
   Element elemDisplayed = new Element();
   int showPauseAfter = 3;
   int showPauseBefore = 0;
+  int showPauseVanish = 0;
 
   private void prepareDefaultScreen() {
     prepareDefaultScreen(null, null);
@@ -131,7 +132,7 @@ public class TestSXAPI {
       Do.setBundlePath(mavenRoot, "Images");
       base = new Image(fnBase);
       if (base.hasContent()) {
-        base.showContent(showPauseAfter, showPauseBefore);
+        base.showContent(showPauseAfter, showPauseBefore, showPauseVanish);
         elemDisplayed = SX.getMain().whereShowing();
         if (SX.isNull(fnImg)) {
           return true;
@@ -158,6 +159,7 @@ public class TestSXAPI {
     elemDisplayed = new Element();
     showPauseAfter = 3;
     showPauseBefore = 0;
+    showPauseVanish = 0;
   }
   //</editor-fold>
 
@@ -485,6 +487,22 @@ public class TestSXAPI {
     result = end() + match.toString();
     assert match.isValid();
     SX.getMain().showMatch();
+  }
+
+  @Test
+  public void test_55_waitVanishOnDefaultScreen() {
+    log.startTimer();
+    currentTest = "test_55_waitVanishOnDefaultScreen";
+    showPauseVanish = 1;
+    assert prepareDefaultScreen("shot", imageNameDefault);
+    if (isHeadless) {
+      return;
+    }
+    int waitTime = 5; //(int) SX.getOptionNumber("Settings.AutoWaitTimeout", 3);
+    boolean vanished = Do.waitVanish(img, waitTime);
+    result = end() + "vanished: " + vanished + " " + SX.getMain().getLastVanish();
+    SX.getMain().showVanish();
+    assert vanished && SX.getMain().hasVanish() && !SX.getMain().hasMatch();
   }
 
 
