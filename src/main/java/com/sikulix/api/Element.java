@@ -10,9 +10,16 @@ import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
 import javax.swing.*;
-import java.awt.*;
+import java.awt.MouseInfo;
+import java.awt.Point;
+import java.awt.PointerInfo;
+import java.awt.Rectangle;
+import java.awt.Robot;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Element extends SXElement {
 
@@ -44,10 +51,21 @@ public class Element extends SXElement {
     return isValid() ? resizeFactor : 1;
   }
 
+  public Element getLastTarget() {
+    return lastTarget;
+  }
+
+  public void setLastTarget(Element lastTarget) {
+    this.lastTarget = lastTarget;
+  }
+
+  private Element lastTarget = null;
   private Element lastMatch = null;
   private Element lastVanish = null;
   private java.util.List<Element> lastMatches = new ArrayList<Element>();
   private int matchIndex = -1;
+
+
 
   public Element getLastSeen() {
     if (SX.isNull(lastSeen)) {
@@ -440,7 +458,7 @@ public class Element extends SXElement {
    * @return this
    */
   public SXElement hover() {
-    Mouse.get().move(this.getTarget());
+    Device.move(this.getTarget());
     return this;
   }
 
@@ -450,7 +468,7 @@ public class Element extends SXElement {
    * @return this
    */
   public SXElement click() {
-    Mouse.get().click(this.getTarget(), "L");
+    Device.click(this.getTarget(), "L");
     return this;
   }
 
@@ -460,7 +478,7 @@ public class Element extends SXElement {
    * @return this
    */
   public SXElement doubleClick() {
-    Mouse.get().click(this.getTarget(), "LD");
+    Device.click(this.getTarget(), "LD");
     return this;
   }
 
@@ -470,7 +488,7 @@ public class Element extends SXElement {
    * @return this
    */
   public SXElement rightClick() {
-    Mouse.get().click(this.getTarget(), "R");
+    Device.click(this.getTarget(), "R");
     return this;
   }
   //</editor-fold>
@@ -485,8 +503,84 @@ public class Element extends SXElement {
   }
   //</editor-fold>
 
+  public double getAutoWaitTimeout() {
+    return autoWaitTimeout;
+  }
+
+  public void setAutoWaitTimeout(double autoWaitTimeout) {
+    this.autoWaitTimeout = autoWaitTimeout;
+  }
+
+  double autoWaitTimeout = getWaitForMatch();
+
+  public Event getFindFailedResponse() {
+    return eventFindFailed;
+  }
+
+  public Event setFindFailedResponse(Event.REACTION response) {
+    eventFindFailed = new Event(Event.TYPE.FINDFAILED, response);
+    return eventFindFailed;
+  }
+
+  public Event setFindFailedHandler(Handler handler) {
+    eventFindFailed = new Event(Event.TYPE.FINDFAILED, handler);
+    return eventFindFailed;
+  }
+
+  public Event getImageMissingResponse() {
+    return eventImageMissing;
+  }
+
+  public Event setImageMissingResponse(Event.REACTION response) {
+    eventImageMissing = new Event(Event.TYPE.IMAGEMISSING, response);
+    return eventImageMissing;
+  }
+
+  public Event setImageMissingHandler(Handler handler) {
+    eventImageMissing = new Event(Event.TYPE.IMAGEMISSING, handler);
+    return eventImageMissing;
+  }
+
+  private String setOnHandler(Event.TYPE type, Element elem, Handler handler) {
+    Event event = new Event(type, elem, handler);
+    String name = elem.getName();
+    onEvents.put(name, event);
+    return name;
+  }
+
+  public String onAppear(Element elem, Handler handler) {
+    return setOnHandler(Event.TYPE.ONAPPEAR, elem, handler);
+  }
+
+  public String onVanish(Element elem, Handler handler) {
+    return setOnHandler(Event.TYPE.ONAPPEAR, elem, handler);
+  }
+
+  public String onChange(Element elem, Handler handler) {
+    return setOnHandler(Event.TYPE.ONAPPEAR, elem, handler);
+  }
+
+  private Event eventFindFailed = new Event(Event.TYPE.FINDFAILED, Event.REACTION.ABORT);
+  private Event eventImageMissing = new Event(Event.TYPE.IMAGEMISSING, Event.REACTION.ABORT);
+  private Map<String, Event> onEvents = new HashMap<>();
+
   public Element find(Object... args) {
     return Do.find(target, this);
   }
 
+  public Element wait(Object... args) {
+    return Do.wait(target, this);
+  }
+
+  public boolean waitVanish(Object... args) {
+    return Do.waitVanish(target, this);
+  }
+
+  public boolean exists(Object... args) {
+    return Do.exists(target, this);
+  }
+
+  public List<Element> findAll(Object... args) {
+    return Do.findAll(target, this);
+  }
 }

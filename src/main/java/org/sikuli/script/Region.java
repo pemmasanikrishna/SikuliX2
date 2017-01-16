@@ -28,29 +28,9 @@ public class Region extends Element {
     initName(eClazz);
   }
 
-  public double getAutoWaitTimeout() {
-    return autoWaitTimeout;
-  }
-
-  public void setAutoWaitTimeout(double autoWaitTimeout) {
-    this.autoWaitTimeout = autoWaitTimeout;
-  }
-
-  double autoWaitTimeout = getWaitForMatch();
-
-  public FindFailedResponse getFindFailedResponse() {
-    return findFailedResponse;
-  }
-
-  public void setFindFailedResponse(FindFailedResponse findFailedResponse) {
-    this.findFailedResponse = findFailedResponse;
-  }
-
-  private FindFailedResponse findFailedResponse = FindFailed.defaultFindFailedResponse;
-
   public <PSI> Match find(PSI target) throws FindFailed {
-    if (autoWaitTimeout > 0) {
-      return wait(target, autoWaitTimeout);
+    if (getAutoWaitTimeout() > 0) {
+      return wait(target, getAutoWaitTimeout());
     }
     Do.find(target, this);
     if (hasMatch()) {
@@ -59,12 +39,19 @@ public class Region extends Element {
     throw new FindFailed(String.format("%s in %s", target, this));
   }
 
+  public void wait(double timeout) {
+    try {
+      Thread.sleep((long) (timeout * 1000L));
+    } catch (InterruptedException e) {
+    }
+  }
+
   public <PSI> Match wait(PSI target) throws FindFailed {
     if (target instanceof Float || target instanceof Double) {
       wait(0.0 + ((Double) target));
       return null;
     }
-    return wait(target, autoWaitTimeout);
+    return wait(target, getAutoWaitTimeout());
   }
 
   public <PSI> Match wait(PSI target, double timeout) throws FindFailed {
@@ -76,7 +63,7 @@ public class Region extends Element {
   }
 
   public <PSI> Match exists(PSI target) {
-    return exists(target, autoWaitTimeout);
+    return exists(target, getAutoWaitTimeout());
   }
 
   public <PSI> Match exists(PSI target, double timeout) {
@@ -85,7 +72,7 @@ public class Region extends Element {
   }
 
   public <PSI> boolean waitVanish(PSI target) {
-    return waitVanish(target, autoWaitTimeout);
+    return waitVanish(target, getAutoWaitTimeout());
   }
 
   public <PSI> boolean waitVanish(PSI target, double timeout) {
@@ -105,7 +92,7 @@ public class Region extends Element {
 
     List<Element> matches = null;
 
-    public  IteratorMatch(List<Element> matches) {
+    public IteratorMatch(List<Element> matches) {
       this.matches = matches;
     }
 
@@ -126,5 +113,4 @@ public class Region extends Element {
     public void remove() {
     }
   }
-
 }

@@ -1124,7 +1124,9 @@ public class Do {
               where.capture();
             }
             finder = new Finder(where);
+            where.setLastTarget(null);
             if (finder.isValid()) {
+              where.setLastTarget(what);
               target = where;
               if (waitTime < 0) {
                 waitTime = (int) (1000 * Math.max(where.getWaitForMatch(), what.getWaitForThis()));
