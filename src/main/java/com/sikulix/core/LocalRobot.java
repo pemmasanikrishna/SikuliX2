@@ -130,16 +130,16 @@ public class LocalRobot extends Robot implements IRobot {
 
   @Override
   public void pressModifiers(int modifiers) {
-    if (Keys.hasModifier(modifiers, Keys.Modifier.SHIFT)) {
+    if (Device.hasModifier(modifiers, Device.Modifier.SHIFT)) {
       doKeyPress(KeyEvent.VK_SHIFT);
     }
-    if (Keys.hasModifier(modifiers, Keys.Modifier.CTRL)) {
+    if (Device.hasModifier(modifiers, Device.Modifier.CTRL)) {
       doKeyPress(KeyEvent.VK_CONTROL);
     }
-    if (Keys.hasModifier(modifiers, Keys.Modifier.ALT)) {
+    if (Device.hasModifier(modifiers, Device.Modifier.ALT)) {
       doKeyPress(KeyEvent.VK_ALT);
     }
-    if (Keys.hasModifier(modifiers, Keys.Modifier.META)) {
+    if (Device.hasModifier(modifiers, Device.Modifier.META)) {
       if (SX.isWindows()) {
         doKeyPress(KeyEvent.VK_WINDOWS);
       } else {
@@ -150,16 +150,16 @@ public class LocalRobot extends Robot implements IRobot {
 
   @Override
   public void releaseModifiers(int modifiers) {
-    if (Keys.hasModifier(modifiers, Keys.Modifier.SHIFT)) {
+    if (Device.hasModifier(modifiers, Device.Modifier.SHIFT)) {
       doKeyRelease(KeyEvent.VK_SHIFT);
     }
-    if (Keys.hasModifier(modifiers, Keys.Modifier.CTRL)) {
+    if (Device.hasModifier(modifiers, Device.Modifier.CTRL)) {
       doKeyRelease(KeyEvent.VK_CONTROL);
     }
-    if (Keys.hasModifier(modifiers, Keys.Modifier.ALT)) {
+    if (Device.hasModifier(modifiers, Device.Modifier.ALT)) {
       doKeyRelease(KeyEvent.VK_ALT);
     }
-    if (Keys.hasModifier(modifiers, Keys.Modifier.META)) {
+    if (Device.hasModifier(modifiers, Device.Modifier.META)) {
       if (SX.isWindows()) {
         doKeyRelease(KeyEvent.VK_WINDOWS);
       } else {
@@ -242,32 +242,32 @@ public class LocalRobot extends Robot implements IRobot {
   @Override
   public void typeChar(char character, KeyMode mode) {
     log.trace("Robot: doType: %s ( %d )",
-            KeyEvent.getKeyText(Keys.toJavaKeyCode(character)[0]),
-            Keys.toJavaKeyCode(character)[0]);
-    doType(mode, Keys.toJavaKeyCode(character));
+            KeyEvent.getKeyText(Device.toJavaKeyCode(character)[0]),
+            Device.toJavaKeyCode(character)[0]);
+    doType(mode, Device.toJavaKeyCode(character));
   }
 
   @Override
   public void typeKey(int key) {
     log.trace("Robot: doType: %s ( %d )", KeyEvent.getKeyText(key), key);
     if (SX.isMac()) {
-      if (key == Keys.toJavaKeyCodeFromText("#N.")) {
-        doType(KeyMode.PRESS_ONLY, Keys.toJavaKeyCodeFromText("#C."));
+      if (key == Device.toJavaKeyCodeFromText("#N.")) {
+        doType(KeyMode.PRESS_ONLY, Device.toJavaKeyCodeFromText("#C."));
         doType(KeyMode.PRESS_RELEASE, key);
-        doType(KeyMode.RELEASE_ONLY, Keys.toJavaKeyCodeFromText("#C."));
+        doType(KeyMode.RELEASE_ONLY, Device.toJavaKeyCodeFromText("#C."));
         return;
-      } else if (key == Keys.toJavaKeyCodeFromText("#T.")) {
-        doType(KeyMode.PRESS_ONLY, Keys.toJavaKeyCodeFromText("#C."));
-        doType(KeyMode.PRESS_ONLY, Keys.toJavaKeyCodeFromText("#A."));
+      } else if (key == Device.toJavaKeyCodeFromText("#T.")) {
+        doType(KeyMode.PRESS_ONLY, Device.toJavaKeyCodeFromText("#C."));
+        doType(KeyMode.PRESS_ONLY, Device.toJavaKeyCodeFromText("#A."));
         doType(KeyMode.PRESS_RELEASE, key);
-        doType(KeyMode.RELEASE_ONLY, Keys.toJavaKeyCodeFromText("#A."));
-        doType(KeyMode.RELEASE_ONLY, Keys.toJavaKeyCodeFromText("#C."));
+        doType(KeyMode.RELEASE_ONLY, Device.toJavaKeyCodeFromText("#A."));
+        doType(KeyMode.RELEASE_ONLY, Device.toJavaKeyCodeFromText("#C."));
         return;
-      } else if (key == Keys.toJavaKeyCodeFromText("#X.")) {
-        key = Keys.toJavaKeyCodeFromText("#T.");
-        doType(KeyMode.PRESS_ONLY, Keys.toJavaKeyCodeFromText("#A."));
+      } else if (key == Device.toJavaKeyCodeFromText("#X.")) {
+        key = Device.toJavaKeyCodeFromText("#T.");
+        doType(KeyMode.PRESS_ONLY, Device.toJavaKeyCodeFromText("#A."));
         doType(KeyMode.PRESS_RELEASE, key);
-        doType(KeyMode.RELEASE_ONLY, Keys.toJavaKeyCodeFromText("#A."));
+        doType(KeyMode.RELEASE_ONLY, Device.toJavaKeyCodeFromText("#A."));
         return;
       }
     }
