@@ -91,6 +91,10 @@ public class Element extends SXElement {
   }
 
   protected void copy(Element elem) {
+    x = elem.x;
+    y = elem.y;
+    w = elem.w;
+    h = elem.h;
   }
 
   protected void initAfter() {
@@ -181,7 +185,7 @@ public class Element extends SXElement {
    *
    * @return the sequence number of the screen, that contains the given point
    */
-  public int getContainingScreenNumber() {
+  public int isOn() {
     Rectangle r;
     for (int i = 0; i < SX.getNumberOfMonitors(); i++) {
       r = SX.getMonitor(i);

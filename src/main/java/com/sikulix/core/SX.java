@@ -1240,6 +1240,10 @@ public class SX {
     return SX.isSet(System.getenv("TRAVIS"), "true");
   }
 
+  public static void resetMonitors() {
+    globalGetMonitors();
+  }
+
   private static void globalGetMonitors() {
     if (!isHeadless()) {
       genv = GraphicsEnvironment.getLocalGraphicsEnvironment();

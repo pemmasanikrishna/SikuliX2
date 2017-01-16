@@ -9,6 +9,7 @@ import com.sikulix.core.*;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
+import org.sikuli.script.Screen;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -443,7 +444,6 @@ public class TestSXAPI {
     }
     assert false;
   }
-//</editor-fold>
 
   @Test
   public void test_52_findInDefaultScreen() {
@@ -516,11 +516,20 @@ public class TestSXAPI {
     assert isThere;
     SX.getMain().showMatch();
   }
+  //</editor-fold>
+
+  @Test
+  public void test_80_oldAPI_Screen() {
+    currentTest = "test_80_oldAPI_Screen";
+    Screen.showMonitors();
+    new Screen(1).show();
+    result = new Screen(1).toString();
+  }
 
   //<editor-fold desc="ignored">
   @Ignore
-  public void test_60_nativeHook() {
-    currentTest = "test_60_nativeHook";
+  public void test_160_nativeHook() {
+    currentTest = "test_160_nativeHook";
     if (!SX.isHeadless()) {
       NativeHook hook = NativeHook.start();
       SX.pause(3);
@@ -533,9 +542,9 @@ public class TestSXAPI {
   }
 
   @Ignore
-  public void test_90_popat() {
+  public void test_190_popat() {
     boolean assertVal = true;
-    currentTest = "test_90_popat";
+    currentTest = "test_190_popat";
     if (!SX.onTravisCI()) {
       Do.popat(300, 300);
       Do.popup("Use mouse to click OK", "testing popat");

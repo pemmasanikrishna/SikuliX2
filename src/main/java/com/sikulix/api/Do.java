@@ -881,6 +881,28 @@ public class Do {
   private static Element defaultElementOnScreen = defaultScreenAsElement;
   private static Element allMonitorsAsElement = new Element(SX.getAllMonitors());
 
+  /**
+   * show the current monitor setup
+   */
+  public static void showMonitors() {
+    log.p("*** monitor configuration [ %s Screen(s)] ***", SX.getNumberOfMonitors());
+    log.p("*** Primary is Screen %d", SX.getMainMonitorID());
+    for (int i = 0; i < SX.getNumberOfMonitors(); i++) {
+      log.p("Screen %d: %s", i, new Element(SX.getMonitor(i)));
+    }
+    log.p("*** end monitor configuration ***");
+  }
+
+  /**
+   * re-initialize the monitor setup (e.g. when it was changed while running)
+   */
+  public static void resetMonitors() {
+    showMonitors();
+    log.p("*** TRYING *** to reset the monitor configuration");
+    SX.resetMonitors();
+    showMonitors();
+  }
+
   private static LocalRobot getLocalRobot() {
     if (SX.isNull(localRobot)) try {
       localRobot = new LocalRobot();
