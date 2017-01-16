@@ -61,7 +61,7 @@ public abstract class SXElement implements Comparable<SXElement>{
 
   //<editor-fold desc="***** variants">
   public boolean isOnScreen() {
-    return isRectangle() && !isTarget();
+    return isElement() && !isTarget() || isWindow();
   }
 
   public boolean isRectangle() {
@@ -73,7 +73,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public boolean isElement() {
-    return eType.ELEMENT.equals(clazz);
+    return eType.ELEMENT.equals(clazz) || isPicture() || isTarget() || isWindow();
   }
 
   public boolean isPicture() {
@@ -457,7 +457,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   protected Element target = null;
 
   public void at(Integer x, Integer y) {
-    if (isRectangle()) {
+    if (isOnScreen()) {
       this.x = x;
       this.y = y;
       if (!SX.isNull(target)) {
@@ -467,7 +467,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public void translate(Integer xoff, Integer yoff) {
-    if (isRectangle()) {
+    if (isOnScreen()) {
       this.x += xoff;
       this.y += yoff;
       if (!SX.isNull(target)) {
