@@ -256,8 +256,8 @@ public class TestSXAPI {
     result = "Element();";
     assert SXElement.eType.ELEMENT.equals(elem.getType());
     Picture img = new Picture();
-    result += " Image();";
-    assert SXElement.eType.IMAGE.equals(img.getType());
+    result += " Picture();";
+    assert SXElement.eType.PICTURE.equals(img.getType());
     Target tgt = new Target();
     result += " Target();";
     assert SXElement.eType.TARGET.equals(tgt.getType());
