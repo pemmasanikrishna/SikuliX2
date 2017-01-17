@@ -19,7 +19,7 @@ import java.awt.PointerInfo;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
-public class Device {
+public class  Device {
 
   protected static SXLog log = SX.getLogger("SX.Device");
 

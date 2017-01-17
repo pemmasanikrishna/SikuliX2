@@ -211,13 +211,17 @@ public class Element extends SXElement {
 
   //<editor-fold desc="***** capture, highlight, show">
   public Picture capture() {
+    return capture(this);
+  }
+
+  public Picture capture(Element elem) {
     content = new Mat();
     Picture img = new Picture();
     if (isSpecial()) {
       SX.terminate(1, "capture: special not implemented");
     } else {
       Robot robot = SX.getSXROBOT();
-      img = new Picture(robot.createScreenCapture(getRectangle()));
+      img = new Picture(robot.createScreenCapture(elem.getRectangle()));
     }
     if (img.hasContent()) {
       content = img.getContent();

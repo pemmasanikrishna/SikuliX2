@@ -6,13 +6,12 @@ package com.sikulix.test;
 
 import com.sikulix.api.*;
 import com.sikulix.core.*;
+import com.sikulix.util.SXCaptureHook;
+import com.sikulix.util.SXPictureTool;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
-import org.sikuli.script.Screen;
 
-import javax.swing.*;
-import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -526,6 +525,20 @@ public class TestSXAPI {
 //    Screen.showMonitors();
 //    new Screen(1).show();
 //    result = new Screen(1).toString();
+  }
+
+  @Test
+  public void test_100_InteractiveCapture() {
+    currentTest = "test_100_InteractiveCapture";
+    log.startTimer();
+//    SXCaptureHook cap = new SXCaptureHook();
+//    while (cap.isRunning()) {
+//      SX.pause(1);
+//    }
+    SXPictureTool tool = new SXPictureTool(new Element(0, 22, 300, 300));
+    while (tool.isRunning()) {
+      SX.pause(1);
+    }
   }
 
   //<editor-fold desc="ignored">
