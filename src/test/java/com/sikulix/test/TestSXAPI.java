@@ -11,6 +11,8 @@ import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
 import org.sikuli.script.Screen;
 
+import javax.swing.*;
+import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -521,9 +523,9 @@ public class TestSXAPI {
   @Test
   public void test_80_oldAPI_Screen() {
     currentTest = "test_80_oldAPI_Screen";
-    Screen.showMonitors();
-    new Screen(1).show();
-    result = new Screen(1).toString();
+//    Screen.showMonitors();
+//    new Screen(1).show();
+//    result = new Screen(1).toString();
   }
 
   //<editor-fold desc="ignored">

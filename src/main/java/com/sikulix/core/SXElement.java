@@ -546,7 +546,7 @@ public abstract class SXElement implements Comparable<SXElement>{
 
   //<editor-fold desc="utility">
   final static String PNG = "png";
-  final static String dotPNG = "." + PNG;
+  protected final static String dotPNG = "." + PNG;
 
   public static int showTime = 3;
 
@@ -616,7 +616,7 @@ public abstract class SXElement implements Comparable<SXElement>{
                 Core.FONT_HERSHEY_SIMPLEX, 0.6, new Scalar(0, 0, 0), 2);
       }
     }
-    BufferedImage bImg = getBufferedImage(imgMat, dotPNG);
+    BufferedImage bImg = getBufferedImage(imgMat);
     JFrame frImg = new JFrame();
     frImg.setAlwaysOnTop(true);
     frImg.setResizable(false);
@@ -725,6 +725,10 @@ public abstract class SXElement implements Comparable<SXElement>{
               bImg.getType(), bImg.getWidth(), bImg.getHeight());
     }
     return aMat;
+  }
+
+  protected static BufferedImage getBufferedImage(Mat mat) {
+    return getBufferedImage(mat, dotPNG);
   }
 
   protected static BufferedImage getBufferedImage(Mat mat, String type) {

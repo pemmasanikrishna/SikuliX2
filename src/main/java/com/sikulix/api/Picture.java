@@ -228,6 +228,10 @@ public class Picture extends Element {
 
     whiteColor = isMeanColorEqual(Color.WHITE);
   }
+
+  public BufferedImage get() {
+    return getBufferedImage(getContent());
+  }
   //</editor-fold>
 
   //<editor-fold desc="*** path">
