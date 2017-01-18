@@ -548,10 +548,10 @@ public class TestSXAPI {
     boolean assertVal = true;
     if (!SX.onTravisCI()) {
       log.startTimer();
-      SXPictureTool tool = new SXPictureTool(new Element(0, 22, 300, 300));
-      while (tool.isRunning()) {
-        SX.pause(1);
-      }
+      SXPictureTool tool = new SXPictureTool(new Element(30, 30, 300, 300));
+      tool.waitFor();
+      Picture cap = tool.getCapture();
+      cap.show(2);
     } else {
       result = "TravisCI: not testing";
     }

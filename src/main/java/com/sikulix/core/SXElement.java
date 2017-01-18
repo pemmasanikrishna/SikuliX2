@@ -111,8 +111,13 @@ public abstract class SXElement implements Comparable<SXElement>{
     return name;
   }
 
-  public void setName(String name) {
+  public Element setName(String name) {
     this.name = name;
+    return (Element) this;
+  }
+
+  public boolean hasName() {
+    return !"noName".equals(name);
   }
 
   private String name = "noName";
@@ -191,10 +196,11 @@ public abstract class SXElement implements Comparable<SXElement>{
 
   @Override
   public String toString() {
+    String name = hasName() ? getName() : clazz.toString();
     if (isPoint()) {
-      return String.format("[\"%s\", [%d, %d]]", clazz, x, y);
+      return String.format("[\"%s\", [%d, %d]]", name, x, y);
     }
-    return String.format("[\"%s\", [%d, %d, %d, %d]%s]", clazz, x, y, w, h, toStringPlus());
+    return String.format("[\"%s\", [%d, %d, %d, %d]%s]", name, x, y, w, h, toStringPlus());
   }
 
   protected String toStringPlus() {

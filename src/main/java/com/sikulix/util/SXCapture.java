@@ -22,7 +22,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 
-public class SXCapture {
+public class SXCapture extends JFrame {
 
   static SXLog log;
 
@@ -36,19 +36,21 @@ public class SXCapture {
   static int cbCaptureKey = NativeKeyEvent.VC_SHIFT_L;
   static int cbpCaptureKey = NativeKeyEvent.VC_CONTROL_L;
 
-  JFrame frm = null;
-
   public SXCapture() {
-    frm = new JFrame();
-    frm.setUndecorated(true);
-    frm.setAlwaysOnTop(true);
-    frm.setBackground(new Color(255, 255, 255, 50));
-    frm.setBounds(SX.getMain().getRectangle());
-    frm.setVisible(true);
+    super();
+    setUndecorated(true);
+    setAlwaysOnTop(true);
+    setBackground(new Color(255, 255, 255, 80));
+    setBounds(SX.getMain().getRectangle());
+    setVisible(true);
     init();
   }
 
   private void init() {
+  }
+
+  public void stop() {
+    dispose();
   }
 
 }
