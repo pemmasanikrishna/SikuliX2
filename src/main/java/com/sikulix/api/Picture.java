@@ -450,20 +450,34 @@ public class Picture extends Element {
   //<editor-fold defaultstate="collapsed" desc="*** helpers">
 
   /**
-   * resize the image's CV-Mat by factor
+   * get a new resized Picture
    *
    * @param factor resize factor
-   * @return a new inMemory Image
+   * @return a new inMemory Picture
    */
-  public Picture resize(float factor) {
-    Picture img = new Picture();
+  public Picture getResized(double factor) {
+    return new Picture(resizeMat(factor));
+  }
+
+  /**
+   * resize the Picture by factor
+   *
+   * @param factor resize factor
+   * @return the Picture
+   */
+  public Picture resize(double factor) {
+    setContent(resizeMat(factor));
+    return this;
+  }
+
+  private Mat resizeMat(double factor) {
+    Mat newMat = getContent();
     if (isValid()) {
-      Mat newMat = new Mat();
+      newMat = new Mat();
       Size newS = new Size(w * factor, h * factor);
       Imgproc.resize(getContent(), newMat, newS, 0, 0, Imgproc.INTER_AREA);
-      img = new Picture(newMat);
     }
-    return img;
+    return newMat;
   }
 
   /**
@@ -481,6 +495,10 @@ public class Picture extends Element {
       img = new Picture(getContent().submat(new Rect(x, y, w, h)));
     }
     return img;
+  }
+
+  public Picture getSub(Element elem) {
+    return getSub(elem.x, elem.y, elem.w, elem.h);
   }
 
   public String save(String name) {

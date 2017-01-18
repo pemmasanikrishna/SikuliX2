@@ -2,12 +2,16 @@ package com.sikulix.util;
 
 import com.sikulix.api.Do;
 import com.sikulix.api.Element;
+import com.sikulix.api.Picture;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
 import javax.swing.*;
 import javax.swing.border.Border;
-import java.awt.*;
+import javax.swing.border.CompoundBorder;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.LayoutManager;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -16,16 +20,17 @@ public class SXPictureTool {
 
   private static final SXLog log = SX.getLogger("SX.PictureTool");
 
-  private Element scr = null;
-  private BufferedImage shot = null;
+  private Picture scr = null;
   private Element rect = null;
+  private Picture shot;
+
   private JFrame box = null;
+  private BufferedImage shotDisplayed = null;
   private JLabel content = new JLabel();
+
   private float aspect = 0;
   private float wFactor = 0;
   private float hFactor = 0;
-  private int xOff = 0;
-  private int yOff = 0;
 
   final private int TOP = 0;
   final private int LEFT = 1;
@@ -48,7 +53,7 @@ public class SXPictureTool {
     running = true;
     this.rect = rect;
     aspect = ((float) rect.w) / rect.h;
-    scr = new Element(scrID);
+    scr = new Element(scrID).capture();
     box = new JFrame();
     box.setUndecorated(true);
     box.setResizable(false);
@@ -82,8 +87,9 @@ public class SXPictureTool {
     };
     LayoutManager overlay = new OverlayLayout(pBox);
     pBox.setLayout(overlay);
-    zoom(rect);
-    content.setBorder(coloredSide(TOP, Color.RED));
+    resizeToFrame();
+    dirty = false;
+    content.setBorder(coloredSide(TOP));
     pBox.add(content);
     box.add(pBox);
     box.pack();
@@ -93,9 +99,9 @@ public class SXPictureTool {
 
   private void myMouseClicked(MouseEvent e) {
     log.trace("mouseClicked: %d,%d", e.getX(), e.getY());
-    Element newRect = crop(rect, e.getX() - xOff, e.getY() - yOff);
-    log.trace("action: crop from %s to %s", getActiveSide(), newRect);
-    zoom(newRect);
+    crop(e.getX(), e.getY());
+    log.trace("action: crop from %s to %s", getActiveSide(), rect);
+    resizeToFrame();
   }
 
   private void myKeyTyped(KeyEvent e) {
@@ -104,11 +110,11 @@ public class SXPictureTool {
       if ("+".equals("" + e.getKeyChar())) {
         Element newRect = zoomIn(rect);
         log.trace("action: zoom-in to %s", newRect);
-        zoom(newRect);
+        resizeToFrame();
       } else if ("-".equals("" + e.getKeyChar())) {
         Element newRect = zoomOut(rect, scr);
         log.trace("action: zoom-out to %s", newRect);
-        zoom(newRect);
+        resizeToFrame();
       } else if ("s".equals("" + e.getKeyChar())) {
         log.trace("action: save request");
         dirty = false;
@@ -198,7 +204,7 @@ public class SXPictureTool {
           break;
         case KeyEvent.VK_CONTROL:
           cName = "CTRL";
-          content.setBorder(coloredSide(-1, Color.RED));
+          content.setBorder(coloredSide(-1));
           box.pack();
           break;
         case KeyEvent.VK_ALT:
@@ -210,9 +216,50 @@ public class SXPictureTool {
       }
       if (!SX.isNull(newRect)) {
         log.info("action: crop %s from %s to %s", cName, getActiveSide(), newRect);
-        zoom(newRect);
+        rect = newRect;
+        resizeToFrame();
       }
       log.trace("keyReleased: %s (%d) %s", e.getKeyText(code), code, cName);
+    }
+  }
+
+  private BufferedImage getShot() {
+    shot = scr.getSub(rect);
+    double wFactor = rect.w / (scr.w * 0.9f);
+    double hFactor = rect.h / (scr.h * 0.9f);
+    double factor = 1 / Math.max(wFactor, hFactor);
+    factor = Math.min(factor, 10);
+    shotDisplayed = shot.resize(factor).get();
+    return shotDisplayed;
+  }
+
+  private void resizeToFrame() {
+    content.setIcon(new ImageIcon(getShot()));
+    content.setBorder(coloredSide(activeSide));
+    box.pack();
+    box.setLocation((int) ((scr.w - shotDisplayed.getWidth()) / 2), (int) (scr.h - shotDisplayed.getHeight()) / 2);
+    int wf = box.getWidth();
+    int hf = box.getHeight();
+    wFactor = (1f + wf) / rect.w;
+    hFactor = (1f + hf) / rect.h;
+    dirty = true;
+  }
+
+  private void crop(int newX, int newY) {
+    int x = (int) (newX / wFactor);
+    int y = (int) (newY / hFactor);
+    if (TOP == activeSide) {
+      rect.h -= y;
+      rect.y += y;
+    } else if (BOTTOM == activeSide) {
+      rect.h -= rect.h - y;
+      rect.h++;
+    } else if (LEFT == activeSide) {
+      rect.h -= y;
+      rect.x += x;
+    } else if (RIGHT == activeSide) {
+      rect.w -= rect.w - x;
+      rect.w++;
     }
   }
 
@@ -258,50 +305,15 @@ public class SXPictureTool {
     return out;
   }
 
-  private void zoom(Element newRect) {
-    rect = new Element(newRect);
-    content.setIcon(new ImageIcon(getShot()));
-    content.setBorder(coloredSide(activeSide));
-    box.pack();
-    box.setLocation((int) ((scr.w - shot.getWidth()) / 2), (int) (scr.h - shot.getHeight()) / 2);
-    int wf = box.getWidth();
-    int hf = box.getHeight();
-    int wc = content.getWidth();
-    int hc = content.getHeight();
-    xOff = wf - wc;
-    yOff = hf - hc;
-    wFactor = (1f + wc) / rect.w;
-    hFactor = (1f + hc) / rect.h;
-    dirty = true;
-  }
-
-  private Element crop(Element in, int newX, int newY) {
-    Element out = new Element(in);
-    int x = (int) (newX / wFactor);
-    int y = (int) (newY / hFactor);
-    if (TOP == activeSide) {
-      out.h -= y;
-      out.y += y;
-    } else if (BOTTOM == activeSide) {
-      out.h -= out.h - y;
-      out.h++;
-    } else if (LEFT == activeSide) {
-      out.h -= y;
-      out.x += x;
-    } else if (RIGHT == activeSide) {
-      out.w -= out.w - x;
-      out.w++;
-    }
-    return out;
-  }
-
   private Border coloredSide(int side) {
-    return coloredSide(side, Color.RED);
+    return coloredSide(side, Color.RED, Color.GREEN);
   }
 
-  private Border coloredSide(int side, Color col) {
+  private Border coloredSide(int side, Color outerCol, Color innerCol) {
+    Border inner = null;
+    Border outer = null;
     if (side == ALL) {
-      return BorderFactory.createMatteBorder(3, 3, 3, 3, col);
+      return BorderFactory.createMatteBorder(3, 3, 3, 3, outerCol);
     }
     if (side < 0) {
       side = ++activeSide > RIGHT ? TOP : activeSide;
@@ -309,15 +321,19 @@ public class SXPictureTool {
     }
     switch (side) {
       case TOP:
-        return BorderFactory.createMatteBorder(3, 0, 0, 0, col);
+        inner = BorderFactory.createMatteBorder(3, 0, 0, 0, innerCol);
+        outer = BorderFactory.createMatteBorder(0, 3, 3, 3, outerCol);
+        break;
       case LEFT:
-        return BorderFactory.createMatteBorder(0, 3, 0, 0, col);
+        inner = BorderFactory.createMatteBorder(0, 3, 0, 0, innerCol);
+        break;
       case BOTTOM:
-        return BorderFactory.createMatteBorder(0, 0, 3, 0, col);
+        inner = BorderFactory.createMatteBorder(0, 0, 3, 0, innerCol);
+        break;
       case RIGHT:
-        return BorderFactory.createMatteBorder(0, 0, 0, 3, col);
+        inner = BorderFactory.createMatteBorder(0, 0, 0, 3, innerCol);
     }
-    return BorderFactory.createMatteBorder(3, 0, 0, 0, col);
+    return new CompoundBorder(outer, inner);
   }
 
   private String getActiveSide() {
@@ -371,15 +387,6 @@ public class SXPictureTool {
     g.drawImage(bImg, 0, 0, width, height, null);
     g.dispose();
     return resizedImage;
-  }
-
-  private BufferedImage getShot() {
-    shot = scr.capture(rect).get();
-    float wFactor = rect.w / (scr.w * 0.3f);
-    float hFactor = rect.h / (scr.h * 0.3f);
-    float factor = 1 / Math.max(wFactor, hFactor);
-    factor = Math.min(factor, 10);
-    return resize(shot, factor);
   }
 
 }

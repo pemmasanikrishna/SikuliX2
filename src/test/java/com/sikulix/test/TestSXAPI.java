@@ -11,6 +11,7 @@ import com.sikulix.util.SXPictureTool;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
+import org.sikuli.script.Screen;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -517,34 +518,18 @@ public class TestSXAPI {
     assert isThere;
     SX.getMain().showMatch();
   }
-  //</editor-fold>
 
   @Test
   public void test_80_oldAPI_Screen() {
     currentTest = "test_80_oldAPI_Screen";
-//    Screen.showMonitors();
-//    new Screen(1).show();
-//    result = new Screen(1).toString();
+    Screen.showMonitors();
+    new Screen(1).show();
+    result = new Screen(1).toString();
   }
 
   @Test
-  public void test_100_InteractiveCapture() {
-    currentTest = "test_100_InteractiveCapture";
-    log.startTimer();
-//    SXCaptureHook cap = new SXCaptureHook();
-//    while (cap.isRunning()) {
-//      SX.pause(1);
-//    }
-    SXPictureTool tool = new SXPictureTool(new Element(0, 22, 300, 300));
-    while (tool.isRunning()) {
-      SX.pause(1);
-    }
-  }
-
-  //<editor-fold desc="ignored">
-  @Ignore
-  public void test_160_nativeHook() {
-    currentTest = "test_160_nativeHook";
+  public void test_990_nativeHook() {
+    currentTest = "test_990_nativeHook";
     if (!SX.isHeadless()) {
       NativeHook hook = NativeHook.start();
       SX.pause(3);
@@ -555,11 +540,29 @@ public class TestSXAPI {
     }
     assert true;
   }
+  //</editor-fold>
 
-  @Ignore
-  public void test_190_popat() {
+  @Test
+  public void test_999_InteractiveCapture() {
+    currentTest = "test_999_InteractiveCapture";
     boolean assertVal = true;
-    currentTest = "test_190_popat";
+    if (!SX.onTravisCI()) {
+      log.startTimer();
+      SXPictureTool tool = new SXPictureTool(new Element(0, 22, 300, 300));
+      while (tool.isRunning()) {
+        SX.pause(1);
+      }
+    } else {
+      result = "TravisCI: not testing";
+    }
+    assert assertVal;
+  }
+
+  //<editor-fold desc="ignored">
+  @Test
+  public void test_991_popat() {
+    currentTest = "test_991_popat";
+    boolean assertVal = true;
     if (!SX.onTravisCI()) {
       Do.popat(300, 300);
       Do.popup("Use mouse to click OK", "testing popat");
