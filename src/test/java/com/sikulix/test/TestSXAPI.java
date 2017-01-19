@@ -550,8 +550,8 @@ public class TestSXAPI {
       log.startTimer();
       SXPictureTool tool = new SXPictureTool(new Element(30, 30, 300, 300));
       tool.waitFor();
-      Picture cap = tool.getCapture();
-      cap.show(2);
+//      Picture cap = tool.getCapture();
+//      cap.show(2);
     } else {
       result = "TravisCI: not testing";
     }

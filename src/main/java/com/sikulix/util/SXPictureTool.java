@@ -9,19 +9,18 @@ import com.sikulix.core.SXLog;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
-import javax.xml.crypto.dom.DOMCryptoContext;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.LayoutManager;
-import java.awt.event.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
-import java.util.Stack;
 
-import static java.awt.event.KeyEvent.VK_E;
 import static java.awt.event.KeyEvent.VK_ESCAPE;
 
 public class SXPictureTool {
