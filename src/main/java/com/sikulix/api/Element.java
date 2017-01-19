@@ -10,11 +10,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
 import javax.swing.*;
-import java.awt.MouseInfo;
-import java.awt.Point;
-import java.awt.PointerInfo;
-import java.awt.Rectangle;
-import java.awt.Robot;
+import java.awt.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,7 +61,15 @@ public class Element extends SXElement {
   private java.util.List<Element> lastMatches = new ArrayList<Element>();
   private int matchIndex = -1;
 
+  public Color getHighlightColor() {
+    return highlightColor;
+  }
 
+  public void setHighlightColor(Color highlightColor) {
+    this.highlightColor = highlightColor;
+  }
+
+  private Color highlightColor = Color.red;
 
   public Element getLastSeen() {
     if (SX.isNull(lastSeen)) {
@@ -157,8 +161,13 @@ public class Element extends SXElement {
   }
 
   public Element(int id) {
-    Rectangle rect = SX.getMonitor(id);
-    init(rect.x, rect.y, rect.width, rect.height);
+    if (id < 0) {
+      // hack: special for even margin all sides
+      init(-id, -id, -id, -id);
+    } else {
+      Rectangle rect = SX.getMonitor(id);
+      init(rect.x, rect.y, rect.width, rect.height);
+    }
   }
 
   public Element(Core.MinMaxLocResult mMinMax, Target target, Rect rect) {

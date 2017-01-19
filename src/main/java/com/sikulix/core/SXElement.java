@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class SXElement implements Comparable<SXElement>{
+public abstract class SXElement implements Comparable<SXElement> {
 
   //<editor-fold desc="housekeeping">
   static {
@@ -54,6 +54,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
   protected eType clazz = eClazz;
+
   public eType getType() {
     return clazz;
   }
@@ -88,7 +89,9 @@ public abstract class SXElement implements Comparable<SXElement>{
     return eType.WINDOW.equals(clazz);
   }
 
-  public boolean isSpecial() { return !SX.isNull(containingScreen); }
+  public boolean isSpecial() {
+    return !SX.isNull(containingScreen);
+  }
 
   Object containingScreen = null;
 
@@ -97,7 +100,9 @@ public abstract class SXElement implements Comparable<SXElement>{
    */
   public boolean isValid() {
     return w > 1 && h > 1;
-  };
+  }
+
+  ;
 
   //</editor-fold>
 
@@ -124,10 +129,21 @@ public abstract class SXElement implements Comparable<SXElement>{
 
 //  protected boolean onRemoteScreen = false;
 
-  public int getX() { return x;}
-  public int getY() { return y;}
-  public int getW() { return w;}
-  public int getH() { return h;}
+  public int getX() {
+    return x;
+  }
+
+  public int getY() {
+    return y;
+  }
+
+  public int getW() {
+    return w;
+  }
+
+  public int getH() {
+    return h;
+  }
 
   public long getPixelSize() {
     return w * h;
@@ -211,6 +227,7 @@ public abstract class SXElement implements Comparable<SXElement>{
 
   //<editor-fold desc="waiting times">
   private double waitForThis = -1;
+
   public double getWaitForThis() {
     if (waitForThis < 0) {
       waitForThis = SX.getOptionNumber("Settings.AutoWaitTimeout");
@@ -223,6 +240,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   private double waitForMatch = -1;
+
   public double getWaitForMatch() {
     if (waitForMatch < 0) {
       waitForMatch = SX.getOptionNumber("Settings.AutoWaitTimeout");
@@ -235,6 +253,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   private double lastWaitForThis = 0;
+
   public double getLastWaitForThis() {
     return lastWaitForThis;
   }
@@ -244,6 +263,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   private double lastWaitForMatch = 0;
+
   public double getLastWaitForMatch() {
     return lastWaitForMatch;
   }
@@ -295,7 +315,31 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public Element getCenter() {
-    return new Element(x + w/2, y + h/2);
+    return new Element(x + w / 2, y + h / 2);
+  }
+
+  public Element getCentered(Element base) {
+    return getCentered(base, null);
+  }
+
+  public Element getCentered(Element base, Element margin) {
+    int mt = 0;
+    int mr = 0;
+    int mb = 0;
+    int ml = 0;
+    if (SX.isNotNull(margin)) {
+      mt = margin.x;
+      mr = margin.y;
+      mb = margin.w;
+      ml = margin.h;
+    }
+    int bcx = base.getCenter().x;
+    int bcy = base.getCenter().y;
+    int offX = w / 2 + ml;
+    int offY = h / 2 + mt;
+    int cx = bcx - offX;
+    int cy = bcy - offY;
+    return new Element(cx, cy);
   }
 
   public Point getPoint() {
@@ -342,7 +386,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public Element leftAt() {
-    return new Element(x, y + h/2);
+    return new Element(x, y + h / 2);
   }
 
   /**
@@ -358,7 +402,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public Element rightAt() {
-    return new Element(x + w, y + h/2);
+    return new Element(x + w, y + h / 2);
   }
 
   /**
@@ -374,7 +418,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public Element aboveAt() {
-    return new Element(x + w/2, y);
+    return new Element(x + w / 2, y);
   }
 
   /**
@@ -390,7 +434,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   public Element belowAt() {
-    return new Element(x + w/2, y + h);
+    return new Element(x + w / 2, y + h);
   }
 
   /**
@@ -406,6 +450,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
 // TODO getColor() implement more support and make it useable
+
   /**
    * Get the color at the given Point (center of element) for details: see java.awt.Robot and ...Color
    *
@@ -444,46 +489,60 @@ public abstract class SXElement implements Comparable<SXElement>{
     if (elem.x > x) {
       return -1;
     } else if (elem.x == x && elem.y > y) {
-        return -1;
+      return -1;
     }
     return 1;
   }
   //</editor-fold>
 
-  private static int growDefault = 20;
-  public SXElement grow() {
-    x -= growDefault;
-    y -= growDefault;
-    w += 2 * growDefault;
-    h += 2 * growDefault;
-    return this;
+  private static int growDefault = 2;
+
+  public void grow() {
+    grow(growDefault);
+  }
+
+  public void grow(int margin) {
+    x -= margin;
+    y -= margin;
+    if (isPoint()) {
+      w = h = 1;
+    }
+    w += 2 * margin;
+    h += 2 * margin;
   }
 
   //<editor-fold desc="***** move">
   protected Element target = null;
 
   public void at(Integer x, Integer y) {
-    if (isOnScreen()) {
-      this.x = x;
-      this.y = y;
-      if (!SX.isNull(target)) {
-        target.translate(x - this.x, y - this.y);
-      }
+    this.x = x;
+    this.y = y;
+    if (!SX.isNull(target)) {
+      target.translate(x - this.x, y - this.y);
     }
   }
 
+  public void at(Element elem) {
+    at(elem.x, elem.y);
+  }
+
   public void translate(Integer xoff, Integer yoff) {
-    if (isOnScreen()) {
-      this.x += xoff;
-      this.y += yoff;
-      if (!SX.isNull(target)) {
-        target.translate(xoff, yoff);
-      }
+    this.x += xoff;
+    this.y += yoff;
+    if (!SX.isNull(target)) {
+      target.translate(xoff, yoff);
     }
   }
 
   public void translate(Element off) {
     translate(off.x, off.y);
+  }
+
+  public void change(Element elem) {
+    x = elem.x;
+    y = elem.y;
+    w = elem.w;
+    h = elem.h;
   }
   //</editor-fold>
 
@@ -561,7 +620,7 @@ public abstract class SXElement implements Comparable<SXElement>{
   }
 
   protected static void show(Element elem, int timeAfter, int timeBefore, int timeVanish) {
-    if(timeAfter < 0) {
+    if (timeAfter < 0) {
       ShowSub sub = new ShowSub(elem, timeBefore, timeVanish - timeAfter);
       new Thread(sub).start();
       SX.pause(-timeAfter);
@@ -605,7 +664,7 @@ public abstract class SXElement implements Comparable<SXElement>{
     if (!elem.hasContent()) {
       return null;
     }
-    if (time <0) {
+    if (time < 0) {
       log.trace("doShow (background)c: start");
     } else {
       log.trace("doShow: start");
@@ -638,7 +697,7 @@ public abstract class SXElement implements Comparable<SXElement>{
     cp.add(label, BorderLayout.CENTER);
     frImg.pack();
     Element loc = SX.getMain().getCenter();
-    loc.translate(-imgMat.width()/2, -imgMat.height()/2);
+    loc.translate(-imgMat.width() / 2, -imgMat.height() / 2);
     if (SX.isMac()) {
       frImg.setLocation(loc.x, loc.y + 22);
     } else {

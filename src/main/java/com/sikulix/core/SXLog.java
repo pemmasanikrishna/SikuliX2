@@ -120,7 +120,7 @@ public class SXLog {
   }
 
   public boolean isGlobalLevel(int level) {
-    return level >= globalLevel;
+    return globalLevel >= level;
   }
 
   public void off() {

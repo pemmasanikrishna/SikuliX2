@@ -1,9 +1,10 @@
-package com.sikulix.util;
+package com.sikulix.core;
 
 import com.sikulix.api.Do;
 import com.sikulix.api.Element;
 import com.sikulix.api.Picture;
 import com.sikulix.core.SX;
+import com.sikulix.core.SXHighlight;
 import com.sikulix.core.SXLog;
 
 import javax.swing.*;
@@ -38,7 +39,8 @@ public class SXPictureTool {
   private BufferedImage shotDisplayed = null;
   private JLabel content = new JLabel();
 
-  private float aspect = 0;
+  private float aspect = 1;
+  private int zoomStep = 10;
   private float wFactor = 0;
   private float hFactor = 0;
 
@@ -74,7 +76,7 @@ public class SXPictureTool {
   public SXPictureTool(int scrID, Element rect) {
     running = true;
     this.rect = rect;
-    aspect = ((float) rect.w) / rect.h;
+    //aspect = ((float) rect.w) / rect.h;
     scr = new Element(scrID).capture();
     box = new JFrame();
     box.setUndecorated(true);
@@ -176,9 +178,36 @@ public class SXPictureTool {
   }
 
   private void myMouseClicked(MouseEvent e) {
-    log.trace("mouseClicked: %d,%d", e.getX(), e.getY());
-    crop(e.getX(), e.getY());
-    log.trace("action: crop from %s to %s", getActiveSide(), rect);
+    String doubleClick = e.getClickCount() > 1 ? "Double" : "";
+    log.trace("mouse%sClicked: %d,%d", doubleClick, e.getX(), e.getY());
+    lastRects.add(0, new Element(rect));
+    if (lastRects.size() > maxRevert) {
+      lastRects.remove(maxRevert);
+    }
+    if (SX.isSet(doubleClick)) {
+
+    } else {
+      int wf = box.getWidth();
+      int hf = box.getHeight();
+      wFactor = (1f + wf) / rect.w;
+      hFactor = (1f + hf) / rect.h;
+      int x = (int) (e.getX() / wFactor);
+      int y = (int) (e.getY() / hFactor);
+      if (TOP == activeSide) {
+        rect.h -= y;
+        rect.y += y;
+      } else if (BOTTOM == activeSide) {
+        rect.h -= rect.h - y;
+        rect.h++;
+      } else if (LEFT == activeSide) {
+        rect.w -= x;
+        rect.x += x;
+      } else if (RIGHT == activeSide) {
+        rect.w -= rect.w - x;
+        rect.w++;
+      }
+      log.trace("action: crop from %s to %s", getActiveSide(), rect);
+    }
     resizeToFrame();
   }
 
@@ -187,24 +216,28 @@ public class SXPictureTool {
     if (e.CHAR_UNDEFINED != e.getKeyChar()) {
       String sKey = "" + e.getKeyChar();
       if ("+".equals("" + e.getKeyChar())) {
-        rect = zoomIn(rect);
+        zoomIn();
         log.trace("action: zoom-in to %s", rect);
         resizeToFrame();
       } else if ("-".equals("" + e.getKeyChar())) {
-        rect = zoomOut(rect, scr);
+        zoomOut();
         log.trace("action: zoom-out to %s", rect);
         resizeToFrame();
       } else if ("s".equals("" + e.getKeyChar())) {
         log.trace("action: save request");
         dirty = false;
       } else if ("f".equals("" + e.getKeyChar())) {
-        box.setVisible(false);
-        Do.find(getCapture(), scr);
-        log.trace("action: find: %s", scr.getLastMatch());
-        SXHighlight hl = new SXHighlight(scr);
-        hl.add(scr.getLastMatch());
-        hl.on();
-        box.setVisible(true);
+        Runnable find = new Runnable() {
+          @Override
+          public void run() {
+            log.trace("action: find: %s", scr.getLastMatch());
+            Do.find(getCapture(), scr);
+            SXHighlight hl = new SXHighlight(scr);
+            hl.add(scr.getLastMatch());
+            hl.on();
+          }
+        };
+        new Thread(find).start();
       } else if ("t".equals("" + e.getKeyChar())) {
         log.trace("action: set target");
         dirty = true;
@@ -219,7 +252,7 @@ public class SXPictureTool {
           dirty = true;
         }
       } else if ("i".equals("" + e.getKeyChar())) {
-        Do.popup(imgInfo(), "NativeCapture::Information");
+        Do.popup(imgInfo(), "PictureTool::Information");
         log.trace("action: show info");
       } else if ("h".equals("" + e.getKeyChar())) {
         log.trace("action: show help");
@@ -349,72 +382,30 @@ public class SXPictureTool {
     dirty = true;
   }
 
-  private void crop(int newX, int newY) {
-    lastRects.add(0, new Element(rect));
-    if (lastRects.size() > maxRevert) {
-      lastRects.remove(maxRevert);
-    }
-    int wf = box.getWidth();
-    int hf = box.getHeight();
-    wFactor = (1f + wf) / rect.w;
-    hFactor = (1f + hf) / rect.h;
-    int x = (int) (newX / wFactor);
-    int y = (int) (newY / hFactor);
-    if (TOP == activeSide) {
-      rect.h -= y;
-      rect.y += y;
-    } else if (BOTTOM == activeSide) {
-      rect.h -= rect.h - y;
-      rect.h++;
-    } else if (LEFT == activeSide) {
-      rect.w -= x;
-      rect.x += x;
-    } else if (RIGHT == activeSide) {
-      rect.w -= rect.w - x;
-      rect.w++;
-    }
+  private void zoomOut() {
+    int stepX, stepY;
+    stepX = Math.max(1, rect.w / 10);
+    stepY = Math.max(1, rect.h / 10);
+    rect.x -= stepX;
+    rect.w += 2 * stepX;
+    rect.y -= stepY;
+    rect.h += 2 * stepY;
+    rect = scr.intersection(rect);
   }
 
-  private Element zoomOut(Element in, Element max) {
-    Element out = new Element(in);
-    int toAdd;
-    if (aspect <= 1) {
-      out.x -= 1;
-      out.w += 2;
-      toAdd = (int) (1.0f / aspect);
-      out.y -= toAdd;
-      out.h += 2 * toAdd;
-    } else {
-      out.y -= 1;
-      out.h += 2;
-      toAdd = (int) aspect;
-      out.x -= toAdd;
-      out.w += 2 * toAdd;
+  private void zoomIn() {
+    int stepX, stepY;
+    Element minimum = rect.getCenter();
+    minimum.grow();
+    stepX = Math.max(1, rect.w / 10);
+    stepY = Math.max(1, rect.h / 10);
+    rect.x += stepX;
+    rect.w -= 2 * stepX;
+    rect.y += stepY;
+    rect.h -= 2 * stepY;
+    if (rect.w < 5 || rect.h < 5) {
+      rect.change(minimum);
     }
-    out = max.intersection(out);
-    return out;
-  }
-
-  private Element zoomIn(Element in) {
-    Element out = new Element(in);
-    int toAdd;
-    if (aspect <= 1) {
-      out.x += 1;
-      out.w -= 2;
-      toAdd = (int) (1.0f / aspect);
-      out.y += toAdd;
-      out.h -= 2 * toAdd;
-    } else {
-      out.y += 1;
-      out.h -= 2;
-      toAdd = (int) aspect;
-      out.x += toAdd;
-      out.w -= 2 * toAdd;
-    }
-    if (out.w < 5 || out.h < 5) {
-      return in;
-    }
-    return out;
   }
 
   private Border coloredSide(int side) {

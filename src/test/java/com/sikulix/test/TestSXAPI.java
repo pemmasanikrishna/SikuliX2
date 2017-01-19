@@ -6,13 +6,14 @@ package com.sikulix.test;
 
 import com.sikulix.api.*;
 import com.sikulix.core.*;
-import com.sikulix.util.SXCaptureHook;
-import com.sikulix.util.SXPictureTool;
+import com.sikulix.core.SXHighlight;
+import com.sikulix.core.SXPictureTool;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
 import org.sikuli.script.Screen;
 
+import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -437,7 +438,8 @@ public class TestSXAPI {
       return;
     }
     start();
-    Picture img = Do.capture((Element) elemDisplayed.grow());
+    elemDisplayed.grow(20);
+    Picture img = Do.capture(elemDisplayed);
     result = end() + img.toString();
     SX.getMain().stopShowing();
     if (img.hasContent()) {
@@ -528,7 +530,7 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_990_nativeHook() {
+  public void test_90_nativeHook() {
     currentTest = "test_990_nativeHook";
     if (!SX.isHeadless()) {
       NativeHook hook = NativeHook.start();
@@ -540,39 +542,58 @@ public class TestSXAPI {
     }
     assert true;
   }
-  //</editor-fold>
 
   @Test
-  public void test_999_InteractiveCapture() {
-    currentTest = "test_999_InteractiveCapture";
-    boolean assertVal = true;
-    if (!SX.onTravisCI()) {
-      log.startTimer();
-      SXPictureTool tool = new SXPictureTool(new Element(30, 30, 300, 300));
-      tool.waitFor();
-//      Picture cap = tool.getCapture();
-//      cap.show(2);
-    } else {
-      result = "TravisCI: not testing";
-    }
-    assert assertVal;
-  }
-
-  //<editor-fold desc="ignored">
-  @Test
-  public void test_991_popat() {
+  public void test_91_popat() {
     currentTest = "test_991_popat";
     boolean assertVal = true;
-    if (!SX.onTravisCI()) {
+    if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       Do.popat(300, 300);
       Do.popup("Use mouse to click OK", "testing popat");
       Element loc = Element.at();
       result = String.format("clicked at (%d, %d)", loc.x, loc.y);
       assertVal = loc.x > 300 && loc.x < 450;
     } else {
-      result = "TravisCI: not testing";
+      result = "TravisCI or NonInteractive: not testing";
     }
     assert assertVal;
   }
+  //</editor-fold>
+
+  @Test
+  public void test_995_PictureTool() {
+    log.startTimer();
+    currentTest = "test_995_PictureTool";
+    boolean assertVal = true;
+    if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
+      SXPictureTool tool = new SXPictureTool(new Element(30, 30, 500, 300));
+      tool.waitFor();
+    } else {
+      result = "TravisCI or NonInteractive: not testing";
+    }
+    assert assertVal;
+  }
+
+  @Test
+  public void test_991_Highlight() {
+    currentTest = "test_991_Highlight";
+    boolean assertVal = true;
+    if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
+      SXHighlight hl = new SXHighlight(SX.getMain().capture());
+//      hl.setLineColor(Color.red);
+//      hl.setLineThickness(3);
+      hl.add(new Element(100, 100, 100));
+      Element element = new Element(300, 300, 100);
+      element.setHighlightColor(Color.blue);
+      hl.add(element);
+      hl.add(new Element(500, 500, 100));
+      hl.on();
+    } else {
+      result = "TravisCI or NonInteractive: not testing";
+    }
+    assert assertVal;
+  }
+
+  //<editor-fold desc="ignored">
   //</editor-fold>
 }

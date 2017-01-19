@@ -2,7 +2,7 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.util;
+package com.sikulix.core;
 
 import com.sikulix.api.Do;
 import com.sikulix.api.Element;
