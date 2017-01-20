@@ -7,13 +7,8 @@ import com.sikulix.api.Picture;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.LayoutManager;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
@@ -24,6 +19,7 @@ import static java.awt.event.KeyEvent.VK_ESCAPE;
 
 public class SXPictureTool {
 
+  //<editor-fold desc="housekeeping">
   private static final SXLog log = SX.getLogger("SX.PictureTool");
 
   private Picture scr = null;
@@ -34,8 +30,11 @@ public class SXPictureTool {
   boolean dirty = false;
 
   private JFrame box = null;
+  private Container pBox = null;
   private BufferedImage shotDisplayed = null;
+  private Dimension dimShotDisplayed = null;
   private JLabel content = new JLabel();
+  private JLabel mousePos = new JLabel();
 
   private float aspect = 1;
   private int zoomStep = 10;
@@ -51,7 +50,7 @@ public class SXPictureTool {
   final private int CLOCKWISE = 6;
   final private int OPPOSITE = 7;
   private int activeSide = TOP;
-  private String[] activeSides = new String[]{"TOP", "LEFT", "BOTTOM", "RIGHT"};
+  private String[] activeSides = new String[]{"TOP", "LEFT", "BOTTOM", "RIGHT", "ALL"};
   private boolean running = false;
 
   private int borderThickness = 5;
@@ -115,35 +114,54 @@ public class SXPictureTool {
       }
     });
     //</editor-fold>
-    JPanel pBox = new JPanel() {
-      public boolean isOptimizedDrawingEnabled() {
-        return false;
+
+    box.addMouseMotionListener(new MouseMotionAdapter() {
+      @Override
+      public void mouseDragged(MouseEvent e) {
+        super.mouseDragged(e);
       }
-    };
-    LayoutManager overlay = new OverlayLayout(pBox);
-    pBox.setLayout(overlay);
+
+      @Override
+      public void mouseMoved(MouseEvent e) {
+        super.mouseMoved(e);
+        Element elem = getPos(new Element(e.getX(), e.getY()));
+        Element rect = getRect();
+        mousePos.setText(String.format("%04d, %04d (%04d, %04d) [%04d, %04d %04dx%04d]",
+                elem.x, elem.y, rect.x + elem.x, rect.y + elem.y, rect.x, rect.y, rect.w, rect.h));
+      }
+    });
+
+
+    pBox = box.getContentPane();
+    pBox.setLayout(new BoxLayout(pBox, BoxLayout.Y_AXIS));
+    pBox.setBackground(Color.white);
+    mousePos.setOpaque(true);
+    mousePos.setBackground(Color.white);
+    mousePos.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 20));
+    mousePos.setText("    ,     ");
     resizeToFrame();
     dirty = false;
     content.setBorder(coloredSide(TOP));
     pBox.add(content);
-    box.add(pBox);
+    pBox.add(mousePos);
     box.pack();
     box.setLocation((int) ((scr.w - box.getWidth()) / 2), (int) (scr.h - box.getHeight()) / 2);
     new Thread(new ClickHandler()).start();
     box.setVisible(true);
   }
 
-  private Element displayBox() {
-    Element elem = new Element(0, 0, shotDisplayed.getWidth(), shotDisplayed.getHeight());
-    return elem.setName("BOX");
+  public Element getRect() {
+    return rect;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="mouse exit/enter">
   int exited = -1;
 
   private void myMouseEntered(MouseEvent e) {
     int side = whichSide(e.getX() - borderThickness, e.getY() - borderThickness);
     if (side == exited) {
-      log.trace("mouseEntered: %s [%d,%d %s", activeSides[side], e.getX(), e.getY(), displayBox());
+      log.trace("mouseEntered: %s", activeSides[side]);
       exited = -1;
       content.setBorder(coloredSide(side));
       box.repaint();
@@ -152,14 +170,14 @@ public class SXPictureTool {
 
   private void myMouseExited(MouseEvent e) {
     exited = whichSide(e.getX() - borderThickness, e.getY() - borderThickness);
-    log.trace("mouseExited: %s [%d,%d %s", activeSides[exited], e.getX(), e.getY(), displayBox());
+    log.trace("mouseExited: %s ", activeSides[exited]);
   }
 
   private int whichSide(int x, int y) {
-    if (isMiddle(displayBox().w, x) && isLow(displayBox().h, y)) return TOP;
-    if (isMiddle(displayBox().h, y) && isLow(displayBox().w, x)) return LEFT;
-    if (isMiddle(displayBox().w, x) && isHigh(displayBox().h, y)) return BOTTOM;
-    if (isMiddle(displayBox().h, y) && isHigh(displayBox().w, x)) return RIGHT;
+    if (isMiddle(box.getWidth(), x) && isLow(box.getHeight(), y)) return TOP;
+    if (isMiddle(box.getHeight(), y) && isLow(box.getWidth(), x)) return LEFT;
+    if (isMiddle(box.getWidth(), x) && isHigh(box.getHeight(), y)) return BOTTOM;
+    if (isMiddle(box.getHeight(), y) && isHigh(box.getWidth(), x)) return RIGHT;
     return TOP;
   }
 
@@ -176,7 +194,9 @@ public class SXPictureTool {
   private boolean isHigh(int range, int point) {
     return point > range - range / 4;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="mouse click">
   private void myMouseClicked(MouseEvent e) {
     String doubleClick = e.getClickCount() > 1 ? "Double" : "";
     log.trace("mouse%sClicked: %d,%d", doubleClick, e.getX(), e.getY());
@@ -191,28 +211,65 @@ public class SXPictureTool {
     }
   }
 
+  Element getPos(Element elem) {
+    return new Element((int) ((elem.x - borderThickness) / resizeFactor),
+            (int) ((elem.y - borderThickness) / resizeFactor));
+  }
+
   void crop(Element clicked) {
-    int wf = box.getWidth();
-    int hf = box.getHeight();
-    wFactor = (1f + wf) / rect.w;
-    hFactor = (1f + hf) / rect.h;
-    int x = (int) (clicked.x / wFactor);
-    int y = (int) (clicked.y / hFactor);
+    clicked = getPos(clicked);
+    int x = clicked.x;
+    int y = clicked.y;
     if (TOP == activeSide) {
       rect.h -= y;
       rect.y += y;
     } else if (BOTTOM == activeSide) {
       rect.h -= rect.h - y;
-      rect.h++;
     } else if (LEFT == activeSide) {
       rect.w -= x;
       rect.x += x;
     } else if (RIGHT == activeSide) {
       rect.w -= rect.w - x;
-      rect.w++;
+    } else if (ALL == activeSide) {
+      rect.h -= y;
+      rect.y += y;
+      rect.w -= x;
+      rect.x += x;
     }
     exited = -1;
     resizeToFrame();
+  }
+
+  void center(Element clicked) {
+    int halfCenteredWidth = 150;
+    clicked = getPos(clicked);
+    int x = rect.x + clicked.x;
+    rect.x = Math.max(0, x - halfCenteredWidth);
+    int y = rect.y + clicked.y;
+    rect.y = Math.max(0, y - halfCenteredWidth);
+    rect.w = rect.h = 2 * Math.min(Math.min(halfCenteredWidth,Math.min(x, scr.w - x)),
+            Math.min(halfCenteredWidth,Math.min(y, scr.h - y)));
+    exited = -1;
+    resizeToFrame();
+  }
+
+  double resizeFactor = 10;
+
+  private void resizeToFrame() {
+    shot = scr.getSub(rect);
+    double wFactor = rect.w / (scr.w * 0.85f);
+    double hFactor = rect.h / (scr.h * 0.85f);
+    resizeFactor = 1 / Math.max(wFactor, hFactor);
+    resizeFactor = Math.min(resizeFactor, 10);
+    BufferedImage img = shot.resize(resizeFactor).get();
+    Dimension dim = new Dimension(img.getWidth() + 2 * borderThickness,
+            img.getHeight() + 2 * borderThickness + 30);
+    content.setIcon(new ImageIcon(img));
+    content.setBorder(coloredSide(activeSide));
+    pBox.setPreferredSize(dim);
+    box.pack();
+    box.setLocation((int) ((scr.w - dim.getWidth()) / 2),(int) (scr.h - dim.getHeight()) / 2);
+    dirty = true;
   }
 
   //<editor-fold desc="clickHandler">
@@ -257,7 +314,8 @@ public class SXPictureTool {
           }
         } else if (clickStatus.get(1).isClicked()) {
           clicked = clickStatus.get(1).getClick();
-          log.trace("action: center at (%d,%d)", clicked.x, clicked.x);
+          log.trace("action: center at (%d,%d) %s", clicked.x, clicked.y, rect);
+          center(clicked);
           resetClickStatus();
           rect.resetClick();
         }
@@ -265,7 +323,9 @@ public class SXPictureTool {
     }
   }
   //</editor-fold>
+  //</editor-fold>
 
+  //<editor-fold desc="key typed">
   private void myKeyTyped(KeyEvent e) {
     boolean shouldQuit = false;
     if (e.CHAR_UNDEFINED != e.getKeyChar()) {
@@ -273,11 +333,9 @@ public class SXPictureTool {
       if ("+".equals("" + e.getKeyChar())) {
         zoomIn();
         log.trace("action: zoom-in to %s", rect);
-        resizeToFrame();
       } else if ("-".equals("" + e.getKeyChar())) {
         zoomOut();
         log.trace("action: zoom-out to %s", rect);
-        resizeToFrame();
       } else if ("s".equals("" + e.getKeyChar())) {
         log.trace("action: save request");
         dirty = false;
@@ -286,7 +344,7 @@ public class SXPictureTool {
           @Override
           public void run() {
             log.trace("action: find: %s", scr.getLastMatch());
-            Do.find(getCapture(), scr);
+            Do.find(scr.getSub(rect), scr);
             SXHighlight hl = new SXHighlight(scr);
             hl.add(scr.getLastMatch());
             hl.on();
@@ -332,6 +390,34 @@ public class SXPictureTool {
     }
   }
 
+  private void zoomOut() {
+    int stepX, stepY;
+    stepX = Math.max(1, rect.w / 10);
+    stepY = Math.max(1, rect.h / 10);
+    rect.x -= stepX;
+    rect.w += 2 * stepX;
+    rect.y -= stepY;
+    rect.h += 2 * stepY;
+    rect = scr.intersection(rect);
+    resizeToFrame();
+  }
+
+  private void zoomIn() {
+    int stepX, stepY;
+    Element minimum = rect.getCenter();
+    minimum.grow();
+    stepX = Math.max(1, rect.w / 10);
+    stepY = Math.max(1, rect.h / 10);
+    rect.x += stepX;
+    rect.w -= 2 * stepX;
+    rect.y += stepY;
+    rect.h -= 2 * stepY;
+    if (rect.w < 5 || rect.h < 5) {
+      rect.change(minimum);
+    }
+    resizeToFrame();
+  }
+
   private void quit() {
     if (dirty) {
       log.error("image not saved yet");
@@ -339,7 +425,9 @@ public class SXPictureTool {
     box.dispose();
     running = false;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="key released (special keys)">
   private void myKeyReleased(KeyEvent e) {
     int code = e.getKeyCode();
     if (e.CHAR_UNDEFINED != e.getKeyChar()) {
@@ -404,6 +492,8 @@ public class SXPictureTool {
           break;
         case KeyEvent.VK_META:
           cName = "#META";
+          content.setBorder(coloredSide(ALL));
+          box.pack();
           break;
       }
       if (!SX.isNull(newRect)) {
@@ -415,54 +505,6 @@ public class SXPictureTool {
     }
   }
 
-  private BufferedImage getShot() {
-    shot = scr.getSub(rect);
-    double wFactor = rect.w / (scr.w * 0.9f);
-    double hFactor = rect.h / (scr.h * 0.9f);
-    double factor = 1 / Math.max(wFactor, hFactor);
-    factor = Math.min(factor, 10);
-    shotDisplayed = shot.resize(factor).get();
-    return shotDisplayed;
-  }
-
-  public Picture getCapture() {
-    return scr.getSub(rect);
-  }
-
-  private void resizeToFrame() {
-    content.setIcon(new ImageIcon(getShot()));
-    content.setBorder(coloredSide(activeSide));
-    box.pack();
-    box.setLocation((int) ((scr.w - shotDisplayed.getWidth()) / 2), (int) (scr.h - shotDisplayed.getHeight()) / 2);
-    dirty = true;
-  }
-
-  private void zoomOut() {
-    int stepX, stepY;
-    stepX = Math.max(1, rect.w / 10);
-    stepY = Math.max(1, rect.h / 10);
-    rect.x -= stepX;
-    rect.w += 2 * stepX;
-    rect.y -= stepY;
-    rect.h += 2 * stepY;
-    rect = scr.intersection(rect);
-  }
-
-  private void zoomIn() {
-    int stepX, stepY;
-    Element minimum = rect.getCenter();
-    minimum.grow();
-    stepX = Math.max(1, rect.w / 10);
-    stepY = Math.max(1, rect.h / 10);
-    rect.x += stepX;
-    rect.w -= 2 * stepX;
-    rect.y += stepY;
-    rect.h -= 2 * stepY;
-    if (rect.w < 5 || rect.h < 5) {
-      rect.change(minimum);
-    }
-  }
-
   private Border coloredSide(int side) {
     return coloredSide(side, Color.RED, Color.GREEN);
   }
@@ -471,19 +513,24 @@ public class SXPictureTool {
     Border inner = null;
     Border outer = null;
     if (side == ALL) {
-      return BorderFactory.createMatteBorder(borderThickness, borderThickness, borderThickness, borderThickness, outerCol);
+      activeSide = ALL;
+      return BorderFactory.createMatteBorder(borderThickness, borderThickness, borderThickness, borderThickness, innerCol);
     }
-    if (side == COUNTERCLOCKWISE) {
-      activeSide = ++activeSide > RIGHT ? TOP : activeSide;
-    } else if (side == CLOCKWISE) {
-      activeSide = --activeSide < TOP ? RIGHT : activeSide;
-    } else if (side == OPPOSITE) {
-      activeSide = activeSide + 2;
-      if (activeSide > RIGHT) {
-        activeSide -= 4;
-      }
+    if (activeSide == ALL) {
+      activeSide = TOP;
     } else {
-      activeSide = side;
+      if (side == COUNTERCLOCKWISE) {
+        activeSide = ++activeSide > RIGHT ? TOP : activeSide;
+      } else if (side == CLOCKWISE) {
+        activeSide = --activeSide < TOP ? RIGHT : activeSide;
+      } else if (side == OPPOSITE) {
+        activeSide = activeSide + 2;
+        if (activeSide > RIGHT) {
+          activeSide -= 4;
+        }
+      } else {
+        activeSide = side;
+      }
     }
     switch (activeSide) {
       case TOP:
@@ -508,7 +555,9 @@ public class SXPictureTool {
   private String getActiveSide() {
     return activeSides[activeSide];
   }
+  //</editor-fold>
 
+  //<editor-fold desc="image attributes">
   private File imgPath = null;
 
   public File getImgPath() {
@@ -543,17 +592,5 @@ public class SXPictureTool {
                     "Region: %s",
             getImgPath(), getImageFile().getName(), rect);
   }
-
-  private static BufferedImage resize(BufferedImage bImg, float factor) {
-    int type;
-    type = bImg.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : bImg.getType();
-    int width = (int) (bImg.getWidth() * factor);
-    int height = (int) (bImg.getHeight() * factor);
-    BufferedImage resizedImage = new BufferedImage(width, height, type);
-    Graphics2D g = resizedImage.createGraphics();
-    g.drawImage(bImg, 0, 0, width, height, null);
-    g.dispose();
-    return resizedImage;
-  }
-
+  //</editor-fold>
 }

@@ -566,7 +566,7 @@ public class TestSXAPI {
     currentTest = "test_995_PictureTool";
     boolean assertVal = true;
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
-      SXPictureTool tool = new SXPictureTool(new Element(30, 30, 500, 300));
+      SXPictureTool tool = new SXPictureTool(new Element(0, 0, 1800, 1000));
       tool.waitFor();
     } else {
       result = "TravisCI or NonInteractive: not testing";
