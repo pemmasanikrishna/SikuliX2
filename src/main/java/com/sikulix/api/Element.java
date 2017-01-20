@@ -12,10 +12,8 @@ import org.opencv.core.Rect;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class Element extends SXElement {
 
@@ -520,6 +518,7 @@ public class Element extends SXElement {
   }
   //</editor-fold>
 
+  //<editor-fold desc="***** handle FindFailed, ImageMissing">
   public double getAutoWaitTimeout() {
     return autoWaitTimeout;
   }
@@ -564,7 +563,9 @@ public class Element extends SXElement {
     onEvents.put(name, event);
     return name;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="***** observe">
   public String onAppear(Element elem, Handler handler) {
     return setOnHandler(Event.TYPE.ONAPPEAR, elem, handler);
   }
@@ -580,7 +581,9 @@ public class Element extends SXElement {
   private Event eventFindFailed = new Event(Event.TYPE.FINDFAILED, Event.REACTION.ABORT);
   private Event eventImageMissing = new Event(Event.TYPE.IMAGEMISSING, Event.REACTION.ABORT);
   private Map<String, Event> onEvents = new HashMap<>();
+  //</editor-fold>
 
+  //<editor-fold desc="***** find, ...">
   public Element find(Object... args) {
     return Do.find(target, this);
   }
@@ -600,4 +603,36 @@ public class Element extends SXElement {
   public List<Element> findAll(Object... args) {
     return Do.findAll(target, this);
   }
+  //</editor-fold>
+
+  //<editor-fold desc="is clicked">
+  Element click = null;
+  long clickedTime = 0;
+
+  public boolean isClicked() {
+    return SX.isNotNull(click);
+  }
+
+  public Element getClick() {
+    return click;
+  }
+
+  public Element setClick(Element click) {
+    this.click = click;
+    click.setClicked(new Date().getTime());
+    return this;
+  }
+
+  public void resetClick() {
+    click = null;
+  }
+
+  public void setClicked(long clickedTime) {
+    this.clickedTime = clickedTime;
+  }
+
+  public long getClicked() {
+    return clickedTime;
+  }
+  //</editor-fold>
 }

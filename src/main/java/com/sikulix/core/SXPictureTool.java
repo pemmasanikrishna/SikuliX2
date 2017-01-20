@@ -3,9 +3,6 @@ package com.sikulix.core;
 import com.sikulix.api.Do;
 import com.sikulix.api.Element;
 import com.sikulix.api.Picture;
-import com.sikulix.core.SX;
-import com.sikulix.core.SXHighlight;
-import com.sikulix.core.SXLog;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -20,6 +17,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static java.awt.event.KeyEvent.VK_ESCAPE;
@@ -55,7 +53,6 @@ public class SXPictureTool {
   private int activeSide = TOP;
   private String[] activeSides = new String[]{"TOP", "LEFT", "BOTTOM", "RIGHT"};
   private boolean running = false;
-  private boolean ignoreMouseEnter = true;
 
   private int borderThickness = 5;
 
@@ -132,6 +129,7 @@ public class SXPictureTool {
     box.add(pBox);
     box.pack();
     box.setLocation((int) ((scr.w - box.getWidth()) / 2), (int) (scr.h - box.getHeight()) / 2);
+    new Thread(new ClickHandler()).start();
     box.setVisible(true);
   }
 
@@ -140,15 +138,21 @@ public class SXPictureTool {
     return elem.setName("BOX");
   }
 
+  int exited = -1;
+
   private void myMouseEntered(MouseEvent e) {
-    if (ignoreMouseEnter) {
-      ignoreMouseEnter = false;
-      return;
-    }
-    log.trace("mouseEntered: %d,%d %s", e.getX(), e.getY(), displayBox());
     int side = whichSide(e.getX() - borderThickness, e.getY() - borderThickness);
-    content.setBorder(coloredSide(side));
-    box.repaint();
+    if (side == exited) {
+      log.trace("mouseEntered: %s [%d,%d %s", activeSides[side], e.getX(), e.getY(), displayBox());
+      exited = -1;
+      content.setBorder(coloredSide(side));
+      box.repaint();
+    }
+  }
+
+  private void myMouseExited(MouseEvent e) {
+    exited = whichSide(e.getX() - borderThickness, e.getY() - borderThickness);
+    log.trace("mouseExited: %s [%d,%d %s", activeSides[exited], e.getX(), e.getY(), displayBox());
   }
 
   private int whichSide(int x, int y) {
@@ -173,10 +177,6 @@ public class SXPictureTool {
     return point > range - range / 4;
   }
 
-  private void myMouseExited(MouseEvent e) {
-    //log.trace("mouseExited: %d,%d %s", e.getX(), e.getY(), new Element(box.getBounds()).setName("BOX"));
-  }
-
   private void myMouseClicked(MouseEvent e) {
     String doubleClick = e.getClickCount() > 1 ? "Double" : "";
     log.trace("mouse%sClicked: %d,%d", doubleClick, e.getX(), e.getY());
@@ -184,32 +184,87 @@ public class SXPictureTool {
     if (lastRects.size() > maxRevert) {
       lastRects.remove(maxRevert);
     }
-    if (SX.isSet(doubleClick)) {
-
+    if (!SX.isSet(doubleClick)) {
+      setClickStatusClicked(new Element(e.getX(), e.getY()));
     } else {
-      int wf = box.getWidth();
-      int hf = box.getHeight();
-      wFactor = (1f + wf) / rect.w;
-      hFactor = (1f + hf) / rect.h;
-      int x = (int) (e.getX() / wFactor);
-      int y = (int) (e.getY() / hFactor);
-      if (TOP == activeSide) {
-        rect.h -= y;
-        rect.y += y;
-      } else if (BOTTOM == activeSide) {
-        rect.h -= rect.h - y;
-        rect.h++;
-      } else if (LEFT == activeSide) {
-        rect.w -= x;
-        rect.x += x;
-      } else if (RIGHT == activeSide) {
-        rect.w -= rect.w - x;
-        rect.w++;
-      }
-      log.trace("action: crop from %s to %s", getActiveSide(), rect);
+      setClickStatusDoubleClicked();
     }
+  }
+
+  void crop(Element clicked) {
+    int wf = box.getWidth();
+    int hf = box.getHeight();
+    wFactor = (1f + wf) / rect.w;
+    hFactor = (1f + hf) / rect.h;
+    int x = (int) (clicked.x / wFactor);
+    int y = (int) (clicked.y / hFactor);
+    if (TOP == activeSide) {
+      rect.h -= y;
+      rect.y += y;
+    } else if (BOTTOM == activeSide) {
+      rect.h -= rect.h - y;
+      rect.h++;
+    } else if (LEFT == activeSide) {
+      rect.w -= x;
+      rect.x += x;
+    } else if (RIGHT == activeSide) {
+      rect.w -= rect.w - x;
+      rect.w++;
+    }
+    exited = -1;
     resizeToFrame();
   }
+
+  //<editor-fold desc="clickHandler">
+  List<Element> listElement = new ArrayList<>();
+  List<Element> clickStatus = Collections.synchronizedList(listElement);
+
+  synchronized void setClickStatusClicked(Element element) {
+    if (!clickStatus.get(0).isClicked()) {
+      clickStatus.get(0).setClick(element);
+      clickStatus.set(1, new Element());
+    }
+  }
+
+  synchronized void setClickStatusDoubleClicked() {
+    if (!clickStatus.get(1).isClicked()) {
+      clickStatus.set(1, clickStatus.get(0));
+      clickStatus.set(0, new Element());
+    }
+  }
+
+  synchronized void resetClickStatus() {
+    SX.pause(0.3);
+    clickStatus.set(0, new Element());
+    clickStatus.set(1, new Element());
+  }
+
+  protected class ClickHandler implements Runnable {
+    @Override
+    public void run() {
+      clickStatus.add(new Element());
+      clickStatus.add(new Element());
+      Element clicked = null;
+      while (true) {
+        if (clickStatus.get(0).isClicked()) {
+          SX.pause(0.3);
+          if (clickStatus.get(0).isClicked()) {
+            clicked = clickStatus.get(0).getClick();
+            log.trace("action: crop at (%d,%d) from %s", clicked.x, clicked.y, getActiveSide());
+            crop(clicked);
+            resetClickStatus();
+            rect.resetClick();
+          }
+        } else if (clickStatus.get(1).isClicked()) {
+          clicked = clickStatus.get(1).getClick();
+          log.trace("action: center at (%d,%d)", clicked.x, clicked.x);
+          resetClickStatus();
+          rect.resetClick();
+        }
+      }
+    }
+  }
+  //</editor-fold>
 
   private void myKeyTyped(KeyEvent e) {
     boolean shouldQuit = false;
