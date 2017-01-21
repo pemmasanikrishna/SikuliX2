@@ -559,6 +559,11 @@ public abstract class SXElement implements Comparable<SXElement> {
     return new Element(r1.intersection(r2));
   }
 
+  public void intersect(Element elem) {
+    Element inter = intersection(elem);
+    change(inter);
+  }
+
   public boolean contains(SXElement elem) {
     if (!isRectangle()) {
       return false;

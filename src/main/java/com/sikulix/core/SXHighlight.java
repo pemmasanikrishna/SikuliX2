@@ -32,6 +32,9 @@ public class SXHighlight {
   private BufferedImage baseImg = null;
   private BufferedImage baseDisplayed = null;
   private JFrame frame = new JFrame();
+  private Color lineColor = null;
+  private int lineThickness = 5;
+  private Element location = new Element();
 
   public SXHighlight(Picture base) {
     this.base = base;
@@ -43,26 +46,7 @@ public class SXHighlight {
     init();
   }
 
-  public Color getLineColor() {
-    return lineColor;
-  }
-
-  public void setLineColor(Color lineColor) {
-    this.lineColor = lineColor;
-  }
-
-  public int getLineThickness() {
-    return lineThickness;
-  }
-
-  public void setLineThickness(int lineThickness) {
-    this.lineThickness = lineThickness;
-  }
-
-  private Color lineColor = null;
-  private int lineThickness = 3;
-  private Element location = new Element();
-
+  //<editor-fold desc="painting">
   private void init() {
     JPanel panel = new JPanel() {
       public void paintComponent(Graphics g) {
@@ -92,12 +76,43 @@ public class SXHighlight {
     int y = elem.y - base.y - lineThickness;
     int w = elem.w + 2 * lineThickness;
     int h = elem.h + 2 * lineThickness;
+    g2d.setStroke(new BasicStroke(lineThickness));
     g2d.drawLine(x, y, x+w, y);
     g2d.drawLine(x + w, y, x + w, y + h);
     g2d.drawLine(x + w, y + h, x, y + h);
     g2d.drawLine(x, y + h , x, y);
+    g2d.setColor(Color.white);
+    int rectW = 50;
+    int rectH = 20;
+    int rectX = x;
+    int rectY = y - lineThickness - rectH;
+    int margin = 2;
+    int fontSize = rectH - margin * 2;
+    g2d.fillRect(rectX, rectY, rectW, rectH);
+    g2d.setColor(Color.black);
+    g2d.setFont(new Font(Font.DIALOG, Font.BOLD, fontSize));
+    double hlScore = elem.isMatch() ? Math.min(elem.getScore(), 0.9999) : 0;
+    g2d.drawString(String.format("%05.2f", 100 * hlScore), rectX + margin, rectY + fontSize);
   }
 
+  public Color getLineColor() {
+    return lineColor;
+  }
+
+  public void setLineColor(Color lineColor) {
+    this.lineColor = lineColor;
+  }
+
+  public int getLineThickness() {
+    return lineThickness;
+  }
+
+  public void setLineThickness(int lineThickness) {
+    this.lineThickness = lineThickness;
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="handling">
   public void on() {
     frame.setVisible(true);
     SX.pause(2);
@@ -118,5 +133,6 @@ public class SXHighlight {
   public void stop() {
     frame.dispose();
   }
+  //</editor-fold>
 
 }
