@@ -7,7 +7,6 @@ package com.sikulix.util;
 import com.sikulix.api.Do;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import org.sikuli.basics.PreferencesUser;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -28,6 +27,7 @@ public class FileChooser {
   static final int LOAD = FileDialog.LOAD;
   Frame _parent;
   boolean accessingAsFile = false;
+  boolean checkSikuli = true;
   String fileType = "";
 
   public FileChooser(Frame parent) {
@@ -45,6 +45,7 @@ public class FileChooser {
   }
 
   public File show(String title) {
+    checkSikuli = false;
     File ret = showFileChooser(title, LOAD, DIRSANDFILES);
     return ret;
   }
@@ -77,13 +78,16 @@ public class FileChooser {
   }
 
   private File showFileChooser(String title, int mode, int selectionMode, Object... filters) {
-    String last_dir = PreferencesUser.getInstance().get("LAST_OPEN_DIR", "");
+    String last_dir = SX.getOption("LAST_OPEN_DIR", "NotSet");
     log.debug("showFileChooser: %s at %s", title.split(" ")[0], last_dir);
     JFileChooser fchooser = null;
     File fileChoosen = null;
     while (true) {
       fchooser = new JFileChooser();
-      if (!last_dir.isEmpty()) {
+      if (SX.isMac()) {
+        fchooser.putClientProperty("JFileChooser.packageIsTraversable", "always");
+      }
+      if (!"NotSet".equals(last_dir)) {
         fchooser.setCurrentDirectory(new File(last_dir));
       }
       fchooser.setSelectedFile(null);
@@ -97,10 +101,8 @@ public class FileChooser {
         fchooser.setDialogType(JFileChooser.SAVE_DIALOG);
         btnApprove = "Save";
       }
-      boolean shouldTraverse = false;
       if (filters.length == 0) {
         fchooser.setAcceptAllFileFilterUsed(true);
-        shouldTraverse = true;
       } else {
         fchooser.setAcceptAllFileFilterUsed(false);
         for (Object filter : filters) {
@@ -108,20 +110,16 @@ public class FileChooser {
             fchooser.addChoosableFileFilter((SikulixFileFilter) filter);
           } else {
             fchooser.setFileFilter((FileNameExtensionFilter) filter);
-            shouldTraverse = true;
+            checkSikuli = false;
           }
         }
       }
-      if (shouldTraverse && SX.isMac()) {
-        fchooser.putClientProperty("JFileChooser.packageIsTraversable", "always");
-      }
-
       if (fchooser.showDialog(_parent, btnApprove) != JFileChooser.APPROVE_OPTION) {
         return null;
       }
       fileChoosen = fchooser.getSelectedFile();
       if (mode == FileDialog.LOAD) {
-        if (SX.isNotSet(fileType) && !isValidScript(fileChoosen)) {
+        if (checkSikuli && !isValidScript(fileChoosen)) {
           // folders must contain a valid scriptfile
           Do.popError("Folder not a valid SikuliX script\nTry again.");
           last_dir = fileChoosen.getAbsolutePath();
@@ -130,7 +128,11 @@ public class FileChooser {
         break;
       }
     }
-    PreferencesUser.getInstance().put("LAST_OPEN_DIR", fileChoosen.getParent());
+    File selected = new File(fileChoosen.getAbsolutePath());
+    if (!selected.isDirectory()) {
+      selected = selected.getParentFile();
+    }
+    SX.setOption("LAST_OPEN_DIR", selected.getAbsolutePath());
     return fileChoosen;
   }
 

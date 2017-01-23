@@ -133,6 +133,11 @@ public class Element extends SXElement {
     init(p);
   }
 
+  public Element(Dimension dim) {
+    setClazz();
+    init(0, 0, (int) dim.getWidth(), (int) dim.getHeight());
+  }
+
   public Element(Element elem) {
     this();
     x = elem.x;

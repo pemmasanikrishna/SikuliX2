@@ -1,10 +1,8 @@
 /*
- * Copyright (c) 2010-2016, Sikuli.org, sikulix.com
- * Released under the MIT License.
- *
+ * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.util;
+package com.sikulix.core;
 
 import org.bridj.BridJ;
 import org.bridj.Pointer;
@@ -14,7 +12,7 @@ import org.sikuli.basics.Debug;
 /**
  * Direct access to system functions via JNI, JNA, BridJ, ...
  */
-public class SysJNA {
+public class SXJNA {
   /**
    * Direct access to Windows API kernel32.dll via BridJ
    */

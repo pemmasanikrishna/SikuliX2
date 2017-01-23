@@ -3,6 +3,7 @@ package com.sikulix.core;
 import com.sikulix.api.Do;
 import com.sikulix.api.Element;
 import com.sikulix.api.Picture;
+import com.sikulix.util.FileChooser;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -22,8 +23,11 @@ public class SXPictureTool {
   //<editor-fold desc="housekeeping">
   private static final SXLog log = SX.getLogger("SX.PictureTool");
 
-  private Picture scr = null;
+  //<editor-fold desc="fields">
+  private Picture base = null;
   private Element rect = null;
+  boolean isImage = false;
+  private Element givenRect = null;
   private List<Element> lastRects = new ArrayList<>();
   private int maxRevert = 10;
   private Picture shot;
@@ -56,42 +60,127 @@ public class SXPictureTool {
   final private int BOTTOM = 2;
   final private int RIGHT = 3;
   final private int ALL = 4;
-  final private int COUNTERCLOCKWISE = 5;
-  final private int CLOCKWISE = 6;
-  final private int OPPOSITE = 7;
-  private int activeSide = TOP;
-  private int activesideSaved = TOP;
+  final private int NONE = 5;
+  final private int COUNTERCLOCKWISE = 6;
+  final private int CLOCKWISE = 7;
+  final private int OPPOSITE = 8;
+  private int activeSide = NONE;
+  private int activeSideSaved = ALL;
   private boolean activeSideAll = false;
-  private String[] activeSides = new String[]{"TOP", "LEFT", "BOTTOM", "RIGHT", "ALL"};
+  private boolean activeSideNone = false;
+  private String[] activeSides = new String[]{"TOP", "LEFT", "BOTTOM", "RIGHT", "ALL", "NONE"};
   private boolean shouldKeepAll = false;
   private boolean running = false;
 
   private int borderThickness = 5;
-  private  int minWidthHeight = 5;
+  private int minWidthHeight = 5;
+  private int whichSideMargin = 10;
 
   MouseEvent lastDrag = null;
   MouseEvent dragStart = null;
   MouseEvent dragCurrent = null;
 
+  String bundlePath = "";
+
+  int scrW = 0;
+  int scrH = 0;
+  int scrID = 0;
+
   public boolean isRunning() {
     return running;
   }
+  //</editor-fold>
 
-  public void waitFor() {
-    while (isRunning()) {
-      SX.pause(1);
+  JFrame intro = new JFrame();
+
+  public SXPictureTool() {
+    intro = new JFrame();
+    intro.addKeyListener(new KeyAdapter() {
+      @Override
+      public void keyTyped(KeyEvent e) {
+        boolean shouldQuit = false;
+        super.keyTyped(e);
+        String sKey = "" + e.getKeyChar();
+        if (e.getKeyChar() == VK_ESCAPE) {
+          shouldQuit = true;
+        } else {
+          if (!"pocq".contains(sKey)) {
+            log.trace("keyTyped: %s", sKey);
+            return;
+          }
+          if ("p".equals("" + e.getKeyChar())) {
+            log.trace("action: bundlePath");
+            actionBundlePath();
+          } else if ("o".equals("" + e.getKeyChar())) {
+            log.trace("action: open");
+            actionOpen(intro);
+          } else if ("c".equals("" + e.getKeyChar())) {
+            log.trace("action: capture");
+            intro.setVisible(false);
+            actionCapture();
+          } else if ("q".equals("" + e.getKeyChar())) {
+            shouldQuit = true;
+          }
+        }
+        if (shouldQuit) {
+          log.trace("action: quit requested");
+          actionQuit();
+        }
+      }
+    });
+    intro.setUndecorated(true);
+    intro.setResizable(false);
+    if (!log.isGlobalLevel(log.TRACE)) {
+      intro.setAlwaysOnTop(true);
     }
+    Container introPane = intro.getContentPane();
+    introPane.setLayout(new BoxLayout(introPane, BoxLayout.Y_AXIS));
+    introPane.setBackground(Color.white);
+    String aText = "<html>" +
+            "<h1>&nbsp;&nbsp;&nbsp;&nbsp;SikuliX Tool</h1>" +
+            "<hr><br>" +
+            "&nbsp;type a key for an action:" +
+            "<br><hr><br>" +
+            "&nbsp;&nbsp;p - set bundle path" +
+            "<br>" +
+            "&nbsp;&nbsp;o - open an image file" +
+            "<br>" +
+            "&nbsp;&nbsp;c - capture screen image" +
+            "<br><br><hr><br>" +
+            "&nbsp;ESC or q - to quit the tool" +
+            "<br>";
+    JLabel introText = getNewLabel(320, 270, aText);
+    introText.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
+    introText.setBorder(BorderFactory.createLineBorder(Color.magenta, 2));
+    introPane.add(introText);
+    intro.pack();
+    Dimension introSize = intro.getMinimumSize();
+    Element centered = new Element(introSize).getCentered(SX.getMain());
+    intro.setLocation(centered.x, centered.y);
+    initBox();
+    intro.setVisible(true);
   }
 
-  public SXPictureTool(Element rect) {
-    this(0, rect);
+  private JLabel getNewLabel(final int width, final int height, String text) {
+    JLabel jLabel = new JLabel(text) {
+      public Dimension getPreferredSize() {
+        return new Dimension(width, height);
+      }
+
+      public Dimension getMinimumSize() {
+        return new Dimension(width, height);
+      }
+
+      public Dimension getMaximumSize() {
+        return new Dimension(width, height);
+      }
+    };
+    jLabel.setVerticalAlignment(SwingConstants.CENTER);
+    jLabel.setHorizontalAlignment(SwingConstants.CENTER);
+    return jLabel;
   }
 
-  public SXPictureTool(int scrID, Element rect) {
-    running = true;
-    this.rect = rect;
-    //aspect = ((float) rect.w) / rect.h;
-    scr = new Element(scrID).capture();
+  private void initBox() {
     box = new JFrame();
     box.setUndecorated(true);
     box.setResizable(false);
@@ -123,9 +212,9 @@ public class SXPictureTool {
           int h = Math.abs(end.y - start.y);
           if (w > minWidthHeight && h > minWidthHeight) {
             pushRect();
-            int rx = getRect().x;
-            int ry = getRect().y;
-            getRect().change(new Element(rx + Math.min(start.x, end.x), ry + Math.min(start.y, end.y), w , h));
+            int rx = rect.x;
+            int ry = rect.y;
+            rect.change(new Element(rx + Math.min(start.x, end.x), ry + Math.min(start.y, end.y), w, h));
           }
           dragStart = null;
           dragCurrent = null;
@@ -158,16 +247,7 @@ public class SXPictureTool {
       public void mouseDragged(MouseEvent e) {
         super.mouseDragged(e);
         myMouseMoved(e);
-        if (getActiveSide() == ALL) {
-          if (SX.isNull(lastDrag)) {
-            dragStart = e;
-          }
-          dragCurrent = e;
-          content.repaint();
-        } else {
-          resizeSelection(e);
-        }
-        lastDrag = e;
+        myMouseDragged(e);
       }
 
       @Override
@@ -198,27 +278,82 @@ public class SXPictureTool {
     status.setFont(new Font(Font.MONOSPACED, Font.PLAIN, statusFontHeight));
     status.setText("    ,     ");
     status.setBorder(BorderFactory.createMatteBorder(0, statusLineWidht, statusLineWidht, statusLineWidht, Color.black));
-    resizeToFrame();
-    content.setBorder(coloredSide(TOP));
     pBox.add(content);
     pBox.add(status);
-    box.pack();
-    box.setLocation((int) ((scr.w - box.getWidth()) / 2), (int) (scr.h - box.getHeight()) / 2);
+    running = true;
     new Thread(new ClickHandler()).start();
-    box.setVisible(true);
+    scrW = SX.getMain().w;
+    scrH = SX.getMain().h;
   }
 
-  public Element getRect() {
-    return rect;
+  private void resetBox() {
+    box.setVisible(false);
+    givenRect = new Element(this.rect);
+    resizeToFrame();
+    box.setVisible(true);
   }
   //</editor-fold>
 
-  //<editor-fold desc="mouse exit/enter/click">
+  //<editor-fold desc="mouse drag/click">
   int exited = -1;
 
   private void myMouseMoved(MouseEvent e) {
     Element elem = getPos(new Element(e.getX(), e.getY()));
     updateStatus(elem);
+  }
+
+  private void myMouseDragged(MouseEvent e) {
+    if (getActiveSide() == ALL) {
+      if (SX.isNull(lastDrag)) {
+        dragStart = e;
+      }
+      dragCurrent = e;
+      content.repaint();
+    } else {
+      dragSelection(e);
+    }
+    lastDrag = e;
+  }
+
+  private void dragSelection(MouseEvent e) {
+    if (SX.isNotNull(lastDrag) && exited < 0) {
+      if (activeSide == NONE) {
+        Element newRect = null;
+        if (e.getY() > lastDrag.getY()) {
+          if (e.getX() > lastDrag.getX()) {
+            newRect = new Element(rect.x + 10, rect.y + 10, rect.w, rect.h);
+          } else if (e.getX() > lastDrag.getX()) {
+            newRect = new Element(rect.x - 10, rect.y + 10, rect.w, rect.h);
+          } else {
+            newRect = new Element(rect.x, rect.y + 10, rect.w, rect.h);
+          }
+        } else if (e.getY() < lastDrag.getY()) {
+          if (e.getX() > lastDrag.getX()) {
+            newRect = new Element(rect.x + 10, rect.y - 10, rect.w, rect.h);
+          } else if (e.getX() > lastDrag.getX()) {
+            newRect = new Element(rect.x - 10, rect.y - 10, rect.w, rect.h);
+          } else {
+            newRect = new Element(rect.x, rect.y - 10, rect.w, rect.h);
+          }
+        } else {
+          if (e.getX() > lastDrag.getX()) {
+            newRect = new Element(rect.x + 10, rect.y, rect.w, rect.h);
+          } else {
+            newRect = new Element(rect.x - 10, rect.y, rect.w, rect.h);
+          }
+        }
+        if (SX.isNotNull(newRect)) {
+          log.info("action: move %s", getActiveSideText());
+          int newRectW = newRect.w;
+          int newRectH = newRect.h;
+          newRect.intersect(base);
+          if (newRect.w == newRectW && newRect.h == newRectH) {
+            rect.change(newRect);
+            resizeToFrame();
+          }
+        }
+      }
+    }
   }
 
   private Element mousePos = new Element();
@@ -237,15 +372,15 @@ public class SXPictureTool {
   }
 
   private void myMouseEntered(MouseEvent e) {
-    if (!isDragging()) {
-      int side = whichSide(e.getX() - borderThickness, e.getY() - borderThickness);
-      if (side == exited) {
-        log.trace("mouseEntered: %s", activeSides[side]);
-        exited = -1;
-        content.setBorder(coloredSide(side));
-        box.repaint();
-      }
-    }
+//    if (!isDragging() && activeSide != NONE && activeSide != ALL) {
+//      int side = whichSide(e.getX() - borderThickness, e.getY() - borderThickness);
+//      if (side == exited) {
+//        log.trace("mouseEntered: %s", activeSides[side]);
+//        content.setBorder(coloredSide(side));
+//        box.repaint();
+//      }
+//    }
+    exited = -1;
   }
 
   private void myMouseExited(MouseEvent e) {
@@ -266,17 +401,17 @@ public class SXPictureTool {
   }
 
   private boolean isLow(int range, int point) {
-    return point < range / 4;
+    return point < range / whichSideMargin;
   }
 
   private boolean isMiddle(int range, int point) {
-    int lower = range / 4;
+    int lower = range / whichSideMargin;
     int upper = range - lower;
     return point > lower && point < upper;
   }
 
   private boolean isHigh(int range, int point) {
-    return point > range - range / 4;
+    return point > range - range / whichSideMargin;
   }
 
   private void myMouseClicked(MouseEvent e) {
@@ -289,6 +424,7 @@ public class SXPictureTool {
       setClickStatusDoubleClicked();
     }
   }
+  //</editor-fold>
 
   //<editor-fold desc="clickHandler">
   List<Element> listElement = new ArrayList<>();
@@ -341,112 +477,233 @@ public class SXPictureTool {
       }
       log.trace("ClickHandler: ended");
     }
+
   }
-  //</editor-fold>
   //</editor-fold>
 
   //<editor-fold desc="key typed">
   private void myKeyTyped(KeyEvent e) {
     boolean shouldQuit = false;
+    String allowed = " +-rposftmnihqz";
     if (e.CHAR_UNDEFINED != e.getKeyChar()) {
       String sKey = "" + e.getKeyChar();
-      if ("+".equals("" + e.getKeyChar())) {
-        zoomIn();
-        log.trace("action: zoom-in to %s", rect);
-      } else if ("-".equals("" + e.getKeyChar())) {
-        zoomOut();
-        log.trace("action: zoom-out to %s", rect);
-      } else if ("s".equals("" + e.getKeyChar())) {
-        log.trace("action: save request");
-        dirty = false;
-      } else if ("f".equals("" + e.getKeyChar())) {
-        Runnable find = new Runnable() {
-          @Override
-          public void run() {
-            log.trace("action: find: %s", scr.getLastMatch());
-            Do.find(scr.getSub(rect), scr);
-            SXHighlight hl = new SXHighlight(scr);
-            hl.add(scr.getLastMatch());
-            hl.on();
-          }
-        };
-        new Thread(find).start();
-      } else if ("t".equals("" + e.getKeyChar())) {
-        log.trace("action: set target");
-        dirty = true;
-      } else if ("a".equals("" + e.getKeyChar())) {
-        log.trace("action: set similarity");
-        dirty = true;
-      } else if ("n".equals("" + e.getKeyChar())) {
-        log.trace("action: change name");
-        String newName = Do.input("Change image name", getImageName(), "NativeCapture::ImageName");
-        if (!SX.isNotSet(newName) && !imgName.equals(newName)) {
-          imgName = newName;
-          dirty = true;
-          updateStatus();
-        }
-      } else if ("i".equals("" + e.getKeyChar())) {
-        Do.popup(imgInfo(), "PictureTool::Information");
-        log.trace("action: show info");
-      } else if ("h".equals("" + e.getKeyChar())) {
-        log.trace("action: show help");
-      } else if ("q".equals("" + e.getKeyChar())) {
+      if (e.getKeyChar() == VK_ESCAPE) {
         log.trace("action: quit request");
-        shouldQuit = true;
-      } else if ("z".equals("" + e.getKeyChar())) {
-        if (lastRects.size() > 0) {
-          log.trace("action: revert crop from %s to %s", rect, lastRects.get(0));
-          rect = lastRects.remove(0);
-          resizeToFrame();
-        }
-      } else if (e.getKeyChar() == VK_ESCAPE) {
         dirty = false;
-        sKey = "#ESCAPE";
+        sKey = "#";
         shouldQuit = true;
+      } else {
+        if (!allowed.contains(sKey)) {
+          log.trace("keyTyped: %s", sKey);
+          return;
+        }
+        if (" ".equals("" + e.getKeyChar())) {
+          if (activeSide == NONE) {
+            activeSide = activeSideSaved;
+          } else {
+            activeSideSaved = activeSide;
+            activeSide = NONE;
+          }
+          content.setBorder(coloredSide(activeSide));
+          box.pack();
+        } else if ("+".equals("" + e.getKeyChar())) {
+          zoomIn();
+          log.trace("action: zoom-in to %s", rect);
+        } else if ("-".equals("" + e.getKeyChar())) {
+          zoomOut();
+          log.trace("action: zoom-out to %s", rect);
+        } else if ("r".equals("" + e.getKeyChar())) {
+          log.trace("action: reset");
+          actionReset();
+        } else if ("p".equals("" + e.getKeyChar())) {
+          log.trace("action: bundlePath");
+          actionBundlePath();
+        } else if ("o".equals("" + e.getKeyChar())) {
+          log.trace("action: open");
+          actionOpen(box);
+        } else if ("c".equals("" + e.getKeyChar())) {
+          log.trace("action: capture");
+          actionCapture();
+        } else if ("s".equals("" + e.getKeyChar())) {
+          log.trace("action: save");
+          actionSave();
+        } else if ("f".equals("" + e.getKeyChar())) {
+          log.trace("action: find: %s", rect);
+          actionFind();
+        } else if ("t".equals("" + e.getKeyChar())) {
+          log.trace("action: set target");
+          actionTarget();
+        } else if ("m".equals("" + e.getKeyChar())) {
+          log.trace("action: set similarity");
+          actionSimilar();
+        } else if ("n".equals("" + e.getKeyChar())) {
+          log.trace("action: change name");
+          actionName();
+        } else if ("i".equals("" + e.getKeyChar())) {
+          log.trace("action: show info");
+          actionInfo();
+        } else if ("h".equals("" + e.getKeyChar())) {
+          log.trace("action: show help");
+          actionHelp();
+        } else if ("z".equals("" + e.getKeyChar())) {
+          log.trace("action: revert");
+          actionRevert();
+        } else if ("q".equals("" + e.getKeyChar())) {
+          log.trace("action: quit request");
+          shouldQuit = true;
+        }
       }
-      log.trace("keyTyped: %s", sKey);
       if (shouldQuit) {
-        quit();
+        box.setVisible(false);
+        intro.setVisible(true);
       }
     }
   }
+  //</editor-fold>
 
-  private void quit() {
+  //<editor-fold desc="actions">
+  private void actionCapture() {
+    base = new Element(scrID).capture();
+    if (SX.isNull(rect)) {
+      this.rect = new Element(base);
+    } else {
+      this.rect = rect;
+    }
+    isImage = false;
+    resetBox();
+  }
+
+  private void actionReset() {
+    rect = givenRect;
+    resizeToFrame();
+    dirty = false;
+  }
+
+  private void actionFind() {
+    Runnable find = new Runnable() {
+      @Override
+      public void run() {
+        Picture searchBase = base;
+        box.setVisible(false);
+        if (isImage) {
+          SX.pause(1);
+          searchBase = new Element(scrID).capture();
+        }
+        Do.find(searchBase.getSub(rect), searchBase);
+        if (searchBase.hasMatch()) {
+          SXHighlight hl = new SXHighlight(searchBase);
+          hl.add(searchBase.getLastMatch());
+          hl.on();
+        }
+        box.setVisible(true);
+      }
+    };
+    new Thread(find).start();
+  }
+
+  private void actionQuit() {
     if (dirty) {
       log.error("image not saved yet");
     }
-    box.dispose();
+    log.trace("waiting for subs to end");
+    if (SX.isNotNull(box)) {
+      box.dispose();
+    }
+    intro.dispose();
     running = false;
     SX.pause(1);
+  }
+
+  private boolean actionBundlePath() {
+    FileChooser fc = new FileChooser(box);
+    File path = fc.show("Select BundlePath");
+    String result = "cancelled";
+    boolean success = true;
+    if (SX.isNotNull(path)) {
+      result = path.getAbsolutePath();
+      if (!path.isDirectory()) {
+        path = path.getParentFile();
+        if (!path.isDirectory()) {
+          log.error("invalid bundlePath: %s", result);
+          success = false;
+        }
+      }
+      bundlePath = result;
+    } else {
+      success = false;
+    }
+    log.trace("new bundlePath: %s", result);
+    return success;
+  }
+
+  private void actionOpen(JFrame frame) {
+    if (SX.isNotSet(bundlePath)) {
+      if (!actionBundlePath()) {
+        return;
+      }
+    }
+    FileChooser fc = new FileChooser(frame);
+    frame.setVisible(false);
+    File fImage = fc.loadImage();
+    if (SX.isNotNull(fImage)) {
+      String result = fImage.getAbsolutePath();
+      log.trace("new image: %s", result);
+      base = new Picture(result);
+      if (base.isValid()) {
+        rect = new Element(base);
+        isImage = true;
+        resetBox();
+        return;
+      }
+    }
+    frame.setVisible(true);
+  }
+
+  private void actionSave() {
+    dirty = false;
+  }
+
+  private void actionTarget() {
+    dirty = true;
+  }
+
+  private void actionSimilar() {
+    dirty = true;
+  }
+
+  private void actionName() {
+    String newName = Do.input("Change image name", getImageName(), "NativeCapture::ImageName");
+    if (!SX.isNotSet(newName) && !imgName.equals(newName)) {
+      imgName = newName;
+      dirty = true;
+      updateStatus();
+    }
+  }
+
+  private void actionInfo() {
+    Do.popup(imgInfo(), "PictureTool::Information");
+  }
+
+  private void actionHelp() {
+  }
+
+  private void actionRevert() {
+    if (lastRects.size() > 0) {
+      log.trace("action: revert crop from %s to %s", rect, lastRects.get(0));
+      rect = lastRects.remove(0);
+      resizeToFrame();
+    }
   }
   //</editor-fold>
 
   //<editor-fold desc="key released (special keys)">
-  private void resizeSelection(MouseEvent e) {
-    if (SX.isNotNull(lastDrag)) {
-      if (activeSide == TOP || activeSide == BOTTOM) {
-        if (e.getY() > lastDrag.getY()) {
-          keyReleasedHandler(KeyEvent.VK_UP, 10);
-        } else if (e.getY() < lastDrag.getY()) {
-          keyReleasedHandler(KeyEvent.VK_DOWN, 10);
-        }
-      } else if (activeSide == LEFT || activeSide == RIGHT) {
-        if (e.getX() > lastDrag.getX()) {
-          keyReleasedHandler(KeyEvent.VK_RIGHT, 10);
-        } else if (e.getX() < lastDrag.getX()) {
-          keyReleasedHandler(KeyEvent.VK_LEFT, 10);
-        }
-      }
-    }
-  }
-
   private void myKeyReleased(KeyEvent e) {
     int code = e.getKeyCode();
     if (e.CHAR_UNDEFINED != e.getKeyChar()) {
     } else {
       String cName = keyReleasedHandler(code, 1);
       log.trace("keyReleased: %s (%d) %s %s %s", e.getKeyText(code), code, cName,
-              activeSides[activeSide], activeSides[activesideSaved]);
+              activeSides[activeSide], activeSides[activeSideSaved]);
     }
   }
 
@@ -518,8 +775,14 @@ public class SXPictureTool {
         box.pack();
         break;
       case KeyEvent.VK_META:
+        if (activeSide == ALL) {
+          activeSide = activeSideSaved;
+        } else {
+          activeSideSaved = activeSide;
+          activeSide = ALL;
+        }
         cName = "#META";
-        content.setBorder(coloredSide(ALL));
+        content.setBorder(coloredSide(activeSide));
         box.pack();
         break;
     }
@@ -530,7 +793,9 @@ public class SXPictureTool {
     }
     return cName;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="coloredSide">
   private Border coloredSide(int side) {
     return coloredSide(side, Color.RED, Color.GREEN);
   }
@@ -538,34 +803,23 @@ public class SXPictureTool {
   private Border coloredSide(int side, Color outerCol, Color innerCol) {
     Border inner = null;
     Border outer = null;
-    if (side == ALL) {
-      if (!activeSideAll) {
-        activesideSaved = activeSide;
-        activeSideAll = true;
-        activeSide = ALL;
-        return BorderFactory.createMatteBorder(borderThickness, borderThickness,
-                borderThickness, borderThickness, innerCol);
+    if (side == NONE) {
+      activeSide = NONE;
+      return BorderFactory.createLineBorder(outerCol, borderThickness);
+    } else if (side == ALL) {
+      activeSide = ALL;
+      return BorderFactory.createLineBorder(innerCol, borderThickness);
+    } else if (side == COUNTERCLOCKWISE) {
+      activeSide = ++activeSide > RIGHT ? TOP : activeSide;
+    } else if (side == CLOCKWISE) {
+      activeSide = --activeSide < TOP ? RIGHT : activeSide;
+    } else if (side == OPPOSITE) {
+      activeSide = activeSide + 2;
+      if (activeSide > RIGHT) {
+        activeSide -= 4;
       }
-    }
-    if (activeSide == ALL) {
-      if (!shouldKeepAll) {
-        activeSide = activesideSaved;
-        activeSideAll = false;
-      }
-      shouldKeepAll = false;
     } else {
-      if (side == COUNTERCLOCKWISE) {
-        activeSide = ++activeSide > RIGHT ? TOP : activeSide;
-      } else if (side == CLOCKWISE) {
-        activeSide = --activeSide < TOP ? RIGHT : activeSide;
-      } else if (side == OPPOSITE) {
-        activeSide = activeSide + 2;
-        if (activeSide > RIGHT) {
-          activeSide -= 4;
-        }
-      } else {
-        activeSide = side;
-      }
+      activeSide = side;
     }
     switch (activeSide) {
       case TOP:
@@ -636,17 +890,6 @@ public class SXPictureTool {
       rect.x += x;
     } else if (RIGHT == activeSide) {
       rect.w -= rect.w - x;
-    } else if (ALL == activeSide && button < 2) {
-      rect.h -= y;
-      rect.y += y;
-      rect.w -= x;
-      rect.x += x;
-      rect.w = rect.h = Math.min(Math.min(2 * halfCenteredWidth, Math.min(rect.x, scr.w - rect.x)),
-              Math.min(2 * halfCenteredWidth, Math.min(rect.y, scr.h - rect.y)));
-      shouldKeepAll = true;
-    } else if (ALL == activeSide && button > 1) {
-      rect.w -= rect.w - x;
-      rect.h -= rect.h - y;
     }
     exited = -1;
     dirty = true;
@@ -660,8 +903,8 @@ public class SXPictureTool {
     rect.x = Math.max(0, x - halfCenteredWidth);
     int y = rect.y + clicked.y;
     rect.y = Math.max(0, y - halfCenteredWidth);
-    rect.w = rect.h = 2 * Math.min(Math.min(halfCenteredWidth, Math.min(x, scr.w - x)),
-            Math.min(halfCenteredWidth, Math.min(y, scr.h - y)));
+    rect.w = rect.h = 2 * Math.min(Math.min(halfCenteredWidth, Math.min(x, base.w - x)),
+            Math.min(halfCenteredWidth, Math.min(y, base.h - y)));
     exited = -1;
     dirty = true;
     resizeToFrame();
@@ -692,7 +935,7 @@ public class SXPictureTool {
   }
 
   private void checkSelection() {
-    rect.intersect(scr);
+    rect.intersect(base);
     Element minimum = rect.getCenter();
     minimum.grow();
     if (rect.w < minWidthHeight || rect.h < minWidthHeight) {
@@ -704,21 +947,23 @@ public class SXPictureTool {
 
   private void resizeToFrame() {
     checkSelection();
-    shot = scr.getSub(rect);
-    double wFactor = rect.w / (scr.w * 0.85f);
-    double hFactor = rect.h / (scr.h * 0.85f);
-    resizeFactor = 1 / Math.max(wFactor, hFactor);
-    resizeFactor = Math.min(resizeFactor, 10);
+    shot = base.getSub(rect);
+    if (activeSide > RIGHT) {
+      double wFactor = rect.w / (scrW * 0.85f);
+      double hFactor = rect.h / (scrH * 0.85f);
+      double lastResizeFactor = resizeFactor;
+      resizeFactor = 1 / Math.max(wFactor, hFactor);
+      resizeFactor = Math.min(resizeFactor, 10);
+    }
     BufferedImage img = shot.resize(resizeFactor).get();
+    //log.trace("resizeFactor:%f last: %f", resizeFactor, lastResizeFactor);
     Dimension dim = new Dimension(img.getWidth() + 2 * borderThickness,
             img.getHeight() + 2 * borderThickness + statusHeight);
     content.setIcon(new ImageIcon(img));
-    if (!isDragging()) {
-      content.setBorder(coloredSide(activeSide));
-    }
+    content.setBorder(coloredSide(activeSide));
     pBox.setPreferredSize(dim);
     box.pack();
-    box.setLocation((int) ((scr.w - dim.getWidth()) / 2), (int) (scr.h - dim.getHeight()) / 2);
+    box.setLocation((int) ((scrW - dim.getWidth()) / 2), (int) (scrH - dim.getHeight()) / 2);
     updateStatus();
   }
 

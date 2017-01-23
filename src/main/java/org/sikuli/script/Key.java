@@ -7,7 +7,7 @@ package org.sikuli.script;
 
 import com.sikulix.core.HotkeyManager;
 import com.sikulix.core.HotkeyListener;
-import java.awt.Toolkit;
+
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +15,7 @@ import java.util.TreeMap;
 
 import com.sikulix.core.SX;
 import org.sikuli.basics.Debug;
-import com.sikulix.util.SysJNA;
+import com.sikulix.core.SXJNA;
 
 /**
  * this class implements an interface to the Java key system
@@ -813,11 +813,11 @@ public class Key {
     }
     switch (key) {
       case '\ue025':
-        return SysJNA.WinUser32.isScrollLockOn();
+        return SXJNA.WinUser32.isScrollLockOn();
       case '\ue027':
-        return SysJNA.WinUser32.isCapsLockOn();
+        return SXJNA.WinUser32.isCapsLockOn();
       case '\ue03B':
-        return SysJNA.WinUser32.isNumLockOn();
+        return SXJNA.WinUser32.isNumLockOn();
       default:
         return false;
     }

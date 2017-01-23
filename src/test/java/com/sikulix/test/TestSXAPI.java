@@ -8,6 +8,7 @@ import com.sikulix.api.*;
 import com.sikulix.core.*;
 import com.sikulix.core.SXHighlight;
 import com.sikulix.core.SXPictureTool;
+import com.sikulix.util.FileChooser;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
@@ -560,40 +561,24 @@ public class TestSXAPI {
   }
   //</editor-fold>
 
-  @Test
-  public void test_995_PictureTool() {
-    log.startTimer();
-    currentTest = "test_995_PictureTool";
-    boolean assertVal = true;
-    if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
-      SXPictureTool tool = new SXPictureTool(new Element(100, 100, 800, 600));
-      tool.waitFor();
-    } else {
-      result = "TravisCI or NonInteractive: not testing";
-    }
-    assert assertVal;
-  }
-
-  @Test
-  public void test_991_Highlight() {
-    currentTest = "test_991_Highlight";
-    boolean assertVal = true;
-    if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
-      SXHighlight hl = new SXHighlight(SX.getMain().capture());
-//      hl.setLineColor(Color.red);
-//      hl.setLineThickness(3);
-      hl.add(new Element(100, 100, 100));
-      Element element = new Element(300, 300, 100);
-      element.setHighlightColor(Color.blue);
-      hl.add(element);
-      hl.add(new Element(500, 500, 100));
-      hl.on();
-    } else {
-      result = "TravisCI or NonInteractive: not testing";
-    }
-    assert assertVal;
-  }
-
   //<editor-fold desc="ignored">
   //</editor-fold>
+
+  @Test
+  public void test_999_someThingToTest() {
+    //log.startTimer();
+    currentTest = "test_999_someThingToTest";
+    if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
+      if (!SX.isHeadless()) {
+// ******************* start
+        result = "nothing to do";
+// ******************* end
+      } else {
+        result = "headless: NativeHook not tested";
+      }
+    } else {
+      result = "TravisCI or NonInteractive: not testing";
+    }
+    assert true;
+  }
 }

@@ -11,7 +11,6 @@ import org.apache.commons.cli.*;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import com.sikulix.util.SysJNA;
 
 import java.awt.*;
 import java.io.*;
@@ -413,11 +412,11 @@ public class SX {
     }
     if (sxSettings.size() > 0) {
       Class cClass = null;
-      try {
-        cClass = Class.forName("org.sikuli.basics.Settings");
-      } catch (ClassNotFoundException e) {
-        error("!setOptions: %s", cClass);
-      }
+//      try {
+//        cClass = Class.forName("org.sikuli.basics.Settings");
+//      } catch (ClassNotFoundException e) {
+//        error("!setOptions: %s", cClass);
+//      }
       if (!isNull(cClass)) {
         for (String sKey : sxSettings) {
           String sAttr = sKey.substring("Settings.".length());
@@ -1353,16 +1352,16 @@ public class SX {
   }
 
   static void addToWindowsSystemPath(File fLibsFolder) {
-    String syspath = SysJNA.WinKernel32.getEnvironmentVariable("PATH");
+    String syspath = SXJNA.WinKernel32.getEnvironmentVariable("PATH");
     if (syspath == null) {
       terminate(1, "addToWindowsSystemPath: cannot access system path");
     } else {
       String libsPath = (fLibsFolder.getAbsolutePath()).replaceAll("/", "\\");
       if (!syspath.toUpperCase().contains(libsPath.toUpperCase())) {
-        if (!SysJNA.WinKernel32.setEnvironmentVariable("PATH", libsPath + ";" + syspath)) {
+        if (!SXJNA.WinKernel32.setEnvironmentVariable("PATH", libsPath + ";" + syspath)) {
           terminate(999, "", "");
         }
-        syspath = SysJNA.WinKernel32.getEnvironmentVariable("PATH");
+        syspath = SXJNA.WinKernel32.getEnvironmentVariable("PATH");
         if (!syspath.toUpperCase().contains(libsPath.toUpperCase())) {
           terminate(1, "addToWindowsSystemPath: did not work: %s", syspath);
         }
