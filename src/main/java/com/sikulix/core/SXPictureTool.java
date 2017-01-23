@@ -24,6 +24,7 @@ public class SXPictureTool {
   private static final SXLog log = SX.getLogger("SX.PictureTool");
 
   //<editor-fold desc="fields">
+  JFrame intro = new JFrame();
   private Picture base = null;
   private Element rect = null;
   boolean isImage = false;
@@ -31,6 +32,8 @@ public class SXPictureTool {
   private List<Element> lastRects = new ArrayList<>();
   private int maxRevert = 10;
   private Picture shot;
+  int shotDisplayedW = 0;
+  int shotDisplayedH = 0;
   boolean dirty = false;
 
   private JFrame box = null;
@@ -42,7 +45,11 @@ public class SXPictureTool {
     public void paintComponent(Graphics g) {
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g.create();
-      drawSelection(g2d);
+      if (getActiveSide() == ALL) {
+        drawSelection(g2d);
+      } else {
+        drawCrossHair(g2d);
+      }
     }
   };
 
@@ -65,7 +72,7 @@ public class SXPictureTool {
   final private int CLOCKWISE = 7;
   final private int OPPOSITE = 8;
   private int activeSide = NONE;
-  private int activeSideSaved = ALL;
+  private int activeSideSaved = TOP;
   private boolean activeSideAll = false;
   private boolean activeSideNone = false;
   private String[] activeSides = new String[]{"TOP", "LEFT", "BOTTOM", "RIGHT", "ALL", "NONE"};
@@ -90,8 +97,6 @@ public class SXPictureTool {
     return running;
   }
   //</editor-fold>
-
-  JFrame intro = new JFrame();
 
   public SXPictureTool() {
     intro = new JFrame();
@@ -163,14 +168,15 @@ public class SXPictureTool {
 
   private JLabel getNewLabel(final int width, final int height, String text) {
     JLabel jLabel = new JLabel(text) {
+      @Override
       public Dimension getPreferredSize() {
         return new Dimension(width, height);
       }
-
+      @Override
       public Dimension getMinimumSize() {
         return new Dimension(width, height);
       }
-
+      @Override
       public Dimension getMaximumSize() {
         return new Dimension(width, height);
       }
@@ -292,9 +298,34 @@ public class SXPictureTool {
     resizeToFrame();
     box.setVisible(true);
   }
+
+  private Element mousePos = new Element();
+
+  private void updateStatus() {
+    updateStatus(null);
+  }
+
+  private void updateStatus(Element elem) {
+    if (!SX.isNull(elem)) {
+      mousePos = elem;
+    }
+    status.setText(String.format("%s%04d, %04d [%04d, %04d %04dx%04d] %s ",
+            dirty ? "*" : "",
+            rect.x + mousePos.x, rect.y + mousePos.y, rect.x, rect.y, rect.w, rect.h, getImageName()));
+  }
   //</editor-fold>
 
-  //<editor-fold desc="mouse drag/click">
+  //<editor-fold desc="mouse click/move/drag">
+  private void myMouseClicked(MouseEvent e) {
+    String doubleClick = e.getClickCount() > 1 ? "Double" : "";
+    log.trace("mouse%sClicked: %d,%d", doubleClick, e.getX(), e.getY());
+    if (!SX.isSet(doubleClick)) {
+      setClickStatusClicked(new Element(e.getX(), e.getY(), e.getButton()));
+    } else {
+      setClickStatusDoubleClicked();
+    }
+  }
+
   int exited = -1;
 
   private void myMouseMoved(MouseEvent e) {
@@ -316,30 +347,34 @@ public class SXPictureTool {
   }
 
   private void dragSelection(MouseEvent e) {
+    int step = 1;
     if (SX.isNotNull(lastDrag) && exited < 0) {
       if (activeSide == NONE) {
+        if (rect.w > halfCenteredWidth && rect.h > halfCenteredWidth) {
+          step = 10;
+        }
         Element newRect = null;
         if (e.getY() > lastDrag.getY()) {
           if (e.getX() > lastDrag.getX()) {
-            newRect = new Element(rect.x + 10, rect.y + 10, rect.w, rect.h);
+            newRect = new Element(rect.x - step, rect.y - step, rect.w, rect.h);
           } else if (e.getX() > lastDrag.getX()) {
-            newRect = new Element(rect.x - 10, rect.y + 10, rect.w, rect.h);
+            newRect = new Element(rect.x + step, rect.y - step, rect.w, rect.h);
           } else {
-            newRect = new Element(rect.x, rect.y + 10, rect.w, rect.h);
+            newRect = new Element(rect.x, rect.y - step, rect.w, rect.h);
           }
         } else if (e.getY() < lastDrag.getY()) {
           if (e.getX() > lastDrag.getX()) {
-            newRect = new Element(rect.x + 10, rect.y - 10, rect.w, rect.h);
+            newRect = new Element(rect.x - step, rect.y + step, rect.w, rect.h);
           } else if (e.getX() > lastDrag.getX()) {
-            newRect = new Element(rect.x - 10, rect.y - 10, rect.w, rect.h);
+            newRect = new Element(rect.x + step, rect.y + step, rect.w, rect.h);
           } else {
-            newRect = new Element(rect.x, rect.y - 10, rect.w, rect.h);
+            newRect = new Element(rect.x, rect.y + step, rect.w, rect.h);
           }
         } else {
           if (e.getX() > lastDrag.getX()) {
-            newRect = new Element(rect.x + 10, rect.y, rect.w, rect.h);
+            newRect = new Element(rect.x - step, rect.y, rect.w, rect.h);
           } else {
-            newRect = new Element(rect.x - 10, rect.y, rect.w, rect.h);
+            newRect = new Element(rect.x + step, rect.y, rect.w, rect.h);
           }
         }
         if (SX.isNotNull(newRect)) {
@@ -355,22 +390,9 @@ public class SXPictureTool {
       }
     }
   }
+  //</editor-fold>
 
-  private Element mousePos = new Element();
-
-  private void updateStatus() {
-    updateStatus(null);
-  }
-
-  private void updateStatus(Element elem) {
-    if (!SX.isNull(elem)) {
-      mousePos = elem;
-    }
-    status.setText(String.format("%s%04d, %04d [%04d, %04d %04dx%04d] %s ",
-            dirty ? "*" : "",
-            rect.x + mousePos.x, rect.y + mousePos.y, rect.x, rect.y, rect.w, rect.h, getImageName()));
-  }
-
+  //<editor-fold desc="mouse enter/exit">
   private void myMouseEntered(MouseEvent e) {
 //    if (!isDragging() && activeSide != NONE && activeSide != ALL) {
 //      int side = whichSide(e.getX() - borderThickness, e.getY() - borderThickness);
@@ -412,17 +434,6 @@ public class SXPictureTool {
 
   private boolean isHigh(int range, int point) {
     return point > range - range / whichSideMargin;
-  }
-
-  private void myMouseClicked(MouseEvent e) {
-    String doubleClick = e.getClickCount() > 1 ? "Double" : "";
-    log.trace("mouse%sClicked: %d,%d", doubleClick, e.getX(), e.getY());
-    if (!SX.isSet(doubleClick)) {
-      if ((!activeSideAll && e.getButton() < 2) || activeSideAll)
-        setClickStatusClicked(new Element(e.getX(), e.getY(), e.getButton()));
-    } else {
-      setClickStatusDoubleClicked();
-    }
   }
   //</editor-fold>
 
@@ -900,11 +911,16 @@ public class SXPictureTool {
     pushRect();
     clicked = getPos(clicked);
     int x = rect.x + clicked.x;
-    rect.x = Math.max(0, x - halfCenteredWidth);
     int y = rect.y + clicked.y;
-    rect.y = Math.max(0, y - halfCenteredWidth);
-    rect.w = rect.h = 2 * Math.min(Math.min(halfCenteredWidth, Math.min(x, base.w - x)),
-            Math.min(halfCenteredWidth, Math.min(y, base.h - y)));
+    if (activeSide > RIGHT) {
+      rect.x = Math.max(0, x - halfCenteredWidth * base.w/base.h);
+      rect.y = Math.max(0, y - halfCenteredWidth);
+      rect.w = 2 * Math.min(halfCenteredWidth * base.w/base.h, Math.min(x, base.w - x));
+      rect.h = 2 * Math.min(halfCenteredWidth, Math.min(y, base.h - y));
+    } else {
+      rect.x = x - rect.w/2;
+      rect.y = y - rect.y/2;
+    }
     exited = -1;
     dirty = true;
     resizeToFrame();
@@ -912,8 +928,11 @@ public class SXPictureTool {
 
   private void zoomOut() {
     int stepX, stepY;
-    stepX = Math.max(1, rect.w / 10);
-    stepY = Math.max(1, rect.h / 10);
+    stepX = stepY = 1;
+    if (rect.w > halfCenteredWidth && rect.h > halfCenteredWidth) {
+      stepX = Math.max(1, rect.w / 10);
+      stepY = Math.max(1, rect.h / 10);
+    }
     rect.x -= stepX;
     rect.w += 2 * stepX;
     rect.y -= stepY;
@@ -924,8 +943,11 @@ public class SXPictureTool {
 
   private void zoomIn() {
     int stepX, stepY;
-    stepX = Math.max(1, rect.w / 10);
-    stepY = Math.max(1, rect.h / 10);
+    stepX = stepY = 1;
+    if (rect.w > halfCenteredWidth && rect.h > halfCenteredWidth) {
+      stepX = Math.max(1, rect.w / 10);
+      stepY = Math.max(1, rect.h / 10);
+    }
     rect.x += stepX;
     rect.w -= 2 * stepX;
     rect.y += stepY;
@@ -956,7 +978,8 @@ public class SXPictureTool {
       resizeFactor = Math.min(resizeFactor, 10);
     }
     BufferedImage img = shot.resize(resizeFactor).get();
-    //log.trace("resizeFactor:%f last: %f", resizeFactor, lastResizeFactor);
+    shotDisplayedW = img.getWidth();
+    shotDisplayedH = img.getHeight();
     Dimension dim = new Dimension(img.getWidth() + 2 * borderThickness,
             img.getHeight() + 2 * borderThickness + statusHeight);
     content.setIcon(new ImageIcon(img));
@@ -994,6 +1017,15 @@ public class SXPictureTool {
       g2d.drawLine(crossVx1, crossVy1, crossVx2, crossVy2);
       g2d.drawLine(crossHx1, crossHy1, crossHx2, crossHy2);
     }
+  }
+
+  private void drawCrossHair(Graphics2D g2d) {
+    g2d.setColor(Color.red);
+    g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL,
+            0, new float[]{3, 2}, 0));
+    g2d.drawLine(shotDisplayedW/2, 0, shotDisplayedW/2, shotDisplayedH);
+    g2d.drawLine(0, shotDisplayedH/2, shotDisplayedW, shotDisplayedH/2);
+
   }
 
   private boolean isDragging() {
