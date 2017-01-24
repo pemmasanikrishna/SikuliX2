@@ -38,6 +38,9 @@ public class Sikulix {
 
   public static void main(String[] args) {
     options.addAll(Arrays.asList(args));
+    if (options.isEmpty()) {
+      options.add("tool");
+    }
     if (options.contains("trace")) {
       System.setProperty("sikulix.logging", "trace");
     }

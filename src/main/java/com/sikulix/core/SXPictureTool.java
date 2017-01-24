@@ -87,6 +87,12 @@ public class SXPictureTool {
   MouseEvent dragStart = null;
   MouseEvent dragCurrent = null;
 
+  int dragButton = 1;
+
+  public void setDragButton(int dragButton) {
+    this.dragButton = dragButton;
+  }
+
   String bundlePath = "";
 
   int scrW = 0;
@@ -172,10 +178,12 @@ public class SXPictureTool {
       public Dimension getPreferredSize() {
         return new Dimension(width, height);
       }
+
       @Override
       public Dimension getMinimumSize() {
         return new Dimension(width, height);
       }
+
       @Override
       public Dimension getMaximumSize() {
         return new Dimension(width, height);
@@ -216,6 +224,10 @@ public class SXPictureTool {
           Element end = getPos(dragCurrent);
           int w = Math.abs(end.x - start.x);
           int h = Math.abs(end.y - start.y);
+          if (e.getButton() > 1) {
+            start.at(start.x - w/2, start.y - h/2);
+            end.at(start.x + w, start.y + h);
+          }
           if (w > minWidthHeight && h > minWidthHeight) {
             pushRect();
             int rx = rect.x;
@@ -228,6 +240,7 @@ public class SXPictureTool {
           resizeToFrame();
         }
         lastDrag = null;
+        dragButton = 1;
       }
 
       @Override
@@ -252,6 +265,7 @@ public class SXPictureTool {
       @Override
       public void mouseDragged(MouseEvent e) {
         super.mouseDragged(e);
+        setDragButton(e.getButton());
         myMouseMoved(e);
         myMouseDragged(e);
       }
@@ -913,13 +927,13 @@ public class SXPictureTool {
     int x = rect.x + clicked.x;
     int y = rect.y + clicked.y;
     if (activeSide > RIGHT) {
-      rect.x = Math.max(0, x - halfCenteredWidth * base.w/base.h);
+      rect.x = Math.max(0, x - halfCenteredWidth * base.w / base.h);
       rect.y = Math.max(0, y - halfCenteredWidth);
-      rect.w = 2 * Math.min(halfCenteredWidth * base.w/base.h, Math.min(x, base.w - x));
+      rect.w = 2 * Math.min(halfCenteredWidth * base.w / base.h, Math.min(x, base.w - x));
       rect.h = 2 * Math.min(halfCenteredWidth, Math.min(y, base.h - y));
     } else {
-      rect.x = x - rect.w/2;
-      rect.y = y - rect.y/2;
+      rect.x = x - rect.w / 2;
+      rect.y = y - rect.y / 2;
     }
     exited = -1;
     dirty = true;
@@ -973,7 +987,6 @@ public class SXPictureTool {
     if (activeSide > RIGHT) {
       double wFactor = rect.w / (scrW * 0.85f);
       double hFactor = rect.h / (scrH * 0.85f);
-      double lastResizeFactor = resizeFactor;
       resizeFactor = 1 / Math.max(wFactor, hFactor);
       resizeFactor = Math.min(resizeFactor, 10);
     }
@@ -994,24 +1007,35 @@ public class SXPictureTool {
     if (SX.isNotNull(dragStart)) {
       g2d.setStroke(new BasicStroke(2));
       g2d.setColor(Color.blue);
-      int x = dragStart.getX();
-      int y = dragStart.getY();
-      int x2 = dragCurrent.getX();
-      int y2 = dragCurrent.getY();
-      int w = x2 - x;
-      int h = y2 - y;
-      int crossVx1 = x + w / 2;
-      int crossVy1 = y;
-      int crossVx2 = crossVx1;
-      int crossVy2 = y + h;
-      int crossHx1 = x;
-      int crossHy1 = y + h / 2;
-      int crossHx2 = x + w;
-      int crossHy2 = crossHy1;
+      int x, y, x2, y2, w, h;
+      int crossVx1, crossVy1, crossVx2, crossVy2, crossHx1, crossHy1, crossHx2, crossHy2;
+      if (dragButton > 1) {
+        int xD = (dragCurrent.getX() - dragStart.getX()) / 2;
+        int yD = (dragCurrent.getY() - dragStart.getY()) / 2;
+        x = dragStart.getX() - xD;
+        y = dragStart.getY() - yD;
+        x2 = dragStart.getX() + xD;
+        y2 = dragStart.getY() + yD;
+      } else {
+        x = dragStart.getX();
+        y = dragStart.getY();
+        x2 = dragCurrent.getX();
+        y2 = dragCurrent.getY();
+      }
+      w = x2 - x;
+      h = y2 - y;
       g2d.drawLine(x, y, x + w, y);
       g2d.drawLine(x + w, y, x + w, y + h);
       g2d.drawLine(x + w, y + h, x, y + h);
       g2d.drawLine(x, y + h, x, y);
+      crossVx1 = x + w / 2;
+      crossVy1 = y;
+      crossVx2 = crossVx1;
+      crossVy2 = y + h;
+      crossHx1 = x;
+      crossHy1 = y + h / 2;
+      crossHx2 = x + w;
+      crossHy2 = crossHy1;
       g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL,
               0, new float[]{3, 2}, 0));
       g2d.drawLine(crossVx1, crossVy1, crossVx2, crossVy2);
@@ -1023,8 +1047,10 @@ public class SXPictureTool {
     g2d.setColor(Color.red);
     g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL,
             0, new float[]{3, 2}, 0));
-    g2d.drawLine(shotDisplayedW/2, 0, shotDisplayedW/2, shotDisplayedH);
-    g2d.drawLine(0, shotDisplayedH/2, shotDisplayedW, shotDisplayedH/2);
+    g2d.drawLine(shotDisplayedW / 2 + borderThickness, borderThickness,
+            shotDisplayedW / 2 + borderThickness, shotDisplayedH);
+    g2d.drawLine(borderThickness, shotDisplayedH / 2 + borderThickness,
+            shotDisplayedW, shotDisplayedH / 2 + borderThickness);
 
   }
 
