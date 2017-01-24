@@ -59,6 +59,8 @@ public class Element extends SXElement {
   private java.util.List<Element> lastMatches = new ArrayList<Element>();
   private int matchIndex = -1;
 
+  private Color highlightColor = Color.red;
+
   public Color getHighlightColor() {
     return highlightColor;
   }
@@ -67,7 +69,15 @@ public class Element extends SXElement {
     this.highlightColor = highlightColor;
   }
 
-  private Color highlightColor = Color.red;
+  private int showTime = 0;
+
+  public int getShowTime() {
+    return showTime;
+  }
+
+  public void setShowTime(int showTime) {
+    this.showTime = showTime;
+  }
 
   public Element getLastSeen() {
     if (SX.isNull(lastSeen)) {

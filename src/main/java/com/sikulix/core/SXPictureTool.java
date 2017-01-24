@@ -604,6 +604,8 @@ public class SXPictureTool {
     dirty = false;
   }
 
+  SXHighlight highlightRunning = null;
+
   private void actionFind() {
     Runnable find = new Runnable() {
       @Override
@@ -616,9 +618,9 @@ public class SXPictureTool {
         }
         Do.find(searchBase.getSub(rect), searchBase);
         if (searchBase.hasMatch()) {
-          SXHighlight hl = new SXHighlight(searchBase);
-          hl.add(searchBase.getLastMatch());
-          hl.on();
+          highlightRunning = SXHighlight.forElement(searchBase);
+          highlightRunning.add(searchBase, searchBase.getLastMatch());
+          highlightRunning.on(searchBase);
         }
         box.setVisible(true);
       }
@@ -633,6 +635,9 @@ public class SXPictureTool {
     log.trace("waiting for subs to end");
     if (SX.isNotNull(box)) {
       box.dispose();
+    }
+    if (SX.isNotNull(highlightRunning)) {
+      highlightRunning.stop();
     }
     intro.dispose();
     running = false;
