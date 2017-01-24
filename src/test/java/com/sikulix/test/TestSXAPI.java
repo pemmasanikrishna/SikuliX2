@@ -6,15 +6,11 @@ package com.sikulix.test;
 
 import com.sikulix.api.*;
 import com.sikulix.core.*;
-import com.sikulix.core.SXHighlight;
-import com.sikulix.core.SXPictureTool;
-import com.sikulix.util.FileChooser;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
 import org.sikuli.script.Screen;
 
-import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -387,6 +383,7 @@ public class TestSXAPI {
     }
     result = end() + result;
     if (success) {
+      base.setShowTime(3);
       base.showMatch();
     }
     assert success;
@@ -460,7 +457,7 @@ public class TestSXAPI {
     match = Do.find(img);
     result = end() + match.toString();
     assert match.isValid();
-    SX.getMain().showMatch();
+    Do.on().showMatch();
   }
 
   @Test

@@ -225,7 +225,7 @@ public class SXPictureTool {
           int w = Math.abs(end.x - start.x);
           int h = Math.abs(end.y - start.y);
           if (e.getButton() > 1) {
-            start.at(start.x - w/2, start.y - h/2);
+            start.at(start.x - w / 2, start.y - h / 2);
             end.at(start.x + w, start.y + h);
           }
           if (w > minWidthHeight && h > minWidthHeight) {
@@ -604,7 +604,7 @@ public class SXPictureTool {
     dirty = false;
   }
 
-  SXHighlight highlightRunning = null;
+  SXShow highlightRunning = null;
 
   private void actionFind() {
     Runnable find = new Runnable() {
@@ -617,11 +617,7 @@ public class SXPictureTool {
           searchBase = new Element(scrID).capture();
         }
         Do.find(searchBase.getSub(rect), searchBase);
-        if (searchBase.hasMatch()) {
-          highlightRunning = SXHighlight.forElement(searchBase);
-          highlightRunning.add(searchBase, searchBase.getLastMatch());
-          highlightRunning.on(searchBase);
-        }
+        searchBase.showMatch();
         box.setVisible(true);
       }
     };

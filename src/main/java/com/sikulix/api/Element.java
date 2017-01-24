@@ -232,6 +232,13 @@ public class Element extends SXElement {
   //</editor-fold>
 
   //<editor-fold desc="***** capture, highlight, show">
+  public Picture getAsPicture() {
+    if (!hasContent()) {
+      return new Picture();
+    }
+    return new Picture(new Picture(getContent()).get());
+  }
+
   public Picture capture() {
     return capture(this);
   }
@@ -264,27 +271,34 @@ public class Element extends SXElement {
     //TODO implement fakeHighlight
   }
 
+  public void showMatch() {
+    if (hasMatch() && hasContent()) {
+        new SXShow(getAsPicture()).add(getLastMatch()).show(showTime);
+    }
+  }
+
+  public void showVanish() {
+    if (SX.isNotNull(getLastVanish()) && hasContent()) {
+      new SXShow(this).add(getLastVanish()).show(showTime);
+    }
+  }
+
+  public void showMatches() {
+    if (hasMatches() && hasContent()) {
+      SXShow story = new SXShow(this);
+      for (Element match : getLastMatches()) {
+        story.add(match);
+      }
+      story.show(showTime);
+    }
+  }
+
   public void show() {
-//    show((int) SX.getOptionNumber("DefaultHighlightTime"));
     show(showTime);
   }
 
   public void show(int time) {
     show(this, time, 0);
-  }
-
-  public void showMatch() {
-    show(this, getLastMatch(), showTime);
-  }
-
-  public void showVanish() {
-    if (SX.isNotNull(getLastVanish())) {
-      show(this, getLastVanish(), showTime);
-    }
-  }
-
-  public void showMatches() {
-    showAll(this, this.getLastMatches(), showTime);
   }
 
   public void showContent(int timeAfter) {
