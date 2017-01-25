@@ -118,11 +118,15 @@ public class Picture extends Element {
   }
   //</editor-fold>
 
+
   //<editor-fold desc="*** get content">
-  public long timeToLoad = -1;
+  private long timeToLoad = -1;
+  public long getTimeToLoad() {
+    return timeToLoad;
+  }
 
   private void setContent(String fpImg) {
-    URL url = searchOnImagePath(fpImg);
+    URL url = Picture.searchOnImagePath(fpImg);
     setContent(url);
   }
 
@@ -175,13 +179,8 @@ public class Picture extends Element {
   }
 
   private final int resizeMinDownSample = 12;
-  private boolean whiteColor = false;
   private int[] meanColor = null;
   private double minThreshhold = 1.0E-5;
-
-  public boolean isWhite() {
-    return isValid() && blackColor;
-  }
 
   public Color getMeanColor() {
     return new Color(meanColor[2], meanColor[1], meanColor[0]);
@@ -499,13 +498,6 @@ public class Picture extends Element {
 
   public Picture getSub(Element elem) {
     return getSub(elem.x, elem.y, elem.w, elem.h);
-  }
-
-  public String save(String name) {
-    String fpName = getValidImageFilename("_" + name);
-    File fName = new File(getBundlePath(), fpName);
-    Imgcodecs.imwrite(fName.getAbsolutePath(), getContent());
-    return fpName;
   }
 //</editor-fold>
 }

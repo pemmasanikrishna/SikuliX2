@@ -8,9 +8,13 @@ import com.sikulix.core.*;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
+import org.opencv.imgcodecs.Imgcodecs;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
@@ -222,12 +226,69 @@ public class Element extends SXElement {
   //<editor-fold desc="***** content">
   protected boolean plainColor = false;
   protected boolean blackColor = false;
+  protected boolean whiteColor = false;
   public boolean isPlainColor() {
     return isValid() && plainColor;
   }
-
   public boolean isBlack() {
     return isValid() && blackColor;
+  }
+  public boolean isWhite() {
+    return isValid() && blackColor;
+  }
+
+  protected Element setContent() {
+    capture();
+    return this;
+  }
+
+  public Element load() {
+    setContent();
+    return this;
+  }
+
+  public Element save(String name) {
+    save(name, Picture.getBundlePath());
+    return this;
+  }
+
+  public Element save(String name, String path) {
+    URL url = Content.makeURL(new File(path, name).getAbsolutePath());
+    try {
+      url = Content.makeURL(new File(path, name).getCanonicalPath());
+    } catch (IOException e) {
+    }
+    if (SX.isNotNull(url)) {
+      save(url);
+    } else {
+      log.error("save: invalid: %s / %s", path, name);
+    }
+    return this;
+  }
+
+  public Element save(String name, URL urlPath) {
+    URL url = Content.makeURL(urlPath, name);
+    if (SX.isNotNull(url)) {
+      save(url);
+    } else {
+      log.error("save: invalid: %s / %s", urlPath, name);
+    }
+    return this;
+  }
+
+  public Element save(URL url) {
+    if (!hasContent()) {
+      load();
+    }
+    if (SX.isNotNull(url)) {
+      if ("file".equals(url.getProtocol())) {
+        Imgcodecs.imwrite(getValidImageFilename(url.getPath()), getContent());
+      } else {
+        //TODO save: http and jar
+        log.error("save: not implemented: %s", url);
+      }
+    }
+    return this;
   }
   //</editor-fold>
 

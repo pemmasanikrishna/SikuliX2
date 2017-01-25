@@ -285,7 +285,7 @@ public class TestSXAPI {
     Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
     if (success) {
-      result = set("(%s) Image %s from " + img.getURL(), img.timeToLoad, img.getName());
+      result = set("(%s) Image %s from " + img.getURL(), img.getTimeToLoad(), img.getName());
       if (log.isLevel(SXLog.DEBUG)) {
         img.show();
       }
@@ -301,7 +301,7 @@ public class TestSXAPI {
     Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
     if (success) {
-      result = set("(%s) Image %s from " + img.getURL(), img.timeToLoad, img.getName());
+      result = set("(%s) Image %s from " + img.getURL(), img.getTimeToLoad(), img.getName());
       if (log.isLevel(SXLog.DEBUG)) {
         img.show();
       }
@@ -317,7 +317,7 @@ public class TestSXAPI {
     Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
     if (success) {
-      result = set("(%s) Image %s from " + img.getURL(), img.timeToLoad, img.getName());
+      result = set("(%s) Image %s from " + img.getURL(), img.getTimeToLoad(), img.getName());
       if (log.isLevel(SXLog.DEBUG)) {
         img.show();
       }
@@ -517,6 +517,27 @@ public class TestSXAPI {
     result = end() + "exists: " + Do.getLastMatch().toString();
     assert isThere;
     SX.getMain().showMatch();
+  }
+
+  @Test
+  public void test_57_saveCapturePartOfDefaultScreen() {
+    log.startTimer();
+    currentTest = "test_57_saveCapturePartOfDefaultScreen";
+    assert prepareDefaultScreen(imageNameDefault);
+    if (isHeadless) {
+      return;
+    }
+    start();
+    elemDisplayed.grow(20);
+    elemDisplayed.load();
+    result = end() + elemDisplayed.toString();
+    SX.getMain().stopShowing();
+    if (elemDisplayed.hasContent()) {
+      elemDisplayed.show();
+      elemDisplayed.save("test_57_saveCapturePartOfDefaultScreen");
+      return;
+    }
+    assert false;
   }
 
   @Test
