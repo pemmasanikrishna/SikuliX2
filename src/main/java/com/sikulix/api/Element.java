@@ -69,7 +69,7 @@ public class Element extends SXElement {
     this.highlightColor = highlightColor;
   }
 
-  private int showTime = 0;
+  private int showTime = (int) SX.getOptionNumber("SXShow.showTime", 2);
 
   public int getShowTime() {
     return showTime;
@@ -236,7 +236,7 @@ public class Element extends SXElement {
     if (!hasContent()) {
       return new Picture();
     }
-    return new Picture(new Picture(getContent()).get());
+    return new Picture(this);
   }
 
   public Picture capture() {

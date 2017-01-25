@@ -27,32 +27,37 @@ public class SXShow {
   private static Color lineColor = Color.red;
   private static int lineThickness = 5;
   private static float darker_factor = 0.85f;
-  private static int showTime = 2;
+  private static int showTime = (int) SX.getOptionNumber("SXShow.showTime", 2);
 
   private JFrame frame = new JFrame();
   private Element story = new Element();
   private java.util.List<Element> elements = new ArrayList<>();
+
   private BufferedImage storyImg = null;
+  public BufferedImage getStoryImg() {
+    return storyImg;
+  }
 
   public SXShow() {
     this(Do.on());
   }
 
+  JPanel panel = new JPanel() {
+    public void paintComponent(Graphics g) {
+      super.paintComponent(g);
+      Graphics2D g2d = (Graphics2D) g.create();
+      g2d.drawImage(getStoryImg(), 0, 0, null);
+      g2d.setStroke(new BasicStroke(lineThickness));
+      for (Element element : elements) {
+        drawHighlight(g2d, getStory(), element);
+      }
+      g2d.dispose();
+    }
+  };
+
   public SXShow(Element story) {
     frame.setUndecorated(true);
-    frame.setAlwaysOnTop(true);
-    JPanel panel = new JPanel() {
-      public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g.create();
-        g2d.drawImage(storyImg, null, 0, 0);
-        g2d.setStroke(new BasicStroke(lineThickness));
-        for (Element element : elements) {
-          drawHighlight(g2d, getStory(), element);
-        }
-        g2d.dispose();
-      }
-    };
+    frame.setAlwaysOnTop(false);
     Element location = new Element();
     Element onElement = Do.on();
     if (story.w < onElement.w || story.h < onElement.h) {
@@ -116,9 +121,7 @@ public class SXShow {
   //<editor-fold desc="showing">
   public void start() {
     if (story.isValid()) {
-//      RescaleOp darkOverlay = new RescaleOp(darker_factor, 0, null);
       if (story.isPicture()) {
-//        storyImg = darkOverlay.filter(((Picture) story).get(), null);
         storyImg = ((Picture) story).get();
       } else {
         storyImg = Do.on().capture(story).get();

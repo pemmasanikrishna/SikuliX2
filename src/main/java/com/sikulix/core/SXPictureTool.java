@@ -610,14 +610,15 @@ public class SXPictureTool {
     Runnable find = new Runnable() {
       @Override
       public void run() {
-        Picture searchBase = base;
         box.setVisible(false);
+        Picture where = base;
+        Element what = base.getSub(rect);
         if (isImage) {
-          SX.pause(1);
-          searchBase = new Element(scrID).capture();
+          SX.pause(0.3);
+          where = new Element(scrID).capture();
         }
-        Do.find(searchBase.getSub(rect), searchBase);
-        searchBase.showMatch();
+        Do.find(what, where);
+        where.showMatch();
         box.setVisible(true);
       }
     };
@@ -663,11 +664,11 @@ public class SXPictureTool {
   }
 
   private void actionOpen(JFrame frame) {
-    if (SX.isNotSet(bundlePath)) {
-      if (!actionBundlePath()) {
-        return;
-      }
-    }
+//    if (SX.isNotSet(bundlePath)) {
+//      if (!actionBundlePath()) {
+//        return;
+//      }
+//    }
     FileChooser fc = new FileChooser(frame);
     frame.setVisible(false);
     File fImage = fc.loadImage();
