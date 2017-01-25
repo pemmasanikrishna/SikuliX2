@@ -12,10 +12,7 @@ import com.sikulix.util.animation.Animator;
 import com.sikulix.util.animation.AnimatorOutQuarticEase;
 import com.sikulix.util.animation.AnimatorTimeBased;
 
-import java.awt.Button;
-import java.awt.MouseInfo;
-import java.awt.Point;
-import java.awt.PointerInfo;
+import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
@@ -38,6 +35,16 @@ public class  Device {
   private static boolean blocked = false;
   private static boolean suspended = false;
   private static Object synchObject = new Object();
+
+  //TODO MouseButtons
+  private static boolean areExtraMouseButtonsEnabled = false;
+  private static int numberOfButtons = 0;
+  public static void getMouseSetup() {
+    areExtraMouseButtonsEnabled = Toolkit.getDefaultToolkit().areExtraMouseButtonsEnabled();
+    numberOfButtons = MouseInfo.getNumberOfButtons();
+    int maskForButton1 = InputEvent.getMaskForButton(1);
+  }
+
 
   //<editor-fold desc="*** Construction">
   private Device() {

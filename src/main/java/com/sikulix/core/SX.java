@@ -13,6 +13,7 @@ import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
@@ -1313,6 +1314,7 @@ public class SX {
   public static Element getMain() {
     return Do.onMain();
   }
+
   //</editor-fold>
 
   //<editor-fold desc="*** handle native libs">
