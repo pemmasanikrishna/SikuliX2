@@ -530,14 +530,16 @@ public class TestSXAPI {
     start();
     elemDisplayed.grow(20);
     elemDisplayed.load();
-    result = end() + elemDisplayed.toString();
+    result = end();
     SX.getMain().stopShowing();
+    boolean success = false;
     if (elemDisplayed.hasContent()) {
       elemDisplayed.show();
-      elemDisplayed.save("test_57_saveCapturePartOfDefaultScreen");
-      return;
+      elemDisplayed.save(currentTest);
+      success = SX.isNotNull(Picture.searchOnImagePath(currentTest));
     }
-    assert false;
+    result += elemDisplayed.toString();
+    assert success;
   }
 
   @Test
