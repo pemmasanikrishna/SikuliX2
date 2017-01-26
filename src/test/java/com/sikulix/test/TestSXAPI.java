@@ -494,7 +494,7 @@ public class TestSXAPI {
   @Test
   public void test_55_waitVanishOnDefaultScreen() {
     currentTest = "test_55_waitVanishOnDefaultScreen";
-    showPauseVanish = 1;
+    showPauseVanish = 3;
     assert prepareDefaultScreen("shot", imageNameDefault);
     if (isHeadless) {
       return;
@@ -514,7 +514,7 @@ public class TestSXAPI {
       return;
     }
     boolean isThere = Do.exists(img);
-    result = end() + "exists: " + Do.getLastMatch().toString();
+    result = end() + "exists: " + (isThere ? Do.getLastMatch().toString() : "Not found");
     assert isThere;
     SX.getMain().showMatch();
   }
