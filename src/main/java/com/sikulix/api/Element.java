@@ -268,7 +268,7 @@ public class Element extends SXElement {
     } catch (IOException e) {
     }
     if (SX.isNotNull(url)) {
-      save(url);
+      save(url, name);
     } else {
       log.error("save: invalid: %s / %s", path, name);
     }
@@ -278,20 +278,24 @@ public class Element extends SXElement {
   public Element save(String name, URL urlPath) {
     URL url = Content.makeURL(urlPath, name);
     if (SX.isNotNull(url)) {
-      save(url);
+      save(url, name);
     } else {
       log.error("save: invalid: %s / %s", urlPath, name);
     }
     return this;
   }
 
-  public Element save(URL url) {
+  public Element save(URL url, String name) {
     if (!hasContent()) {
       load();
     }
-    if (SX.isNotNull(url)) {
+    urlImg = null;
+    if (SX.isNotNull(url) && hasContent()) {
       if ("file".equals(url.getProtocol())) {
+        log.trace("save: %s", url);
         Imgcodecs.imwrite(getValidImageFilename(url.getPath()), getContent());
+        urlImg = url;
+        setName(name);
       } else {
         //TODO save: http and jar
         log.error("save: not implemented: %s", url);
