@@ -87,7 +87,7 @@ public class Sikulix {
       traceBlock("testing: find image on primary monitor");
       if (baseOK && imgOK) {
         Element element = new Element();
-        base.showContent(3);
+        base.show();
         element = Do.find(img);
         if (element.isMatch()) {
           SX.getMain().showMatch();

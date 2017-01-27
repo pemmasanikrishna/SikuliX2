@@ -112,9 +112,9 @@ public class TestSXAPI {
   List<Element> matches = new ArrayList<>();
   boolean isHeadless = false;
   Element elemDisplayed = new Element();
-  int showPauseAfter = 3;
+  int showPauseAfter = 0;
   int showPauseBefore = 0;
-  int showPauseVanish = 0;
+  SXShow theShow = null;
 
   private void prepareDefaultScreen() {
     prepareDefaultScreen(null, null);
@@ -133,8 +133,8 @@ public class TestSXAPI {
       Do.setBundlePath(mavenRoot, "Images");
       base = new Picture(fnBase);
       if (base.hasContent()) {
-        base.showContent(showPauseAfter, showPauseBefore, showPauseVanish);
-        elemDisplayed = SX.getMain().whereShowing();
+        theShow = base.showStart(showPauseAfter, showPauseBefore);
+        elemDisplayed = theShow.whereShowing();
         if (SX.isNull(fnImg)) {
           return true;
         }
@@ -160,7 +160,6 @@ public class TestSXAPI {
     elemDisplayed = new Element();
     showPauseAfter = 3;
     showPauseBefore = 0;
-    showPauseVanish = 0;
   }
   //</editor-fold>
 
@@ -350,6 +349,7 @@ public class TestSXAPI {
     Picture img = new Picture(base);
     Element element = null;
     if (success) {
+      base.show();
       element = Do.find(img, base);
       success &= element.isMatch() && 0.99 < element.getScore() &&
               0 == element.x && 0 == element.y &&
@@ -375,6 +375,7 @@ public class TestSXAPI {
     success &= base.isValid();
     Element element = null;
     if (success) {
+      base.show();
       element = Do.find(target, base);
       success &= element.isMatch();
     }
@@ -383,7 +384,6 @@ public class TestSXAPI {
     }
     result = end() + result;
     if (success) {
-      base.setShowTime(3);
       base.showMatch();
     }
     assert success;
@@ -402,6 +402,7 @@ public class TestSXAPI {
     success &= base.isValid();
     List<Element> elements = new ArrayList<>();
     if (success) {
+      base.show();
       elements = Do.findAll(target, base);
       success &= elements.size() == expected;
     }
@@ -439,7 +440,7 @@ public class TestSXAPI {
     elemDisplayed.grow(20);
     Picture img = Do.capture(elemDisplayed);
     result = end() + img.toString();
-    SX.getMain().stopShowing();
+    theShow.stop();
     if (img.hasContent()) {
       img.show();
       return;
@@ -455,6 +456,7 @@ public class TestSXAPI {
       return;
     }
     match = Do.find(img);
+    theShow.stop();
     result = end() + match.toString();
     assert match.isValid();
     Do.on().showMatch();
@@ -469,32 +471,34 @@ public class TestSXAPI {
     }
     int expected = (int) (base.w / 200) * (int) (base.h / 200);
     matches = Do.findAll(img);
+    theShow.stop();
     assert matches.size() == expected;
     result = String.format("#%d in (%dx%d) %% %.2f +- %.4f]", matches.size(),
             base.w, base.h, 100 * SX.getMain().getLastScores()[0], 100 * SX.getMain().getLastScores()[2]);
     result = end() + result;
-    SX.getMain().showMatches();
+    Do.on().showMatches();
   }
 
   @Test
   public void test_54_waitForOnDefaultScreen() {
     currentTest = "test_54_waitForOnDefaultScreen";
-    showPauseBefore = 3;
+    showPauseBefore = 2;
     assert prepareDefaultScreen("shot", imageNameDefault);
     if (isHeadless) {
       return;
     }
-    int waitTime = (int) SX.getOptionNumber("Settings.AutoWaitTimeout", 3);
+    int waitTime = (int) SX.getOptionNumber("Settings.AutoWaitTimeout", 5);
     match = Do.wait(img, waitTime);
+    theShow.stop();
     result = end() + match.toString();
     assert match.isValid();
-    SX.getMain().showMatch();
+    Do.on().showMatch();
   }
 
   @Test
   public void test_55_waitVanishOnDefaultScreen() {
     currentTest = "test_55_waitVanishOnDefaultScreen";
-    showPauseVanish = 1;
+    showPauseAfter = 3;
     assert prepareDefaultScreen("shot", imageNameDefault);
     if (isHeadless) {
       return;
@@ -503,7 +507,7 @@ public class TestSXAPI {
     boolean vanished = Do.waitVanish(img, waitTime);
     result = end() + "vanished: " + vanished + " " + SX.getMain().getLastVanish();
     assert vanished && SX.getMain().hasVanish() && !SX.getMain().hasMatch();
-    SX.getMain().showVanish();
+    Do.on().showVanish();
   }
 
   @Test
@@ -514,14 +518,14 @@ public class TestSXAPI {
       return;
     }
     boolean isThere = Do.exists(img);
+    theShow.stop();
     result = end() + "exists: " + Do.getLastMatch().toString();
     assert isThere;
-    SX.getMain().showMatch();
+    Do.on().showMatch();
   }
 
   @Test
   public void test_57_saveCapturePartOfDefaultScreen() {
-    log.startTimer();
     currentTest = "test_57_saveCapturePartOfDefaultScreen";
     assert prepareDefaultScreen(imageNameDefault);
     if (isHeadless) {
@@ -531,7 +535,7 @@ public class TestSXAPI {
     elemDisplayed.grow(20);
     elemDisplayed.load();
     result = end() + elemDisplayed.toString();
-    SX.getMain().stopShowing();
+    theShow.stop();
     if (elemDisplayed.hasContent()) {
       elemDisplayed.show();
       elemDisplayed.save("test_57_saveCapturePartOfDefaultScreen");

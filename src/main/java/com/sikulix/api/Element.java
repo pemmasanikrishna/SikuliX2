@@ -13,6 +13,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -25,6 +26,10 @@ public class Element extends SXElement {
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
   protected URL urlImg = null;
+
+  public BufferedImage get() {
+    return getBufferedImage(getContent());
+  }
 
   public Mat getContent() {
     return content;
@@ -45,6 +50,7 @@ public class Element extends SXElement {
   private Mat content = null;
 
   protected double resizeFactor;
+
   public double getResizeFactor() {
     return isValid() ? resizeFactor : 1;
   }
@@ -73,7 +79,7 @@ public class Element extends SXElement {
     this.highlightColor = highlightColor;
   }
 
-  private int showTime = (int) SX.getOptionNumber("SXShow.showTime", 2);
+  private int showTime = (int) SX.getOptionNumber("SXShow.showTime", 3);
 
   public int getShowTime() {
     return showTime;
@@ -190,7 +196,7 @@ public class Element extends SXElement {
   public Element(Core.MinMaxLocResult mMinMax, Target target, Rect rect) {
     setClazz();
     init((int) mMinMax.maxLoc.x + target.getTarget().x +
-            rect.x, (int) mMinMax.maxLoc.y + target.getTarget().y + rect.y,
+                    rect.x, (int) mMinMax.maxLoc.y + target.getTarget().y + rect.y,
             target.w, target.h);
     setScore(mMinMax.maxVal);
   }
@@ -227,12 +233,15 @@ public class Element extends SXElement {
   protected boolean plainColor = false;
   protected boolean blackColor = false;
   protected boolean whiteColor = false;
+
   public boolean isPlainColor() {
     return isValid() && plainColor;
   }
+
   public boolean isBlack() {
     return isValid() && blackColor;
   }
+
   public boolean isWhite() {
     return isValid() && blackColor;
   }
@@ -332,72 +341,65 @@ public class Element extends SXElement {
     //TODO implement fakeHighlight
   }
 
-  public void showMatch() {
-    if (hasMatch() && hasContent()) {
-        new SXShow(getAsPicture()).add(getLastMatch()).show(showTime);
-    }
+  public SXShow showStart(int... times) {
+    showing = new SXShow(this, times);
+    showing.setWaitForFrame();
+    showing.start();
+    return showing;
   }
 
-  public void showVanish() {
-    if (SX.isNotNull(getLastVanish()) && hasContent()) {
-      new SXShow(this).add(getLastVanish()).show(showTime);
+  public void showStop() {
+    if (isShowing()) {
+      showing.stop();
     }
-  }
-
-  public void showMatches() {
-    if (hasMatches() && hasContent()) {
-      SXShow story = new SXShow(this);
-      for (Element match : getLastMatches()) {
-        story.add(match);
-      }
-      story.show(showTime);
-    }
+    showing = null;
   }
 
   public void show() {
     show(showTime);
   }
 
-  public void show(int time) {
-    show(this, time, 0);
+  public void show(int time, int... times) {
+    if (hasContent()) {
+      showing = new SXShow(this, times);
+      showing.setBorder();
+      showing.show(time);
+      showing = null;
+    }
   }
 
-  public void showContent(int timeAfter) {
-    showContent(timeAfter, 0, 0);
+  public void showMatch(int... times) {
+    if (hasMatch() && hasContent()) {
+      showing = new SXShow(this);
+      showing.add(getLastMatch()).show(times.length > 0 ? times[0] : showTime);
+      showing = null;
+    }
   }
 
-  public void showContent(int timeAfter, int timeBefore) {
-    showContent(timeAfter, timeBefore, 0);
+  public void showVanish(int... times) {
+    if (SX.isNotNull(getLastVanish()) && hasContent()) {
+      showing = new SXShow(this);
+      showing.add(getLastVanish()).show(times.length > 0 ? times[0] : showTime);
+      showing = null;
+    }
   }
 
-  public void showContent(int timeAfter, int timeBefore, int timeVanish) {
-    show(this, -timeAfter, timeBefore, timeVanish);
+  public void showMatches(int... times) {
+    if (hasMatches() && hasContent()) {
+      showing = new SXShow(this);
+      for (Element match : getLastMatches()) {
+        showing.add(match);
+      }
+      showing.show(times.length > 0 ? times[0] : showTime);
+      showing = null;
+    }
   }
 
   public boolean isShowing() {
     return SX.isNotNull(showing);
   }
 
-  public void setShowing(JFrame showing) {
-    this.showing = showing;
-  }
-
-  public void stopShowing() {
-    if (isShowing()) {
-      showing.dispose();
-      showing = null;
-    }
-  }
-
-  public Element whereShowing() {
-    if (!isShowing()) {
-      return new Element();
-    }
-    Point location = showing.getLocation();
-    return new Element(location.x, location.y, showing.getWidth(), showing.getHeight());
-  }
-
-  private JFrame showing = null;
+  private SXShow showing = null;
 
 
   //</editor-fold>
@@ -463,7 +465,7 @@ public class Element extends SXElement {
     lastMatch = null;
     lastMatches = new ArrayList<Element>();
     matchIndex = -1;
-    lastScores = new double[] {0, 0, 0};
+    lastScores = new double[]{0, 0, 0};
   }
 
   public boolean hasMatch() {
@@ -501,10 +503,10 @@ public class Element extends SXElement {
     }
   }
 
-  private double[] lastScores = new double[] {0, 0, 0};
+  private double[] lastScores = new double[]{0, 0, 0};
 
   public void setLastScores(double[] scores) {
-    for (int i = 0; i<scores.length; i++) {
+    for (int i = 0; i < scores.length; i++) {
       lastScores[i] = scores[i];
     }
   }
@@ -557,6 +559,7 @@ public class Element extends SXElement {
     //TODO implement special Robots
     return SX.getLocalRobot();
   }
+
   /**
    * Move the mouse to this element's target
    *

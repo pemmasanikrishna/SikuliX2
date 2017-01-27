@@ -987,7 +987,6 @@ public class Do {
     log.trace("find: start");
     Element where = new EvaluateTarget().get(args);
     Element match = new Element();
-    where.stopShowing();
     if (where.hasMatch()) {
       match = where.getLastMatch();
     }
@@ -1012,7 +1011,6 @@ public class Do {
         }
       }
     }
-    where.stopShowing();
     return match;
   }
 
@@ -1042,7 +1040,6 @@ public class Do {
         }
       }
     }
-    where.stopShowing();
     return vanished;
   }
 
@@ -1050,7 +1047,6 @@ public class Do {
     log.trace("findAll: start");
     Element where = new EvaluateTarget("ALL").get(args);
     List<Element> matches = new ArrayList<>();
-    where.stopShowing();
     if (where.hasMatches()) {
       matches = where.getLastMatches();
     }
