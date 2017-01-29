@@ -11,6 +11,7 @@ import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
 import org.sikuli.script.Screen;
 
+import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -114,7 +115,7 @@ public class TestSXAPI {
   Element elemDisplayed = new Element();
   int showPauseAfter = 0;
   int showPauseBefore = 0;
-  SXShow theShow = null;
+  Story theShow = null;
 
   private void prepareDefaultScreen() {
     prepareDefaultScreen(null, null);
@@ -428,7 +429,6 @@ public class TestSXAPI {
     assert img.hasContent();
   }
 
-
   @Test
   public void test_51_capturePartOfDefaultScreen() {
     currentTest = "test_51_capturePartOfDefaultScreen";
@@ -545,6 +545,23 @@ public class TestSXAPI {
   }
 
   @Test
+  public void test_58_basicStory() {
+    currentTest = "test_58_basicStory";
+    result = "showing some grafics";
+    if (!SX.isHeadless()) {
+      Story story = new Story();
+      story.add(Symbol.circle(700).setColor(Color.black).setLine(20).fill(Color.yellow));
+      story.add(Symbol.rectangle(500, 300).setColor(Color.red).fill(Color.cyan).setLine(10));
+      story.add(Symbol.ellipse(300, 100).setColor(Color.blue).setLine(8).fill());
+      story.add(Symbol.square(50).setColor(Color.yellow));
+      story.show(5);
+    } else {
+      result = "headless: not testing";
+    }
+    assert true;
+  }
+
+  @Test
   public void test_80_oldAPI_Screen() {
     currentTest = "test_80_oldAPI_Screen";
     Screen.showMonitors();
@@ -588,15 +605,15 @@ public class TestSXAPI {
 
   @Test
   public void test_999_someThingToTest() {
-    //log.startTimer();
+//    log.startTimer();
     currentTest = "test_999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // ******************* start
-        result = "nothing to do";
+        result = "nothing to do here";
 // ******************* end
       } else {
-        result = "headless: NativeHook not tested";
+        result = "headless: not testing";
       }
     } else {
       result = "TravisCI or NonInteractive: not testing";

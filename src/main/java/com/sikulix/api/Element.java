@@ -67,14 +67,24 @@ public class Element extends SXElement {
   private java.util.List<Element> lastMatches = new ArrayList<Element>();
   private int matchIndex = -1;
 
-  private Color highlightColor = Color.red;
+  private Color lineColor = Story.getLineColor();
 
-  public Color getHighlightColor() {
-    return highlightColor;
+  public Color getLineColor() {
+    return lineColor;
   }
 
-  public void setHighlightColor(Color highlightColor) {
-    this.highlightColor = highlightColor;
+  public void setLineColor(Color lineColor) {
+    this.lineColor = lineColor;
+  }
+
+  private int highLightLine = Story.getLineThickness();
+
+  public int getHighLightLine() {
+    return highLightLine;
+  }
+
+  public void setHighLightLine(int highLightLine) {
+    this.highLightLine = highLightLine;
   }
 
   private int showTime = (int) SX.getOptionNumber("SXShow.showTime", 3);
@@ -344,8 +354,8 @@ public class Element extends SXElement {
     //TODO implement fakeHighlight
   }
 
-  public SXShow showStart(int... times) {
-    showing = new SXShow(this, times);
+  public Story showStart(int... times) {
+    showing = new Story(this, times);
     showing.setWaitForFrame();
     showing.start();
     return showing;
@@ -364,32 +374,43 @@ public class Element extends SXElement {
 
   public void show(int time, int... times) {
     if (hasContent()) {
-      showing = new SXShow(this, times);
+      showing = new Story(this, times);
       showing.setBorder();
       showing.show(time);
       showing = null;
     }
   }
 
+  public void show(Element elem) {
+    show(elem, showTime);
+  }
+
+  public void show(Element elem, int time, int... times) {
+      showing = new Story(this, times);
+      showing.add(elem);
+      showing.show(time);
+      showing = null;
+  }
+
   public void showMatch(int... times) {
-    if (hasMatch() && hasContent()) {
-      showing = new SXShow(this);
+    if (hasMatch()) {
+      showing = new Story(this);
       showing.add(getLastMatch()).show(times.length > 0 ? times[0] : showTime);
       showing = null;
     }
   }
 
   public void showVanish(int... times) {
-    if (SX.isNotNull(getLastVanish()) && hasContent()) {
-      showing = new SXShow(this);
+    if (SX.isNotNull(getLastVanish())) {
+      showing = new Story(this);
       showing.add(getLastVanish()).show(times.length > 0 ? times[0] : showTime);
       showing = null;
     }
   }
 
   public void showMatches(int... times) {
-    if (hasMatches() && hasContent()) {
-      showing = new SXShow(this);
+    if (hasMatches()) {
+      showing = new Story(this);
       for (Element match : getLastMatches()) {
         showing.add(match);
       }
@@ -402,7 +423,7 @@ public class Element extends SXElement {
     return SX.isNotNull(showing);
   }
 
-  private SXShow showing = null;
+  private Story showing = null;
 
 
   //</editor-fold>

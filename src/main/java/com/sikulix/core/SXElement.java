@@ -39,7 +39,7 @@ public abstract class SXElement implements Comparable<SXElement> {
   }
 
   public enum eType {
-    SXELEMENT, ELEMENT, PICTURE, TARGET, WINDOW,
+    SXELEMENT, ELEMENT, SYMBOL, PICTURE, TARGET, WINDOW,
     REGION, MATCH, SCREEN, PATTERN;
 
     static eType isType(String strType) {
@@ -81,6 +81,10 @@ public abstract class SXElement implements Comparable<SXElement> {
 
   public boolean isPicture() {
     return eType.PICTURE.equals(clazz);
+  }
+
+  public boolean isSymbol() {
+    return eType.SYMBOL.equals(clazz);
   }
 
   public boolean isTarget() {
