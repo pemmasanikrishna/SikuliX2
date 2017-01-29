@@ -308,7 +308,7 @@ public class TestSXAPI {
     assert success;
   }
 
-  @Ignore
+  @Test
   public void test_33_loadImageFromHttp() {
     currentTest = "test_33_loadImageFromHttp";
     boolean success = Do.setBundlePath(httpRoot, "master");

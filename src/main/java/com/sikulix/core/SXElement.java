@@ -643,6 +643,10 @@ public abstract class SXElement implements Comparable<SXElement> {
       return oMatBGR;
     } else if (bImg.getType() == BufferedImage.TYPE_3BYTE_BGR) {
       log.error("makeMat: 3BYTE_BGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
+      byte[] data = ((DataBufferByte) bImg.getRaster().getDataBuffer()).getData();
+      aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC3);
+      aMat.put(0, 0, data);
+      return aMat;
     } else if (bImg.getType() == BufferedImage.TYPE_4BYTE_ABGR) {
       log.trace("makeMat: TYPE_4BYTE_ABGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
       byte[] data = ((DataBufferByte) bImg.getRaster().getDataBuffer()).getData();
