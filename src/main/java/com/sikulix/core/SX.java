@@ -546,6 +546,23 @@ public class SX {
       p("*** options dump end");
     }
   }
+
+  public static String getValidImageFilename(String fname) {
+    String validEndings = ".png.jpg.jpeg.tiff.bmp";
+    String defaultEnding = ".png";
+    int dot = fname.lastIndexOf(".");
+    String ending = defaultEnding;
+    if (dot > 0) {
+      ending = fname.substring(dot);
+      if (validEndings.contains(ending.toLowerCase())) {
+        return fname;
+      }
+    } else {
+      fname += ending;
+      return fname;
+    }
+    return "";
+  }
   //</editor-fold>
 
   //<editor-fold desc="*** system/java version info">
@@ -1688,8 +1705,26 @@ public class SX {
   public static boolean existsFile(Object aPath) {
     if (aPath instanceof URL) {
       //TODO implement existsFile(URL)
+      return false;
     }
     return (getFile(aPath).exists());
+  }
+
+  public static boolean existsFile(Object aPath, String name) {
+    if (aPath instanceof URL) {
+      //TODO implement existsFile(URL, name)
+      return false;
+    }
+    return (getFile(aPath, name).exists());
+  }
+
+  public static boolean existsImageFile(Object aPath, String name) {
+    if (aPath instanceof URL) {
+      //TODO implement existsImageFile(URL, name)
+      return false;
+    }
+    File imgFile = new File(getValidImageFilename(getFile(aPath, name).getAbsolutePath()));
+    return (imgFile.exists());
   }
 
   public static boolean isNull(Object obj) {

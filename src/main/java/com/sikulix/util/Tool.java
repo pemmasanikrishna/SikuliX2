@@ -1,8 +1,14 @@
-package com.sikulix.core;
+/*
+ * Copyright (c) 2016 - sikulix.com - MIT license
+ */
+
+package com.sikulix.util;
 
 import com.sikulix.api.Do;
 import com.sikulix.api.Element;
 import com.sikulix.api.Picture;
+import com.sikulix.core.SX;
+import com.sikulix.core.SXLog;
 import com.sikulix.util.FileChooser;
 
 import javax.swing.*;
@@ -18,17 +24,16 @@ import java.util.List;
 
 import static java.awt.event.KeyEvent.VK_ESCAPE;
 
-public class SXPictureTool {
+public class Tool {
 
   //<editor-fold desc="housekeeping">
-  private static final SXLog log = SX.getLogger("SX.PictureTool");
+  private static final SXLog log = SX.getLogger("SX.Tool");
 
   //<editor-fold desc="fields">
   JFrame intro = new JFrame();
   private Picture base = null;
   private Element rect = null;
   boolean isImage = false;
-  private Element givenRect = null;
   private List<Element> lastRects = new ArrayList<>();
   private int maxRevert = 10;
   private Picture shot;
@@ -38,8 +43,6 @@ public class SXPictureTool {
 
   private JFrame box = null;
   private Container pBox = null;
-  private BufferedImage shotDisplayed = null;
-  private Dimension dimShotDisplayed = null;
   private JLabel content = new JLabel() {
     @Override
     public void paintComponent(Graphics g) {
@@ -73,10 +76,7 @@ public class SXPictureTool {
   final private int OPPOSITE = 8;
   private int activeSide = NONE;
   private int activeSideSaved = TOP;
-  private boolean activeSideAll = false;
-  private boolean activeSideNone = false;
   private String[] activeSides = new String[]{"TOP", "LEFT", "BOTTOM", "RIGHT", "ALL", "NONE"};
-  private boolean shouldKeepAll = false;
   private boolean running = false;
 
   private int borderThickness = 5;
@@ -104,7 +104,7 @@ public class SXPictureTool {
   }
   //</editor-fold>
 
-  public SXPictureTool() {
+  public Tool() {
     intro = new JFrame();
     intro.addKeyListener(new KeyAdapter() {
       @Override
@@ -121,13 +121,14 @@ public class SXPictureTool {
           }
           if ("p".equals("" + e.getKeyChar())) {
             log.trace("action: bundlePath");
-            actionBundlePath();
+            actionBundlePath(intro);
           } else if ("o".equals("" + e.getKeyChar())) {
             log.trace("action: open");
             actionOpen(intro);
           } else if ("c".equals("" + e.getKeyChar())) {
             log.trace("action: capture");
             intro.setVisible(false);
+            SX.pause(0.5);
             actionCapture();
           } else if ("q".equals("" + e.getKeyChar())) {
             shouldQuit = true;
@@ -306,13 +307,6 @@ public class SXPictureTool {
     scrH = SX.getMain().h;
   }
 
-  private void resetBox() {
-    box.setVisible(false);
-    givenRect = new Element(this.rect);
-    resizeToFrame();
-    box.setVisible(true);
-  }
-
   private Element mousePos = new Element();
 
   private void updateStatus() {
@@ -325,7 +319,8 @@ public class SXPictureTool {
     }
     status.setText(String.format("%s%04d, %04d [%04d, %04d %04dx%04d] %s ",
             dirty ? "*" : "",
-            rect.x + mousePos.x, rect.y + mousePos.y, rect.x, rect.y, rect.w, rect.h, getImageName()));
+            rect.x + mousePos.x, rect.y + mousePos.y, rect.x, rect.y, rect.w, rect.h,
+            (base.hasName() ? base.getName() : "?name?")));
   }
   //</editor-fold>
 
@@ -509,7 +504,7 @@ public class SXPictureTool {
   //<editor-fold desc="key typed">
   private void myKeyTyped(KeyEvent e) {
     boolean shouldQuit = false;
-    String allowed = " +-rposftmnihqz";
+    String allowed = " +-acrposftmnihqz";
     if (e.CHAR_UNDEFINED != e.getKeyChar()) {
       String sKey = "" + e.getKeyChar();
       if (e.getKeyChar() == VK_ESCAPE) {
@@ -542,7 +537,7 @@ public class SXPictureTool {
           actionReset();
         } else if ("p".equals("" + e.getKeyChar())) {
           log.trace("action: bundlePath");
-          actionBundlePath();
+          actionBundlePath(box);
         } else if ("o".equals("" + e.getKeyChar())) {
           log.trace("action: open");
           actionOpen(box);
@@ -555,6 +550,9 @@ public class SXPictureTool {
         } else if ("f".equals("" + e.getKeyChar())) {
           log.trace("action: find: %s", rect);
           actionFind();
+        } else if ("a".equals("" + e.getKeyChar())) {
+          log.trace("action: findAll: %s", rect);
+          actionFindAll();
         } else if ("t".equals("" + e.getKeyChar())) {
           log.trace("action: set target");
           actionTarget();
@@ -588,23 +586,24 @@ public class SXPictureTool {
 
   //<editor-fold desc="actions">
   private void actionCapture() {
+    box.setVisible(false);
     base = new Element(scrID).capture();
-    if (SX.isNull(rect)) {
-      this.rect = new Element(base);
-    } else {
-      this.rect = rect;
-    }
     isImage = false;
+    activeSide = ALL;
     resetBox();
   }
 
   private void actionReset() {
-    rect = givenRect;
-    resizeToFrame();
-    dirty = false;
+    resetBox();
   }
 
-  SXShow highlightRunning = null;
+  private void resetBox() {
+    box.setVisible(false);
+    rect = new Element(this.base);
+    dirty = false;
+    resizeToFrame();
+    box.setVisible(true);
+  }
 
   private void actionFind() {
     Runnable find = new Runnable() {
@@ -625,6 +624,25 @@ public class SXPictureTool {
     new Thread(find).start();
   }
 
+  private void actionFindAll() {
+    Runnable find = new Runnable() {
+      @Override
+      public void run() {
+        box.setVisible(false);
+        Picture where = base;
+        Element what = base.getSub(rect);
+        if (isImage) {
+          SX.pause(0.3);
+          where = new Element(scrID).capture();
+        }
+        Do.findAll(what, where);
+        where.showMatches();
+        box.setVisible(true);
+      }
+    };
+    new Thread(find).start();
+  }
+
   private void actionQuit() {
     if (dirty) {
       log.error("image not saved yet");
@@ -633,45 +651,34 @@ public class SXPictureTool {
     if (SX.isNotNull(box)) {
       box.dispose();
     }
-    if (SX.isNotNull(highlightRunning)) {
-      highlightRunning.stop();
-    }
     intro.dispose();
     running = false;
     SX.pause(1);
   }
 
-  private boolean actionBundlePath() {
-    FileChooser fc = new FileChooser(box);
-    File path = fc.show("Select BundlePath");
-    String result = "cancelled";
-    boolean success = true;
-    if (SX.isNotNull(path)) {
-      result = path.getAbsolutePath();
-      if (!path.isDirectory()) {
-        path = path.getParentFile();
-        if (!path.isDirectory()) {
-          log.error("invalid bundlePath: %s", result);
-          success = false;
-        }
-      }
+  private boolean actionBundlePath(JFrame frame) {
+    String result = selectPath("Select BundlePath", frame);
+    boolean success = false;
+    if (SX.isSet(result)) {
       bundlePath = result;
-    } else {
-      success = false;
+      success = true;
     }
-    log.trace("new bundlePath: %s", result);
+    log.trace("new bundlePath: %s",result);
     return success;
+}
+
+  private String selectPath(String title, JFrame frame) {
+    String path = null;
+    File fPath = FileChooser.folder(frame, title);
+    if (SX.isNotNull(fPath)) {
+      path = fPath.getAbsolutePath();
+    }
+    return path;
   }
 
   private void actionOpen(JFrame frame) {
-//    if (SX.isNotSet(bundlePath)) {
-//      if (!actionBundlePath()) {
-//        return;
-//      }
-//    }
-    FileChooser fc = new FileChooser(frame);
     frame.setVisible(false);
-    File fImage = fc.loadImage();
+    File fImage = FileChooser.loadImage(frame);
     if (SX.isNotNull(fImage)) {
       String result = fImage.getAbsolutePath();
       log.trace("new image: %s", result);
@@ -680,6 +687,11 @@ public class SXPictureTool {
         rect = new Element(base);
         isImage = true;
         resetBox();
+        if (!bundlePath.equals(fImage.getParent()) && Do.popAsk(fImage.getParent() +
+                "\nUse this folder as bundlepath?", "SikuliX Tool::BundlePath")) {
+          bundlePath = fImage.getParent();
+        }
+        updateStatus();
         return;
       }
     }
@@ -687,7 +699,42 @@ public class SXPictureTool {
   }
 
   private void actionSave() {
-    dirty = false;
+    boolean shouldSelectPath = false;
+    String savePath = bundlePath;
+    if (SX.isNotSet(savePath)) {
+      shouldSelectPath = true;
+    } else {
+      if (!Do.popAsk(savePath +
+              "\nSave to this folder (bundle path)?", "SikuliX Tool::ImageSave")) {
+        shouldSelectPath = true;
+      }
+    }
+    if (shouldSelectPath) {
+       savePath = selectPath("Select a Directory/Folder", box);
+       if (SX.isNotSet(savePath)) {
+         return;
+       }
+    }
+    if (!base.hasName()) {
+      actionName();
+    }
+    if (!base.hasName()) {
+      return;
+    }
+    if (SX.existsImageFile(savePath, base.getName())) {
+      if (!Do.popAsk(new File(savePath, base.getName()).getAbsolutePath() +
+              "\nOverwrite image file?", "SikuliX Tool::ImageSave")) {
+        return;
+      }
+    }
+    if (shot.save(base.getName(), savePath)) {
+      if (!bundlePath.equals(savePath) && Do.popAsk(savePath +
+              "\nUse this folder as bundlepath?", "SikuliX Tool::BundlePath")) {
+        bundlePath = savePath;
+      }
+      dirty = false;
+      updateStatus();
+    }
   }
 
   private void actionTarget() {
@@ -699,9 +746,11 @@ public class SXPictureTool {
   }
 
   private void actionName() {
-    String newName = Do.input("Change image name", getImageName(), "NativeCapture::ImageName");
-    if (!SX.isNotSet(newName) && !imgName.equals(newName)) {
-      imgName = newName;
+    String newName = Do.input("Change image name",
+            (base.hasName() ? base.getName() : ""),
+            "SikuliX Tool::ImageName");
+    if (!SX.isNotSet(newName) && !newName.equals(base.getName())) {
+      base.setName(newName);
       dirty = true;
       updateStatus();
     }
@@ -1072,14 +1121,13 @@ public class SXPictureTool {
     return path;
   }
 
-  private String imgName = "";
+//  private String imgName = "";
 
   private String getImageName() {
-    String name = imgName;
-    if (SX.isNotSet(imgName)) {
-      name = "NameNotSet";
+    if (base.hasName()) {
+      return base.getName();
     }
-    return name;
+    return "";
   }
 
   private File getImageFile() {

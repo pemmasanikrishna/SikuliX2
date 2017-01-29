@@ -10,8 +10,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 import org.opencv.imgcodecs.Imgcodecs;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -256,36 +254,35 @@ public class Element extends SXElement {
     return this;
   }
 
-  public Element save(String name) {
-    save(name, Picture.getBundlePath());
-    return this;
+  public boolean save(String name) {
+    return save(name, Picture.getBundlePath());
   }
 
-  public Element save(String name, String path) {
+  public boolean save(String name, String path) {
     URL url = Content.makeURL(new File(path, name).getAbsolutePath());
+    if (SX.isNull(url)) {
+      return false;
+    }
     try {
       url = Content.makeURL(new File(path, name).getCanonicalPath());
+      return save(url, name);
     } catch (IOException e) {
     }
-    if (SX.isNotNull(url)) {
-      save(url, name);
-    } else {
-      log.error("save: invalid: %s / %s", path, name);
-    }
-    return this;
+    log.error("save: invalid: %s / %s", path, name);
+    return false;
   }
 
-  public Element save(String name, URL urlPath) {
+  public boolean save(String name, URL urlPath) {
     URL url = Content.makeURL(urlPath, name);
     if (SX.isNotNull(url)) {
-      save(url, name);
+      return save(url, name);
     } else {
       log.error("save: invalid: %s / %s", urlPath, name);
     }
-    return this;
+    return false;
   }
 
-  public Element save(URL url, String name) {
+  public boolean save(URL url, String name) {
     if (!hasContent()) {
       load();
     }
@@ -293,15 +290,17 @@ public class Element extends SXElement {
     if (SX.isNotNull(url) && hasContent()) {
       if ("file".equals(url.getProtocol())) {
         log.trace("save: %s", url);
-        Imgcodecs.imwrite(getValidImageFilename(url.getPath()), getContent());
-        urlImg = url;
-        setName(name);
+        if (Imgcodecs.imwrite(SX.getValidImageFilename(url.getPath()), getContent())) {
+          urlImg = url;
+          setName(name);
+          return true;
+        }
       } else {
         //TODO save: http and jar
         log.error("save: not implemented: %s", url);
       }
     }
-    return this;
+    return false;
   }
   //</editor-fold>
 

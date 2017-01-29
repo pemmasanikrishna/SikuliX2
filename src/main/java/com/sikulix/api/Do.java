@@ -27,7 +27,7 @@ import java.util.StringTokenizer;
 
 /**
  * Implements the top level features as static methods to allow the usage somehow like "commands".<br>
- *   Usage: Do.something(arg1, arg2, ...)<br>
+ * Usage: Do.something(arg1, arg2, ...)<br>
  */
 public class Do {
 
@@ -301,9 +301,7 @@ public class Do {
   public static String popFile(String title) {
     popat(SX.getMonitor());
     JFrame anchor = popLocation();
-    FileChooser fc = new FileChooser(anchor, "something");
-    File ret = fc.show(title);
-    fc = null;
+    File ret = FileChooser.load(anchor);
     popat();
     if (SX.isNull(ret)) {
       return "";
@@ -983,12 +981,46 @@ public class Do {
   // waitVanish
   // findAll
   //<editor-fold desc="actions like find, wait, click">
+
+  static final String FIND = "find()";
+  static final String WAIT = "wait()";
+  static final String EXISTS = "exists()";
+  static final String VANISH = "waitVanish()";
+  static final String ALL = "findAll()";
+
+  private static boolean handleImageMissing(String type, PossibleMatch possibleMatch) {
+    //TODO image missing handler
+    if (possibleMatch.isImageMissingWhat()) {
+      log.trace("%s: handling image missing: what: %s", type, possibleMatch.getWhat());
+    } else {
+      log.trace("%s: handling image missing: where: %s", type, possibleMatch.getWhere());
+    }
+    return false;
+  }
+
+  private static boolean handleFindFailed(String type, PossibleMatch possibleMatch) {
+    //TODO find failed handler
+    log.trace("%s: handling not found: %s", type, possibleMatch);
+    return false;
+  }
+
   public static Element find(Object... args) {
     log.trace("find: start");
-    Element where = new EvaluateTarget().get(args);
     Element match = new Element();
-    if (where.hasMatch()) {
-      match = where.getLastMatch();
+    PossibleMatch possibleMatch = new PossibleMatch();
+    boolean shouldRepeat = true;
+    while (shouldRepeat) {
+      Element where = possibleMatch.get(args);
+      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
+        shouldRepeat = handleImageMissing(FIND, possibleMatch);
+      } else {
+        if (where.hasMatch()) {
+          match = where.getLastMatch();
+          shouldRepeat = false;
+        } else {
+          shouldRepeat = handleFindFailed(FIND, possibleMatch);
+        }
+      }
     }
     log.trace("find: end");
     return match;
@@ -996,47 +1028,77 @@ public class Do {
 
   public static Element wait(Object... args) {
     log.trace("wait: start");
-    EvaluateTarget evalTarget = new EvaluateTarget();
-    Element where = evalTarget.get(args);
+    Element match = doWait(WAIT, args);
+    log.trace("wait: end");
+    return match;
+  }
+
+  public static boolean exists(Object... args) {
+    log.trace("exists: start");
+    Element match = doWait(EXISTS, args);
+    log.trace("exists: end");
+    return match.isMatch();
+  }
+
+  private static Element doWait(String type, Object... args) {
+    PossibleMatch possibleMatch = new PossibleMatch();
     Element match = new Element();
-    if (where.hasMatch()) {
-      match = where.getLastMatch();
-    } else {
-      while (evalTarget.shouldWait()) {
-        log.trace("wait: need to repeat");
-        evalTarget.repeat();
+    boolean shouldRepeat = true;
+    while (shouldRepeat) {
+      Element where = possibleMatch.get(args);
+      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
+        shouldRepeat = handleImageMissing(type, possibleMatch);
+      } else {
         if (where.hasMatch()) {
           match = where.getLastMatch();
-          break;
+          shouldRepeat = false;
+        } else {
+          while (possibleMatch.shouldWait()) {
+            log.trace("wait: need to repeat");
+            possibleMatch.repeat();
+            if (where.hasMatch()) {
+              match = where.getLastMatch();
+              shouldRepeat = false;
+              break;
+            }
+          }
+          if (!shouldRepeat) {
+            break;
+          }
+          shouldRepeat = handleFindFailed(type, possibleMatch);
         }
       }
     }
     return match;
   }
 
-  public static boolean exists(Object... args) {
-    Element match = wait(args);
-    return match.isMatch();
-  }
-
   public static boolean waitVanish(Object... args) {
     log.trace("waitVanish: start");
-    EvaluateTarget evalTarget = new EvaluateTarget();
-    Element where = evalTarget.get(args);
-    where.setLastVanish(null);
-    Element match = new Element();
+    PossibleMatch possibleMatch = new PossibleMatch();
+    boolean shouldRepeat = true;
     boolean vanished = false;
-    if (where.hasMatch()) {
-      match = where.getLastMatch();
-      where.setLastVanish(match);
-      while (!vanished && evalTarget.shouldWait()) {
-        log.trace("wait: need to repeat");
-        evalTarget.repeat();
+    while (shouldRepeat) {
+      Element where = possibleMatch.get(args);
+      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
+        shouldRepeat = handleImageMissing(VANISH, possibleMatch);
+      } else {
+        where.setLastVanish(null);
         if (where.hasMatch()) {
-          match = where.getLastMatch();
+          Element match = where.getLastMatch();
           where.setLastVanish(match);
+          while (!vanished && possibleMatch.shouldWait()) {
+            log.trace("wait: need to repeat");
+            possibleMatch.repeat();
+            if (where.hasMatch()) {
+              match = where.getLastMatch();
+              where.setLastVanish(match);
+            } else {
+              vanished = true;
+              shouldRepeat = false;
+            }
+          }
         } else {
-          vanished = true;
+          shouldRepeat = handleFindFailed(VANISH, possibleMatch);
         }
       }
     }
@@ -1045,10 +1107,21 @@ public class Do {
 
   public static List<Element> findAll(Object... args) {
     log.trace("findAll: start");
-    Element where = new EvaluateTarget("ALL").get(args);
+    PossibleMatch possibleMatch = new PossibleMatch("ALL");
+    boolean shouldRepeat = true;
     List<Element> matches = new ArrayList<>();
-    if (where.hasMatches()) {
-      matches = where.getLastMatches();
+    while (shouldRepeat) {
+      Element where = possibleMatch.get(args);
+      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
+        shouldRepeat = handleImageMissing(ALL, possibleMatch);
+      } else {
+        if (where.hasMatches()) {
+          matches = where.getLastMatches();
+          shouldRepeat = false;
+        } else {
+          shouldRepeat = handleFindFailed(ALL, possibleMatch);
+        }
+      }
     }
     log.trace("findAll: end");
     return matches;
@@ -1082,9 +1155,15 @@ public class Do {
     return matches;
   }
 
-  private static class EvaluateTarget {
+  private static class PossibleMatch {
     Element what = null;
+    public Element getWhat() {
+      return what;
+    }
     Element where = null;
+    public Element getWhere() {
+      return where;
+    }
     int waitTime = -1;
     Element target = new Element();
     String type = "";
@@ -1094,10 +1173,28 @@ public class Do {
     long lastRepeatTime = 0;
     long repeatPause = (long) (1000 / SX.getOptionNumber("Settings.WaitScanRate", 3));
 
-    protected EvaluateTarget() {
+    boolean imageMissingWhere = false;
+
+    public boolean isImageMissingWhere() {
+      return imageMissingWhere;
     }
 
-    protected EvaluateTarget(String type) {
+    boolean imageMissingWhat = false;
+
+    public boolean isImageMissingWhat() {
+      return imageMissingWhat;
+    }
+
+    boolean valid = false;
+
+    public boolean isValid() {
+      return valid;
+    }
+
+    protected PossibleMatch() {
+    }
+
+    protected PossibleMatch(String type) {
       this.type = type;
     }
 
@@ -1108,21 +1205,26 @@ public class Do {
       }
       log.trace(form, args);
       Object args0, args1;
-      Element elem0, elem1;
       if (args.length > 0) {
         args0 = args[0];
         if (args0 instanceof String) {
           what = new Picture((String) args0);
+          if (!what.isValid()) {
+            imageMissingWhat = true;
+          }
         } else if (args0 instanceof Element) {
           what = (Element) args0;
         } else {
           log.error("EvaluateTarget: args0 invalid: %s", args0);
           what = new Element();
         }
-        if (SX.isNotNull(what) && args.length == 2) {
+        if (SX.isNotNull(what) && args.length == 2 && !imageMissingWhat) {
           args1 = args[1];
           if (args1 instanceof String) {
             where = new Picture((String) args1);
+            if (!where.isValid()) {
+              imageMissingWhere = true;
+            }
           } else if (args1 instanceof Element) {
             where = (Element) args1;
           } else if (args1 instanceof Double) {
@@ -1133,7 +1235,7 @@ public class Do {
             log.error("EvaluateTarget: args1 invalid: %s", args0);
           }
         }
-        if (SX.isNotNull(what)) {
+        if (SX.isNotNull(what) && !imageMissingWhat && !imageMissingWhere) {
           if (what.isTarget()) {
             if (SX.isNull(where)) {
               where = defaultElementOnScreen;

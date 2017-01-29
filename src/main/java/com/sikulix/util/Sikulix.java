@@ -10,7 +10,6 @@ import com.sikulix.api.Picture;
 import com.sikulix.core.NativeHook;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.core.SXPictureTool;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,7 +96,7 @@ public class Sikulix {
     //</editor-fold>
 
     if (options.contains("tool")) {
-      new SXPictureTool();
+      new Tool();
     }
   }
 }

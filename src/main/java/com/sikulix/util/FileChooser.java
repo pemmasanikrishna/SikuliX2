@@ -20,65 +20,104 @@ public class FileChooser {
 
   private static SXLog log = SX.getLogger("SX.FileChooser");
 
-  static final int FILES = JFileChooser.FILES_ONLY;
-  static final int DIRS = JFileChooser.DIRECTORIES_ONLY;
-  static final int DIRSANDFILES = JFileChooser.FILES_AND_DIRECTORIES;
+  public static final int FILES = JFileChooser.FILES_ONLY;
+  public static final int DIRS = JFileChooser.DIRECTORIES_ONLY;
+  public static final int DIRSANDFILES = JFileChooser.FILES_AND_DIRECTORIES;
   static final int SAVE = FileDialog.SAVE;
   static final int LOAD = FileDialog.LOAD;
-  Frame _parent;
-  boolean accessingAsFile = false;
-  boolean checkSikuli = true;
-  String fileType = "";
 
-  public FileChooser(Frame parent) {
-    _parent = parent;
+  boolean checkSikuli = false;
+
+  public FileChooser setCheckSikuli() {
+    checkSikuli = true;
+    return this;
   }
 
-  public FileChooser(Frame parent, String type) {
-    _parent = parent;
-    fileType = type;
+  int type = DIRSANDFILES;
+
+  public FileChooser setType(int type) {
+    this.type = type;
+    return this;
   }
 
-  public FileChooser(Frame parent, boolean accessingAsFile) {
-    _parent = parent;
-    this.accessingAsFile = accessingAsFile;
+  private Frame parent = null;
+
+  public FileChooser setParent(Frame parent) {
+    this.parent = parent;
+    return this;
   }
 
-  public File show(String title) {
-    checkSikuli = false;
-    File ret = showFileChooser(title, LOAD, DIRSANDFILES);
+  private String title = "";
+
+  public FileChooser setTitle(String title) {
+    this.title = title;
+    return this;
+  }
+
+  private File folder = null;
+
+  public FileChooser setFile(File folder) {
+    this.folder = folder;
+    return this;
+  }
+
+  private FileChooser() {
+  }
+
+  private FileChooser(Object... args) {
+    for (Object arg : args) {
+      if (arg instanceof Frame) {
+        setParent((Frame) arg);
+      } else if (arg instanceof String) {
+        setTitle((String) arg);
+      }
+    }
+  }
+
+  public static File show(Object... args) {
+    File ret = new FileChooser(args).showFileChooser(DIRSANDFILES, "Select a file or folder", LOAD, null);
     return ret;
   }
 
-  public File load() {
-    String type = "Sikuli Script (*.sikuli, *.skl)";
+  public static File folder(Object... args) {
+    File ret = new FileChooser(args).showFileChooser(DIRS, "Select a folder", LOAD, null);
+    return ret;
+  }
+
+  public static File load(Object... args) {
+    String fileType = "Sikuli Script (*.sikuli, *.skl, *.jar)";
     String title = "Open a Sikuli Script";
-    File ret = showFileChooser(title, LOAD, DIRSANDFILES, new SikulixFileFilter(type, "o"));
+    File ret = new FileChooser(args).setCheckSikuli().showFileChooser(DIRSANDFILES, title, LOAD,
+            new SikulixFileFilter(fileType, "o"));
     return ret;
   }
 
-  public File save() {
-    String type = "Sikuli Script (*.sikuli)";
+  public static File save(Object... args) {
+    String fileType = "Sikuli Script (*.sikuli, *.jar)";
     String title = "Save a Sikuli Script";
-    File ret = showFileChooser(title, SAVE, DIRS, new SikulixFileFilter(type, "s"));
+    File ret = new FileChooser(args).setCheckSikuli().showFileChooser(DIRSANDFILES, title, SAVE,
+            new SikulixFileFilter(fileType, "s"));
     return ret;
   }
 
-  public File export() {
-    String type = "Sikuli packed Script (*.skl)";
-    String title = "Export as Sikuli packed Script";
-    File ret = showFileChooser(title, SAVE, FILES, new SikulixFileFilter(type, "e"));
-    return ret;
-  }
-
-  public File loadImage() {
-    File ret = showFileChooser("Load Image File", LOAD, FILES,
+  public static File loadImage(Object... args) {
+    File ret = new FileChooser(args).showFileChooser(FILES, "Load Image File", LOAD,
             new FileNameExtensionFilter("Image files (jpg, png)", "jpg", "jpeg", "png"));
     return ret;
   }
 
-  private File showFileChooser(String title, int mode, int selectionMode, Object... filters) {
-    String last_dir = SX.getOption("LAST_OPEN_DIR", "NotSet");
+  private File showFileChooser(int type, String title, int mode, Object... filters) {
+    if (SX.isNotSet(title)) {
+      if (SX.isNotSet(this.title)) {
+        title = "Select file or folder";
+      }
+    }
+    String last_dir;
+    if (SX.isNotNull(folder)) {
+      last_dir = folder.getAbsolutePath();
+    } else {
+      last_dir = SX.getOption("LAST_OPEN_DIR", "NotSet");
+    }
     log.debug("showFileChooser: %s at %s", title.split(" ")[0], last_dir);
     JFileChooser fchooser = null;
     File fileChoosen = null;
@@ -91,17 +130,18 @@ public class FileChooser {
         fchooser.setCurrentDirectory(new File(last_dir));
       }
       fchooser.setSelectedFile(null);
-      if (SX.isMac() && selectionMode == DIRS) {
-        selectionMode = DIRSANDFILES;
+      if (SX.isMac() && type == DIRS) {
+        fchooser.setFileSelectionMode(DIRSANDFILES);
+      } else {
+        fchooser.setFileSelectionMode(type);
       }
-      fchooser.setFileSelectionMode(selectionMode);
       fchooser.setDialogTitle(title);
       String btnApprove = "Select";
       if (mode == FileDialog.SAVE) {
         fchooser.setDialogType(JFileChooser.SAVE_DIALOG);
         btnApprove = "Save";
       }
-      if (filters.length == 0) {
+      if (SX.isNull(filters) || filters.length == 0) {
         fchooser.setAcceptAllFileFilterUsed(true);
       } else {
         fchooser.setAcceptAllFileFilterUsed(false);
@@ -114,7 +154,7 @@ public class FileChooser {
           }
         }
       }
-      if (fchooser.showDialog(_parent, btnApprove) != JFileChooser.APPROVE_OPTION) {
+      if (fchooser.showDialog(parent, btnApprove) != JFileChooser.APPROVE_OPTION) {
         return null;
       }
       fileChoosen = fchooser.getSelectedFile();
@@ -129,14 +169,14 @@ public class FileChooser {
       }
     }
     File selected = new File(fileChoosen.getAbsolutePath());
-    if (!selected.isDirectory()) {
+    if (!selected.isDirectory() || type == DIRS) {
       selected = selected.getParentFile();
     }
     SX.setOption("LAST_OPEN_DIR", selected.getAbsolutePath());
     return fileChoosen;
   }
 
-  private boolean isValidScript(File f) {
+  private static boolean isValidScript(File f) {
     String[] endings = new String[]{".py", ".rb", ".js"};
     String fName = f.getName();
     if (fName.endsWith(".skl")) {
@@ -164,24 +204,24 @@ public class FileChooser {
     return false;
   }
 
-  class SikulixFileFilter extends FileFilter {
+  static class SikulixFileFilter extends FileFilter {
 
-    private String _type, _desc;
+    private String type, desc;
 
     public SikulixFileFilter(String desc, String type) {
-      _type = type;
-      _desc = desc;
+      this.type = type;
+      this.desc = desc;
     }
 
     @Override
     public boolean accept(File f) {
-      if ("o".equals(_type) && (isExt(f.getName(), "sikuli") || isExt(f.getName(), "skl"))) {
+      if ("o".equals(type) && (isExt(f.getName(), "sikuli") || isExt(f.getName(), "skl"))) {
         return true;
       }
-      if ("s".equals(_type) && isExt(f.getName(), "sikuli")) {
+      if ("s".equals(type) && isExt(f.getName(), "sikuli")) {
         return true;
       }
-      if ("e".equals(_type)) {
+      if ("e".equals(type)) {
         if (isExt(f.getName(), "skl")) {
           return true;
         }
@@ -197,7 +237,7 @@ public class FileChooser {
 
     @Override
     public String getDescription() {
-      return _desc;
+      return desc;
     }
   }
 }

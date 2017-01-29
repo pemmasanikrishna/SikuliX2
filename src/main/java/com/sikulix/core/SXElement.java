@@ -27,6 +27,8 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class SXElement implements Comparable<SXElement> {
 
@@ -121,11 +123,15 @@ public abstract class SXElement implements Comparable<SXElement> {
     return (Element) this;
   }
 
+  static Pattern patStdName = Pattern.compile("[EPTWMS]_\\d+?_\\d+?_\\d+?x\\d+");
+
   public boolean hasName() {
-    return !"noName".equals(name);
+    Matcher matchStdName  = patStdName.matcher(name);
+    boolean isStdName = matchStdName.find();
+    return !isStdName;
   }
 
-  private String name = "noName";
+  private String name = "";
 
 //  protected boolean onRemoteScreen = false;
 
@@ -170,7 +176,7 @@ public abstract class SXElement implements Comparable<SXElement> {
   }
 
   protected void initName(eType type) {
-    setName(String.format("%s_%04d_%04d_%04dx%04d", type, x, y, w, h));
+    setName(String.format("%s_%d_%d_%dx%d", type.toString().substring(0,1), x, y, w, h));
   }
 
   protected void init(int[] rect) {
@@ -677,22 +683,6 @@ public abstract class SXElement implements Comparable<SXElement> {
     return bImg;
   }
 
-  protected static String getValidImageFilename(String fname) {
-    String validEndings = ".png.jpg.jpeg.tiff.bmp";
-    String defaultEnding = ".png";
-    int dot = fname.lastIndexOf(".");
-    String ending = defaultEnding;
-    if (dot > 0) {
-      ending = fname.substring(dot);
-      if (validEndings.contains(ending.toLowerCase())) {
-        return fname;
-      }
-    } else {
-      fname += ending;
-      return fname;
-    }
-    return "";
-  }
   //</editor-fold>
 
 
