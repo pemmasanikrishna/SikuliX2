@@ -563,7 +563,6 @@ public class TestSXAPI {
 
   @Test
   public void test_70_handlingWhatImageNotOnImagePath() {
-    log.startTimer();
     currentTest = "test_70_handlingWhatImageNotOnImagePath";
     result = "what image not found on imagepath";
     String givenWhat = "noimagewhat";
