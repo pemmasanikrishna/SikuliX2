@@ -86,7 +86,7 @@ public class  Device {
    * @param handler
    */
   public static void setCallback(Handler handler) {
-    callback = new Event(Event.TYPE.GENERIC, handler);
+    callback = new Event(handler);
   }
   //</editor-fold>
 
@@ -361,7 +361,7 @@ public class  Device {
    */
   public static void setMovedCallback(Handler handler) {
       movedAction = MOVEDCALLBACK;
-      movedHandler = new Event(Event.TYPE.GENERIC, handler);
+      movedHandler = new Event(handler);
   }
 
   /**

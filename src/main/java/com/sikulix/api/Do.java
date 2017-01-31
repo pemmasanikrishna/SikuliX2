@@ -989,13 +989,13 @@ public class Do {
   static final String ALL = "findAll()";
 
   private static boolean handleImageMissing(String type, PossibleMatch possibleMatch) {
-    //TODO image missing handler
     if (possibleMatch.isImageMissingWhat()) {
       log.trace("%s: handling image missing: what: %s", type, possibleMatch.getWhat());
+      return Picture.handleImageMissing(possibleMatch.getWhat());
     } else {
       log.trace("%s: handling image missing: where: %s", type, possibleMatch.getWhere());
+      return Picture.handleImageMissing(possibleMatch.getWhere());
     }
-    return false;
   }
 
   private static boolean handleFindFailed(String type, PossibleMatch possibleMatch) {
@@ -1012,12 +1012,17 @@ public class Do {
     while (shouldRepeat) {
       Element where = possibleMatch.get(args);
       if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
+        match = possibleMatch.getWhat();
+        if (possibleMatch.isImageMissingWhere()) {
+          match = possibleMatch.getWhere();
+        }
         shouldRepeat = handleImageMissing(FIND, possibleMatch);
       } else {
         if (where.hasMatch()) {
           match = where.getLastMatch();
           shouldRepeat = false;
         } else {
+          match = possibleMatch.getWhat();
           shouldRepeat = handleFindFailed(FIND, possibleMatch);
         }
       }

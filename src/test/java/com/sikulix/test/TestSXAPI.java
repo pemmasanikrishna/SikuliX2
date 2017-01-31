@@ -562,11 +562,51 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_80_oldAPI_Screen() {
-    currentTest = "test_80_oldAPI_Screen";
-    Screen.showMonitors();
-    new Screen(1).show();
-    result = new Screen(1).toString();
+  public void test_70_handlingWhatImageNotOnImagePath() {
+    log.startTimer();
+    currentTest = "test_70_handlingWhatImageNotOnImagePath";
+    result = "what image not found on imagepath";
+    String givenWhat = "noimagewhat";
+    Element missing = Do.find(givenWhat);
+    assert missing.getName().equals(givenWhat) && !missing.hasContent();
+  }
+
+  @Test
+  public void test_71_handlingWhereImageNotOnImagePath() {
+    currentTest = "test_71_handlingWhereImageNotOnImagePath";
+    result = "where image not found on imagepath";
+    boolean success = Do.setBundlePath(mavenRoot, "Images");
+    String givenWhat = imageNameDefault;
+    String givenWhere = "noimagewhere";
+    Element missing = Do.find(givenWhat, givenWhere);
+    assert missing.getName().equals(givenWhere) && !missing.hasContent();
+  }
+
+  @Test
+  public void test_80_basicsObserve() {
+    currentTest = "test_80_basicsObserve";
+    result = "basic observe features";
+    boolean success = Do.setBundlePath(mavenRoot, "Images");
+    Element where = Do.on();
+    Element what = new Picture(imageNameDefault);
+    Event evt = where.onAppear(what);
+    log.trace("Event added: %s", evt);
+    evt = where.onChange();
+    log.trace("Event added: %s", evt);
+    evt = where.onVanish(imageNameDefault);
+    log.trace("Event added: %s", evt);
+    where.observe();
+    int nEvents = Events.getEventCount(where);
+    assert nEvents == 3;
+    assert Events.hasEvent(what, where);
+    assert SX.isNotNull(Events.getEvent(what, where));
+    Events.stopObserving();
+    assert where.hasEvents();
+    for (int i = 0; i < nEvents; i++) {
+      assert SX.isNotNull(where.nextEvent());
+    }
+    assert !where.hasEvents();
+    assert SX.isNull(where.nextEvent());
   }
 
   @Test
@@ -598,6 +638,14 @@ public class TestSXAPI {
     }
     assert assertVal;
   }
+
+  @Test
+  public void test_92_oldAPI_Screen() {
+    currentTest = "test_92_oldAPI_Screen";
+    Screen.showMonitors();
+    new Screen(1).show();
+    result = new Screen(1).toString();
+  }
   //</editor-fold>
 
   //<editor-fold desc="ignored">
@@ -605,7 +653,7 @@ public class TestSXAPI {
 
   @Test
   public void test_999_someThingToTest() {
-//    log.startTimer();
+    //log.startTimer();
     currentTest = "test_999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {

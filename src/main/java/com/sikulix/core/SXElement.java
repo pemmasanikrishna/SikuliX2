@@ -176,11 +176,15 @@ public abstract class SXElement implements Comparable<SXElement> {
   }
 
   protected void initAfter() {
-    initName(eClazz);
+    if (SX.isNotSet(name)) {
+      initName(eClazz);
+    }
   }
 
   protected void initName(eType type) {
-    setName(String.format("%s_%d_%d_%dx%d", type.toString().substring(0,1), x, y, w, h));
+    if (SX.isNotSet(name)) {
+      setName(String.format("%s_%d_%d_%dx%d", type.toString().substring(0, 1), x, y, w, h));
+    }
   }
 
   protected void init(int[] rect) {

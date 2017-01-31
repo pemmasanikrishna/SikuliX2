@@ -193,7 +193,7 @@ public class Element extends SXElement {
 
   public Element(int id) {
     if (id < 0) {
-      // hack: special for even margin all sides
+      // hack: special for even margin all sides and for onChange()
       init(-id, -id, -id, -id);
     } else {
       Rectangle rect = SX.getMonitor(id);
@@ -386,10 +386,10 @@ public class Element extends SXElement {
   }
 
   public void show(Element elem, int time, int... times) {
-      showing = new Story(this, times);
-      showing.add(elem);
-      showing.show(time);
-      showing = null;
+    showing = new Story(this, times);
+    showing.add(elem);
+    showing.show(time);
+    showing = null;
   }
 
   public void showMatch(int... times) {
@@ -646,58 +646,142 @@ public class Element extends SXElement {
 
   double autoWaitTimeout = getWaitForMatch();
 
-  public Event getFindFailedResponse() {
-    return eventFindFailed;
+  private Event.RESPONSE findFailedResponse = Event.RESPONSE.ABORT;
+
+  public Event.RESPONSE getFindFailedResponse() {
+    return findFailedResponse;
   }
 
-  public Event setFindFailedResponse(Event.REACTION response) {
-    eventFindFailed = new Event(Event.TYPE.FINDFAILED, response);
-    return eventFindFailed;
+  public void setFindFailedResponse(Event.RESPONSE response) {
+    findFailedResponse = response;
   }
 
-  public Event setFindFailedHandler(Handler handler) {
-    eventFindFailed = new Event(Event.TYPE.FINDFAILED, handler);
-    return eventFindFailed;
+  private Handler findFaileHandler = null;
+
+  public void setFindFaileHandler(Handler handler) {
+    findFaileHandler = handler;
   }
 
-  public Event getImageMissingResponse() {
-    return eventImageMissing;
+  public void unsetFindFaileHandler() {
+    findFaileHandler = null;
   }
 
-  public Event setImageMissingResponse(Event.REACTION response) {
-    eventImageMissing = new Event(Event.TYPE.IMAGEMISSING, response);
-    return eventImageMissing;
+  private Event.RESPONSE imageMissingResponse = Event.RESPONSE.ABORT;
+
+  public Event.RESPONSE getImageMissingResponse() {
+    return imageMissingResponse;
   }
 
-  public Event setImageMissingHandler(Handler handler) {
-    eventImageMissing = new Event(Event.TYPE.IMAGEMISSING, handler);
-    return eventImageMissing;
+  public void setImageMissingResponse(Event.RESPONSE response) {
+    imageMissingResponse = response;
   }
 
-  private String setOnHandler(Event.TYPE type, Element elem, Handler handler) {
-    Event event = new Event(type, elem, handler);
-    String name = elem.getName();
-    onEvents.put(name, event);
-    return name;
+  private Handler imageMissingHandler = null;
+
+  public void setImageMissingHandler(Handler handler) {
+    imageMissingHandler = handler;
+  }
+
+  public void unsetImageMissingHandler() {
+    imageMissingHandler = null;
   }
   //</editor-fold>
 
   //<editor-fold desc="***** observe">
-  public String onAppear(Element elem, Handler handler) {
-    return setOnHandler(Event.TYPE.ONAPPEAR, elem, handler);
+  private Map<Element, Event> events = new HashMap<>();
+
+  public long getObserveStart() {
+    return observeStart;
   }
 
-  public String onVanish(Element elem, Handler handler) {
-    return setOnHandler(Event.TYPE.ONAPPEAR, elem, handler);
+  private long observeStart = 0;
+
+  public boolean isObserving() {
+    return observeStart > 0;
   }
 
-  public String onChange(Element elem, Handler handler) {
-    return setOnHandler(Event.TYPE.ONAPPEAR, elem, handler);
+  public void observe() {
+    observeStart = new Date().getTime();
+    Events.add(this, events.values());
+    Events.startObserving();
   }
 
-  private Event eventFindFailed = new Event(Event.TYPE.FINDFAILED, Event.REACTION.ABORT);
-  private Event eventImageMissing = new Event(Event.TYPE.IMAGEMISSING, Event.REACTION.ABORT);
-  private Map<String, Event> onEvents = new HashMap<>();
+  public void observeStop() {
+    observeStart = 0;
+  }
+
+  public void observeReset() {
+    observeStop();
+    events.clear();
+    Events.remove(this);
+  }
+
+  private Event putEvent(Event.TYPE type, Object what, Handler handler) {
+    if (what instanceof String) {
+      Picture pWhat = new Picture((String) what);
+      if (!pWhat.isValid()) {
+        log.trace("handle image missing: %s", pWhat);
+        if (!Picture.handleImageMissing(pWhat)) {
+          log.error("Event: %s invalid what: %s", type, what);
+          return null;
+        }
+      }
+      what = pWhat;
+    } else if (!(what instanceof Element)) {
+      log.error("Event: invalid what: %s", what);
+      return null;
+    }
+    Event evt = new Event(type, (Element) what, this, handler);
+    events.put((Element) what, evt);
+    evt.setWhen(events.size());
+    return evt;
+  }
+
+  public Event onAppear(Object what, Handler handler) {
+    return putEvent(Event.TYPE.ONAPPEAR, what, handler);
+  }
+
+  public Event onAppear(Object what) {
+    return putEvent(Event.TYPE.ONAPPEAR, what, null);
+  }
+
+  public Event onVanish(Object what, Handler handler) {
+    return putEvent(Event.TYPE.ONVANISH, what, handler);
+  }
+
+  public Event onVanish(Object what) {
+    return putEvent(Event.TYPE.ONVANISH, what, null);
+  }
+
+  private int minimumSizeDefault = 50;
+
+  public Event onChange() {
+    return putEvent(Event.TYPE.ONCHANGE, new Element(-minimumSizeDefault), null);
+  }
+
+  public Event onChange(Handler handler) {
+    return putEvent(Event.TYPE.ONCHANGE, new Element(-minimumSizeDefault), handler);
+  }
+
+  public Event onChange(int minimumSize) {
+    return putEvent(Event.TYPE.ONCHANGE, new Element(-minimumSize), null);
+  }
+
+  public Event onChange(int minimumSize, Handler handler) {
+    return putEvent(Event.TYPE.ONCHANGE, new Element(-minimumSize), handler);
+  }
+
+  public void removeEvent(Event evt) {
+    events.remove(evt);
+  }
+
+  public boolean hasEvents() {
+    return Events.hasHappened(this);
+  }
+
+  public Event nextEvent() {
+    return Events.nextHappened(this);
+  }
   //</editor-fold>
 
   //<editor-fold desc="***** find, ...">

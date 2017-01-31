@@ -7,63 +7,171 @@ package com.sikulix.api;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
-public class Event {
-  private static SXLog log = SX.getLogger("SX.SXEvent");
-  private static String klazz = Event.class.getName();
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+public class Event implements Comparable {
+  private static SXLog log = SX.getLogger("SX.Event");
+
+  @Override
+  public int compareTo(Object evt) {
+    long diff = this.when - ((Event) evt).getWhen();
+    return  diff == 0 ? 0 : (diff < 0 ? -1 : 1);
+  }
 
   public enum TYPE {
-    NOTSET, FINDFAILED, IMAGEMISSING, ONAPPEAR, ONVANISH, ONCHANGE, GENERIC
+    FINDFAILED, IMAGEMISSING, ONAPPEAR, ONVANISH, ONCHANGE, GENERIC
   }
 
-  public enum REACTION {
-    NOTSET, ABORT, SKIP, RETRY, PROMPT, CAPTURE, HANDLE
+  public boolean isAppear() {
+    return TYPE.ONAPPEAR.equals(type);
   }
 
-  TYPE type = TYPE.NOTSET;
-  REACTION reaction = REACTION.NOTSET;
-  Element elem = null;
-  Handler handler = null;
+  public boolean isVanish() {
+    return TYPE.ONVANISH.equals(type);
+  }
+
+  public boolean isChange() {
+    return TYPE.ONCHANGE.equals(type);
+  }
+
+  public enum RESPONSE {
+    ABORT, SKIP, RETRY, PROMPT, CAPTURE, HANDLE
+  }
 
   private Event() {
   }
 
-  public Event(TYPE type, REACTION reaction) {
-    if (TYPE.FINDFAILED.equals(type) || TYPE.IMAGEMISSING.equals(type)) {
-      this.type = type;
-      if (!REACTION.HANDLE.equals(reaction)) {
-        this.reaction = reaction;
-      }
-    }
+  public Event(TYPE type, Element what, Element where) {
+    this.type = type;
+    this.what = what;
+    this.where = where;
   }
 
-  public Event(TYPE type, Handler handler) {
-    this.type = type;
-    this.reaction = REACTION.HANDLE;
+  public Event(TYPE type, Element what, Element where, Handler handler) {
+    this(type, what, where);
     this.handler = handler;
   }
 
-  public Event(TYPE type, Element elem, Handler handler) {
-    if (isOnEvent()) {
-      this.type = type;
-      this.reaction = REACTION.HANDLE;
-      this.elem = elem;
-      this.handler = handler;
-    }
+  public Event(Handler handler) {
+    this(TYPE.GENERIC, null, null);
+    this.handler = handler;
   }
 
-  public boolean isValid() {
-    return !TYPE.NOTSET.equals(type);
+  TYPE type = TYPE.GENERIC;
+
+  public Element getWhat() {
+    return what;
   }
 
-  public boolean isOnEvent() {
-    return type.toString().startsWith("ON");
+  Element what = null;
+
+  public Element getWhere() {
+    return where;
   }
 
-  public Event handle() {
-    if (SX.isNotNull(handler)) {
-      handler.handle(this);
-    }
-    return this;
+  Element where = null;
+
+  public Handler getHandler() {
+    return handler;
   }
 
+  public void setHandler(Handler handler) {
+    this.handler = handler;
+  }
+
+  Handler handler = null;
+
+  public void setMatch(Element match) {
+    this.match = match;
+  }
+
+  public Element getMatch() {
+    return match;
+  }
+
+  Element match = null;
+
+  public Element getVanish() {
+    return vanish;
+  }
+
+  public void setVanish(Element vanish) {
+    this.vanish = vanish;
+  }
+
+  Element vanish = null;
+
+  public List<Element> getChanges() {
+    return changes;
+  }
+
+  public void setChanges(List<Element> changes) {
+    this.changes = changes;
+  }
+
+  List<Element> changes = new ArrayList<>();
+
+  public long getWhen() {
+    return when;
+  }
+
+  public long setWhen() {
+    when = new Date().getTime();
+    return when;
+  }
+
+  public long setWhen(long newWhen) {
+    when = newWhen;
+    return when;
+  }
+
+  long when = 0;
+
+  public long getKey() {
+    return key;
+  }
+
+  public Long setKey(long key) {
+    this.key = key;
+    return key;
+  }
+
+  long key = 0;
+
+  public boolean isFor(Element what) {
+    return this.what.equals(what);
+  }
+
+  private int repeatPauseDefault = 1;
+  private int repeatPause = repeatPauseDefault;
+
+  public void repeat() {
+    repeatPause = repeatPauseDefault;
+  }
+
+  public void repeat(int pause) {
+    repeatPause = pause;
+  }
+
+  public void pause() {
+    repeatPause = -1;
+  }
+
+  public boolean shouldRepeat() {
+    return repeatPause > -1;
+  }
+
+  public int getRepeat() {
+    return repeatPause;
+  }
+
+  public void handle() {
+    log.trace("handling: %s", this);
+  }
+
+  public String toString() {
+    return String.format("%s what: %s where: %s", type, what, where);
+  }
 }

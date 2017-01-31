@@ -75,14 +75,12 @@ public class Picture extends Element {
     this();
     setContent(fpImg);
     init(0, 0, getContent().width(), getContent().height());
-    setName(getNameFromURL(urlImg));
   }
 
   public Picture(URL url) {
     this();
     setContent(url);
     init(0, 0, getContent().width(), getContent().height());
-    setName(getNameFromURL(urlImg));
   }
 
   public Picture(Element elem) {
@@ -118,21 +116,28 @@ public class Picture extends Element {
   }
   //</editor-fold>
 
-
   //<editor-fold desc="*** get content">
   private long timeToLoad = -1;
+
   public long getTimeToLoad() {
     return timeToLoad;
   }
 
   private void setContent(String fpImg) {
     URL url = Picture.searchOnImagePath(fpImg);
-    setContent(url);
+    if (SX.isSet(url)) {
+      setContent(url);
+    } else {
+      setContent(new Mat());
+      setName(getNameFromFileL(new File(fpImg)));
+    }
   }
 
   private void setContent(URL url) {
+    setContent(new Mat());
     if (SX.isSet(url)) {
       urlImg = url;
+      setName(getNameFromURL(urlImg));
       if (urlImg != null) {
         long start = new Date().getTime();
         String urlProto = urlImg.getProtocol();
@@ -143,7 +148,6 @@ public class Picture extends Element {
           try {
             setContent(makeMat(ImageIO.read(urlImg)));
           } catch (IOException e) {
-            setContent(new Mat());
             log.error("load(): %s for %s", e.getMessage(), urlImg);
           }
         }
@@ -163,6 +167,18 @@ public class Picture extends Element {
     if (SX.isNotNull(url)) {
       name = url.getPath().replace("file:", "");
       name = new File(name).getName();
+      int iDot = name.indexOf(".");
+      if (iDot > -1) {
+        name = name.substring(0, iDot);
+      }
+    }
+    return name;
+  }
+
+  private String getNameFromFileL(File image) {
+    String name = getName();
+    if (SX.isNotNull(image)) {
+      name = image.getName();
       int iDot = name.indexOf(".");
       if (iDot > -1) {
         name = name.substring(0, iDot);
@@ -400,14 +416,14 @@ public class Picture extends Element {
             break;
           }
         } else {
-          log.error("find: URL not supported: " + path);
+          log.error("searchOnImagePath: URL not supported: " + path);
           return fURL;
         }
         fURL = null;
       }
     }
     if (fURL == null) {
-      log.error("find: does not exist: " + fname);
+      log.error("searchOnImagePath: does not exist: " + fname);
     }
     return fURL;
   }
@@ -439,6 +455,11 @@ public class Picture extends Element {
       }
     }
     return validName;
+  }
+
+  public static boolean handleImageMissing(Element image) {
+    //TODO image missing handler
+    return false;
   }
   //</editor-fold>
 
