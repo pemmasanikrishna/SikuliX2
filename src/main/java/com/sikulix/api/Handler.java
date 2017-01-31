@@ -10,63 +10,73 @@ import com.sikulix.core.SXLog;
 public class Handler {
   private static SXLog log = SX.getLogger("SX.Handler");
 
-  Object handler = null;
+//  public Handler(Object handler) {
+//    this.handler = handler;
+//  }
+//
+//  public void handle(Event e) {
+//    if (e.type.equals(Event.TYPE.ONAPPEAR)) {
+//      appeared(e);
+//    } else if (e.type.equals(Event.TYPE.ONVANISH)) {
+//      vanished(e);
+//    } else if (e.type.equals(Event.TYPE.ONCHANGE)) {
+//      changed(e);
+//    } else if (e.type.equals(Event.TYPE.FINDFAILED)) {
+//      findFailed(e);
+//    } else if (e.type.equals(Event.TYPE.IMAGEMISSING)) {
+//      imageMissing(e);
+//    }
+//  }
+//
+//  public void appeared(Event e) {
+//    if (SX.isNotNull(handler)) {
+//      run(e);
+//    }
+//  }
+//
+//  public void vanished(Event e) {
+//    if (SX.isNotNull(handler)) {
+//      run(e);
+//    }
+//  }
+//
+//  public void changed(Event e) {
+//    if (SX.isNotNull(handler)) {
+//      run(e);
+//    }
+//  }
+//
+//  public void findFailed(Event e) {
+//    if (SX.isNotNull(handler)) {
+//      run(e);
+//    }
+//  }
+//
+//  public void imageMissing(Event e) {
+//    if (SX.isNotNull(handler)) {
+//      run(e);
+//    }
+//  }
+//
+//  public void generic(Event e) {
+//    if (SX.isNotNull(handler)) {
+//      run(e);
+//    }
+//  }
 
-  public Handler(Object handler) {
-    this.handler = handler;
+  public void run(Event e) {
+    log.error("Event handler not implemented");
+    showEvent(e);
   }
 
-  public void handle(Event e) {
-    if (e.type.equals(Event.TYPE.ONAPPEAR)) {
-      appeared(e);
-    } else if (e.type.equals(Event.TYPE.ONVANISH)) {
-      vanished(e);
-    } else if (e.type.equals(Event.TYPE.ONCHANGE)) {
-      changed(e);
-    } else if (e.type.equals(Event.TYPE.FINDFAILED)) {
-      findFailed(e);
-    } else if (e.type.equals(Event.TYPE.IMAGEMISSING)) {
-      imageMissing(e);
-    }
-  }
-
-  public void appeared(Event e) {
-    if (SX.isNotNull(handler)) {
-      run(e);
-    }
-  }
-
-  public void vanished(Event e) {
-    if (SX.isNotNull(handler)) {
-      run(e);
-    }
-  }
-
-  public void changed(Event e) {
-    if (SX.isNotNull(handler)) {
-      run(e);
-    }
-  }
-
-  public void findFailed(Event e) {
-    if (SX.isNotNull(handler)) {
-      run(e);
-    }
-  }
-
-  public void imageMissing(Event e) {
-    if (SX.isNotNull(handler)) {
-      run(e);
-    }
-  }
-
-  public void generic(Event e) {
-    if (SX.isNotNull(handler)) {
-      run(e);
-    }
-  }
-
-  private void run(Event e) {
-    log.error("non-Java handler not implemented");
+  public void showEvent(Event e) {
+    String msg = "---------- Event:\n" +
+            "key = %d\n" +
+            "when = %d\n" +
+            "what = %s\n" +
+            "where = %s\n" +
+            "match = %s\n" +
+            "---------";
+    log.p(msg, e.getKey(), e.getWhen(), e.getWhat(), e.getWhere(), e.getWhere().getLastMatch());
   }
 }

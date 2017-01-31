@@ -4,6 +4,7 @@
 
 package com.sikulix.core;
 
+import com.sikulix.api.Do;
 import com.sikulix.api.Element;
 import com.sikulix.api.Event;
 
@@ -158,6 +159,12 @@ public class Events {
     log.trace("waitForEventLoopToFinish: end");
   }
 
+  private static boolean processEvents = true;
+
+  public static void shouldProcessEvents(boolean state) {
+    processEvents = state;
+  }
+
   private static class EventLoop implements Runnable {
 
     boolean running = true;
@@ -168,15 +175,20 @@ public class Events {
 
     @Override
     public void run() {
-      log.p("EventLoop: started for %d elements", get().elements.size());
+      log.trace("EventLoop: started for %d elements", get().elements.size());
       while (true) {
         for (Element where : get().elements.keySet().toArray(new Element[0])) {
           if (where.isObserving()) {
-            log.p("EventLoop: observing starting for %s with %d events",
+            log.trace("EventLoop: observing starting for %s with %d events",
                     where, getEventList(where).size());
             for (Event evt : getEvents(where)) {
-              evt.setWhen(new Date().getTime());
-              log.p("observing: %s", evt);
+              if (processEvents) {
+                new Thread(new EventProcess(evt)).start();
+              } else {
+                log.trace("observing: %s", evt);
+                evt.setWhen(new Date().getTime());
+              }
+
             }
           }
         }
@@ -187,6 +199,30 @@ public class Events {
       }
       running = false;
       log.trace("EventLoop: stopped");
+    }
+  }
+
+  private static class EventProcess implements Runnable {
+
+    Event event = null;
+
+    public EventProcess(Event event) {
+      this.event = event;
+    }
+
+    @Override
+    public void run() {
+      log.trace("observing: %s", event);
+      if (event.isAppear()) {
+        Element match = Do.find(event.getWhat(), event.getWhere());
+        if (match.isMatch()) {
+          event.setWhen(new Date().getTime());
+          event.setMatch(match);
+        }
+      }
+      if (event.hasHandler()) {
+        event.getHandler().run(event);
+      }
     }
   }
 }

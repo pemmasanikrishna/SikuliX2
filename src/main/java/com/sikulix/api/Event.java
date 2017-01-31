@@ -73,6 +73,10 @@ public class Event implements Comparable {
 
   Element where = null;
 
+  public boolean hasHandler() {
+    return SX.isNotNull(handler);
+  }
+
   public Handler getHandler() {
     return handler;
   }
@@ -82,6 +86,10 @@ public class Event implements Comparable {
   }
 
   Handler handler = null;
+
+  public boolean hasMatch() {
+    return SX.isNotNull(match);
+  }
 
   public void setMatch(Element match) {
     this.match = match;

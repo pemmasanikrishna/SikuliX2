@@ -582,33 +582,6 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_80_basicsObserve() {
-    currentTest = "test_80_basicsObserve";
-    result = "basic observe features";
-    boolean success = Do.setBundlePath(mavenRoot, "Images");
-    Element where = Do.on();
-    Element what = new Picture(imageNameDefault);
-    Event evt = where.onAppear(what);
-    log.trace("Event added: %s", evt);
-    evt = where.onChange();
-    log.trace("Event added: %s", evt);
-    evt = where.onVanish(imageNameDefault);
-    log.trace("Event added: %s", evt);
-    where.observe();
-    int nEvents = Events.getEventCount(where);
-    assert nEvents == 3;
-    assert Events.hasEvent(what, where);
-    assert SX.isNotNull(Events.getEvent(what, where));
-    Events.stopObserving();
-    assert where.hasEvents();
-    for (int i = 0; i < nEvents; i++) {
-      assert SX.isNotNull(where.nextEvent());
-    }
-    assert !where.hasEvents();
-    assert SX.isNull(where.nextEvent());
-  }
-
-  @Test
   public void test_90_nativeHook() {
     currentTest = "test_990_nativeHook";
     if (!SX.isHeadless()) {
@@ -647,12 +620,64 @@ public class TestSXAPI {
   }
   //</editor-fold>
 
+  @Test
+  public void test_80_basicsObserve() {
+    currentTest = "test_80_basicsObserve";
+    result = "basic observe features";
+    boolean success = Do.setBundlePath(mavenRoot, "Images");
+    Events.shouldProcessEvents(false);
+    Element where = Do.on();
+    Element what = new Picture(imageNameDefault);
+    Event evt = where.onAppear(what);
+    log.trace("Event added: %s", evt);
+    evt = where.onChange();
+    log.trace("Event added: %s", evt);
+    evt = where.onVanish(imageNameDefault);
+    log.trace("Event added: %s", evt);
+    where.observe();
+    int nEvents = Events.getEventCount(where);
+    assert nEvents == 3;
+    assert Events.hasEvent(what, where);
+    assert SX.isNotNull(Events.getEvent(what, where));
+    Events.stopObserving();
+    assert where.hasEvents();
+    for (int i = 0; i < nEvents; i++) {
+      assert SX.isNotNull(where.nextEvent());
+    }
+    assert !where.hasEvents();
+    assert SX.isNull(where.nextEvent());
+  }
+
+  @Test
+  public void test_81_basicsObserveWithHandler() {
+    log.startTimer();
+    currentTest = "test_81_basicsObserveWithHandler";
+    assert prepareDefaultScreen("shot", imageNameDefault);
+    result = "basic observe features with handler";
+    Events.shouldProcessEvents(true);
+    Element where = Do.on();
+    Element what = new Picture(imageNameDefault);
+    Event evt = where.onAppear(what, new Handler() {
+      public void run(Event event) {
+        log.trace("Event handler for %s", event);
+        showEvent(event);
+        if (event.hasMatch()) {
+          event.getWhere().showMatch();
+        }
+      }
+    });
+    log.trace("Event added: %s", evt);
+    where.observe();
+    Events.stopObserving();
+    theShow.stop();
+  }
+
   //<editor-fold desc="ignored">
   //</editor-fold>
 
+  //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    //log.startTimer();
     currentTest = "test_999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
