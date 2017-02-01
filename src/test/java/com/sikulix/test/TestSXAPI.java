@@ -104,6 +104,8 @@ public class TestSXAPI {
     }
     Picture.clearPath();
     resetDefaultScreen();
+    Events.reset();
+    Do.on().removeEvents();
     log.info("!%2d: result: %s: %s ", nTest++, currentTest, result);
   }
 
@@ -618,7 +620,6 @@ public class TestSXAPI {
     new Screen(1).show();
     result = new Screen(1).toString();
   }
-  //</editor-fold>
 
   @Test
   public void test_80_basicsObserve() {
@@ -649,28 +650,49 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_81_basicsObserveWithHandler() {
-    //log.startTimer();
-    currentTest = "test_81_basicsObserveWithHandler";
+  public void test_81_ObserveOnAppearWithHandler() {
+    currentTest = "test_81_ObserveOnAppearWithHandler";
     assert prepareDefaultScreen("shot", imageNameDefault);
-    result = "basic observe features with handler";
-    Events.shouldProcessEvents(true);
+    result = "observe onAppear with handler";
     Element where = Do.on();
     Element what = new Picture(imageNameDefault);
-    Event evt = where.onAppear(what, new Handler() {
+    where.onAppear(what, new Handler() {
       public void run(Event event) {
         log.trace("Event handler for %s", event);
         showEvent(event);
-        if (event.hasMatch()) {
-          event.getWhere().showMatch();
+        assert event.hasMatch();
+        event.getWhere().showMatch(1);
+        if (event.getCount() < 2) {
+          event.repeat(3);
         }
       }
     });
-    log.trace("Event added: %s", evt);
     where.observe();
-    Events.stopObserving();
+    Events.waitUntilFinished();
     theShow.stop();
   }
+
+  @Test
+  public void test_82_ObserveOnVanishWithHandler() {
+    currentTest = "test_82_ObserveOnVanishWithHandler";
+    showPauseAfter = 2;
+    assert prepareDefaultScreen("shot", imageNameDefault);
+    result = "observe onVanish with handler";
+    Element where = Do.on();
+    Element what = new Picture(imageNameDefault);
+    where.onVanish(what, new Handler() {
+      public void run(Event event) {
+        log.trace("Event handler for %s", event);
+        showEvent(event);
+        assert event.hasVanish();
+        event.getWhere().showVanish(1);
+      }
+    });
+    where.observe();
+    Events.waitUntilFinished();
+    theShow.stop();
+  }
+  //</editor-fold>
 
   //<editor-fold desc="ignored">
   //</editor-fold>
@@ -678,6 +700,7 @@ public class TestSXAPI {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
+    //log.startTimer();
     currentTest = "test_999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {

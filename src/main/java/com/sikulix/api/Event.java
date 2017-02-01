@@ -24,6 +24,10 @@ public class Event implements Comparable {
     FINDFAILED, IMAGEMISSING, ONAPPEAR, ONVANISH, ONCHANGE, GENERIC
   }
 
+  public String getTypeShort() {
+    return type.toString().substring(2,3);
+  }
+
   public boolean isAppear() {
     return TYPE.ONAPPEAR.equals(type);
   }
@@ -101,6 +105,10 @@ public class Event implements Comparable {
 
   Element match = null;
 
+  public boolean hasVanish() {
+    return SX.isNotNull(vanish);
+  }
+
   public Element getVanish() {
     return vanish;
   }
@@ -153,7 +161,7 @@ public class Event implements Comparable {
   }
 
   private int repeatPauseDefault = 1;
-  private int repeatPause = repeatPauseDefault;
+  private int repeatPause = -1;
 
   public void repeat() {
     repeatPause = repeatPauseDefault;
@@ -175,8 +183,31 @@ public class Event implements Comparable {
     return repeatPause;
   }
 
+  public int getCount() {
+    return count;
+  }
+
+  public void incrementCount() {
+    this.count++;
+  }
+
+  private int count = 0;
+
+  public void stop() {
+
+  }
+
+  public void reset() {
+    count = 0;
+    repeatPause = -1;
+    match = null;
+    vanish = null;
+    changes = new ArrayList<>();
+  }
+
   public void handle() {
     log.trace("handling: %s", this);
+    this.getHandler().run(this);
   }
 
   public String toString() {

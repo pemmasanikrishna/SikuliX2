@@ -22,7 +22,10 @@ public class Handler {
             "what = %s\n" +
             "where = %s\n" +
             "match = %s\n" +
+            "vanish = %s\n" +
+            "count = %s\n" +
             "---------";
-    log.p(msg, e.getKey(), e.getWhen(), e.getWhat(), e.getWhere(), e.getWhere().getLastMatch());
+    log.p(msg, e.getKey(), e.getWhen(), e.getWhat(), e.getWhere(),
+            e.getWhere().getLastMatch(), e.getWhere().getLastVanish(), e.getCount());
   }
 }
