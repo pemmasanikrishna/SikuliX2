@@ -21,7 +21,6 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -988,7 +987,7 @@ public class Do {
   static final String VANISH = "waitVanish()";
   static final String ALL = "findAll()";
 
-  private static boolean handleImageMissing(String type, PossibleMatch possibleMatch) {
+  private static boolean handleImageMissing(String type, Finder.PossibleMatch possibleMatch) {
     if (possibleMatch.isImageMissingWhat()) {
       log.trace("%s: handling image missing: what: %s", type, possibleMatch.getWhat());
       return Picture.handleImageMissing(possibleMatch.getWhat());
@@ -998,7 +997,7 @@ public class Do {
     }
   }
 
-  private static boolean handleFindFailed(String type, PossibleMatch possibleMatch) {
+  private static boolean handleFindFailed(String type, Finder.PossibleMatch possibleMatch) {
     //TODO find failed handler
     log.trace("%s: handling not found: %s", type, possibleMatch);
     return false;
@@ -1007,7 +1006,7 @@ public class Do {
   public static Element find(Object... args) {
     log.trace("find: start");
     Element match = new Element();
-    PossibleMatch possibleMatch = new PossibleMatch();
+    Finder.PossibleMatch possibleMatch = new Finder.PossibleMatch();
     boolean shouldRepeat = true;
     while (shouldRepeat) {
       Element where = possibleMatch.get(args);
@@ -1046,7 +1045,7 @@ public class Do {
   }
 
   private static Element doWait(String type, Object... args) {
-    PossibleMatch possibleMatch = new PossibleMatch();
+    Finder.PossibleMatch possibleMatch = new Finder.PossibleMatch();
     Element match = new Element();
     boolean shouldRepeat = true;
     while (shouldRepeat) {
@@ -1079,7 +1078,7 @@ public class Do {
 
   public static boolean waitVanish(Object... args) {
     log.trace("waitVanish: start");
-    PossibleMatch possibleMatch = new PossibleMatch();
+    Finder.PossibleMatch possibleMatch = new Finder.PossibleMatch();
     boolean shouldRepeat = true;
     boolean vanished = false;
     while (shouldRepeat) {
@@ -1112,7 +1111,7 @@ public class Do {
 
   public static List<Element> findAll(Object... args) {
     log.trace("findAll: start");
-    PossibleMatch possibleMatch = new PossibleMatch("ALL");
+    Finder.PossibleMatch possibleMatch = new Finder.PossibleMatch("ALL");
     boolean shouldRepeat = true;
     List<Element> matches = new ArrayList<>();
     while (shouldRepeat) {
@@ -1160,158 +1159,5 @@ public class Do {
     return matches;
   }
 
-  private static class PossibleMatch {
-    Element what = null;
-    public Element getWhat() {
-      return what;
-    }
-    Element where = null;
-    public Element getWhere() {
-      return where;
-    }
-    int waitTime = -1;
-    Element target = new Element();
-    String type = "";
-    Finder finder = null;
-    long startTime = new Date().getTime();
-    long endTime = startTime;
-    long lastRepeatTime = 0;
-    long repeatPause = (long) (1000 / SX.getOptionNumber("Settings.WaitScanRate", 3));
-
-    boolean imageMissingWhere = false;
-
-    public boolean isImageMissingWhere() {
-      return imageMissingWhere;
-    }
-
-    boolean imageMissingWhat = false;
-
-    public boolean isImageMissingWhat() {
-      return imageMissingWhat;
-    }
-
-    boolean valid = false;
-
-    public boolean isValid() {
-      return valid;
-    }
-
-    protected PossibleMatch() {
-    }
-
-    protected PossibleMatch(String type) {
-      this.type = type;
-    }
-
-    protected Element get(Object... args) {
-      String form = "EvaluateTarget: ";
-      for (Object arg : args) {
-        form += "%s, ";
-      }
-      log.trace(form, args);
-      Object args0, args1;
-      if (args.length > 0) {
-        args0 = args[0];
-        if (args0 instanceof String) {
-          what = new Picture((String) args0);
-          if (!what.isValid()) {
-            imageMissingWhat = true;
-          }
-        } else if (args0 instanceof Element) {
-          what = (Element) args0;
-        } else {
-          log.error("EvaluateTarget: args0 invalid: %s", args0);
-          what = new Element();
-        }
-        if (SX.isNotNull(what) && args.length == 2 && !imageMissingWhat) {
-          args1 = args[1];
-          if (args1 instanceof String) {
-            where = new Picture((String) args1);
-            if (!where.isValid()) {
-              imageMissingWhere = true;
-            }
-          } else if (args1 instanceof Element) {
-            where = (Element) args1;
-          } else if (args1 instanceof Double) {
-            waitTime = (int) (1000 * (Double) args1);
-          } else if (args1 instanceof Integer) {
-            waitTime = 1000 * (Integer) args1;
-          } else {
-            log.error("EvaluateTarget: args1 invalid: %s", args0);
-          }
-        }
-        if (SX.isNotNull(what) && !imageMissingWhat && !imageMissingWhere) {
-          if (what.isTarget()) {
-            if (SX.isNull(where)) {
-              where = defaultElementOnScreen;
-            }
-            if (where.isOnScreen()) {
-              where.capture();
-            }
-            finder = new Finder(where);
-            where.setLastTarget(null);
-            if (finder.isValid()) {
-              where.setLastTarget(what);
-              target = where;
-              if (waitTime < 0) {
-                waitTime = (int) (1000 * Math.max(where.getWaitForMatch(), what.getWaitForThis()));
-              }
-              endTime = startTime + waitTime;
-              if (type.isEmpty()) {
-                lastRepeatTime = new Date().getTime();
-                finder.find(what);
-              } else if (type == "ALL") {
-                finder.findAll(what);
-              }
-            }
-          } else {
-            target = what;
-          }
-        }
-      }
-      return target;
-    }
-
-    protected void repeat() {
-      long now = new Date().getTime();
-      long repeatDelay = lastRepeatTime + repeatPause - now;
-      if (repeatDelay > 0) {
-        try {
-          Thread.sleep(repeatDelay);
-        } catch (InterruptedException ex) {
-        }
-      }
-      log.trace("EvaluateTarget: repeat: delayed: %d", repeatDelay);
-      lastRepeatTime = new Date().getTime();
-      if (new Date().getTime() < endTime) {
-        if (where.isOnScreen()) {
-          where.capture();
-          finder.refreshBase();
-        }
-        if (type.isEmpty()) {
-          finder.find(what);
-        } else if (type == "ALL") {
-          finder.findAll(what);
-        }
-        if (where.hasMatch() || where.hasMatches()) {
-          long waitedFor = new Date().getTime() - startTime;
-          what.setLastWaitForThis(waitedFor);
-          where.setLastWaitForMatch(waitedFor);
-        }
-      }
-    }
-
-    protected boolean shouldWait() {
-      if (waitTime < 0) {
-        return false;
-      }
-      return new Date().getTime() < endTime;
-    }
-
-    @Override
-    public String toString() {
-      return String.format("what: %s, where: %s: wait: %d sec", what, where, waitTime);
-    }
-  }
   //</editor-fold>
 }

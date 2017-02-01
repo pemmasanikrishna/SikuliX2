@@ -4,7 +4,9 @@
 
 package com.sikulix.core;
 
+import com.sikulix.api.Do;
 import com.sikulix.api.Element;
+import com.sikulix.api.Picture;
 import com.sikulix.api.Target;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -15,11 +17,16 @@ import java.util.List;
 
 public class Finder {
 
+  //<editor-fold desc="housekeeping">
   private static final SXLog log = SX.getLogger("SX.Finder");
 
   private Element baseElement = null;
   private Mat base = new Mat();
   private Mat result = new Mat();
+
+  private enum FindType {
+    ONE, ALL
+  }
 
   private Finder() {
   }
@@ -33,18 +40,16 @@ public class Finder {
     }
   }
 
-  public void refreshBase() {
-    base = baseElement.getContent();
-  }
-
-  private enum FindType {
-    ONE, ALL
-  }
-
   public boolean isValid() {
     return !base.empty();
   }
 
+  public void refreshBase() {
+    base = baseElement.getContent();
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="find basic">
   public Element find(Element target) {
     baseElement.resetMatches();
     FindResult findResult = doFind(target, FindType.ONE);
@@ -65,34 +70,6 @@ public class Finder {
     baseElement.setLastScores(findResult.getScores());
     return matches;
   }
-
-  public Element findBest(List<Element> targets) {
-    List<Element> mList = findAny(targets);
-    if (mList != null) {
-      if (mList.size() > 1) {
-        Collections.sort(mList, new Comparator<Element>() {
-          @Override
-          public int compare(Element m1, Element m2) {
-            double ms = m2.getScore() - m1.getScore();
-            if (ms < 0) {
-              return -1;
-            } else if (ms > 0) {
-              return 1;
-            }
-            return 0;
-          }
-        });
-      }
-      return mList.get(0);
-    }
-    return null;
-  }
-
-  public List<Element> findAny(List<Element> targets) {
-    List<Element> mList = findAnyCollect(targets);
-    return mList;
-  }
-
 
   private final double resizeMinFactor = 1.5;
   private final double[] resizeLevels = new double[]{1f, 0.4f};
@@ -214,6 +191,35 @@ public class Finder {
     }
     return result;
   }
+  //</editor-fold>
+
+  //<editor-fold desc="find extended">
+  public Element findBest(List<Element> targets) {
+    List<Element> mList = findAny(targets);
+    if (mList != null) {
+      if (mList.size() > 1) {
+        Collections.sort(mList, new Comparator<Element>() {
+          @Override
+          public int compare(Element m1, Element m2) {
+            double ms = m2.getScore() - m1.getScore();
+            if (ms < 0) {
+              return -1;
+            } else if (ms > 0) {
+              return 1;
+            }
+            return 0;
+          }
+        });
+      }
+      return mList.get(0);
+    }
+    return null;
+  }
+
+  public List<Element> findAny(List<Element> targets) {
+    List<Element> mList = findAnyCollect(targets);
+    return mList;
+  }
 
   private List<Element> findAnyCollect(List<Element> targets) {
     int targetCount = 0;
@@ -297,7 +303,9 @@ public class Finder {
       return finished;
     }
   }
+  //</editor-fold>
 
+  //<editor-fold desc="detect changes">
   public boolean hasChanges(Mat current) {
     int PIXEL_DIFF_THRESHOLD = 5;
     int IMAGE_DIFF_THRESHOLD = 5;
@@ -345,9 +353,159 @@ public class Finder {
   public void setMinChanges(int min) {
     log.terminate(1, "setMinChanges");
   }
+  //</editor-fold>
 
-  protected static Target evalTarget(Object target) throws IOException {
-    //TODO evalTarget(Object target)
-    return null;
+  public static class PossibleMatch {
+    Element what = null;
+    public Element getWhat() {
+      return what;
+    }
+    Element where = null;
+    public Element getWhere() {
+      return where;
+    }
+    int waitTime = -1;
+    Element target = new Element();
+    String type = "";
+    Finder finder = null;
+    long startTime = new Date().getTime();
+    long endTime = startTime;
+    long lastRepeatTime = 0;
+    long repeatPause = (long) (1000 / SX.getOptionNumber("Settings.WaitScanRate", 3));
+
+    boolean imageMissingWhere = false;
+
+    public boolean isImageMissingWhere() {
+      return imageMissingWhere;
+    }
+
+    boolean imageMissingWhat = false;
+
+    public boolean isImageMissingWhat() {
+      return imageMissingWhat;
+    }
+
+    boolean valid = false;
+
+    public boolean isValid() {
+      return valid;
+    }
+
+    public PossibleMatch() {
+    }
+
+    public PossibleMatch(String type) {
+      this.type = type;
+    }
+
+    public Element get(Object... args) {
+      String form = "EvaluateTarget: ";
+      for (Object arg : args) {
+        form += "%s, ";
+      }
+      log.trace(form, args);
+      Object args0, args1;
+      if (args.length > 0) {
+        args0 = args[0];
+        if (args0 instanceof String) {
+          what = new Picture((String) args0);
+          if (!what.isValid()) {
+            imageMissingWhat = true;
+          }
+        } else if (args0 instanceof Element) {
+          what = (Element) args0;
+        } else {
+          log.error("EvaluateTarget: args0 invalid: %s", args0);
+          what = new Element();
+        }
+        if (SX.isNotNull(what) && args.length == 2 && !imageMissingWhat) {
+          args1 = args[1];
+          if (args1 instanceof String) {
+            where = new Picture((String) args1);
+            if (!where.isValid()) {
+              imageMissingWhere = true;
+            }
+          } else if (args1 instanceof Element) {
+            where = (Element) args1;
+          } else if (args1 instanceof Double) {
+            waitTime = (int) (1000 * (Double) args1);
+          } else if (args1 instanceof Integer) {
+            waitTime = 1000 * (Integer) args1;
+          } else {
+            log.error("EvaluateTarget: args1 invalid: %s", args0);
+          }
+        }
+        if (SX.isNotNull(what) && !imageMissingWhat && !imageMissingWhere) {
+          if (what.isTarget()) {
+            if (SX.isNull(where)) {
+              where = Do.on();
+            }
+            if (where.isOnScreen()) {
+              where.capture();
+            }
+            finder = new Finder(where);
+            where.setLastTarget(null);
+            if (finder.isValid()) {
+              where.setLastTarget(what);
+              target = where;
+              if (waitTime < 0) {
+                waitTime = (int) (1000 * Math.max(where.getWaitForMatch(), what.getWaitForThis()));
+              }
+              endTime = startTime + waitTime;
+              if (type.isEmpty()) {
+                lastRepeatTime = new Date().getTime();
+                finder.find(what);
+              } else if (type == "ALL") {
+                finder.findAll(what);
+              }
+            }
+          } else {
+            target = what;
+          }
+        }
+      }
+      return target;
+    }
+
+    public void repeat() {
+      long now = new Date().getTime();
+      long repeatDelay = lastRepeatTime + repeatPause - now;
+      if (repeatDelay > 0) {
+        try {
+          Thread.sleep(repeatDelay);
+        } catch (InterruptedException ex) {
+        }
+      }
+      log.trace("EvaluateTarget: repeat: delayed: %d", repeatDelay);
+      lastRepeatTime = new Date().getTime();
+      if (new Date().getTime() < endTime) {
+        if (where.isOnScreen()) {
+          where.capture();
+          finder.refreshBase();
+        }
+        if (type.isEmpty()) {
+          finder.find(what);
+        } else if (type == "ALL") {
+          finder.findAll(what);
+        }
+        if (where.hasMatch() || where.hasMatches()) {
+          long waitedFor = new Date().getTime() - startTime;
+          what.setLastWaitForThis(waitedFor);
+          where.setLastWaitForMatch(waitedFor);
+        }
+      }
+    }
+
+    public boolean shouldWait() {
+      if (waitTime < 0) {
+        return false;
+      }
+      return new Date().getTime() < endTime;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("what: %s, where: %s: wait: %d sec", what, where, waitTime);
+    }
   }
 }

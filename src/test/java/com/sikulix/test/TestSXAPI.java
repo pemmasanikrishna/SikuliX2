@@ -650,7 +650,7 @@ public class TestSXAPI {
 
   @Test
   public void test_81_basicsObserveWithHandler() {
-    log.startTimer();
+    //log.startTimer();
     currentTest = "test_81_basicsObserveWithHandler";
     assert prepareDefaultScreen("shot", imageNameDefault);
     result = "basic observe features with handler";
