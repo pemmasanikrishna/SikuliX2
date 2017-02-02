@@ -300,7 +300,9 @@ public class Element extends SXElement {
     if (SX.isNotNull(url) && hasContent()) {
       if ("file".equals(url.getProtocol())) {
         log.trace("save: %s", url);
-        if (Imgcodecs.imwrite(SX.getValidImageFilename(url.getPath()), getContent())) {
+        String imgFileName = SX.getValidImageFilename(url.getPath());
+        Mat imgContent = getContent();
+        if (Imgcodecs.imwrite(imgFileName, imgContent)) {
           urlImg = url;
           setName(name);
           return true;

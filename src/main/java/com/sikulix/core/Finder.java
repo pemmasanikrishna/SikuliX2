@@ -306,7 +306,7 @@ public class Finder {
   //</editor-fold>
 
   //<editor-fold desc="detect changes">
-  public boolean hasChanges(Mat current) {
+  public boolean hasChanges(Mat base, Mat current) {
     int PIXEL_DIFF_THRESHOLD = 5;
     int IMAGE_DIFF_THRESHOLD = 5;
     Mat bg = new Mat();
@@ -339,6 +339,111 @@ public class Finder {
     printMatI(contours);
     return true;
   }
+
+  //<editor-fold desc="original C++">
+/*
+  ChangeFinder::find(Mat new_screen_image){
+
+    BaseFinder::find(); // set ROI
+
+    Mat im1 = roiSource;
+    Mat im2 = Mat(new_screen_image,roi);
+
+    Mat gray1;
+    Mat gray2;
+
+    // convert image from RGB to grayscale
+    cvtColor(im1, gray1, CV_RGB2GRAY);
+    cvtColor(im2, gray2, CV_RGB2GRAY);
+
+    Mat diff1;
+    absdiff(gray1,gray2,diff1);
+
+    Size size = diff1.size();
+    int ch = diff1.channels();
+    typedef unsigned char T;
+
+    int diff_cnt = 0;
+    for( int i = 0; i < size.height; i++ )
+    {
+        const T* ptr1 = diff1.ptr<T>(i);
+      for( int j = 0; j < size.width; j += ch )
+      {
+        if (ptr1[j] > PIXEL_DIFF_THRESHOLD)
+          diff_cnt++;
+      }
+    }
+
+    // quickly check if two images are nearly identical
+    if (diff_cnt < IMAGE_DIFF_THRESHOLD){
+      is_identical = true;
+      return;
+    }
+
+    threshold(diff1,diff1,PIXEL_DIFF_THRESHOLD,255,CV_THRESH_BINARY);
+    dilate(diff1,diff1,Mat());
+
+    // close operation
+    Mat se = getStructuringElement(MORPH_ELLIPSE, Size(5,5));
+    morphologyEx(diff1, diff1, MORPH_CLOSE, se);
+
+    vector< vector<Point> > contours;
+    vector< Vec4i> hierarchy;
+    //findContours(diff1, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point());
+
+    storage = cvCreateMemStorage();
+    CvSeq* first_contour = NULL;
+
+    CvMat mat = (CvMat) diff1;
+
+    cvFindContours(
+            &mat,
+            storage,
+                     &first_contour,
+            sizeof(CvContour),
+            CV_RETR_EXTERNAL);
+
+    c = first_contour;
+  }
+
+  bool
+  ChangeFinder::hasNext(){
+    return !is_identical  && c !=NULL;
+  }
+
+  FindResult
+  ChangeFinder::next(){
+
+    // find bounding boxes
+    int x1=source.cols;
+    int x2=0;
+    int y1=source.rows;
+    int y2=0;
+
+    for( int i=0; i < c->total; ++i ){
+      CvPoint* p = CV_GET_SEQ_ELEM( CvPoint, c, i );
+      if (p->x > x2)
+        x2 = p->x;
+      if (p->x < x1)
+        x1 = p->x;
+      if (p->y > y2)
+        y2 = p->y;
+      if (p->y < y1)
+        y1 = p->y;
+    }
+
+    FindResult m;
+    m.x = x1 + roi.x;
+    m.y = y1 + roi.y;
+    m.w = x2 - x1 + 1;
+    m.h = y2 - y1 + 1;
+
+    c = c->h_next;
+    return m;
+  }
+
+*/
+  //</editor-fold>
 
   private static void printMatI(Mat mat) {
     int[] data = new int[mat.channels()];
