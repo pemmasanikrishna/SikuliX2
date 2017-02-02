@@ -472,7 +472,7 @@ public class Picture extends Element {
    * @return a new inMemory Picture
    */
   public Picture getResized(double factor) {
-    return new Picture(resizeMat(factor));
+    return new Picture(getResizedMat(factor));
   }
 
   /**
@@ -482,11 +482,11 @@ public class Picture extends Element {
    * @return the Picture
    */
   public Picture resize(double factor) {
-    setContent(resizeMat(factor));
+    setContent(getResizedMat(factor));
     return this;
   }
 
-  private Mat resizeMat(double factor) {
+  public Mat getResizedMat(double factor) {
     Mat newMat = getContent();
     if (isValid()) {
       newMat = new Mat();

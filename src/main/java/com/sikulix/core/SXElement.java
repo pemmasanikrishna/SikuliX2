@@ -674,11 +674,11 @@ public abstract class SXElement implements Comparable<SXElement> {
     return aMat;
   }
 
-  protected static BufferedImage getBufferedImage(Mat mat) {
+  public static BufferedImage getBufferedImage(Mat mat) {
     return getBufferedImage(mat, dotPNG);
   }
 
-  protected static BufferedImage getBufferedImage(Mat mat, String type) {
+  public static BufferedImage getBufferedImage(Mat mat, String type) {
     BufferedImage bImg = null;
     MatOfByte bytemat = new MatOfByte();
     if (SX.isNull(mat)) {

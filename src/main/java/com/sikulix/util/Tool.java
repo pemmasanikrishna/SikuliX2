@@ -9,7 +9,7 @@ import com.sikulix.api.Element;
 import com.sikulix.api.Picture;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import com.sikulix.util.FileChooser;
+import org.opencv.core.Mat;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -1041,7 +1041,7 @@ public class Tool {
       resizeFactor = 1 / Math.max(wFactor, hFactor);
       resizeFactor = Math.min(resizeFactor, 10);
     }
-    BufferedImage img = shot.resize(resizeFactor).get();
+    BufferedImage img = getResizedAsBufferedImage(shot, resizeFactor);
     shotDisplayedW = img.getWidth();
     shotDisplayedH = img.getHeight();
     Dimension dim = new Dimension(img.getWidth() + 2 * borderThickness,
@@ -1052,6 +1052,13 @@ public class Tool {
     box.pack();
     box.setLocation((int) ((scrW - dim.getWidth()) / 2), (int) (scrH - dim.getHeight()) / 2);
     updateStatus();
+  }
+
+  private BufferedImage getResizedAsBufferedImage(Picture img, double factor) {
+    BufferedImage bImg = null;
+    Mat resizedMat = img.getResizedMat(factor);
+    bImg = Picture.getBufferedImage(resizedMat);
+    return bImg;
   }
 
   private void drawSelection(Graphics2D g2d) {
