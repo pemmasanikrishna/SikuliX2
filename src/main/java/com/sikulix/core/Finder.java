@@ -11,7 +11,6 @@ import com.sikulix.api.Target;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -190,6 +189,115 @@ public class Finder {
       Core.subtract(Mat.ones(result.size(), CvType.CV_32F), result, result);
     }
     return result;
+  }
+
+  private static class FindResult implements Iterator<Element> {
+
+    private static final SXLog log = SX.getLogger("SX.FindResult");
+
+    private FindResult() {
+    }
+
+    public FindResult(Mat result, Element target) {
+      this.result = result;
+      this.target = target;
+    }
+
+    public FindResult(Mat result, Element target, int[] off) {
+      this(result, target);
+      offX = off[0];
+      offY = off[1];
+    }
+
+    public String name = "";
+    //  public boolean success = false;
+
+    private Element target = null;
+    private Mat result = null;
+    private Core.MinMaxLocResult resultMinMax = null;
+    private int offX = 0;
+    private int offY = 0;
+
+    private double currentScore = -1;
+    double firstScore = -1;
+    double scoreMaxDiff = 0.005;
+
+    private int currentX = -1;
+    private int currentY = -1;
+
+    public boolean hasNext() {
+      resultMinMax = Core.minMaxLoc(result);
+      currentScore = resultMinMax.maxVal;
+      currentX = (int) resultMinMax.maxLoc.x;
+      currentY = (int) resultMinMax.maxLoc.y;
+      if (firstScore < 0) {
+        firstScore = currentScore;
+      }
+      if (currentScore > target.getScore() && currentScore > firstScore - scoreMaxDiff) {
+        return true;
+      }
+      return false;
+    }
+
+    public Element next() {
+      Element match = null;
+      if (hasNext()) {
+        match = new Element(new Element(currentX + offX , currentY + offY, target.w, target.h), currentScore);
+        int margin = getPurgeMargin();
+        Range rangeX = new Range(Math.max(currentX - margin, 0), currentX + 1);
+        Range rangeY = new Range(Math.max(currentY - margin, 0), currentY +1);
+        result.colRange(rangeX).rowRange(rangeY).setTo(new Scalar(0f));
+      }
+      return match;
+    }
+
+    private int getPurgeMargin() {
+      if (currentScore < 0.95) {
+        return 4;
+      } else if (currentScore < 0.85) {
+        return 8;
+      } else if (currentScore < 0.71) {
+        return 16;
+      }
+      return 2;
+    }
+
+    double bestScore = 0;
+    double meanScore = 0;
+    double stdDevScore = 0;
+
+    public List<Element> getMatches() {
+      if (hasNext()) {
+        List<Element> matches = new ArrayList<Element>();
+        List<Double> scores = new ArrayList<>();
+        while (hasNext()) {
+          Element match = next();
+          meanScore = (meanScore * matches.size() + match.getScore()) / (matches.size() + 1);
+          bestScore = Math.max(bestScore, match.getScore());
+          matches.add(match);
+          scores.add(match.getScore());
+        }
+        stdDevScore = calcStdDev(scores, meanScore);
+        return matches;
+      }
+      return null;
+    }
+
+    public double[] getScores() {
+      return new double[] {bestScore, meanScore, stdDevScore};
+    }
+
+    private double calcStdDev(List<Double> doubles, double mean) {
+      double stdDev = 0;
+      for (double doubleVal : doubles) {
+        stdDev += (doubleVal - mean) * (doubleVal - mean);
+      }
+      return Math.sqrt(stdDev / doubles.size());
+    }
+
+    @Override
+    public void remove() {
+    }
   }
   //</editor-fold>
 
@@ -478,6 +586,26 @@ public class Finder {
     long lastRepeatTime = 0;
     long repeatPause = (long) (1000 / SX.getOptionNumber("Settings.WaitScanRate", 3));
 
+    public double getScanRate() {
+      return scanRate;
+    }
+
+    public void setScanRate() {
+      setScanRate(-1);
+    }
+
+    public void setScanRate(double scanRate) {
+      this.scanRate = scanRate;
+      if (scanRate < 0) {
+        if ("OBSERVE".equals(type)) {
+          repeatPause = (long) (1000 / SX.getOptionNumber("Settings.ObserveScanRate", 3));
+        } else
+          repeatPause = (long) (1000 / SX.getOptionNumber("Settings.WaitScanRate", 3));
+      }
+    }
+
+    double scanRate = -1;
+
     boolean imageMissingWhere = false;
 
     public boolean isImageMissingWhere() {
@@ -497,10 +625,16 @@ public class Finder {
     }
 
     public PossibleMatch() {
+      init("");
     }
 
     public PossibleMatch(String type) {
+      init(type);
+    }
+
+    private void init(String type) {
       this.type = type;
+      setScanRate();
     }
 
     public Element get(Object... args) {
@@ -613,4 +747,5 @@ public class Finder {
       return String.format("what: %s, where: %s: wait: %d sec", what, where, waitTime);
     }
   }
+
 }

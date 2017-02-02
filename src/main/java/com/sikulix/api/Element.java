@@ -692,24 +692,45 @@ public class Element extends SXElement {
   //<editor-fold desc="***** observe">
   private Map<Element, Event> events = new HashMap<>();
 
-  public long getObserveStart() {
-    return observeStart;
+  public long getObserveCount() {
+    return observeCount;
   }
 
-  private long observeStart = 0;
+  private long observeCount = 0;
+
+  private synchronized boolean setObserving(Integer state) {
+    if (SX.isNotNull(state)) {
+      if (state > 0) {
+        observeCount++;
+      } else if (state < 0) {
+        observeCount--;
+      } else {
+        observeCount = 0;
+      }
+    }
+    return observeCount > 0;
+  }
+
+  public boolean incrementObserveCount() {
+    return setObserving(1);
+  }
+
+  public boolean decrementObserveCount() {
+    return setObserving(-1);
+  }
 
   public boolean isObserving() {
-    return observeStart > 0;
+    return setObserving(null);
   }
 
   public void observe() {
-    observeStart = new Date().getTime();
+    observeCount = 0;
     Events.add(this, events.values());
     Events.startObserving();
   }
 
   public void observeStop() {
-    observeStart = 0;
+    setObserving(0);
   }
 
   public void observeReset() {
@@ -734,8 +755,12 @@ public class Element extends SXElement {
       return null;
     }
     Event evt = new Event(type, (Element) what, this, handler);
+    if (events.containsKey(what)) {
+      evt.setKey(events.get(what).getKey());
+    } else {
+      evt.setKey(events.size() + 1);
+    }
     events.put((Element) what, evt);
-    evt.setWhen(events.size());
     return evt;
   }
 
@@ -776,6 +801,8 @@ public class Element extends SXElement {
   public void removeEvent(Event evt) {
     events.remove(evt);
   }
+
+  public void removeEvents() { events.clear(); }
 
   public boolean hasEvents() {
     return Events.hasHappened(this);

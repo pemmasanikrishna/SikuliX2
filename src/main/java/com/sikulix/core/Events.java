@@ -4,7 +4,6 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.Do;
 import com.sikulix.api.Element;
 import com.sikulix.api.Event;
 
@@ -14,12 +13,19 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Events {
   private static SXLog log = SX.getLogger("SX.Events");
 
+  //<editor-fold desc="housekeeping">
   private static Events instance = null;
   private ConcurrentHashMap<Element, ConcurrentHashMap<Long, Event>> elements = new ConcurrentHashMap<>();
 
   private boolean running = false;
 
   EventLoop eventLoop = null;
+
+  private static boolean processEvents = true;
+
+  public static void shouldProcessEvents(boolean state) {
+    processEvents = state;
+  }
 
   private Events() {
   }
@@ -31,6 +37,13 @@ public class Events {
     return instance;
   }
 
+  public static void reset() {
+    processEvents = true;
+    instance = null;
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="start/stop">
   public static void startObserving() {
     if (!get().running) {
       if (SX.isNull(get().eventLoop)) {
@@ -59,7 +72,9 @@ public class Events {
   private static boolean isRunning() {
     return get().running;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="elements (where)">
   private static ConcurrentHashMap<Long, Event> put(Element where) {
     get().elements.put(where, new ConcurrentHashMap<Long, Event>());
     return get().elements.get(where);
@@ -68,20 +83,22 @@ public class Events {
   public static void add(Element where, Collection<Event> evts) {
     ConcurrentHashMap<Long, Event> events = put(where);
     for (Event evt : evts) {
-      Long key = evt.setKey(evt.getWhen());
-      events.put(key, evt);
+      evt.reset();
+      events.put(evt.getKey(), evt);
     }
   }
 
-  public static void remove(Element elem) {
-    get().elements.remove(elem);
+  public static void remove(Element where) {
+    get().elements.put(where, new ConcurrentHashMap<Long, Event>());
   }
 
   private static ConcurrentHashMap<Long, Event> getEventList(Element where) {
     ConcurrentHashMap<Long, Event> events = get().elements.get(where);
     return events;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="events (what)">
   public static boolean hasEvents(Element where) {
     return SX.isNotNull(get().elements.get(where));
   }
@@ -132,7 +149,7 @@ public class Events {
     int count = 0;
     if (hasEvents(where)) {
       for (Event e : getEvents(where)) {
-        if (e.getWhen() > where.getObserveStart()) {
+        if (e.getWhen() > where.getObserveCount()) {
           count++;
         }
       }
@@ -150,7 +167,9 @@ public class Events {
     }
     return evt;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="EventLoop">
   private static void waitForEventLoopToFinish() {
     log.trace("waitForEventLoopToFinish: start");
     while (get().eventLoop.isLooping()) {
@@ -159,10 +178,8 @@ public class Events {
     log.trace("waitForEventLoopToFinish: end");
   }
 
-  private static boolean processEvents = true;
-
-  public static void shouldProcessEvents(boolean state) {
-    processEvents = state;
+  public static void waitUntilFinished() {
+    waitForEventLoopToFinish();
   }
 
   private static class EventLoop implements Runnable {
@@ -174,26 +191,46 @@ public class Events {
     }
 
     @Override
-    public void run() {
+    public void run()
+    {
       log.trace("EventLoop: started for %d elements", get().elements.size());
+      int numWhere = 1;
+      Element[] wheres = get().elements.keySet().toArray(new Element[0]);
       while (true) {
-        for (Element where : get().elements.keySet().toArray(new Element[0])) {
-          if (where.isObserving()) {
-            log.trace("EventLoop: observing starting for %s with %d events",
-                    where, getEventList(where).size());
-            for (Event evt : getEvents(where)) {
-              if (processEvents) {
-                new Thread(new EventProcess(evt)).start();
-              } else {
-                log.trace("observing: %s", evt);
-                evt.setWhen(new Date().getTime());
+        for (Element where : wheres) {
+          if (!where.isObserving()) {
+            int numEvents = getEventList(where).size();
+            if (numEvents > 0) {
+              log.trace("EventLoop: starting observe for (%d) %s with %d events",
+                      numWhere, where, numEvents);
+              for (Event evt : getEvents(where)) {
+                if (processEvents) {
+                  new Thread(new Observe(evt, numWhere)).start();
+                } else {
+                  log.trace("Observe skipped: %s", evt);
+                  evt.setWhen(new Date().getTime());
+                }
               }
-
             }
           }
         }
         SX.pause(1);
         if (!isRunning()) {
+          for (Element where : wheres) {
+            where.observeStop();
+          }
+        }
+        boolean someObserving = false;
+        while (true) {
+          for (Element where : wheres) {
+            someObserving |= where.isObserving();
+          }
+          if (!isRunning() && someObserving) {
+            continue;
+          }
+          break;
+        }
+        if (!someObserving) {
           break;
         }
       }
@@ -201,28 +238,96 @@ public class Events {
       log.trace("EventLoop: stopped");
     }
   }
+  //</editor-fold>
 
-  private static class EventProcess implements Runnable {
+  //<editor-fold desc="Observe">
+  private static class Observe implements Runnable {
 
     Event event = null;
+    int nWhere = 0;
 
-    public EventProcess(Event event) {
+    public Observe(Event event, int nWhere) {
       this.event = event;
+      this.nWhere = nWhere;
+    }
+
+    boolean shouldRepeat = true;
+
+    public void stop() {
+      shouldRepeat = false;
     }
 
     @Override
     public void run() {
-      log.trace("observing: %s", event);
-      if (event.isAppear()) {
-        Element match = Do.find(event.getWhat(), event.getWhere());
-        if (match.isMatch()) {
-          event.setWhen(new Date().getTime());
-          event.setMatch(match);
+      event.getWhere().incrementObserveCount();
+      String cType = event.getTypeShort();
+      log.trace("Observe start: %s%d in %d", cType, event.getKey(), nWhere);
+      while (true) {
+        if (event.shouldRepeat()) {
+          SX.pause(event.getRepeat());
         }
-      }
-      if (event.hasHandler()) {
-        event.getHandler().run(event);
+        event.pause();
+        boolean success = false;
+        Finder.PossibleMatch possibleMatch = new Finder.PossibleMatch();
+        Element where = possibleMatch.get(event.getWhat(), event.getWhere(), nWhere);
+        if (event.isAppear()) {
+          if (!where.hasMatch()) {
+            while (where.isObserving() && shouldRepeat) {
+              log.trace("Observe repeat: %s%d in %d", cType, event.getKey(), nWhere);
+              possibleMatch.repeat();
+              if (where.hasMatch()) {
+                success = true;
+                break;
+              }
+            }
+          } else {
+            success = true;
+          }
+          if (success) {
+            event.setMatch(where.getLastMatch());
+            success = true;
+          }
+        } else if (event.isVanish()) {
+          where.setLastVanish(null);
+          if (where.hasMatch()) {
+            Element match = where.getLastMatch();
+            where.setLastVanish(match);
+            while (where.isObserving() && shouldRepeat) {
+              log.trace("Observe repeat: %s%d in %d", cType, event.getKey(), nWhere);
+              possibleMatch.repeat();
+              if (where.hasMatch()) {
+                match = where.getLastMatch();
+                where.setLastVanish(match);
+                event.setVanish(match);
+              } else {
+                success = true;
+                break;
+              }
+            }
+          }
+        } else if (event.isChange()) {
+          log.error("Observe: onChange not implemented: %s", event);
+        } else {
+          log.error("Observe: Event invalid: %s", event);
+        }
+        if (success) {
+          event.setWhen(new Date().getTime());
+          event.incrementCount();
+          log.trace("Observe success: %s%d in %d %s", cType, event.getKey(), nWhere,
+                  (Event.TYPE.ONAPPEAR.equals(event.isAppear()) ? event.getMatch() : event.getVanish()));
+          if (event.hasHandler()) {
+            log.trace("Observe handler: %s%d in %d", cType, event.getKey(), nWhere);
+            event.getHandler().run(event);
+          }
+        } else {
+          log.trace("Observe stopped: %s%d in %d", cType, event.getKey(), nWhere);
+        }
+        if (!event.shouldRepeat()) {
+          event.getWhere().decrementObserveCount();
+          break;
+        }
       }
     }
   }
+  //</editor-fold>
 }
