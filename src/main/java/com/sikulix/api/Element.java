@@ -23,93 +23,6 @@ public class Element extends SXElement {
   private static eType eClazz = eType.ELEMENT;
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
-  protected URL urlImg = null;
-
-  public BufferedImage get() {
-    return getBufferedImage(getContent());
-  }
-
-  public Mat getContent() {
-    return content;
-  }
-
-  public Mat getContent(Element elem) {
-    return content.submat(new Rect(elem.x, elem.y, elem.w, elem.h));
-  }
-
-  public void setContent(Mat content) {
-    this.content = content;
-  }
-
-  public boolean hasContent() {
-    return SX.isNotNull(content) && !content.empty();
-  }
-
-  private Mat content = null;
-
-  protected double resizeFactor;
-
-  public double getResizeFactor() {
-    return isValid() ? resizeFactor : 1;
-  }
-
-  public Element getLastTarget() {
-    return lastTarget;
-  }
-
-  public void setLastTarget(Element lastTarget) {
-    this.lastTarget = lastTarget;
-  }
-
-  private Element lastTarget = null;
-  private Element lastMatch = null;
-  private Element lastVanish = null;
-  private java.util.List<Element> lastMatches = new ArrayList<Element>();
-  private int matchIndex = -1;
-
-  private Color lineColor = Story.getLineColor();
-
-  public Color getLineColor() {
-    return lineColor;
-  }
-
-  public void setLineColor(Color lineColor) {
-    this.lineColor = lineColor;
-  }
-
-  private int highLightLine = Story.getLineThickness();
-
-  public int getHighLightLine() {
-    return highLightLine;
-  }
-
-  public void setHighLightLine(int highLightLine) {
-    this.highLightLine = highLightLine;
-  }
-
-  private int showTime = (int) SX.getOptionNumber("SXShow.showTime", 3);
-
-  public int getShowTime() {
-    return showTime;
-  }
-
-  public void setShowTime(int showTime) {
-    this.showTime = showTime;
-  }
-
-  public Element getLastSeen() {
-    if (SX.isNull(lastSeen)) {
-      return new Element();
-    }
-    return lastSeen;
-  }
-
-  public void setLastSeen(Element lastSeen) {
-    this.lastSeen = lastSeen;
-  }
-
-  private Element lastSeen = null;
-
   //<editor-fold desc="***** construction, info">
   public Element() {
     setClazz();
@@ -238,6 +151,30 @@ public class Element extends SXElement {
   //</editor-fold>
 
   //<editor-fold desc="***** content">
+  protected URL urlImg = null;
+
+  public BufferedImage get() {
+    return getBufferedImage(getContent());
+  }
+
+  public Mat getContent() {
+    return content;
+  }
+
+  public Mat getContent(Element elem) {
+    return content.submat(new Rect(elem.x, elem.y, elem.w, elem.h));
+  }
+
+  public void setContent(Mat content) {
+    this.content = content;
+  }
+
+  public boolean hasContent() {
+    return SX.isNotNull(content) && !content.empty();
+  }
+
+  private Mat content = null;
+
   protected boolean plainColor = false;
   protected boolean blackColor = false;
   protected boolean whiteColor = false;
@@ -253,6 +190,12 @@ public class Element extends SXElement {
   public boolean isWhite() {
     return isValid() && blackColor;
   }
+
+  public double getResizeFactor() {
+    return isValid() ? resizeFactor : 1;
+  }
+
+  protected double resizeFactor;
 
   protected Element setContent() {
     capture();
@@ -316,7 +259,7 @@ public class Element extends SXElement {
   }
   //</editor-fold>
 
-  //<editor-fold desc="***** capture, highlight, show">
+  //<editor-fold desc="***** capture">
   public Picture getAsPicture() {
     if (!hasContent()) {
       return new Picture();
@@ -342,7 +285,9 @@ public class Element extends SXElement {
     }
     return img;
   }
+  //</editor-fold>
 
+  //<editor-fold desc="***** show, highlight">
   public void highlight() {
     highlight((int) SX.getOptionNumber("DefaultHighlightTime"));
   }
@@ -354,6 +299,36 @@ public class Element extends SXElement {
 
   public static void fakeHighlight(boolean state) {
     //TODO implement fakeHighlight
+  }
+
+  private Color lineColor = Story.getLineColor();
+
+  public Color getLineColor() {
+    return lineColor;
+  }
+
+  public void setLineColor(Color lineColor) {
+    this.lineColor = lineColor;
+  }
+
+  private int highLightLine = Story.getLineThickness();
+
+  public int getHighLightLine() {
+    return highLightLine;
+  }
+
+  public void setHighLightLine(int highLightLine) {
+    this.highLightLine = highLightLine;
+  }
+
+  private int showTime = (int) SX.getOptionNumber("SXShow.showTime", 3);
+
+  public int getShowTime() {
+    return showTime;
+  }
+
+  public void setShowTime(int showTime) {
+    this.showTime = showTime;
   }
 
   public Story showStart(int... times) {
@@ -426,23 +401,19 @@ public class Element extends SXElement {
   }
 
   private Story showing = null;
-
-
-  //</editor-fold>
-
-  //<editor-fold desc="***** lastCapture">
-  private Picture lastCapture = null;
-
-  public Picture getLastCapture() {
-    return lastCapture;
-  }
-
-  public void setLastCapture(Picture lastCapture) {
-    this.lastCapture = lastCapture;
-  }
   //</editor-fold>
 
   //<editor-fold desc="***** target">
+  public Element getLastTarget() {
+    return lastTarget;
+  }
+
+  public void setLastTarget(Element lastTarget) {
+    this.lastTarget = lastTarget;
+  }
+
+  private Element lastTarget = null;
+
   public void setTarget(Element elem) {
     target = elem.getCenter();
   }
@@ -487,6 +458,24 @@ public class Element extends SXElement {
   //</editor-fold>
 
   //<editor-fold desc="***** lastMatch">
+  public Element getLastSeen() {
+    if (SX.isNull(lastSeen)) {
+      return new Element();
+    }
+    return lastSeen;
+  }
+
+  public void setLastSeen(Element lastSeen) {
+    this.lastSeen = lastSeen;
+  }
+
+  private Element lastSeen = null;
+
+  private Element lastMatch = null;
+  private Element lastVanish = null;
+  private java.util.List<Element> lastMatches = new ArrayList<Element>();
+  private int matchIndex = -1;
+
   public void resetMatches() {
     lastMatch = null;
     lastMatches = new ArrayList<Element>();

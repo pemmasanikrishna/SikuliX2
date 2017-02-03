@@ -579,7 +579,12 @@ public class Finder {
     }
     int waitTime = -1;
     Element target = new Element();
+
     String type = "";
+    // ALL for findAll
+    // OBSERVE for observe
+    // empty for everything else
+
     Finder finder = null;
     long startTime = new Date().getTime();
     long endTime = startTime;
@@ -618,11 +623,11 @@ public class Finder {
       return imageMissingWhat;
     }
 
-    boolean valid = false;
-
     public boolean isValid() {
       return valid;
     }
+
+    boolean valid = false;
 
     public PossibleMatch() {
       init("");
@@ -747,5 +752,4 @@ public class Finder {
       return String.format("what: %s, where: %s: wait: %d sec", what, where, waitTime);
     }
   }
-
 }
