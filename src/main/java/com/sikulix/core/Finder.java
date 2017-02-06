@@ -413,20 +413,63 @@ public class Finder {
   }
   //</editor-fold>
 
+  //<editor-fold desc="Edges">
+  public static Picture detectEdges(Picture src) {
+    Mat mSource;
+    Mat mSourceGray = new Mat();
+    Mat mDestination = new Mat();
+    Mat mDetectedEdges = new Mat();
+
+    int edgeThresh = 1;
+    int lowThreshold = 100;
+    int ratio = 3;
+    int kernelSize = 5;
+    int blurFilterSize = 3;
+
+    Picture result = new Picture();
+
+    if (src.isValid()) {
+      mSource = src.getContent();
+      Imgproc.cvtColor(mSource, mSourceGray, toGray);
+      Imgproc.blur(mSourceGray, mDetectedEdges, new Size(blurFilterSize, blurFilterSize));
+      Imgproc.Canny(mDetectedEdges, mDetectedEdges,
+              lowThreshold, lowThreshold * ratio, kernelSize, false);
+      Core.add(mSourceGray, Scalar.all(0), mDestination);
+      mDetectedEdges.copyTo(mDestination);
+      result = new Picture(mDestination);
+    }
+    return result;
+  }
+  //https://raw.githubusercontent.com/opencv-java/image-segmentation/master/src/it/polito/teaching/cv/ImageSegController.java
+  //</editor-fold>
+
   //<editor-fold desc="detect changes">
-  public static Mat hasChanges(Mat base, Mat changed) {
-    int PIXEL_DIFF_THRESHOLD = 5;
+  private static int toGray = Imgproc.COLOR_BGR2GRAY;
+  private static int toColor = Imgproc.COLOR_GRAY2BGR;
+  private static int gray = CvType.CV_8UC1;
+  private static int colored = CvType.CV_8UC3;
+  private static int transparent = CvType.CV_8UC4;
+
+  private static boolean isGray(Mat mat) {
+    return mat.type() == gray;
+  }
+
+  private static boolean isColored(Mat mat) {
+    return mat.type() == colored || mat.type() == transparent;
+  }
+
+  public static Mat detectChanges(Mat base, Mat changed) {
+    int PIXEL_DIFF_THRESHOLD = 3;
     int IMAGE_DIFF_THRESHOLD = 5;
     Mat mBase = new Mat();
     Mat mChanged = new Mat();
     Mat mDiffAbs = new Mat();
     Mat mDiffTresh = new Mat();
     Mat mChanges = new Mat();
+    Size size = mBase.size();
 
-    boolean debug = false;
-
-    Imgproc.cvtColor(base, mBase, Imgproc.COLOR_BGR2GRAY);
-    Imgproc.cvtColor(changed, mChanged, Imgproc.COLOR_BGR2GRAY);
+    Imgproc.cvtColor(base, mBase, toGray);
+    Imgproc.cvtColor(changed, mChanged, toGray);
     Core.absdiff(mBase, mChanged, mDiffAbs);
     Imgproc.threshold(mDiffAbs, mDiffTresh, PIXEL_DIFF_THRESHOLD, 0.0, Imgproc.THRESH_TOZERO);
     if (Core.countNonZero(mDiffTresh) > IMAGE_DIFF_THRESHOLD) {
@@ -436,14 +479,27 @@ public class Finder {
       Imgproc.morphologyEx(mDiffAbs, mDiffAbs, Imgproc.MORPH_CLOSE, se);
 
       List<MatOfPoint> points = new ArrayList<MatOfPoint>();
-      Mat mContours = new Mat();
-      Imgproc.findContours(mDiffAbs, points, mContours, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_NONE);
+      Mat mHierarchy = new Mat();
+      Imgproc.findContours(mDiffAbs, points, mHierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
-      mChanges.create(mBase.size(), mBase.type());
-      Core.add(mChanges, Scalar.all(0), mChanges);
-      Imgproc.drawContours(mChanges, points, 0, new Scalar(1, 1, 1));
+      Core.subtract(mDiffAbs, mDiffAbs, mChanges);
+      Imgproc.drawContours(mChanges, points, -1, new Scalar(255));
     }
     return mChanges;
+  }
+
+  private static void logShow(Mat mat) {
+    Picture image = new Picture();
+    if (isGray(mat)) {
+      Mat colored = new Mat();
+      Imgproc.cvtColor(mat, colored, toColor);
+      image = new Picture(colored);
+    } else if (isColored(mat)) {
+      image = new Picture(mat);
+    }
+    if (image.isValid()) {
+      image.show();
+    }
   }
 
   //<editor-fold desc="original C++">
@@ -753,33 +809,4 @@ public class Finder {
   }
   //</editor-fold>
 
-  //<editor-fold desc="Edges">
-  public static Picture detectEdges(Picture src) {
-    Mat mSource;
-    Mat mSourceGray = new Mat();
-    Mat mDestination = new Mat();
-    Mat mDetectedEdges = new Mat();
-
-    int edgeThresh = 1;
-    int lowThreshold = 100;
-    int ratio = 3;
-    int kernelSize = 5;
-    int blurFilterSize = 3;
-
-    Picture result = new Picture();
-
-    if (src.isValid()) {
-      mSource = src.getContent();
-      Imgproc.cvtColor(mSource, mSourceGray, Imgproc.COLOR_BGR2GRAY);
-      Imgproc.blur(mSourceGray, mDetectedEdges, new Size(blurFilterSize, blurFilterSize));
-      Imgproc.Canny(mDetectedEdges, mDetectedEdges,
-              lowThreshold, lowThreshold * ratio, kernelSize, false);
-      Core.add(mSourceGray, Scalar.all(0), mDestination);
-      mDetectedEdges.copyTo(mDestination);
-      result = new Picture(mDestination);
-    }
-    return result;
-  }
-  //https://raw.githubusercontent.com/opencv-java/image-segmentation/master/src/it/polito/teaching/cv/ImageSegController.java
-  //</editor-fold>
 }

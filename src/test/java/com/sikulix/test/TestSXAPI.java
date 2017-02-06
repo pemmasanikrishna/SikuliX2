@@ -696,14 +696,30 @@ public class TestSXAPI {
   @Test
   public void test_90_edgeDetectionBasic() {
     currentTest = "test_90_edgeDetectionBasic";
+    result = "basic edge detection sample";
     Do.setBundlePath(mavenRoot, "Images");
     Picture pBase, pEdges;
     pBase = new Picture("gui");
     pEdges = Finder.detectEdges(pBase);
+    pBase.show();
     pEdges.show();
     pBase = new Picture("gui-button");
     pEdges = Finder.detectEdges(pBase);
+    pBase.show();
     pEdges.show();
+  }
+
+  @Test
+  public void test_91_changeDetectionBasic() {
+    currentTest = "test_91_changeDetectionBasic";
+    result = "basic change detection sample";
+    Do.setBundlePath(mavenRoot, "Images");
+    Picture pBase, pChanged;
+    pBase = new Picture("gui-button");
+    pChanged = new Picture("gui-button-blank");
+    pBase.show();
+    pChanged.show();
+    new Picture(Finder.detectChanges(pBase.getContent(), pChanged.getContent())).show();
   }
   //</editor-fold>
 
@@ -713,17 +729,12 @@ public class TestSXAPI {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    log.startTimer();
+    //log.startTimer();
     currentTest = "test_999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // ******************* start
         result = "nothing to do here";
-        Do.setBundlePath(mavenRoot, "Images");
-        Picture pBase, pChanged;
-        pBase = new Picture("gui-button");
-        pChanged = new Picture("gui-button1");
-        new Picture(Finder.hasChanges(pBase.getContent(), pChanged.getContent())).show();
 // ******************* end
       } else {
         result = "headless: not testing";
