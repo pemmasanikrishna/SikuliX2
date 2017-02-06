@@ -414,38 +414,36 @@ public class Finder {
   //</editor-fold>
 
   //<editor-fold desc="detect changes">
-  public boolean hasChanges(Mat base, Mat current) {
+  public static Mat hasChanges(Mat base, Mat changed) {
     int PIXEL_DIFF_THRESHOLD = 5;
     int IMAGE_DIFF_THRESHOLD = 5;
-    Mat bg = new Mat();
-    Mat cg = new Mat();
-    Mat diff = new Mat();
-    Mat tdiff = new Mat();
+    Mat mBase = new Mat();
+    Mat mChanged = new Mat();
+    Mat mDiffAbs = new Mat();
+    Mat mDiffTresh = new Mat();
+    Mat mChanges = new Mat();
 
-    Imgproc.cvtColor(base, bg, Imgproc.COLOR_BGR2GRAY);
-    Imgproc.cvtColor(current, cg, Imgproc.COLOR_BGR2GRAY);
-    Core.absdiff(bg, cg, diff);
-    Imgproc.threshold(diff, tdiff, PIXEL_DIFF_THRESHOLD, 0.0, Imgproc.THRESH_TOZERO);
-    if (Core.countNonZero(tdiff) <= IMAGE_DIFF_THRESHOLD) {
-      return false;
+    boolean debug = false;
+
+    Imgproc.cvtColor(base, mBase, Imgproc.COLOR_BGR2GRAY);
+    Imgproc.cvtColor(changed, mChanged, Imgproc.COLOR_BGR2GRAY);
+    Core.absdiff(mBase, mChanged, mDiffAbs);
+    Imgproc.threshold(mDiffAbs, mDiffTresh, PIXEL_DIFF_THRESHOLD, 0.0, Imgproc.THRESH_TOZERO);
+    if (Core.countNonZero(mDiffTresh) > IMAGE_DIFF_THRESHOLD) {
+      Imgproc.threshold(mDiffAbs, mDiffAbs, PIXEL_DIFF_THRESHOLD, 255, Imgproc.THRESH_BINARY);
+      Imgproc.dilate(mDiffAbs, mDiffAbs, new Mat());
+      Mat se = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
+      Imgproc.morphologyEx(mDiffAbs, mDiffAbs, Imgproc.MORPH_CLOSE, se);
+
+      List<MatOfPoint> points = new ArrayList<MatOfPoint>();
+      Mat mContours = new Mat();
+      Imgproc.findContours(mDiffAbs, points, mContours, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_NONE);
+
+      mChanges.create(mBase.size(), mBase.type());
+      Core.add(mChanges, Scalar.all(0), mChanges);
+      Imgproc.drawContours(mChanges, points, 0, new Scalar(1, 1, 1));
     }
-
-    Imgproc.threshold(diff, diff, PIXEL_DIFF_THRESHOLD, 255, Imgproc.THRESH_BINARY);
-    Imgproc.dilate(diff, diff, new Mat());
-    Mat se = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
-    Imgproc.morphologyEx(diff, diff, Imgproc.MORPH_CLOSE, se);
-
-    List<MatOfPoint> points = new ArrayList<MatOfPoint>();
-    Mat contours = new Mat();
-    Imgproc.findContours(diff, points, contours, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-    int n = 0;
-    for (Mat pm : points) {
-      log.trace("(%d) %s", n++, pm);
-      printMatI(pm);
-    }
-    log.trace("contours: %s", contours);
-    printMatI(contours);
-    return true;
+    return mChanges;
   }
 
   //<editor-fold desc="original C++">
@@ -568,6 +566,7 @@ public class Finder {
   }
   //</editor-fold>
 
+  //<editor-fold desc="PossibleMatch">
   public static class PossibleMatch {
     Element what = null;
     public Element getWhat() {
@@ -752,4 +751,35 @@ public class Finder {
       return String.format("what: %s, where: %s: wait: %d sec", what, where, waitTime);
     }
   }
+  //</editor-fold>
+
+  //<editor-fold desc="Edges">
+  public static Picture detectEdges(Picture src) {
+    Mat mSource;
+    Mat mSourceGray = new Mat();
+    Mat mDestination = new Mat();
+    Mat mDetectedEdges = new Mat();
+
+    int edgeThresh = 1;
+    int lowThreshold = 100;
+    int ratio = 3;
+    int kernelSize = 5;
+    int blurFilterSize = 3;
+
+    Picture result = new Picture();
+
+    if (src.isValid()) {
+      mSource = src.getContent();
+      Imgproc.cvtColor(mSource, mSourceGray, Imgproc.COLOR_BGR2GRAY);
+      Imgproc.blur(mSourceGray, mDetectedEdges, new Size(blurFilterSize, blurFilterSize));
+      Imgproc.Canny(mDetectedEdges, mDetectedEdges,
+              lowThreshold, lowThreshold * ratio, kernelSize, false);
+      Core.add(mSourceGray, Scalar.all(0), mDestination);
+      mDetectedEdges.copyTo(mDestination);
+      result = new Picture(mDestination);
+    }
+    return result;
+  }
+  //https://raw.githubusercontent.com/opencv-java/image-segmentation/master/src/it/polito/teaching/cv/ImageSegController.java
+  //</editor-fold>
 }

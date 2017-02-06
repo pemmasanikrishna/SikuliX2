@@ -240,8 +240,9 @@ public class Picture extends Element {
     if (sum < minThreshhold && plainColor) {
       blackColor = true;
     }
-
-    whiteColor = isMeanColorEqual(Color.WHITE);
+    if (meanColor.length > 1) {
+      whiteColor = isMeanColorEqual(Color.WHITE);
+    }
   }
   //</editor-fold>
 

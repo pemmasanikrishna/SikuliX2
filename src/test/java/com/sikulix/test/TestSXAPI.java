@@ -692,6 +692,19 @@ public class TestSXAPI {
     Events.waitUntilFinished();
     theShow.stop();
   }
+
+  @Test
+  public void test_90_edgeDetectionBasic() {
+    currentTest = "test_90_edgeDetectionBasic";
+    Do.setBundlePath(mavenRoot, "Images");
+    Picture pBase, pEdges;
+    pBase = new Picture("gui");
+    pEdges = Finder.detectEdges(pBase);
+    pEdges.show();
+    pBase = new Picture("gui-button");
+    pEdges = Finder.detectEdges(pBase);
+    pEdges.show();
+  }
   //</editor-fold>
 
   //<editor-fold desc="ignored">
@@ -700,12 +713,17 @@ public class TestSXAPI {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    //log.startTimer();
+    log.startTimer();
     currentTest = "test_999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // ******************* start
         result = "nothing to do here";
+        Do.setBundlePath(mavenRoot, "Images");
+        Picture pBase, pChanged;
+        pBase = new Picture("gui-button");
+        pChanged = new Picture("gui-button1");
+        new Picture(Finder.hasChanges(pBase.getContent(), pChanged.getContent())).show();
 // ******************* end
       } else {
         result = "headless: not testing";
