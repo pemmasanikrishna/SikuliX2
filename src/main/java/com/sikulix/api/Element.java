@@ -311,7 +311,7 @@ public class Element extends SXElement {
     this.lineColor = lineColor;
   }
 
-  private int highLightLine = Story.getLineThickness();
+  private int highLightLine = (int) SX.getOptionNumber("highLightLine", 3);
 
   public int getHighLightLine() {
     return highLightLine;

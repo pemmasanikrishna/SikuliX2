@@ -9,8 +9,10 @@ import com.sikulix.api.Element;
 import com.sikulix.api.Picture;
 import com.sikulix.api.Target;
 import org.opencv.core.*;
+import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
+import java.awt.*;
 import java.util.*;
 import java.util.List;
 
@@ -458,7 +460,7 @@ public class Finder {
     return mat.type() == colored || mat.type() == transparent;
   }
 
-  public static Mat detectChanges(Mat base, Mat changed) {
+  public static List<Element> detectChanges(Mat base, Mat changed) {
     int PIXEL_DIFF_THRESHOLD = 3;
     int IMAGE_DIFF_THRESHOLD = 5;
     Mat mBase = new Mat();
@@ -467,6 +469,7 @@ public class Finder {
     Mat mDiffTresh = new Mat();
     Mat mChanges = new Mat();
     Size size = mBase.size();
+    List<Element> rectangles = new ArrayList<>();
 
     Imgproc.cvtColor(base, mBase, toGray);
     Imgproc.cvtColor(changed, mChanged, toGray);
@@ -478,14 +481,40 @@ public class Finder {
       Mat se = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
       Imgproc.morphologyEx(mDiffAbs, mDiffAbs, Imgproc.MORPH_CLOSE, se);
 
-      List<MatOfPoint> points = new ArrayList<MatOfPoint>();
+      List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
       Mat mHierarchy = new Mat();
-      Imgproc.findContours(mDiffAbs, points, mHierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+      Imgproc.findContours(mDiffAbs, contours, mHierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+      rectangles = contoursToRectangle(contours);
 
       Core.subtract(mDiffAbs, mDiffAbs, mChanges);
-      Imgproc.drawContours(mChanges, points, -1, new Scalar(255));
+      Imgproc.drawContours(mChanges, contours, -1, new Scalar(255));
     }
-    return mChanges;
+    return rectangles;
+  }
+
+  private static List<Element> contoursToRectangle(List<MatOfPoint> contours) {
+    List<Element> rects = new ArrayList<>();
+    for (MatOfPoint contour : contours) {
+      log.trace("*** new contour");
+      int x1 = 99999;
+      int y1 = 99999;
+      int x2 = 0;
+      int y2 = 0;
+      List<Point> points = contour.toList();
+      for (Point point : points) {
+        int x = (int) point.x;
+        int y = (int) point.y;
+        log.trace("x: %d y: %d", x, y);
+        if (x < x1) x1 = x;
+        if (x > x2) x2 = x;
+        if (y < y1) y1 = y;
+        if (y > y2) y2 = y;
+      }
+      Element rect = new Element(x1, y1, x2 - x1, y2 - y1);
+      log.trace("rectangle: %s", rect);
+      rects.add(rect);
+    }
+    return rects;
   }
 
   private static void logShow(Mat mat) {

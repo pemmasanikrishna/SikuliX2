@@ -719,7 +719,15 @@ public class TestSXAPI {
     pChanged = new Picture("gui-button-blank");
     pBase.show();
     pChanged.show();
-    new Picture(Finder.detectChanges(pBase.getContent(), pChanged.getContent())).show();
+    SX.setOption("highLightLine", "1");
+    List<Element> rectangles = Finder.detectChanges(pBase.getContent(), pChanged.getContent());
+    assert rectangles.size() == 3;
+    Story changed = new Story(pBase);
+    for (Element rect : rectangles) {
+      changed.add(rect);
+    }
+//    changed.setBorder();
+    changed.show(3);
   }
   //</editor-fold>
 

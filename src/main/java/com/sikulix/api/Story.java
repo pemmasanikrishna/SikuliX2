@@ -121,14 +121,15 @@ public class Story {
     Story.lineColor = lineColor;
   }
 
-  private static int lineThickness = 3;
+  private int lineThickness = 3;
+  private static int defaultlineThickness = 3;
 
-  public static int getLineThickness() {
+  public int getLineThickness() {
     return lineThickness;
   }
 
-  public static void setLineThickness(int lineThickness) {
-    Story.lineThickness = lineThickness;
+  public void setLineThickness(int lineThickness) {
+    this.lineThickness = lineThickness;
   }
 
   private static Color labelColor = new Color(200, 200, 200);
