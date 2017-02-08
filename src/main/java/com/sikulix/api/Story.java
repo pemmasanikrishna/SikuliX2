@@ -71,15 +71,16 @@ public class Story {
     public void paintComponent(Graphics g) {
       super.paintComponent(g);
       Graphics2D g2d = (Graphics2D) g.create();
-      if (withBorder) {
-        drawBorder(g2d, 0, 0, story.w, story.h, borderThickness, borderColor);
-        g2d.drawImage(storyImg, borderThickness, borderThickness, null);
-      } else {
+      if (!withBorder) {
         Graphics2D bg = (Graphics2D) storyImg.getGraphics().create();
         for (Element element : elements) {
           drawElement(bg, story, element);
         }
         g2d.drawImage(storyImg, 0, 0, null);
+      }
+      if (withBorder || shouldAddBorder) {
+        drawBorder(g2d, 0, 0, story.w, story.h, borderThickness, borderColor);
+        g2d.drawImage(storyImg, borderThickness, borderThickness, null);
       }
       g2d.dispose();
     }
@@ -89,6 +90,12 @@ public class Story {
 
   public void setBorder() {
     withBorder = true;
+  }
+
+  private boolean shouldAddBorder = false;
+
+  public void addBorder() {
+    shouldAddBorder = true;
   }
 
   private static Color borderColor = Color.green;
@@ -222,12 +229,13 @@ public class Story {
 
     @Override
     public void run() {
+      boolean hasBorder = withBorder || shouldAddBorder;
       Element location = new Element();
       Element onElement = Do.on();
-      panel.setPreferredSize(new Dimension(story.w + (withBorder ? borderThickness * 2 : 0),
-              story.h + (withBorder ? borderThickness * 2 : 0)));
+      panel.setPreferredSize(new Dimension(story.w + (hasBorder ? borderThickness * 2 : 0),
+              story.h + (hasBorder ? borderThickness * 2 : 0)));
       if (story.w < onElement.w || story.h < onElement.h) {
-        location = story.getCentered(onElement, (withBorder ? new Element(-borderThickness) : null));
+        location = story.getCentered(onElement, (hasBorder ? new Element(-borderThickness) : null));
       }
       Container contentPane = frame.getContentPane();
       contentPane.setLayout(new OverlayLayout(contentPane));

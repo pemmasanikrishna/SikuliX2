@@ -726,7 +726,7 @@ public class TestSXAPI {
     for (Element rect : rectangles) {
       changed.add(rect);
     }
-//    changed.setBorder();
+    changed.addBorder();
     changed.show(3);
   }
   //</editor-fold>
