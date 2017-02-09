@@ -488,7 +488,7 @@ public class  Device {
       robot.mouseUp(buttons);
     } else {
       robot.mouseDown(buttons);
-      robot.delay(pause);
+      robot.pause(pause);
       robot.mouseUp(buttons);
     }
     robot.releaseModifiers(modifiers);
@@ -676,7 +676,7 @@ public class  Device {
     use(vis);
     for (int i = 0; i < steps; i++) {
       robot.mouseWheel(direction);
-      robot.delay(stepDelay);
+      robot.pause(stepDelay);
     }
     let(vis);
   }

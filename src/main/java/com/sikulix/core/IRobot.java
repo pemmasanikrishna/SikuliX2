@@ -33,10 +33,10 @@ public interface IRobot {
    void mouseWheel(int wheelAmt);
    Picture captureScreen(Rectangle rect);
    void waitForIdle();
-   void delay(int ms);
+   void pause(int ms);
    void setAutoDelay(int ms);
    Color getColorAt(int x, int y);
-   void cleanup();
-   boolean isRemote();
+//   void cleanup();
+//   boolean isRemote();
 }
 

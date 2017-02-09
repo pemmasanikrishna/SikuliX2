@@ -18,6 +18,7 @@ public class LocalRobot extends Robot implements IRobot {
 
   private static SXLog log = SX.getLogger("SX.LocalRobot");
 
+  //<editor-fold desc="housekeeping">
   final static int MAX_DELAY = 60000;
   private static int heldButtons = 0;
   private static String heldKeys = "";
@@ -25,61 +26,14 @@ public class LocalRobot extends Robot implements IRobot {
   public static int stdAutoDelay = 0;
   public static int stdDelay = 10;
 
-  @Override
-  public boolean isRemote() {
-    return false;
-  }
-
   public LocalRobot() throws AWTException {
     super();
     setAutoDelay(stdAutoDelay);
     setAutoWaitForIdle(false);
   }
+  //</editor-fold>
 
-  private void doMouseMove(int x, int y) {
-    mouseMove(x, y);
-  }
-
-  private void doMouseDown(int buttons) {
-    Element.fakeHighlight(true);
-    setAutoDelay(stdAutoDelay);
-    setAutoWaitForIdle(false);
-    delay(100);
-    Element.fakeHighlight(false);
-    delay(100);
-    mousePress(buttons);
-    if (stdAutoDelay == 0) {
-      delay(stdDelay);
-    }
-  }
-
-  private void doMouseUp(int buttons) {
-    setAutoDelay(stdAutoDelay);
-    setAutoWaitForIdle(false);
-    mouseRelease(buttons);
-    if (stdAutoDelay == 0) {
-      delay(stdDelay);
-    }
-  }
-
-  private void doKeyPress(int keyCode) {
-    setAutoDelay(stdAutoDelay);
-    setAutoWaitForIdle(false);
-    keyPress(keyCode);
-    if (stdAutoDelay == 0) {
-      delay(stdDelay);
-    }
-  }
-
-  private void doKeyRelease(int keyCode) {
-    setAutoDelay(stdAutoDelay);
-    setAutoWaitForIdle(false);
-    keyRelease(keyCode);
-    if (stdAutoDelay == 0) {
-      delay(stdDelay);
-    }
-  }
-
+  //<editor-fold desc="Mouse">
   @Override
   public void mouseDown(int buttons) {
     if (heldButtons != 0) {
@@ -89,6 +43,19 @@ public class LocalRobot extends Robot implements IRobot {
       heldButtons = buttons;
     }
     doMouseDown(heldButtons);
+  }
+
+  private void doMouseDown(int buttons) {
+    Element.fakeHighlight(true);
+    setAutoDelay(stdAutoDelay);
+    setAutoWaitForIdle(false);
+    pause(100);
+    Element.fakeHighlight(false);
+    pause(100);
+    mousePress(buttons);
+    if (stdAutoDelay == 0) {
+      pause(stdDelay);
+    }
   }
 
   @Override
@@ -103,8 +70,16 @@ public class LocalRobot extends Robot implements IRobot {
     return heldButtons;
   }
 
-  @Override
-  public void delay(int ms) {
+  private void doMouseUp(int buttons) {
+    setAutoDelay(stdAutoDelay);
+    setAutoWaitForIdle(false);
+    mouseRelease(buttons);
+    if (stdAutoDelay == 0) {
+      pause(stdDelay);
+    }
+  }
+
+  public void pause(int ms) {
     if (ms < 0) {
       return;
     }
@@ -114,7 +89,9 @@ public class LocalRobot extends Robot implements IRobot {
     }
     super.delay(ms);
   }
+  //</editor-fold>
 
+  //<editor-fold desc="Screen">
   @Override
   public Picture captureScreen(Rectangle rect) {
     BufferedImage bImg = createScreenCapture(rect);
@@ -127,7 +104,9 @@ public class LocalRobot extends Robot implements IRobot {
   public Color getColorAt(int x, int y) {
     return getPixelColor(x, y);
   }
+  //</editor-fold>
 
+  //<editor-fold desc="Keys">
   @Override
   public void pressModifiers(int modifiers) {
     if (Device.hasModifier(modifiers, Device.Modifier.SHIFT)) {
@@ -189,6 +168,15 @@ public class LocalRobot extends Robot implements IRobot {
     }
   }
 
+  private void doKeyPress(int keyCode) {
+    setAutoDelay(stdAutoDelay);
+    setAutoWaitForIdle(false);
+    keyPress(keyCode);
+    if (stdAutoDelay == 0) {
+      pause(stdDelay);
+    }
+  }
+
   @Override
   public void keyUp(String keys) {
     if (keys != null && !"".equals(keys)) {
@@ -220,25 +208,17 @@ public class LocalRobot extends Robot implements IRobot {
     }
   }
 
-  private void doType(KeyMode mode, int... keyCodes) {
-    if (mode == KeyMode.PRESS_ONLY) {
-      for (int i = 0; i < keyCodes.length; i++) {
-        doKeyPress(keyCodes[i]);
-      }
-    } else if (mode == KeyMode.RELEASE_ONLY) {
-      for (int i = 0; i < keyCodes.length; i++) {
-        doKeyRelease(keyCodes[i]);
-      }
-    } else {
-      for (int i = 0; i < keyCodes.length; i++) {
-        doKeyPress(keyCodes[i]);
-      }
-      for (int i = 0; i < keyCodes.length; i++) {
-        doKeyRelease(keyCodes[i]);
-      }
+  private void doKeyRelease(int keyCode) {
+    setAutoDelay(stdAutoDelay);
+    setAutoWaitForIdle(false);
+    keyRelease(keyCode);
+    if (stdAutoDelay == 0) {
+      pause(stdDelay);
     }
   }
+  //</editor-fold>
 
+  //<editor-fold desc="type">
   @Override
   public void typeChar(char character, KeyMode mode) {
     log.trace("Robot: doType: %s ( %d )",
@@ -274,7 +254,23 @@ public class LocalRobot extends Robot implements IRobot {
     doType(KeyMode.PRESS_RELEASE, key);
   }
 
-  @Override
-  public void cleanup() {
+  private void doType(KeyMode mode, int... keyCodes) {
+    if (mode == KeyMode.PRESS_ONLY) {
+      for (int i = 0; i < keyCodes.length; i++) {
+        doKeyPress(keyCodes[i]);
+      }
+    } else if (mode == KeyMode.RELEASE_ONLY) {
+      for (int i = 0; i < keyCodes.length; i++) {
+        doKeyRelease(keyCodes[i]);
+      }
+    } else {
+      for (int i = 0; i < keyCodes.length; i++) {
+        doKeyPress(keyCodes[i]);
+      }
+      for (int i = 0; i < keyCodes.length; i++) {
+        doKeyRelease(keyCodes[i]);
+      }
+    }
   }
+  //</editor-fold>
 }
