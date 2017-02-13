@@ -272,18 +272,7 @@ public class Element extends SXElement {
   }
 
   public Picture capture(Element elem) {
-    content = new Mat();
-    Picture img = new Picture();
-    if (isSpecial()) {
-      SX.terminate(1, "capture: special not implemented");
-    } else {
-      Robot robot = SX.getSXROBOT();
-      img = new Picture(robot.createScreenCapture(elem.getRectangle()));
-    }
-    if (img.hasContent()) {
-      content = img.getContent();
-    }
-    return img;
+    return Device.capture(elem);
   }
   //</editor-fold>
 

@@ -7,96 +7,51 @@ package com.sikulix.core;
 import com.sikulix.api.Element;
 import com.sikulix.api.Event;
 import com.sikulix.api.Handler;
+import com.sikulix.api.Picture;
 import com.sikulix.util.Settings;
 import com.sikulix.util.animation.Animator;
 import com.sikulix.util.animation.AnimatorOutQuarticEase;
 import com.sikulix.util.animation.AnimatorTimeBased;
+import org.opencv.core.Mat;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
-public class  Device {
+public class Device {
 
-  protected static SXLog log = SX.getLogger("SX.Device");
+  private static SXLog log = SX.getLogger("SX.Device");
 
-  protected static Device device = null;
-  protected static String deviceName = "Device";
-
-  protected static boolean isMouse = false;
-  protected boolean isKeys = false;
-  protected boolean isLocalScreen = false;
-  protected boolean isOtherScreen = false;
-
+  //<editor-fold desc="*** houskeeping ***">
+  private static Device device = new Device();
+  private static Object deviceOwner = null;
 
   private static boolean inUse = false;
-  private static boolean keep = false;
-  protected static Object deviceOwner = null;
   private static boolean blocked = false;
-  private static boolean suspended = false;
   private static Object synchObject = new Object();
 
   //TODO MouseButtons
   private static boolean areExtraMouseButtonsEnabled = false;
   private static int numberOfButtons = 0;
+  private static int maskForButton1 = 0;
+
   public static void getMouseSetup() {
     areExtraMouseButtonsEnabled = Toolkit.getDefaultToolkit().areExtraMouseButtonsEnabled();
     numberOfButtons = MouseInfo.getNumberOfButtons();
-    int maskForButton1 = InputEvent.getMaskForButton(1);
+    maskForButton1 = InputEvent.getMaskForButton(1);
   }
 
-
-  //<editor-fold desc="*** Construction">
   private Device() {
   }
-  //</editor-fold>
 
-  //<editor-fold desc="*** Callback">
-  private static Event callback = null;
-  private static boolean shouldRunCallback = false;
-  private static boolean shouldTerminate = false;
-
-  public static void setShouldTerminate() {
-    shouldTerminate = true;
-    log.debug("setShouldTerminate: request issued");
-  }
-
-  public static boolean isShouldRunCallback() {
-    return shouldRunCallback;
-  }
-
-  public static void setShouldRunCallback(boolean shouldRun) {
-    shouldRunCallback = shouldRun;
-  }
-
-  private static void checkShouldRunCallback() {
-    if (shouldRunCallback && callback != null) {
-      callback.handle();
-      if (shouldTerminate) {
-        shouldTerminate = false;
-        throw new AssertionError("aborted by Sikulix.GenericDeviceCallBack");
-      }
-    }
-  }
-
-  /**
-   * set a callback function for handling Device events <br>
-   * in case of event the user provided callBack.happened is called
-   *
-   * @param handler
-   */
-  public static void setCallback(Handler handler) {
-    callback = new Event(handler);
+  public String toString() {
+    return "GlobalDevice";
   }
   //</editor-fold>
 
   //<editor-fold desc="*** get state">
   protected static boolean isInUse() {
     return inUse;
-  }
-
-  protected static boolean isSuspended() {
-    return suspended;
   }
 
   protected static boolean isBlocked() {
@@ -191,31 +146,16 @@ public class  Device {
     }
     if (!inUse) {
       inUse = true;
-      if (isMouse) {
-        checkLastPos();
-        checkShouldRunCallback();
-        if (shouldTerminate) {
-          shouldTerminate = false;
-          throw new AssertionError(String.format("Device: %s: termination after return from callback", deviceName));
-        }
+      checkLastPos();
+      checkShouldRunCallback();
+      if (shouldTerminate) {
+        shouldTerminate = false;
+        throw new AssertionError(String.format("Device: termination after return from callback"));
       }
-      keep = false;
-      log.trace("%s: use start: %s", deviceName, owner);
+      log.trace("use start: %s", owner);
       return true;
     }
     log.error("use synch problem at start: %s", owner);
-    return false;
-  }
-
-  public static synchronized boolean keep(Object ownerGiven) {
-    if (isNotLocal(ownerGiven)) {
-      return false;
-    }
-    if (inUse && deviceOwner == ownerGiven) {
-      keep = true;
-      log.trace("%s: use keep: %s", deviceName, ownerGiven);
-      return true;
-    }
     return false;
   }
 
@@ -228,33 +168,15 @@ public class  Device {
       return false;
     }
     if (inUse && deviceOwner == owner) {
-      if (keep) {
-        keep = false;
-        return true;
-      }
-      setLastPos();
       inUse = false;
       deviceOwner = null;
       synchObject.notify();
-      log.trace("%s: use stop: %s", deviceName, deviceOwner);
+      log.trace("use stop: %s", deviceOwner);
       return true;
     }
     return false;
   }
   //</editor-fold>
-
-  public static void delay(int time) {
-    if (time == 0) {
-      return;
-    }
-    if (time < 60) {
-      time = time * 1000;
-    }
-    try {
-      Thread.sleep(time);
-    } catch (InterruptedException e) {
-    }
-  }
 
   //<editor-fold desc="*** mouse pointer location ***">
   private static Element lastPos = null;
@@ -278,7 +200,7 @@ public class  Device {
       }
       if (movedAction == MOVEDPAUSE) {
         while (pos.x > 0 && pos.y > 0) {
-          delay(500);
+          SX.pause(0.5);
           pos = Element.at();
           if (MOVEDHIGHLIGHT) {
             showMousePos(pos.getPoint());
@@ -303,13 +225,7 @@ public class  Device {
   }
 
   private static void showMousePos(Point pos) {
-    //TODO implement showMousePos (Visual.highlight)
-//    Location lPos = new Location(pos);
-//    Region inner = lPos.grow(20).highlight();
-//    delay(500);
-//    lPos.grow(40).highlight(1);
-//    delay(500);
-//    inner.highlight();
+    //TODO implement showMousePos (Element.show)
   }
   //</editor-fold>
 
@@ -360,8 +276,8 @@ public class  Device {
    * @param handler Handler
    */
   public static void setMovedCallback(Handler handler) {
-      movedAction = MOVEDCALLBACK;
-      movedHandler = new Event(handler);
+    movedAction = MOVEDCALLBACK;
+    movedHandler = new Event(handler);
   }
 
   /**
@@ -410,7 +326,7 @@ public class  Device {
    * @return the location
    */
   public static Element click(Element loc, String action, Integer... args) {
-    if (isSuspended() || loc.isSpecial()) {
+    if (loc.isSpecial()) {
       return null;
     }
     boolean clickDouble = false;
@@ -451,15 +367,16 @@ public class  Device {
       }
     }
     use();
-    Device.delay(beforeWait);
+    //TODO revise mouse click timing
+    SX.pause(beforeWait);
     Settings.ClickDelay = innerWait / 1000;
     click(loc, buttons, 0, clickDouble, null);
-    Device.delay(afterWait);
+    SX.pause(afterWait);
     let();
     return loc;
   }
 
-  private static int click(Element loc, int buttons, Integer modifiers, boolean dblClick, Element vis) {
+  private static int click(Element loc, int buttons, Integer modifiers, boolean dblClick, Element elem) {
     if (modifiers == null) {
       modifiers = 0;
     }
@@ -472,11 +389,10 @@ public class  Device {
     if (robot == null) {
       return 0;
     }
-    Point pLoc = loc.getPoint();
-    use(vis);
+    use(elem);
     log.info("%s", getClickMsg(loc, buttons, modifiers, dblClick));
     if (shouldMove) {
-      smoothMove(pLoc, robot);
+      smoothMove(loc, robot);
     }
     robot.pressModifiers(modifiers);
     int pause = Settings.ClickDelay > 1 ? 1 : (int) (Settings.ClickDelay * 1000);
@@ -493,7 +409,7 @@ public class  Device {
     }
     robot.releaseModifiers(modifiers);
     robot.waitForIdle();
-    let(vis);
+    let(elem);
     return 1;
   }
 
@@ -521,16 +437,6 @@ public class  Device {
   //<editor-fold desc="*** move ***">
 
   /**
-   * move the mouse to the given location
-   *
-   * @param vis Location
-   * @return 1 for success, 0 otherwise
-   */
-  public static int move(Element vis) {
-    return move(vis.getTarget(), null);
-  }
-
-  /**
    * move the mouse from the current position to the offset position given by the parameters
    *
    * @param xoff horizontal offset (&lt; 0 left, &gt; 0 right)
@@ -541,30 +447,35 @@ public class  Device {
     return move(Element.at().offset(xoff, yoff));
   }
 
-  public static int move(Element loc, Element vis) {
-    if (isSuspended()) {
-      return 0;
-    }
-    Point pLoc = null;
+  /**
+   * move the mouse to the given location
+   *
+   * @param elem Location
+   * @return 1 for success, 0 otherwise
+   */
+  public static int move(Element elem) {
+    return move(elem.getTarget(), null);
+  }
+
+  public static int move(Element loc, Element owner) {
     if (loc != null) {
-      pLoc = loc.getPoint();
       IRobot robot = loc.getDeviceRobot();
       if (robot == null) {
         return 0;
       }
-      use(vis);
-      smoothMove(pLoc, robot);
-      let(vis);
+      use(owner);
+      smoothMove(loc, robot);
+      let(owner);
       return 1;
     }
     return 0;
   }
 
-  public static void smoothMove(Point dest, IRobot robot) {
-    smoothMove(new Point(Element.at().x, Element.at().y), dest, (long) (Settings.MoveMouseDelay * 1000L), robot);
+  private static void smoothMove(Element dest, IRobot robot) {
+    smoothMove(Element.at(), dest, (long) (Settings.MoveMouseDelay * 1000L), robot);
   }
 
-  public static void smoothMove(Point src, Point dest, long ms, IRobot robot) {
+  private static void smoothMove(Element src, Element dest, long ms, IRobot robot) {
     int x = dest.x;
     int y = dest.y;
     log.trace("smoothMove (%.1f): (%d, %d) to (%d, %d)", Settings.MoveMouseDelay, src.x, src.y, x, y);
@@ -582,18 +493,23 @@ public class  Device {
       }
     }
     robot.waitForIdle();
+    checkMouseMoved(dest);
+  }
+
+  private static void checkMouseMoved(Element loc) {
+    //TODO implementation with native hook
     PointerInfo mp = MouseInfo.getPointerInfo();
-    Point pc;
+    Point pCurrent;
     if (mp == null) {
-      log.error("RobotDesktop: checkMousePosition: MouseInfo.getPointerInfo invalid after move to (%d, %d)", x, y);
+      log.error("checkMouseMoved: MouseInfo invalid after move to (%d, %d)", loc.x, loc.y);
     } else {
-      pc = mp.getLocation();
-      if (pc.x != x || pc.y != y) {
-        log.error("RobotDesktop: checkMousePosition: should be (%d, %d)\nbut after move is (%d, %d)"
+      pCurrent = mp.getLocation();
+      if (pCurrent.x != loc.x || pCurrent.y != loc.y) {
+        log.error("checkMouseMoved: should be (%d, %d)\nbut after move is (%d, %d)"
                         + "\nPossible cause in case you did not touch the mouse while script was running:\n"
                         + " Mouse actions are blocked generally or by the frontmost application."
                         + (SX.isWindows() ? "\nYou might try to run the SikuliX stuff as admin." : ""),
-                x, y, pc.x, pc.y);
+                loc.x, loc.y, pCurrent.x, pCurrent.y);
       }
     }
   }
@@ -610,12 +526,9 @@ public class  Device {
     down(buttons, null);
   }
 
-  public static void down(int buttons, Element vis) {
-    if (isSuspended()) {
-      return;
-    }
-    use(vis);
-    IRobot robot = SX.isNull(vis) ? SX.getLocalRobot() : vis.getDeviceRobot();
+  public static void down(int buttons, Element elem) {
+    use(elem);
+    IRobot robot = SX.isNull(elem) ? SX.getLocalRobot() : elem.getDeviceRobot();
     robot.mouseDown(buttons);
   }
   //</editor-fold>
@@ -638,15 +551,14 @@ public class  Device {
     up(buttons, null);
   }
 
-  public static void up(int buttons, Element vis) {
-    if (isSuspended()) {
-      return;
-    }
-    IRobot robot = SX.isNull(vis) ? SX.getLocalRobot() : vis.getDeviceRobot();
+  public static void up(int buttons, Element elem) {
+    IRobot robot = SX.isNull(elem) ? SX.getLocalRobot() : elem.getDeviceRobot();
     robot.mouseUp(buttons);
-    let(vis);
+    let(elem);
   }
   //</editor-fold>
+
+  //TODO implement drag, drop, dragDrop
 
   //<editor-fold desc="*** mouse wheel ***">
   public static final int WHEEL_UP = -1;
@@ -664,24 +576,22 @@ public class  Device {
     wheel(direction, steps, null);
   }
 
-  public static void wheel(int direction, int steps, Element vis) {
-    wheel(direction, steps, vis, WHEEL_STEP_DELAY);
+  public static void wheel(int direction, int steps, Element elem) {
+    wheel(direction, steps, elem, WHEEL_STEP_DELAY);
   }
 
-  public static void wheel(int direction, int steps, Element vis, int stepDelay) {
-    if (isSuspended()) {
-      return;
-    }
-    IRobot robot = SX.isNull(vis) ? SX.getLocalRobot() : vis.getDeviceRobot();
-    use(vis);
+  public static void wheel(int direction, int steps, Element elem, int stepDelay) {
+    IRobot robot = SX.isNull(elem) ? SX.getLocalRobot() : elem.getDeviceRobot();
+    use(elem);
     for (int i = 0; i < steps; i++) {
       robot.mouseWheel(direction);
       robot.pause(stepDelay);
     }
-    let(vis);
+    let(elem);
   }
   //</editor-fold>
 
+  //<editor-fold desc="*** keyboard ***">
   public static class Modifier {
     public static final int CTRL = InputEvent.CTRL_MASK;
     public static final int SHIFT = InputEvent.SHIFT_MASK;
@@ -705,4 +615,62 @@ public class  Device {
     //TODO implement toJavaKeyCodeFromText
     return 0;
   }
+  //</editor-fold>
+
+  //TODO implement capture, show coordination
+
+  public static Picture capture(Element elem) {
+    Picture img = new Picture();
+    if (elem.isSpecial()) {
+      SX.terminate(1, "capture: special not implemented");
+    } else {
+      Robot robot = SX.getSXROBOT();
+      img = new Picture(robot.createScreenCapture(elem.getRectangle()));
+    }
+    if (img.hasContent()) {
+      elem.setContent(img.getContent());
+    } else {
+      elem.setContent(new Mat());
+    }
+    return img;
+  }
+
+  //<editor-fold desc="*** Callback">
+  private static Event callback = null;
+  private static boolean shouldRunCallback = false;
+  private static boolean shouldTerminate = false;
+
+  public static void setShouldTerminate() {
+    shouldTerminate = true;
+    log.debug("setShouldTerminate: request issued");
+  }
+
+  public static boolean isShouldRunCallback() {
+    return shouldRunCallback;
+  }
+
+  public static void setShouldRunCallback(boolean shouldRun) {
+    shouldRunCallback = shouldRun;
+  }
+
+  private static void checkShouldRunCallback() {
+    if (shouldRunCallback && callback != null) {
+      callback.handle();
+      if (shouldTerminate) {
+        shouldTerminate = false;
+        throw new AssertionError("aborted by Sikulix.GenericDeviceCallBack");
+      }
+    }
+  }
+
+  /**
+   * set a callback function for handling Device events <br>
+   * in case of event the user provided callBack.happened is called
+   *
+   * @param handler
+   */
+  public static void setCallback(Handler handler) {
+    callback = new Event(handler);
+  }
+  //</editor-fold>
 }
