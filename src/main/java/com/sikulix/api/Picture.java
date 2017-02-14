@@ -35,6 +35,8 @@ public class Picture extends Element {
   }
 
   protected void copy(Element elem) {
+    w = elem.w;
+    h = elem.h;
     if (elem.hasContent()) {
       setContent(elem.getContent().clone());
     } else {
