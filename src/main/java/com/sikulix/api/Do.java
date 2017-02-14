@@ -949,33 +949,49 @@ public class Do {
   }
   //</editor-fold>
 
-  // find
-  // wait
-  // exists
-  // waitVanish
-  // findAll
   //<editor-fold desc="actions like find, wait, click">
-
-  static final String FIND = "find()";
-  static final String WAIT = "wait()";
-  static final String EXISTS = "exists()";
-  static final String VANISH = "waitVanish()";
-  static final String ALL = "findAll()";
-
-  private static boolean handleImageMissing(String type, Finder.PossibleMatch possibleMatch) {
-    if (possibleMatch.isImageMissingWhat()) {
-      log.trace("%s: handling image missing: what: %s", type, possibleMatch.getWhat());
-      return Picture.handleImageMissing(possibleMatch.getWhat());
-    } else {
-      log.trace("%s: handling image missing: where: %s", type, possibleMatch.getWhere());
-      return Picture.handleImageMissing(possibleMatch.getWhere());
-    }
+  public static Element click(Object... args) {
+    log.trace("click: start");
+    Element target = findForClick(Finder.CLICK, args);
+    target.click();
+    log.trace("click: end");
+    return target;
   }
 
-  private static boolean handleFindFailed(String type, Finder.PossibleMatch possibleMatch) {
-    //TODO find failed handler
-    log.trace("%s: handling not found: %s", type, possibleMatch);
-    return false;
+  public static Element doubleClick(Object... args) {
+    log.trace("doubleClick: start");
+    Element target = findForClick(Finder.DOUBLECLICK, args);
+    target.doubleClick();
+    log.trace("doubleClick: end");
+    return target;
+  }
+
+  public static Element rightClick(Object... args) {
+    log.trace("rightClick: start");
+    Element target = findForClick(Finder.RIGHTCLICK, args);
+    target.rightClick();
+    log.trace("rightClick: end");
+    return target;
+  }
+
+  public static Element hover(Object... args) {
+    log.trace("hover: start");
+    Element target = findForClick(Finder.HOVER, args);
+    target.hover();
+    log.trace("hover: end");
+    return target;
+  }
+
+  private static Element findForClick(String type, Object... args) {
+    Element match;
+    if (args.length == 0) {
+      match = Do.on();
+    } else if (args.length == 1) {
+      match = Finder.runFind(type, args);
+    } else {
+      match = Finder.runWait(type, args);
+    }
+    return match;
   }
 
   /**
@@ -984,159 +1000,67 @@ public class Do {
    */
   public static Element find(Object... args) {
     log.trace("find: start");
-    Element match = new Element();
-    Finder.PossibleMatch possibleMatch = new Finder.PossibleMatch();
-    boolean shouldRepeat = true;
-    while (shouldRepeat) {
-      Element where = possibleMatch.get(args);
-      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
-        match = possibleMatch.getWhat();
-        if (possibleMatch.isImageMissingWhere()) {
-          match = possibleMatch.getWhere();
-        }
-        shouldRepeat = handleImageMissing(FIND, possibleMatch);
-      } else {
-        if (where.hasMatch()) {
-          match = where.getLastMatch();
-          shouldRepeat = false;
-        } else {
-          match = possibleMatch.getWhat();
-          shouldRepeat = handleFindFailed(FIND, possibleMatch);
-        }
-      }
-    }
+    Element match = Finder.runFind(Finder.FIND, args);
     log.trace("find: end");
     return match;
   }
 
   public static Element wait(Object... args) {
     log.trace("wait: start");
-    Element match = doWait(WAIT, args);
+    Element match = Finder.runWait(Finder.WAIT, args);
     log.trace("wait: end");
     return match;
   }
 
   public static boolean exists(Object... args) {
     log.trace("exists: start");
-    Element match = doWait(EXISTS, args);
+    Element match = Finder.runWait(Finder.EXISTS, args);
     log.trace("exists: end");
     return match.isMatch();
   }
 
-  private static Element doWait(String type, Object... args) {
-    Finder.PossibleMatch possibleMatch = new Finder.PossibleMatch();
-    Element match = new Element();
-    boolean shouldRepeat = true;
-    while (shouldRepeat) {
-      Element where = possibleMatch.get(args);
-      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
-        shouldRepeat = handleImageMissing(type, possibleMatch);
-      } else {
-        if (where.hasMatch()) {
-          match = where.getLastMatch();
-          shouldRepeat = false;
-        } else {
-          while (possibleMatch.shouldWait()) {
-            log.trace("wait: need to repeat");
-            possibleMatch.repeat();
-            if (where.hasMatch()) {
-              match = where.getLastMatch();
-              shouldRepeat = false;
-              break;
-            }
-          }
-          if (!shouldRepeat) {
-            break;
-          }
-          shouldRepeat = handleFindFailed(type, possibleMatch);
-        }
-      }
-    }
-    return match;
-  }
-
   public static boolean waitVanish(Object... args) {
     log.trace("waitVanish: start");
-    Finder.PossibleMatch possibleMatch = new Finder.PossibleMatch();
-    boolean shouldRepeat = true;
-    boolean vanished = false;
-    while (shouldRepeat) {
-      Element where = possibleMatch.get(args);
-      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
-        shouldRepeat = handleImageMissing(VANISH, possibleMatch);
-      } else {
-        where.setLastVanish(null);
-        if (where.hasMatch()) {
-          Element match = where.getLastMatch();
-          where.setLastVanish(match);
-          while (!vanished && possibleMatch.shouldWait()) {
-            log.trace("wait: need to repeat");
-            possibleMatch.repeat();
-            if (where.hasMatch()) {
-              match = where.getLastMatch();
-              where.setLastVanish(match);
-            } else {
-              vanished = true;
-              shouldRepeat = false;
-            }
-          }
-        } else {
-          shouldRepeat = handleFindFailed(VANISH, possibleMatch);
-        }
-      }
-    }
+    boolean vanished = Finder.runWaitVanish(args);
+    log.trace("waitVanish: end");
     return vanished;
   }
 
+  //<editor-fold desc="findAll">
   public static List<Element> findAll(Object... args) {
     log.trace("findAll: start");
-    Finder.PossibleMatch possibleMatch = new Finder.PossibleMatch("ALL");
-    boolean shouldRepeat = true;
-    List<Element> matches = new ArrayList<>();
-    while (shouldRepeat) {
-      Element where = possibleMatch.get(args);
-      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
-        shouldRepeat = handleImageMissing(ALL, possibleMatch);
-      } else {
-        if (where.hasMatches()) {
-          matches = where.getLastMatches();
-          shouldRepeat = false;
-        } else {
-          shouldRepeat = handleFindFailed(ALL, possibleMatch);
-        }
-      }
-    }
+    List<Element> matches = Finder.runFindAll(args);
     log.trace("findAll: end");
     return matches;
   }
 
   public static boolean hasMatch() {
-    return defaultElement.hasMatch();
+    return getDefaultElement().hasMatch();
   }
 
   public static Element getLastMatch() {
-    return defaultElement.getLastMatch();
+    return getDefaultElement().getLastMatch();
   }
 
   public static boolean hasVanish() {
-    return defaultElement.hasVanish();
+    return getDefaultElement().hasVanish();
   }
 
   public static Element getLastVanish() {
-    return defaultElement.getLastVanish();
+    return getDefaultElement().getLastVanish();
   }
 
   public static boolean hasMatches() {
-    return defaultElement.hasMatches();
+    return getDefaultElement().hasMatches();
   }
 
   public static List<Element> getLastMatches() {
-    List<Element> matches = defaultElement.getLastMatches();
+    List<Element> matches = getDefaultElement().getLastMatches();
     if (matches.isEmpty()) {
       matches = null;
     }
     return matches;
   }
-
+  //</editor-fold>
   //</editor-fold>
 }

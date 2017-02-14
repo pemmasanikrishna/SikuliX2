@@ -5,6 +5,7 @@
 package com.sikulix.api;
 
 import com.sikulix.core.Content;
+import com.sikulix.core.Finder;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 import org.opencv.core.*;
@@ -460,8 +461,24 @@ public class Picture extends Element {
     return validName;
   }
 
-  public static boolean handleImageMissing(Element image) {
+  public static boolean handleImageMissing(String type, Finder.PossibleMatch possibleMatch) {
+    if (possibleMatch.isImageMissingWhat()) {
+      log.trace("%s: handling image missing: what: %s", type, possibleMatch.getWhat());
+      return handleImageMissing(possibleMatch.getWhat());
+    } else {
+      log.trace("%s: handling image missing: where: %s", type, possibleMatch.getWhere());
+      return handleImageMissing(possibleMatch.getWhere());
+    }
+  }
+
+  static boolean handleImageMissing(Element image) {
     //TODO image missing handler
+    return false;
+  }
+
+  public static boolean handleFindFailed(String type, Finder.PossibleMatch possibleMatch) {
+    //TODO find failed handler
+    log.trace("%s: handling not found: %s", type, possibleMatch);
     return false;
   }
   //</editor-fold>

@@ -542,14 +542,27 @@ public class Element extends SXElement {
   //</editor-fold>
 
   //<editor-fold desc="***** mouse">
+  private Element findForClick(String type, Object... args) {
+    Element target;
+    if (args.length == 0) {
+      target = this;
+    } else if (args.length == 1) {
+      target = Finder.runFind(type, args[0], this);
+    } else {
+      target = Finder.runWait(type, args[0], this, args[1]);
+    }
+    return target;
+  }
+
   /**
    * Move the mouse to this element's target
    *
    * @return this
    */
-  public Element hover() {
-    getElementDevice().move(this);
-    return this;
+  public Element hover(Object... args) {
+    Element target = findForClick(Finder.HOVER, args);
+    target.getElementDevice().move(target);
+    return target;
   }
 
   /**
@@ -557,9 +570,10 @@ public class Element extends SXElement {
    *
    * @return this
    */
-  public Element click() {
-    getElementDevice().click(this);
-    return this;
+  public Element click(Object... args) {
+    Element target = findForClick(Finder.CLICK, args);
+    target.getElementDevice().click(target);
+    return target;
   }
 
   /**
@@ -567,9 +581,10 @@ public class Element extends SXElement {
    *
    * @return this
    */
-  public Element doubleClick() {
-    getElementDevice().click(this, IDevice.Action.LEFTDOUBLE);
-    return this;
+  public Element doubleClick(Object... args) {
+    Element target = findForClick(Finder.DOUBLECLICK, args);
+    target.getElementDevice().doubleClick(target);
+    return target;
   }
 
   /**
@@ -577,9 +592,10 @@ public class Element extends SXElement {
    *
    * @return this
    */
-  public Element rightClick() {
-    getElementDevice().click(this, IDevice.Action.RIGHT);
-    return this;
+  public Element rightClick(Object... args) {
+    Element target = findForClick(Finder.RIGHTCLICK, args);
+    target.getElementDevice().rightClick(target);
+    return target;
   }
   //</editor-fold>
 

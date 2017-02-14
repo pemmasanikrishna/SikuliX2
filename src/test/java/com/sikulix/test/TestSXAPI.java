@@ -170,15 +170,15 @@ public class TestSXAPI {
 
   //<editor-fold desc="running">
   @Test
-  public void test_00_play() {
-    currentTest = "test_00_play";
+  public void test_000_play() {
+    currentTest = "test_000_play";
     result = "nothing to do";
     assert true;
   }
 
   @Test
-  public void test_10_startup() {
-    currentTest = "test_10_startup_workdir";
+  public void test_010_startup() {
+    currentTest = "test_010_startup_workdir";
     String workDir = SX.getUSERWORK();
     if (SX.isNotSet(workDir)) {
       SX.show();
@@ -188,24 +188,24 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_11_startup_native_load() {
-    currentTest = "test_11_startup_native_load";
+  public void test_011_startup_native_load() {
+    currentTest = "test_011_startup_native_load";
     File test = SX.getFileExists(SX.getSXNATIVE(), SX.sxLibsCheckName);
     result = SX.sxLibsCheckName;
     assert !SX.isNull(test) && SX.existsFile(test);
   }
 
   @Test
-  public void test_20_getBundlePath() {
-    currentTest = "test_20_getBundlePath";
+  public void test_020_getBundlePath() {
+    currentTest = "test_020_getBundlePath";
     String bundlePath = Do.getBundlePath();
     result = bundlePath;
     assert SX.existsFile(bundlePath);
   }
 
   @Test
-  public void test_21_setBundlePathFile() {
-    currentTest = "test_21_setBundlePathFile";
+  public void test_021_setBundlePathFile() {
+    currentTest = "test_021_setBundlePathFile";
     boolean success = Do.setBundlePath(mavenRoot, defaultImagePath);
     result = Do.getBundlePath();
     success &= SX.existsFile(result);
@@ -213,8 +213,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_22_setBundlePathByClass() {
-    currentTest = "test_22_setBundlePathByClass";
+  public void test_022_setBundlePathByClass() {
+    currentTest = "test_022_setBundlePathByClass";
     boolean success = Do.setBundlePath(jarImagePathDefault);
     result = Do.getBundlePath();
     success &= SX.existsFile(result);
@@ -222,8 +222,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_23_setBundlePathJarByClass() {
-    currentTest = "test_23_setBundlePathJarByClass";
+  public void test_023_setBundlePathJarByClass() {
+    currentTest = "test_023_setBundlePathJarByClass";
     boolean success = Do.setBundlePath(jarImagePathClass);
     result = Do.getBundlePath();
     success &= SX.existsFile(result);
@@ -231,8 +231,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_24_setBundlePathHttp() {
-    currentTest = "test_24_setBundlePathHttp";
+  public void test_024_setBundlePathHttp() {
+    currentTest = "test_024_setBundlePathHttp";
     boolean success = Do.setBundlePath(httpRoot, defaultImagePath);
     result = Do.getBundlePath();
     success &= (httpImagePath).equals(result);
@@ -240,8 +240,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_29_getImagePath() {
-    currentTest = "test_29_getImagePath";
+  public void test_029_getImagePath() {
+    currentTest = "test_029_getImagePath";
     Do.setBundlePath(jarImagePathDefault);
     Do.addImagePath(jarImagePathClass);
     Do.addImagePath(httpImagePath);
@@ -255,8 +255,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_30_elementConstructors() {
-    currentTest = "test_30_elementConstructors";
+  public void test_030_elementConstructors() {
+    currentTest = "test_030_elementConstructors";
     Element elem = new Element();
     result = "Element();";
     assert SXElement.eType.ELEMENT.equals(elem.getType());
@@ -282,8 +282,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_31_loadImageFromFile() {
-    currentTest = "test_31_loadImageFromFile";
+  public void test_0031_loadImageFromFile() {
+    currentTest = "test_0031_loadImageFromFile";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "BundlePath: " + Do.getBundlePath();
     Picture img = new Picture(imageNameDefault);
@@ -298,8 +298,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_32_loadImageFromJarByClass() {
-    currentTest = "test_32_loadImageFromJarByClass";
+  public void test_0032_loadImageFromJarByClass() {
+    currentTest = "test_0032_loadImageFromJarByClass";
     boolean success = Do.setBundlePath(jarImagePathClass);
     result = "BundlePath: " + Do.getBundlePath();
     Picture img = new Picture(imageNameDefault);
@@ -314,8 +314,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_33_loadImageFromHttp() {
-    currentTest = "test_33_loadImageFromHttp";
+  public void test_033_loadImageFromHttp() {
+    currentTest = "test_033_loadImageFromHttp";
     boolean success = Do.setBundlePath(httpRoot, "master");
     result = "BundlePath: " + Do.getBundlePath();
     Picture img = new Picture(imageNameDefault);
@@ -330,8 +330,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_40_createFinderFromImage() {
-    currentTest = "test_40_createFinderFromImage";
+  public void test_040_createFinderFromImage() {
+    currentTest = "test_040_createFinderFromImage";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "";
     Picture img = new Picture(imageNameDefault);
@@ -344,8 +344,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_41_findImageInSameImage() {
-    currentTest = "test_41_findImageInSameImage";
+  public void test_041_findImageInSameImage() {
+    currentTest = "test_041_findImageInSameImage";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
     start();
@@ -369,8 +369,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_42_findImageInOtherImage() {
-    currentTest = "test_42_findImageInOtherImage";
+  public void test_042_findImageInOtherImage() {
+    currentTest = "test_042_findImageInOtherImage";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
     start();
@@ -395,8 +395,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_43_findAllInImage() {
-    currentTest = "test_43_findAllInImage";
+  public void test_043_findAllInImage() {
+    currentTest = "test_043_findAllInImage";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
     start();
@@ -421,8 +421,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_50_captureDefaultScreen() {
-    currentTest = "test_50_captureDefaultScreen";
+  public void test_050_captureDefaultScreen() {
+    currentTest = "test_050_captureDefaultScreen";
     prepareDefaultScreen();
     if (isHeadless) {
       return;
@@ -434,8 +434,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_51_capturePartOfDefaultScreen() {
-    currentTest = "test_51_capturePartOfDefaultScreen";
+  public void test_051_capturePartOfDefaultScreen() {
+    currentTest = "test_051_capturePartOfDefaultScreen";
     assert prepareDefaultScreen(imageNameDefault);
     if (isHeadless) {
       return;
@@ -453,8 +453,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_52_findInDefaultScreen() {
-    currentTest = "test_52_findInDefaultScreen";
+  public void test_052_findInDefaultScreen() {
+    currentTest = "test_052_findInDefaultScreen";
     assert prepareDefaultScreen("shot", imageNameDefault);
     if (isHeadless) {
       return;
@@ -467,8 +467,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_53_findAllInDefaultScreen() {
-    currentTest = "test_53_findAllInDefaultScreen";
+  public void test_053_findAllInDefaultScreen() {
+    currentTest = "test_053_findAllInDefaultScreen";
     assert prepareDefaultScreen("shot-tile", imageNameDefault);
     if (isHeadless) {
       return;
@@ -484,8 +484,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_54_waitForOnDefaultScreen() {
-    currentTest = "test_54_waitForOnDefaultScreen";
+  public void test_054_waitForOnDefaultScreen() {
+    currentTest = "test_054_waitForOnDefaultScreen";
     showPauseBefore = 2;
     assert prepareDefaultScreen("shot", imageNameDefault);
     if (isHeadless) {
@@ -500,8 +500,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_55_waitVanishOnDefaultScreen() {
-    currentTest = "test_55_waitVanishOnDefaultScreen";
+  public void test_055_waitVanishOnDefaultScreen() {
+    currentTest = "test_055_waitVanishOnDefaultScreen";
     showPauseAfter = 3;
     assert prepareDefaultScreen("shot", imageNameDefault);
     if (isHeadless) {
@@ -515,8 +515,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_56_existsOnDefaultScreen() {
-    currentTest = "test_56_existsOnDefaultScreen";
+  public void test_056_existsOnDefaultScreen() {
+    currentTest = "test_056_existsOnDefaultScreen";
     assert prepareDefaultScreen("shot", imageNameDefault);
     if (isHeadless) {
       return;
@@ -529,8 +529,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_57_saveCapturePartOfDefaultScreen() {
-    currentTest = "test_57_saveCapturePartOfDefaultScreen";
+  public void test_057_saveCapturePartOfDefaultScreen() {
+    currentTest = "test_057_saveCapturePartOfDefaultScreen";
     assert prepareDefaultScreen(imageNameDefault);
     if (isHeadless) {
       return;
@@ -542,15 +542,15 @@ public class TestSXAPI {
     theShow.stop();
     if (elemDisplayed.hasContent()) {
       elemDisplayed.show();
-      elemDisplayed.save("test_57_saveCapturePartOfDefaultScreen");
+      elemDisplayed.save("test_057_saveCapturePartOfDefaultScreen");
       return;
     }
     assert false;
   }
 
   @Test
-  public void test_58_basicStory() {
-    currentTest = "test_58_basicStory";
+  public void test_058_basicStory() {
+    currentTest = "test_058_basicStory";
     result = "showing some grafics";
     if (!SX.isHeadless()) {
       Story story = new Story();
@@ -566,8 +566,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_70_handlingWhatImageNotOnImagePath() {
-    currentTest = "test_70_handlingWhatImageNotOnImagePath";
+  public void test_070_handlingWhatImageNotOnImagePath() {
+    currentTest = "test_070_handlingWhatImageNotOnImagePath";
     result = "what image not found on imagepath";
     String givenWhat = "noimagewhat";
     Element missing = Do.find(givenWhat);
@@ -575,8 +575,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_71_handlingWhereImageNotOnImagePath() {
-    currentTest = "test_71_handlingWhereImageNotOnImagePath";
+  public void test_071_handlingWhereImageNotOnImagePath() {
+    currentTest = "test_071_handlingWhereImageNotOnImagePath";
     result = "where image not found on imagepath";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     String givenWhat = imageNameDefault;
@@ -586,46 +586,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_90_nativeHook() {
-    currentTest = "test_990_nativeHook";
-    if (!SX.isHeadless()) {
-      NativeHook hook = NativeHook.start();
-      SX.pause(3);
-      hook.stop();
-      result = "NativeHook works";
-    } else {
-      result = "headless: NativeHook not tested";
-    }
-    assert true;
-  }
-
-  @Test
-  public void test_91_popat() {
-    currentTest = "test_991_popat";
-    boolean assertVal = true;
-    if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
-      Do.popat(300, 300);
-      Do.popup("Use mouse to click OK", "testing popat");
-      Element loc = SX.getSXLOCALDEVICE().at();
-      result = String.format("clicked at (%d, %d)", loc.x, loc.y);
-      assertVal = loc.x > 300 && loc.x < 450;
-    } else {
-      result = "TravisCI or NonInteractive: not testing";
-    }
-    assert assertVal;
-  }
-
-  @Test
-  public void test_92_oldAPI_Screen() {
-    currentTest = "test_92_oldAPI_Screen";
-    Screen.showMonitors();
-    new Screen(1).show();
-    result = new Screen(1).toString();
-  }
-
-  @Test
-  public void test_80_basicsObserve() {
-    currentTest = "test_80_basicsObserve";
+  public void test_080_basicsObserve() {
+    currentTest = "test_080_basicsObserve";
     result = "basic observe features";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     Events.shouldProcessEvents(false);
@@ -652,8 +614,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_81_ObserveOnAppearWithHandler() {
-    currentTest = "test_81_ObserveOnAppearWithHandler";
+  public void test_081_ObserveOnAppearWithHandler() {
+    currentTest = "test_081_ObserveOnAppearWithHandler";
     assert prepareDefaultScreen("shot", imageNameDefault);
     result = "observe onAppear with handler";
     Element where = Do.on();
@@ -675,8 +637,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_82_ObserveOnVanishWithHandler() {
-    currentTest = "test_82_ObserveOnVanishWithHandler";
+  public void test_082_ObserveOnVanishWithHandler() {
+    currentTest = "test_082_ObserveOnVanishWithHandler";
     showPauseAfter = 2;
     assert prepareDefaultScreen("shot", imageNameDefault);
     result = "observe onVanish with handler";
@@ -696,8 +658,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_90_edgeDetectionBasic() {
-    currentTest = "test_90_edgeDetectionBasic";
+  public void test_090_edgeDetectionBasic() {
+    currentTest = "test_090_edgeDetectionBasic";
     result = "basic edge detection sample";
     Do.setBundlePath(mavenRoot, "Images");
     Picture pBase, pEdges;
@@ -712,8 +674,8 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_91_changeDetectionBasic() {
-    currentTest = "test_91_changeDetectionBasic";
+  public void test_091_changeDetectionBasic() {
+    currentTest = "test_091_changeDetectionBasic";
     result = "basic change detection sample";
     Do.setBundlePath(mavenRoot, "Images");
     Picture pBase, pChanged;
@@ -731,6 +693,44 @@ public class TestSXAPI {
     changed.addBorder();
     changed.show(3);
   }
+
+  @Test
+  public void test_100_nativeHook() {
+    currentTest = "test_100_nativeHook";
+    if (!SX.isHeadless()) {
+      NativeHook hook = NativeHook.start();
+      SX.pause(3);
+      hook.stop();
+      result = "NativeHook works";
+    } else {
+      result = "headless: NativeHook not tested";
+    }
+    assert true;
+  }
+
+  @Test
+  public void test_200_popat() {
+    currentTest = "test_200_popat";
+    boolean assertVal = true;
+    if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
+      Do.popat(300, 300);
+      Do.popup("Use mouse to click OK", "testing popat");
+      Element loc = SX.getSXLOCALDEVICE().at();
+      result = String.format("clicked at (%d, %d)", loc.x, loc.y);
+      assertVal = loc.x > 300 && loc.x < 450;
+    } else {
+      result = "TravisCI or NonInteractive: not testing";
+    }
+    assert assertVal;
+  }
+
+  @Test
+  public void test_300_oldAPI_Screen() {
+    currentTest = "test_300_oldAPI_Screen";
+    Screen.showMonitors();
+    new Screen(1).show();
+    result = new Screen(1).toString();
+  }
   //</editor-fold>
 
   //<editor-fold desc="ignored">
@@ -739,12 +739,19 @@ public class TestSXAPI {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    //log.startTimer();
-    currentTest = "test_999_someThingToTest";
+    log.startTimer();
+    currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // ******************* start
         result = "nothing to do here";
+        Element elem = new Element(100, 100);
+        Do.hover();
+        elem.hover();
+        Do.hover();
+        elem.hover(elem);
+        Do.hover();
+        Do.hover(elem);
 // ******************* end
       } else {
         result = "headless: not testing";

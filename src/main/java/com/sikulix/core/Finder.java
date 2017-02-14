@@ -158,7 +158,7 @@ public class Finder {
       }
     }
     // ************************************** search in original
-    if (((int) (100 * downSizeScore)) == 0 ) {
+    if (((int) (100 * downSizeScore)) == 0) {
       begin_t = new Date().getTime();
       result = doFindMatch(target, base, null);
       mMinMax = Core.minMaxLoc(result);
@@ -244,10 +244,10 @@ public class Finder {
     public Element next() {
       Element match = null;
       if (hasNext()) {
-        match = new Element(new Element(currentX + offX , currentY + offY, target.w, target.h), currentScore);
+        match = new Element(new Element(currentX + offX, currentY + offY, target.w, target.h), currentScore);
         int margin = getPurgeMargin();
         Range rangeX = new Range(Math.max(currentX - margin, 0), currentX + 1);
-        Range rangeY = new Range(Math.max(currentY - margin, 0), currentY +1);
+        Range rangeY = new Range(Math.max(currentY - margin, 0), currentY + 1);
         result.colRange(rangeX).rowRange(rangeY).setTo(new Scalar(0f));
       }
       return match;
@@ -286,7 +286,7 @@ public class Finder {
     }
 
     public double[] getScores() {
-      return new double[] {bestScore, meanScore, stdDevScore};
+      return new double[]{bestScore, meanScore, stdDevScore};
     }
 
     private double calcStdDev(List<Double> doubles, double mean) {
@@ -415,7 +415,7 @@ public class Finder {
   }
   //</editor-fold>
 
-  //<editor-fold desc="Edges">
+  //<editor-fold desc="detect edges">
   public static Picture detectEdges(Picture src) {
     Mat mSource;
     Mat mSourceGray = new Mat();
@@ -651,23 +651,153 @@ public class Finder {
   }
   //</editor-fold>
 
+  //<editor-fold desc="runFind, Wait, WaitVanish, FindAll">
+  public static final String CLICK = "click()";
+  public static final String DOUBLECLICK = "doubleClick()";
+  public static final String RIGHTCLICK = "rightClick()";
+  public static final String HOVER = "hover()";
+  public static final String FIND = "find()";
+  public static final String WAIT = "wait()";
+  public static final String EXISTS = "exists()";
+  static final String VANISH = "waitVanish()";
+  static final String ALL = "findAll()";
+
+  public static Element runFind(String type, Object... args) {
+    Element match = new Element();
+    PossibleMatch possibleMatch = new PossibleMatch();
+    boolean shouldRepeat = true;
+    while (shouldRepeat) {
+      Element where = possibleMatch.get(args);
+      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
+        match = possibleMatch.getWhat();
+        if (possibleMatch.isImageMissingWhere()) {
+          match = possibleMatch.getWhere();
+        }
+        shouldRepeat = Picture.handleImageMissing(type, possibleMatch);
+      } else {
+        if (where.hasMatch()) {
+          match = where.getLastMatch();
+          shouldRepeat = false;
+        } else {
+          match = possibleMatch.getWhat();
+          if (!match.isTarget()) {
+            break;
+          }
+          shouldRepeat = Picture.handleFindFailed(type, possibleMatch);
+        }
+      }
+    }
+    return match;
+  }
+
+  public static Element runWait(String type, Object... args) {
+    PossibleMatch possibleMatch = new PossibleMatch();
+    Element match = new Element();
+    boolean shouldRepeat = true;
+    while (shouldRepeat) {
+      Element where = possibleMatch.get(args);
+      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
+        shouldRepeat = Picture.handleImageMissing(type, possibleMatch);
+      } else {
+        if (where.hasMatch()) {
+          match = where.getLastMatch();
+          shouldRepeat = false;
+        } else {
+          while (possibleMatch.shouldWait()) {
+            log.trace("wait: need to repeat");
+            possibleMatch.repeat();
+            if (where.hasMatch()) {
+              match = where.getLastMatch();
+              shouldRepeat = false;
+              break;
+            }
+          }
+          if (!shouldRepeat) {
+            break;
+          }
+          shouldRepeat = Picture.handleFindFailed(type, possibleMatch);
+        }
+      }
+    }
+    return match;
+  }
+
+  public static boolean runWaitVanish(Object... args) {
+    PossibleMatch possibleMatch = new PossibleMatch();
+    boolean shouldRepeat = true;
+    boolean vanished = false;
+    while (shouldRepeat) {
+      Element where = possibleMatch.get(args);
+      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
+        shouldRepeat = Picture.handleImageMissing(VANISH, possibleMatch);
+      } else {
+        where.setLastVanish(null);
+        if (where.hasMatch()) {
+          Element match = where.getLastMatch();
+          where.setLastVanish(match);
+          while (!vanished && possibleMatch.shouldWait()) {
+            log.trace("wait: need to repeat");
+            possibleMatch.repeat();
+            if (where.hasMatch()) {
+              match = where.getLastMatch();
+              where.setLastVanish(match);
+            } else {
+              vanished = true;
+              shouldRepeat = false;
+            }
+          }
+        } else {
+          shouldRepeat = Picture.handleFindFailed(VANISH, possibleMatch);
+        }
+      }
+    }
+    return vanished;
+  }
+
+  public static List<Element> runFindAll(Object... args) {
+    PossibleMatch possibleMatch = new PossibleMatch(PossibleMatch.Type.ALL);
+    boolean shouldRepeat = true;
+    List<Element> matches = new ArrayList<>();
+    while (shouldRepeat) {
+      Element where = possibleMatch.get(args);
+      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
+        shouldRepeat = Picture.handleImageMissing(ALL, possibleMatch);
+      } else {
+        if (where.hasMatches()) {
+          matches = where.getLastMatches();
+          shouldRepeat = false;
+        } else {
+          shouldRepeat = Picture.handleFindFailed(ALL, possibleMatch);
+        }
+      }
+    }
+    return matches;
+  }
+
+  //</editor-fold>
+
   //<editor-fold desc="PossibleMatch">
   public static class PossibleMatch {
     Element what = null;
+
     public Element getWhat() {
       return what;
     }
+
     Element where = null;
+
     public Element getWhere() {
       return where;
     }
+
     int waitTime = -1;
     Element target = new Element();
 
-    String type = "";
-    // ALL for findAll
-    // OBSERVE for observe
-    // empty for everything else
+    public static enum Type {
+      FIND, ALL, OBSERVE, DEVICE
+    }
+
+    Type type = Type.FIND;
 
     Finder finder = null;
     long startTime = new Date().getTime();
@@ -714,14 +844,14 @@ public class Finder {
     boolean valid = false;
 
     public PossibleMatch() {
-      init("");
+      init(Type.FIND);
     }
 
-    public PossibleMatch(String type) {
+    public PossibleMatch(Type type) {
       init(type);
     }
 
-    private void init(String type) {
+    private void init(Type type) {
       this.type = type;
       setScanRate();
     }
@@ -780,10 +910,10 @@ public class Finder {
                 waitTime = (int) (1000 * Math.max(where.getWaitForMatch(), what.getWaitForThis()));
               }
               endTime = startTime + waitTime;
-              if (type.isEmpty()) {
+              if (Type.FIND.equals(type)) {
                 lastRepeatTime = new Date().getTime();
                 finder.find(what);
-              } else if (type == "ALL") {
+              } else if (Type.ALL.equals(type)) {
                 finder.findAll(what);
               }
             }
@@ -811,9 +941,9 @@ public class Finder {
           where.capture();
           finder.refreshBase();
         }
-        if (type.isEmpty()) {
+        if (Type.FIND.equals(type)) {
           finder.find(what);
-        } else if (type == "ALL") {
+        } else if (Type.ALL.equals(type)) {
           finder.findAll(what);
         }
         if (where.hasMatch() || where.hasMatches()) {
