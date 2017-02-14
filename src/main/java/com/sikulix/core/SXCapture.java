@@ -41,7 +41,7 @@ public class SXCapture extends JFrame {
     setUndecorated(true);
     setAlwaysOnTop(true);
     setBackground(new Color(255, 255, 255, 80));
-    setBounds(SX.getMain().getRectangle());
+    setBounds(Do.onMain().getRectangle());
     setVisible(true);
     init();
   }

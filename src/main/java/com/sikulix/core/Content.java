@@ -1464,7 +1464,7 @@ public class Content {
 
   /**
    * export all resource files from the given subtree on classpath to the given folder retaining the subtree<br>
-   * to export a specific file from classpath use extractResourceToFile or extractResourceToString
+   * to export a specific file from classpath lock extractResourceToFile or extractResourceToString
    *
    * @param fpRessources path of the subtree relative to root
    * @param fFolder      folder where to export (if null, only list - no export)
@@ -2060,7 +2060,7 @@ public class Content {
         }
         if (zPath.startsWith(current)) {
           if (zPath.length() == fpRessource.length() - 1) {
-            log.error("extractResourcesToFolderFromJar: only ressource folders allowed - use filter");
+            log.error("extractResourcesToFolderFromJar: only ressource folders allowed - lock filter");
             return false;
           }
           log.trace("copying: %s", zPath);

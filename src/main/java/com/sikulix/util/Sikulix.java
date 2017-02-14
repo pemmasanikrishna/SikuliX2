@@ -50,7 +50,7 @@ public class Sikulix {
     if (options.contains("test")) {
 
       traceBlock("testing: native libraries");
-      Do.setBaseClass();
+      SX.setBaseClass();
 
       traceBlock("testing: NativeHook");
       if (!SX.isHeadless()) {
@@ -89,7 +89,7 @@ public class Sikulix {
         base.show();
         element = Do.find(img);
         if (element.isMatch()) {
-          SX.getMain().showMatch();
+          Do.onMain().showMatch();
         }
       }
     }

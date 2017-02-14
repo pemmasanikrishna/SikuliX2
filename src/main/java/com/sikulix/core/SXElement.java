@@ -9,11 +9,8 @@ import com.sikulix.api.Element;
 import org.json.JSONObject;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
@@ -117,6 +114,19 @@ public abstract class SXElement implements Comparable<SXElement> {
   public Integer y = 0;
   public Integer w = -1;
   public Integer h = -1;
+
+  public IDevice getElementDevice() {
+    if (SX.isNull(elementDevice)) {
+      elementDevice = SX.getSXLOCALDEVICE();
+    }
+    return elementDevice;
+  }
+
+  public void setElementDevice(IDevice elementDevice) {
+    this.elementDevice = elementDevice;
+  }
+
+  protected IDevice elementDevice = null;
 
   public String getName() {
     return name;

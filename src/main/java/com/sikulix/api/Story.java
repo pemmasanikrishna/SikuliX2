@@ -51,7 +51,7 @@ public class Story {
     if (story.hasContent()) {
       storyImg = story.get();
     } else {
-      storyImg = Do.on().capture(story).get();
+      storyImg = Do.capture().get();
       contentLoaded = "captured";
     }
     frame.setUndecorated(true);

@@ -167,7 +167,7 @@ public class Tool {
     introPane.add(introText);
     intro.pack();
     Dimension introSize = intro.getMinimumSize();
-    Element centered = new Element(introSize).getCentered(SX.getMain());
+    Element centered = new Element(introSize).getCentered(Do.onMain());
     intro.setLocation(centered.x, centered.y);
     initBox();
     intro.setVisible(true);
@@ -303,8 +303,8 @@ public class Tool {
     pBox.add(status);
     running = true;
     new Thread(new ClickHandler()).start();
-    scrW = SX.getMain().w;
-    scrH = SX.getMain().h;
+    scrW = Do.onMain().w;
+    scrH = Do.onMain().h;
   }
 
   private Element mousePos = new Element();

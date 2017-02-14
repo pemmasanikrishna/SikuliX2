@@ -37,7 +37,7 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
     log = SX.getLogger("NativeHook");
     log.isSX();
     log.on(SXLog.INFO);
-    mainMonitor = SX.getMonitor(SX.getMainMonitorID());
+    mainMonitor = SX.getSXLOCALDEVICE().getMonitor(SX.getSXLOCALDEVICE().getMainMonitorID());
   }
 
   static NativeHook listener = null;

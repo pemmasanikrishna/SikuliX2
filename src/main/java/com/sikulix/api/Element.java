@@ -38,6 +38,7 @@ public class Element extends SXElement {
     y = elem.y;
     w = elem.w;
     h = elem.h;
+    elementDevice = elem.elementDevice;
   }
 
   protected void initAfter() {
@@ -81,10 +82,6 @@ public class Element extends SXElement {
 
   public Element(Element elem) {
     this();
-    x = elem.x;
-    y = elem.y;
-    w = elem.w;
-    h = elem.h;
     copy(elem);
   }
 
@@ -109,7 +106,7 @@ public class Element extends SXElement {
       // hack: special for even margin all sides and for onChange()
       init(-id, -id, -id, -id);
     } else {
-      Rectangle rect = SX.getMonitor(id);
+      Rectangle rect = getElementDevice().getMonitor(id);
       init(rect.x, rect.y, rect.width, rect.height);
     }
   }
@@ -140,8 +137,8 @@ public class Element extends SXElement {
    */
   public int isOn() {
     Rectangle r;
-    for (int i = 0; i < SX.getNumberOfMonitors(); i++) {
-      r = SX.getMonitor(i);
+    for (int i = 0; i < getElementDevice().getNumberOfMonitors(); i++) {
+      r = getElementDevice().getMonitor(i);
       if (r.contains(this.x, this.y)) {
         return i;
       }
@@ -268,11 +265,7 @@ public class Element extends SXElement {
   }
 
   public Picture capture() {
-    return capture(this);
-  }
-
-  public Picture capture(Element elem) {
-    return Device.capture(elem);
+    return getElementDevice().capture(this);
   }
   //</editor-fold>
 
@@ -549,28 +542,13 @@ public class Element extends SXElement {
   //</editor-fold>
 
   //<editor-fold desc="***** mouse">
-  public static Element at() {
-    PointerInfo mp = MouseInfo.getPointerInfo();
-    if (mp != null) {
-      return new Element(mp.getLocation());
-    } else {
-      log.error("MouseInfo.getPointerInfo(): null");
-      return new Element();
-    }
-  }
-
-  public IRobot getDeviceRobot() {
-    //TODO implement special Robots
-    return SX.getLocalRobot();
-  }
-
   /**
    * Move the mouse to this element's target
    *
    * @return this
    */
-  public SXElement hover() {
-    Device.move(this.getTarget());
+  public Element hover() {
+    getElementDevice().move(this);
     return this;
   }
 
@@ -579,8 +557,8 @@ public class Element extends SXElement {
    *
    * @return this
    */
-  public SXElement click() {
-    Device.click(this.getTarget(), "L");
+  public Element click() {
+    getElementDevice().click(this);
     return this;
   }
 
@@ -589,8 +567,8 @@ public class Element extends SXElement {
    *
    * @return this
    */
-  public SXElement doubleClick() {
-    Device.click(this.getTarget(), "LD");
+  public Element doubleClick() {
+    getElementDevice().click(this, IDevice.Action.LEFTDOUBLE);
     return this;
   }
 
@@ -599,8 +577,8 @@ public class Element extends SXElement {
    *
    * @return this
    */
-  public SXElement rightClick() {
-    Device.click(this.getTarget(), "R");
+  public Element rightClick() {
+    getElementDevice().click(this, IDevice.Action.RIGHT);
     return this;
   }
   //</editor-fold>

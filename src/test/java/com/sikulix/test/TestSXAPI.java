@@ -77,7 +77,7 @@ public class TestSXAPI {
         }
       });
     }
-    Do.setBaseClass();
+    SX.setBaseClass();
   }
 
   @AfterClass
@@ -105,16 +105,18 @@ public class TestSXAPI {
     Picture.clearPath();
     resetDefaultScreen();
     Events.reset();
-    Do.on().removeEvents();
+    if (SX.isSetSXLOCALDEVICE()) {
+      Do.on().removeEvents();
+    }
     log.info("!%2d: result: %s: %s ", nTest++, currentTest, result);
   }
 
   Picture base = null;
   Picture img = null;
-  Element match = new Element();
+  Element match = null;
   List<Element> matches = new ArrayList<>();
   boolean isHeadless = false;
-  Element elemDisplayed = new Element();
+  Element elemDisplayed = null;
   int showPauseAfter = 0;
   int showPauseBefore = 0;
   Story theShow = null;
@@ -157,10 +159,10 @@ public class TestSXAPI {
   private void resetDefaultScreen() {
     base = null;
     img = null;
-    match = new Element();
+    match = null;
     matches = new ArrayList<>();
     isHeadless = false;
-    elemDisplayed = new Element();
+    elemDisplayed = null;
     showPauseAfter = 3;
     showPauseBefore = 0;
   }
@@ -476,7 +478,7 @@ public class TestSXAPI {
     theShow.stop();
     assert matches.size() == expected;
     result = String.format("#%d in (%dx%d) %% %.2f +- %.4f]", matches.size(),
-            base.w, base.h, 100 * SX.getMain().getLastScores()[0], 100 * SX.getMain().getLastScores()[2]);
+            base.w, base.h, 100 * Do.onMain().getLastScores()[0], 100 * Do.onMain().getLastScores()[2]);
     result = end() + result;
     Do.on().showMatches();
   }
@@ -507,8 +509,8 @@ public class TestSXAPI {
     }
     int waitTime = 5; //(int) SX.getOptionNumber("Settings.AutoWaitTimeout", 3);
     boolean vanished = Do.waitVanish(img, waitTime);
-    result = end() + "vanished: " + vanished + " " + SX.getMain().getLastVanish();
-    assert vanished && SX.getMain().hasVanish() && !SX.getMain().hasMatch();
+    result = end() + "vanished: " + vanished + " " + Do.onMain().getLastVanish();
+    assert vanished && Do.onMain().hasVanish() && !Do.onMain().hasMatch();
     Do.on().showVanish();
   }
 
@@ -604,7 +606,7 @@ public class TestSXAPI {
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       Do.popat(300, 300);
       Do.popup("Use mouse to click OK", "testing popat");
-      Element loc = Element.at();
+      Element loc = SX.getSXLOCALDEVICE().at();
       result = String.format("clicked at (%d, %d)", loc.x, loc.y);
       assertVal = loc.x > 300 && loc.x < 450;
     } else {

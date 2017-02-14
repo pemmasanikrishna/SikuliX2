@@ -484,7 +484,7 @@ public class Key {
     }
     Map<String, Integer> sortedNames = new TreeMap<String, Integer>(keyTexts);
     System.out.println("[info] Key: dump keynames (tokens) used with Region write");
-    System.out.println("[info] Token to use --- KeyEvent::keycode --- KeyEvent::keyname");
+    System.out.println("[info] Token to lock --- KeyEvent::keycode --- KeyEvent::keyname");
     int keyN;
     for (String key : sortedNames.keySet()) {
       keyN = sortedNames.get(key);

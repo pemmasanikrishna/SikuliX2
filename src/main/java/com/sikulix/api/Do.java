@@ -11,7 +11,6 @@ import com.sikulix.util.FileChooser;
 import org.sikuli.script.Key;
 
 import javax.swing.*;
-import java.awt.AWTException;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Dimension;
@@ -57,7 +56,7 @@ public class Do {
   }
 
   private static Point getLocPopAt() {
-    Rectangle screen0 = SX.getMonitor();
+    Rectangle screen0 = SX.getSXLOCALDEVICE().getMonitor();
     if (null == screen0) {
       return null;
     }
@@ -298,7 +297,7 @@ public class Do {
   }
 
   public static String popFile(String title) {
-    popat(SX.getMonitor());
+    popat(SX.getSXLOCALDEVICE().getMonitor());
     JFrame anchor = popLocation();
     File ret = FileChooser.load(anchor);
     popat();
@@ -474,28 +473,6 @@ public class Do {
   //</editor-fold>
 
   //<editor-fold desc="SX Do ImagePath handling">
-  private static String baseClass = "";
-
-  public static void setBaseClass() {
-    log.trace("setBaseClass: start");
-    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-    boolean takeit = false;
-    for (StackTraceElement traceElement : stackTrace) {
-      String tName = traceElement.getClassName();
-      if (takeit) {
-        baseClass = tName;
-        break;
-      }
-      if (tName.equals(klazz)) {
-        takeit = true;
-      }
-    }
-  }
-
-  public static String getBaseClass() {
-    return baseClass;
-  }
-
   public static boolean setBundlePath(Object... args) {
     return Picture.setBundlePath(args);
   }
@@ -874,18 +851,16 @@ public class Do {
   //</editor-fold>
 
   //<editor-fold desc="Screen related">
-  private static Element defaultScreenAsElement = new Element(SX.getMonitor().getBounds());
-  private static Element defaultElementOnScreen = defaultScreenAsElement;
-  private static Element allMonitorsAsElement = new Element(SX.getAllMonitors());
+  private static Element allMonitorsAsElement = new Element(SX.getSXLOCALDEVICE().getAllMonitors());
 
   /**
    * show the current monitor setup
    */
   public static void showMonitors() {
-    log.p("*** monitor configuration [ %s Screen(s)] ***", SX.getNumberOfMonitors());
-    log.p("*** Primary is Screen %d", SX.getMainMonitorID());
-    for (int i = 0; i < SX.getNumberOfMonitors(); i++) {
-      log.p("Screen %d: %s", i, new Element(SX.getMonitor(i)));
+    log.p("*** monitor configuration [ %s Screen(s)] ***", SX.getSXLOCALDEVICE().getNumberOfMonitors());
+    log.p("*** Primary is Screen %d", SX.getSXLOCALDEVICE().getMainMonitorID());
+    for (int i = 0; i < SX.getSXLOCALDEVICE().getNumberOfMonitors(); i++) {
+      log.p("Screen %d: %s", i, new Element(SX.getSXLOCALDEVICE().getMonitor(i)));
     }
     log.p("*** end monitor configuration ***");
   }
@@ -896,27 +871,8 @@ public class Do {
   public static void resetMonitors() {
     showMonitors();
     log.p("*** TRYING *** to reset the monitor configuration");
-    SX.resetMonitors();
+    SX.getSXLOCALDEVICE().resetMonitors();
     showMonitors();
-  }
-
-  private static LocalRobot getLocalRobot() {
-    if (SX.isNull(localRobot)) try {
-      localRobot = new LocalRobot();
-    } catch (AWTException e) {
-      log.error("getLocalRobot: %s", e.getMessage());
-    }
-    return localRobot;
-  }
-
-  private static LocalRobot localRobot = null;
-
-  public static Element on() {
-    return defaultElementOnScreen;
-  }
-
-  public static Element onMain() {
-    return defaultScreenAsElement;
   }
 
   public static Element on(int monitor) {
@@ -927,11 +883,11 @@ public class Do {
 
   private static Element getScreenAsElement(int monitor) {
     if (screensAsElements.size() == 0) {
-      for (int i = 0; i < SX.getNumberOfMonitors(); i++) {
-        screensAsElements.add(new Element(SX.getMonitor(i)));
+      for (int i = 0; i < SX.getSXLOCALDEVICE().getNumberOfMonitors(); i++) {
+        screensAsElements.add(new Element(SX.getSXLOCALDEVICE().getMonitor(i)));
       }
     }
-    if (monitor > -1 && monitor < SX.getNumberOfMonitors()) {
+    if (monitor > -1 && monitor < SX.getSXLOCALDEVICE().getNumberOfMonitors()) {
       return screensAsElements.get(monitor);
     } else {
       return screensAsElements.get(0);
@@ -942,35 +898,54 @@ public class Do {
     return allMonitorsAsElement;
   }
 
+  private static Element defaultScreenAsElement = null;
+  private static Element getDefaultScreenAsElement() {
+    if (SX.isNull(defaultScreenAsElement)) {
+      defaultScreenAsElement = new Element(SX.getSXLOCALDEVICE().getMonitor().getBounds());
+    }
+    return defaultScreenAsElement;
+  }
+
+  private static Element defaultElement = null;
+  private static Element getDefaultElement() {
+    if (SX.isNull(defaultElement)) {
+      defaultElement = getDefaultScreenAsElement();
+    }
+    return defaultElement;
+  }
+
+  public static Element on() {
+    return getDefaultElement();
+  }
+
+  public static Element onMain() {
+    return getDefaultScreenAsElement();
+  }
+
   public static Element use() {
-    defaultElementOnScreen = defaultScreenAsElement;
-    return defaultElementOnScreen;
+    defaultElement = getDefaultScreenAsElement();
+    return defaultElement;
   }
 
   public static Element use(Element elem) {
-    defaultElementOnScreen = elem;
-    return defaultElementOnScreen;
+    defaultElement = elem;
+    return defaultElement;
   }
 
   public static Element use(int monitor) {
-    defaultElementOnScreen = new Element(SX.getMonitor(monitor).getBounds());
-    return defaultElementOnScreen;
+    defaultElement = getScreenAsElement(monitor);
+    return defaultElement;
   }
 
   public static Picture capture() {
-    return capture(defaultElementOnScreen);
+    return capture(defaultElement);
   }
 
   public static Picture capture(Element elem) {
     if (SX.isNull(elem)) {
-      elem = defaultElementOnScreen;
+      elem = defaultElement;
     }
-    Picture imgCapture = new Picture();
-    //TODO capture special screens
-    if (!elem.isSpecial()) {
-      imgCapture = getLocalRobot().captureScreen(elem.getRectangle());
-    }
-    return imgCapture;
+    return elem.capture();
   }
   //</editor-fold>
 
@@ -1003,6 +978,10 @@ public class Do {
     return false;
   }
 
+  /**
+   * @param args
+   * @return
+   */
   public static Element find(Object... args) {
     log.trace("find: start");
     Element match = new Element();
@@ -1132,27 +1111,27 @@ public class Do {
   }
 
   public static boolean hasMatch() {
-    return defaultElementOnScreen.hasMatch();
+    return defaultElement.hasMatch();
   }
 
   public static Element getLastMatch() {
-    return defaultElementOnScreen.getLastMatch();
+    return defaultElement.getLastMatch();
   }
 
   public static boolean hasVanish() {
-    return defaultElementOnScreen.hasVanish();
+    return defaultElement.hasVanish();
   }
 
   public static Element getLastVanish() {
-    return defaultElementOnScreen.getLastVanish();
+    return defaultElement.getLastVanish();
   }
 
   public static boolean hasMatches() {
-    return defaultElementOnScreen.hasMatches();
+    return defaultElement.hasMatches();
   }
 
   public static List<Element> getLastMatches() {
-    List<Element> matches = defaultElementOnScreen.getLastMatches();
+    List<Element> matches = defaultElement.getLastMatches();
     if (matches.isEmpty()) {
       matches = null;
     }

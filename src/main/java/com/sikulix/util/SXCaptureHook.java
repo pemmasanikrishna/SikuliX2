@@ -52,7 +52,7 @@ public class SXCaptureHook {
     frm.setUndecorated(true);
     frm.setAlwaysOnTop(true);
     frm.setBackground(new Color(255, 255, 255, 50));
-    frm.setBounds(SX.getMain().getRectangle());
+    frm.setBounds(Do.onMain().getRectangle());
     frm.setVisible(true);
     init(NativeHook.start());
     running = true;
@@ -147,7 +147,7 @@ public class SXCaptureHook {
   }
 
   private void make(NativeHook hook, int x, int y, int w, int h, Object shot) {
-    Element scr = SX.getMain();
+    Element scr = Do.onMain();
     Rectangle toCapture = null;
     if (w == 0 && h == 0) {
       toCapture = new Rectangle(x - 50, y - 15, 100, 30);

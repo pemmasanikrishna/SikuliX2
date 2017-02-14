@@ -13,7 +13,6 @@ import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
 import java.awt.*;
-import java.awt.event.InputEvent;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
@@ -140,7 +139,7 @@ public class SX {
       });
       //</editor-fold>
 
-      // TODO Content class must be initialized for use in shutdown
+      // TODO Content class must be initialized for lock in shutdown
       Content.start();
 
       //<editor-fold desc="*** sx lock (not active)">
@@ -179,9 +178,6 @@ public class SX {
 
       // *** check how we are running
       sxRunningAs();
-
-      // *** get monitor setup
-      globalGetMonitors();
 
       //TODO i18n SXGlobal_sxinit_complete=complete %.3f
       trace("!sxinit: exit %.3f", (new Date().getTime() - startTime) / 1000.0f);
@@ -1237,13 +1233,6 @@ public class SX {
   //</editor-fold>
 
   //<editor-fold desc="*** monitor info">
-  private static GraphicsEnvironment genv = null;
-  private static GraphicsDevice[] gdevs;
-  private static Rectangle[] monitorBounds = null;
-  private static Rectangle rAllMonitors;
-  private static int mainMonitor = -1;
-  private static int nMonitors = 0;
-
   /**
    * checks, whether Java runs with a valid GraphicsEnvironment (usually means real screens connected)
    *
@@ -1256,82 +1245,6 @@ public class SX {
   public static boolean onTravisCI() {
     return SX.isSet(System.getenv("TRAVIS"), "true");
   }
-
-  public static void resetMonitors() {
-    globalGetMonitors();
-  }
-
-  private static void globalGetMonitors() {
-    if (!isHeadless()) {
-      genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
-      gdevs = genv.getScreenDevices();
-      nMonitors = gdevs.length;
-      if (nMonitors == 0) {
-        terminate(1, "globalGetMonitors: GraphicsEnvironment has no ScreenDevices");
-      }
-      monitorBounds = new Rectangle[nMonitors];
-      rAllMonitors = null;
-      Rectangle currentBounds;
-      for (int i = 0; i < nMonitors; i++) {
-        currentBounds = new Rectangle(gdevs[i].getDefaultConfiguration().getBounds());
-        if (null != rAllMonitors) {
-          rAllMonitors = rAllMonitors.union(currentBounds);
-        } else {
-          rAllMonitors = currentBounds;
-        }
-        if (currentBounds.contains(new Point())) {
-          if (mainMonitor < 0) {
-            mainMonitor = i;
-            debug("globalGetMonitors: 1#ScreenDevice %d has (0,0) --- will be primary Screen(0)", i);
-          } else {
-            debug("globalGetMonitors: 2#ScreenDevice %d too contains (0,0)!", i);
-          }
-        }
-        debug("globalGetMonitors: Monitor %d: (%d, %d) %d x %d", i,
-                currentBounds.x, currentBounds.y, currentBounds.width, currentBounds.height);
-        monitorBounds[i] = currentBounds;
-      }
-      if (mainMonitor < 0) {
-        debug("globalGetMonitors: No ScreenDevice has (0,0) --- using 0 as primary: %s", monitorBounds[0]);
-        mainMonitor = 0;
-      }
-    } else {
-      error("running in headless environment");
-    }
-  }
-
-  public static int getNumberOfMonitors() {
-    return nMonitors;
-  }
-
-  public static Rectangle getMonitor(int n) {
-    if (isHeadless() || mainMonitor < 0) {
-      return new Rectangle();
-    }
-    n = (n < 0 || n >= nMonitors) ? mainMonitor : n;
-    return new Rectangle(monitorBounds[n]);
-  }
-
-  public static Rectangle getMonitor() {
-    return getMonitor(mainMonitor);
-  }
-
-  public static int getMainMonitorID() {
-    return mainMonitor;
-  }
-
-  public static Rectangle getAllMonitors() {
-    return rAllMonitors;
-  }
-
-  public static GraphicsDevice getGraphicsDevice(int id) {
-    return gdevs[id];
-  }
-
-  public static Element getMain() {
-    return Do.onMain();
-  }
-
   //</editor-fold>
 
   //<editor-fold desc="*** handle native libs">
@@ -1891,8 +1804,8 @@ public class SX {
       klassName = fpMain;
     }
     if (".".equals(klassName)) {
-      if (isSet(Do.getBaseClass())) {
-        klassName = Do.getBaseClass();
+      if (isSet(SX.getBaseClass())) {
+        klassName = SX.getBaseClass();
       } else {
         klassName = sxGlobalClassReference.getName();
       }
@@ -1939,33 +1852,46 @@ public class SX {
   //</editor-fold>
 
   /**
-   * ***** Property SXROBOT *****
+   * ***** Property SXLOCALDEVICE *****
    *
    * @return
    */
-  public static Robot getSXROBOT() {
-    if (isNotSet(SXROBOT)) {
-      try {
-        SXROBOT = new Robot();
-      } catch (AWTException e) {
-        terminate(1, "getSXROBOT: not possible: %s", e.getMessage());
-      }
+  public static LocalDevice getSXLOCALDEVICE() {
+    if (isNotSet(SXLOCALDEVICE)) {
+      SXLOCALDEVICE = new LocalDevice().start();
     }
-    return SXROBOT;
+    return SXLOCALDEVICE;
   }
 
-  private static Robot SXROBOT = null;
-
-  public static IRobot getLocalRobot() {
-    if (isNotSet(SXLOCALROBOT)) {
-      try {
-        SXLOCALROBOT = new LocalRobot();
-      } catch (AWTException e) {
-        terminate(1, "getLocalRobot: not possible: %s", e.getMessage());
-      }
-    }
-    return SXLOCALROBOT;
+  public static boolean isSetSXLOCALDEVICE() {
+    return SX.isNotNull(SXLOCALDEVICE);
   }
 
-  private static IRobot SXLOCALROBOT = null;
+  public static void setSXLOCALDEVICE(LocalDevice SXLOCALDEVICE) {
+    SX.SXLOCALDEVICE = SXLOCALDEVICE;
+  }
+
+  private static LocalDevice SXLOCALDEVICE = null;
+
+  private static String baseClass = "";
+
+  public static void setBaseClass() {
+    log.trace("setBaseClass: start");
+    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+    boolean takeit = false;
+    for (StackTraceElement traceElement : stackTrace) {
+      String tName = traceElement.getClassName();
+      if (takeit) {
+        baseClass = tName;
+        break;
+      }
+      if (tName.equals(SX.class.getName())) {
+        takeit = true;
+      }
+    }
+  }
+
+  public static String getBaseClass() {
+    return baseClass;
+  }
 }

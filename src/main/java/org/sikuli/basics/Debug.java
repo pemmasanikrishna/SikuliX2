@@ -19,7 +19,7 @@ import com.sikulix.core.SX;
 /**
  * Debug is a utility class that wraps println statements and allows more or less command line
  * output to be turned on.<br> <br> For debug messages only ( Debug.log() ):<br> Use system
- * property: sikuli.Debug to set the debug level (default = 1)<br> On the command line, use
+ * property: sikuli.Debug to set the debug level (default = 1)<br> On the command line, lock
  * -Dsikuli.Debug=n to set it to level n<br> -Dsikuli.Debug will disable any debug messages <br>
  * (which is equivalent to using Settings.Debuglogs = false)<br> <br> It prints if the level
  * number is less than or equal to the currently set DEBUG_LEVEL.<br> <br> For messages
@@ -322,9 +322,9 @@ public class Debug {
 
 	/**
 	 * specify, where the logs should be written:<br>
-	 * null - use from property sikuli.Logfile
-	 * empty - use SikuliLog.txt in working folder
-	 * not empty - use given filename
+	 * null - lock from property sikuli.Logfile
+	 * empty - lock SikuliLog.txt in working folder
+	 * not empty - lock given filename
 	 * @param fileName null, empty or absolute filename
 	 * @return success
 	 */
@@ -367,9 +367,9 @@ public class Debug {
 
 	/**
 	 * specify, where the user logs (Debug.user) should be written:<br>
-	 * null - use from property sikuli.LogfileUser
-	 * empty - use UserLog.txt in working folder
-	 * not empty - use given filename
+	 * null - lock from property sikuli.LogfileUser
+	 * empty - lock UserLog.txt in working folder
+	 * not empty - lock given filename
 	 * @param fileName null, empty or absolute filename
 	 * @return success
 	 */
@@ -550,7 +550,7 @@ public class Debug {
    * Sikuli messages from actions like click, ...<br> switch on/off: Settings.ActionLogs
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args to lock with format string
    */
   public static void action(String message, Object... args) {
     if (SX.isOption("ActionLogs")) {
@@ -566,9 +566,9 @@ public class Debug {
   }
 
   /**
-   * use Debug.action() instead
+   * lock Debug.action() instead
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args to lock with format string
    * @deprecated
    */
   @Deprecated
@@ -580,7 +580,7 @@ public class Debug {
    * informative Sikuli messages <br> switch on/off: Settings.InfoLogs
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args to lock with format string
    */
   public static void info(String message, Object... args) {
     if (SX.isOption("InfoLogs")) {
@@ -598,7 +598,7 @@ public class Debug {
    * Sikuli error messages<br> switch on/off: always on
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args to lock with format string
    */
 	public static void error(String message, Object... args) {
 		if (doRedirect(CallbackType.ERROR, "", message, args)) {
@@ -608,10 +608,10 @@ public class Debug {
 	}
 
   /**
-   * Sikuli messages to use in tests<br> switch on/off: always on
+   * Sikuli messages to lock in tests<br> switch on/off: always on
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args to lock with format string
    */
   public static void test(String message, Object... args) {
 		if (message.contains("#returned#")) {
@@ -627,7 +627,7 @@ public class Debug {
    * -Dsikuli.Debug
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args to lock with format string
    */
   public static void log(String message, Object... args) {
     log(0, message, args);
@@ -656,7 +656,7 @@ public class Debug {
    * can be set: Settings,UserLogPrefix
    *
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args to lock with format string
    */
   public static void user(String message, Object... args) {
     if (SX.isOption("UserLogs")) {
@@ -676,7 +676,7 @@ public class Debug {
    *
    * @param level value
    * @param message String or format string (String.format)
-   * @param args to use with format string
+   * @param args to lock with format string
    */
   public static void log(int level, String message, Object... args) {
     if (SX.isOption("DebugLogs")) {
@@ -688,7 +688,7 @@ public class Debug {
 	 * INTERNAL USE: special debug messages
 	 * @param level value
 	 * @param message text or format string
-	 * @param args for use with format string
+	 * @param args for lock with format string
 	 */
 	public static String logx(int level, String message, Object... args) {
     String sout = "";
@@ -758,7 +758,7 @@ public class Debug {
    * Sikuli profiling messages<br> switch on/off: Settings.ProfileLogs, default off
    *
    * @param message String or format string
-   * @param args to use with format string
+   * @param args to lock with format string
    */
   public static void profile(String message, Object... args) {
     if (SX.isOption("ProfileLogs")) {
@@ -769,7 +769,7 @@ public class Debug {
 	/**
 	 * profile convenience: entering a method
    * @param message String or format string
-   * @param args to use with format string
+   * @param args to lock with format string
 	 */
 	public static void enter(String message, Object... args) {
     profile("entering: " + message, args);
@@ -778,7 +778,7 @@ public class Debug {
 	/**
 	 * profile convenience: exiting a method
    * @param message String or format string
-   * @param args to use with format string
+   * @param args to lock with format string
 	 */
 	public static void exit(String message, Object... args) {
     profile("exiting: " + message, args);
@@ -797,7 +797,7 @@ public class Debug {
 	 * start timer with a message
 	 * <br>log output depends on Settings.ProfileLogs
    * @param message String or format string
-   * @param args to use with format string
+   * @param args to lock with format string
 	 * @return timer
 	 */
   public static Debug startTimer(String message, Object... args) {
