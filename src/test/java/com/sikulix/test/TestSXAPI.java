@@ -5,13 +5,14 @@
 package com.sikulix.test;
 
 import com.sikulix.api.*;
+import com.sikulix.api.Event;
 import com.sikulix.core.*;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
 import org.sikuli.script.Screen;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -694,16 +695,50 @@ public class TestSXAPI {
     changed.show(3);
   }
 
+//  @Test
+//  public void test_100_nativeHook() {
+//    currentTest = "test_100_nativeHook";
+//    if (!SX.isHeadless()) {
+//      NativeHook hook = NativeHook.start();
+//      SX.pause(3);
+//      hook.stop();
+//      result = "NativeHook works";
+//    } else {
+//      result = "headless: NativeHook not tested";
+//    }
+//    assert true;
+//  }
+
   @Test
-  public void test_100_nativeHook() {
-    currentTest = "test_100_nativeHook";
+  public void test_101_mouseHoverWithHookCheck() {
+    log.startTimer();
+    currentTest = "test_101_mouseHoverWithHookCheck";
     if (!SX.isHeadless()) {
+      result = "some mouse moves checked with NativeHook";
       NativeHook hook = NativeHook.start();
-      SX.pause(3);
+      SX.pause(1);
+      Element elem = new Element(100, 100);
+      Do.hover();
+      Point mousePos = hook.getMousePosition();
+      Element center = Do.on().getCenter();
+      log.trace("******************* hook mouse position: (%d, %d) to (%d, %d)", mousePos.x, mousePos.y, center.x, center.y);
+      assert mousePos.x - center.x == 0 && mousePos.y - center.y == 0;
+      elem.hover();
+      mousePos = hook.getMousePosition();
+      assert mousePos.x - elem.x == 0 && mousePos.y - elem.y == 0;
+      Do.hover();
+      mousePos = hook.getMousePosition();
+      assert mousePos.x - center.x == 0 && mousePos.y - center.y == 0;
+      elem.hover(elem);
+      mousePos = hook.getMousePosition();
+      assert mousePos.x - elem.x == 0 && mousePos.y - elem.y == 0;
+      Do.hover();
+      mousePos = hook.getMousePosition();
+      assert mousePos.x - center.x == 0 && mousePos.y - center.y == 0;
+      Do.hover(elem);
+      mousePos = hook.getMousePosition();
+      assert mousePos.x - elem.x == 0 && mousePos.y - elem.y == 0;
       hook.stop();
-      result = "NativeHook works";
-    } else {
-      result = "headless: NativeHook not tested";
     }
     assert true;
   }
@@ -728,7 +763,7 @@ public class TestSXAPI {
   public void test_300_oldAPI_Screen() {
     currentTest = "test_300_oldAPI_Screen";
     Screen.showMonitors();
-    new Screen(1).show();
+//    new Screen(1).show();
     result = new Screen(1).toString();
   }
   //</editor-fold>
@@ -739,19 +774,12 @@ public class TestSXAPI {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    log.startTimer();
+    //log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // ******************* start
         result = "nothing to do here";
-        Element elem = new Element(100, 100);
-        Do.hover();
-        elem.hover();
-        Do.hover();
-        elem.hover(elem);
-        Do.hover();
-        Do.hover(elem);
 // ******************* end
       } else {
         result = "headless: not testing";

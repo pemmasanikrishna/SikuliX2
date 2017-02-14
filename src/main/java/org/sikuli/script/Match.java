@@ -9,18 +9,18 @@ import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
 public class Match extends Region {
-  private static eType eClazz = eType.MATCH;
-  private static SXLog log = SX.getLogger("SX." + eClazz.toString());
+  private static SXLog log = SX.getLogger("SX.MATCH");
 
-  protected void setClazz() {
-    clazz = eClazz;
+  double score = -1;
+  Location target = null;
+
+  public  Match(Element elem) {
+    x = elem.x;
+    y = elem.y;
+    w = elem.w;
+    h = elem.h;
+    score = elem.getScore();
+    target = new Location(elem.getTarget().x, elem.getTarget().y);
   }
 
-  protected void copy(Element elem) {
-    super.copy(elem);
-  }
-
-  protected void initAfter() {
-    initName(eClazz);
-  }
 }

@@ -37,7 +37,7 @@ public abstract class SXElement implements Comparable<SXElement> {
 
   public enum eType {
     SXELEMENT, ELEMENT, SYMBOL, PICTURE, TARGET, WINDOW,
-    REGION, MATCH, SCREEN, PATTERN;
+    REGION, MATCH, SCREEN, PATTERN, LOCATION;
 
     static eType isType(String strType) {
       for (eType t : eType.values()) {

@@ -3,11 +3,17 @@
  */
 package org.sikuli.script;
 
+import com.sikulix.api.Event;
+import com.sikulix.api.Handler;
+import com.sikulix.core.SX;
+import com.sikulix.core.SXLog;
+
 /**
  * implements the SikuliX FindFailed exception class
  * and defines constants and settings for the feature FindFailedResponse
  */
 public class FindFailed extends SikuliException {
+	private static SXLog log = SX.getLogger("SX.FINDFAILED");
 
 	/**
 	 * default FindFailedResponse is ABORT
@@ -53,18 +59,6 @@ public class FindFailed extends SikuliException {
     _name = "FindFailed";
   }
 
-//  public static String createdefault(Region reg, Image img) {
-//    String msg = "";
-//    if (img.isText()) {
-//      msg = String.format("%s as text", img.getName());
-//    } else if (img.getSize().width < 0 && img.getSize().height < 0) {
-//      msg = String.format("%s not loaded", img.getName());
-//    } else {
-//      msg = String.format("%s in %s", img, reg);
-//    }
-//    return msg;
-//  }
-
   public static FindFailedResponse getResponse() {
     return defaultFindFailedResponse;
   }
@@ -74,44 +68,43 @@ public class FindFailed extends SikuliException {
     return defaultFindFailedResponse;
   }
 
-//  public static FindFailedResponse setHandler(Object observer) {
-//    if (observer != null && (observer.getClass().getName().contains("org.python")
-//            || observer.getClass().getName().contains("org.jruby"))) {
-//      observer = new ObserverCallBack(observer, ObserveEvent.Type.FINDFAILED);
-//    } else {
-//      ((ObserverCallBack) observer).setType(ObserveEvent.Type.FINDFAILED);
-//    }
-//    ffHandler = observer;
-//    Debug.log(3, "Setting Default FindFailedHandler");
-//    return defaultFindFailedResponse;
-//  }
-//
-//  protected void setFindFailedHandler(Object handler) {
-//    ffHandler = setHandler(handler, ObserveEvent.Type.FINDFAILED);
-//  }
-//
-//  public void setImageMissingHandler(Object handler) {
-//    imHandler = setHandler(handler, ObserveEvent.Type.MISSING);
-//  }
-//
-//  private Object setHandler(Object handler, ObserveEvent.Type type) {
-//    defaultFindFailedResponse = HANDLE;
-//    if (handler != null && (handler.getClass().getName().contains("org.python")
-//            || handler.getClass().getName().contains("org.jruby"))) {
-//      handler = new ObserverCallBack(handler, type);
-//    } else {
-//      ((ObserverCallBack) handler).setType(type);
-//    }
-//    return handler;
-//  }
-//
-//  public static Object getFindFailedHandler() {
-//    return ffHandler;
-//  }
-//
-//  public static Object getImageMissingHandler() {
-//    return imHandler;
-//  }
+  public static FindFailedResponse setHandler(Object observer) {
+    if (observer != null && (observer.getClass().getName().contains("org.python")
+            || observer.getClass().getName().contains("org.jruby"))) {
+      observer = new Handler(observer, Event.TYPE.FINDFAILED);
+    } else {
+      ((Handler) observer).setType(Event.TYPE.FINDFAILED);
+    }
+    ffHandler = observer;
+    return defaultFindFailedResponse;
+  }
+
+  protected void setFindFailedHandler(Object handler) {
+    ffHandler = setHandler(handler, Event.TYPE.FINDFAILED);
+  }
+
+  public void setImageMissingHandler(Object handler) {
+    imHandler = setHandler(handler, Event.TYPE.IMAGEMISSING);
+  }
+
+  private Object setHandler(Object handler, Event.TYPE type) {
+    defaultFindFailedResponse = HANDLE;
+    if (handler != null && (handler.getClass().getName().contains("org.python")
+            || handler.getClass().getName().contains("org.jruby"))) {
+      handler = new Handler(handler, type);
+    } else {
+      ((Handler) handler).setType(type);
+    }
+    return handler;
+  }
+
+  public static Object getFindFailedHandler() {
+    return ffHandler;
+  }
+
+  public static Object getImageMissingHandler() {
+    return imHandler;
+  }
 
   public static FindFailedResponse reset() {
     defaultFindFailedResponse = ABORT;

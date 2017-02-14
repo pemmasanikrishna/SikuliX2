@@ -111,6 +111,10 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
     SwingUtilities.invokeLater(stopit);
   }
 
+  public Point getMousePosition() {
+    return lastMousePosition;
+  }
+
   public void addCallback(int key, NativeHookCallback cb) {
     toBeConsumed.put(key, cb);
   }
@@ -285,7 +289,7 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
     return currentEvent;
   }
 
-  Point lastMPos = new Point(0, 0);
+  Point lastMousePosition = new Point(0, 0);
   NativeInputEvent currentEvent = null;
 
   public void nativeMouseMoved(NativeMouseEvent evt) {
@@ -294,10 +298,14 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
     }
     Point current = evt.getPoint();
     currentEvent = evt;
-    if (runningGesture && current.distance(lastMPos) > distMPos) {
-      log.trace("nativeMouseMoved: %s", evt.paramString());
-      collectEvent(evt);
-      lastMPos = current;
+    if (runningGesture) {
+      if( current.distance(lastMousePosition) > distMPos) {
+        log.trace("nativeMouseMoved: %s", evt.paramString());
+        collectEvent(evt);
+        lastMousePosition = current;
+      }
+    } else {
+      lastMousePosition = current;
     }
   }
 

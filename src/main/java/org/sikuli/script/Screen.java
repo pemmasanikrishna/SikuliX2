@@ -4,39 +4,50 @@
 
 package org.sikuli.script;
 
-import com.sikulix.api.Element;
-import com.sikulix.core.LocalDevice;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
-public class Screen extends Region {
-  private static eType eClazz = eType.SCREEN;
-  private static SXLog log = SX.getLogger("SX." + eClazz.toString());
+import java.util.ArrayList;
+import java.util.List;
 
-  protected void setClazz() {
-    clazz = eClazz;
-  }
-
-  protected void copy(Element elem) {
-    super.copy(elem);
-  }
-
-  protected void initAfter() {
-    initName(eClazz);
-  }
+public class Screen extends Region implements IScreen {
+  private static SXLog log = SX.getLogger("SX.SCREEN");
 
   private int id = -1;
+  private int curID = -1;
+
+  public int getID() {
+    return curID;
+  }
 
   public Screen() {
     init(SX.getSXLOCALDEVICE().getMonitor());
     id = 0;
-    initAfter();
   }
 
   public Screen(int id) {
     init(SX.getSXLOCALDEVICE().getMonitor(id));
-    this.id = isOn();
-    initAfter();
+    this.id = id;
+  }
+
+  public String toString() {
+    return String.format("Screen(%d,%d %dx%d #%d)", x, y, w, h, id);
+  }
+
+  public IScreen getScreen() {
+    return this;
+  }
+
+  private static List<IScreen> screens = new ArrayList<>();
+
+  public static IScreen getScreen(int num) {
+    int numScreens = SX.getSXLOCALDEVICE().getNumberOfMonitors();
+    if (screens.size() == 0) {
+      for (int i = 0; i < numScreens; i++) {
+        screens.add(new Screen(i));
+      }
+    }
+    return (num >= 0 && num <= numScreens ? screens.get(num) : screens.get(0));
   }
 
   public String toStringPlus() {
