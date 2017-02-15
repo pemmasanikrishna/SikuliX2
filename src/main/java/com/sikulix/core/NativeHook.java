@@ -30,11 +30,11 @@ import java.util.logging.Logger;
 
 public class NativeHook implements NativeKeyListener, NativeMouseInputListener, NativeMouseWheelListener {
 
+  //<editor-fold desc="housekeeping">
   static SXLog log;
-  static Rectangle mainMonitor;
 
   static {
-    log = SX.getLogger("NativeHook");
+    log = SX.getLogger("SX.NativeHook");
     log.isSX();
     log.on(SXLog.INFO);
     mainMonitor = SX.getSXLOCALDEVICE().getMonitor(SX.getSXLOCALDEVICE().getMainMonitorID());
@@ -48,6 +48,7 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
   double distMPos = Math.sqrt(mainMonitor.getWidth() * mainMonitor.getWidth() +
           mainMonitor.getHeight() * mainMonitor.getHeight()) / 150;
   private int eventQueueSize = (int) ((mainMonitor.width + mainMonitor.height) / distMPos * 1.2);
+  static Rectangle mainMonitor;
 
   private Integer keyStop = NativeKeyEvent.VC_ESCAPE;
 
@@ -61,6 +62,21 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
     }
   }
 
+  private boolean runningGesture = false;
+  private boolean hookLocked = false;
+  private int defPoints = 100;
+  //</editor-fold>
+
+  //<editor-fold desc="mouse position and info">
+  Point lastMousePosition = new Point(0, 0);
+  NativeInputEvent currentEvent = null;
+
+  public Point getMousePosition() {
+    return lastMousePosition;
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="hook start / stop">
   public static NativeHook start() {
     if (SX.isNull(listener)) {
       listener = new NativeHook();
@@ -110,54 +126,9 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
     };
     SwingUtilities.invokeLater(stopit);
   }
+  //</editor-fold>
 
-  public Point getMousePosition() {
-    return lastMousePosition;
-  }
-
-  public void addCallback(int key, NativeHookCallback cb) {
-    toBeConsumed.put(key, cb);
-  }
-
-  public void nativeKeyPressed(NativeKeyEvent evt) {
-    if (hookLocked) {
-      return;
-    }
-    if (dispatcher != null && toBeConsumed.containsKey(evt.getKeyCode())) {
-      log.trace("consumeKeyPressed: %s %s", NativeKeyEvent.getKeyText(evt.getKeyCode()), consumeKey(evt));
-    } else {
-      log.trace("Key Pressed: %s", NativeKeyEvent.getKeyText(evt.getKeyCode()));
-    }
-  }
-
-  public void nativeKeyReleased(NativeKeyEvent evt) {
-    if (hookLocked) {
-      return;
-    }
-    if (dispatcher != null && toBeConsumed.containsKey(evt.getKeyCode())) {
-      log.trace("consumeKeyReleased: %s %s", NativeKeyEvent.getKeyText(evt.getKeyCode()), consumeKey(evt));
-      if (toBeConsumed.get(evt.getKeyCode()) != null) {
-        toBeConsumed.get(evt.getKeyCode()).callback(evt);
-      } else if (keyStop != null && evt.getKeyCode() == keyStop) {
-        log.info("should stop requested (key)");
-        stop();
-      }
-    } else {
-      log.trace("Key Released: %s", NativeKeyEvent.getKeyText(evt.getKeyCode()));
-      return;
-    }
-  }
-
-  public void nativeKeyTyped(NativeKeyEvent evt) {
-    if (hookLocked) {
-      return;
-    }
-    if (evt.getKeyCode() == 0) {
-      return;
-    }
-    log.trace("Key Typed: %s", NativeKeyEvent.getKeyText(evt.getKeyCode()));
-  }
-
+  //<editor-fold desc="consume keys">
   public String consumeKey(NativeKeyEvent e) {
     String msg = "";
     if (dispatcher != null) {
@@ -205,6 +176,53 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
     }
   }
 
+  public void addCallback(int key, NativeHookCallback cb) {
+    toBeConsumed.put(key, cb);
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="keys">
+  public void nativeKeyPressed(NativeKeyEvent evt) {
+    if (hookLocked) {
+      return;
+    }
+    if (dispatcher != null && toBeConsumed.containsKey(evt.getKeyCode())) {
+      log.trace("consumeKeyPressed: %s %s", NativeKeyEvent.getKeyText(evt.getKeyCode()), consumeKey(evt));
+    } else {
+      log.trace("Key Pressed: %s", NativeKeyEvent.getKeyText(evt.getKeyCode()));
+    }
+  }
+
+  public void nativeKeyReleased(NativeKeyEvent evt) {
+    if (hookLocked) {
+      return;
+    }
+    if (dispatcher != null && toBeConsumed.containsKey(evt.getKeyCode())) {
+      log.trace("consumeKeyReleased: %s %s", NativeKeyEvent.getKeyText(evt.getKeyCode()), consumeKey(evt));
+      if (toBeConsumed.get(evt.getKeyCode()) != null) {
+        toBeConsumed.get(evt.getKeyCode()).callback(evt);
+      } else if (keyStop != null && evt.getKeyCode() == keyStop) {
+        log.info("should stop requested (key)");
+        stop();
+      }
+    } else {
+      log.trace("Key Released: %s", NativeKeyEvent.getKeyText(evt.getKeyCode()));
+      return;
+    }
+  }
+
+  public void nativeKeyTyped(NativeKeyEvent evt) {
+    if (hookLocked) {
+      return;
+    }
+    if (evt.getKeyCode() == 0) {
+      return;
+    }
+    log.trace("Key Typed: %s", NativeKeyEvent.getKeyText(evt.getKeyCode()));
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="mouse">
   public void nativeMouseClicked(NativeMouseEvent evt) {
     if (hookLocked) {
       return;
@@ -227,10 +245,37 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
     log.trace("Mouse Released: %s, %s", evt.getButton(), evt.getPoint());
   }
 
-  private boolean runningGesture = false;
-  private boolean hookLocked = false;
-  private int defPoints = 100;
+  public void nativeMouseMoved(NativeMouseEvent evt) {
+    if (hookLocked) {
+      return;
+    }
+    Point current = evt.getPoint();
+    currentEvent = evt;
+    if (runningGesture) {
+      if( current.distance(lastMousePosition) > distMPos) {
+        log.trace("nativeMouseMoved: %s", evt.paramString());
+        collectEvent(evt);
+        lastMousePosition = current;
+      }
+    } else {
+      lastMousePosition = current;
+    }
+  }
 
+  public void nativeMouseDragged(NativeMouseEvent evt) {
+    if (hookLocked) {
+      return;
+    }
+  }
+
+  public void nativeMouseWheelMoved(NativeMouseWheelEvent evt) {
+    if (hookLocked) {
+      return;
+    }
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="gesture">
   public boolean startGesture() {
     return startGesture(defPoints);
   }
@@ -288,36 +333,5 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
   public NativeInputEvent getQueueLast() {
     return currentEvent;
   }
-
-  Point lastMousePosition = new Point(0, 0);
-  NativeInputEvent currentEvent = null;
-
-  public void nativeMouseMoved(NativeMouseEvent evt) {
-    if (hookLocked) {
-      return;
-    }
-    Point current = evt.getPoint();
-    currentEvent = evt;
-    if (runningGesture) {
-      if( current.distance(lastMousePosition) > distMPos) {
-        log.trace("nativeMouseMoved: %s", evt.paramString());
-        collectEvent(evt);
-        lastMousePosition = current;
-      }
-    } else {
-      lastMousePosition = current;
-    }
-  }
-
-  public void nativeMouseDragged(NativeMouseEvent evt) {
-    if (hookLocked) {
-      return;
-    }
-  }
-
-  public void nativeMouseWheelMoved(NativeMouseWheelEvent evt) {
-    if (hookLocked) {
-      return;
-    }
-  }
+  //</editor-fold>
 }
