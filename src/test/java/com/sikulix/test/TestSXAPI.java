@@ -816,7 +816,7 @@ public class TestSXAPI {
       if (!SX.isHeadless()) {
 // start
         result = "nothing to do here";
-        // end
+//end
       } else {
         result = "headless: not testing";
       }

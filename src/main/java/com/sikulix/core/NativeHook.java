@@ -263,7 +263,7 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
     if (hookLocked) {
       return;
     }
-    log.trace("Mouse Released: %s, %s", evt.getButton(), evt.getPoint());
+    log.trace("Mouse Pressed: %s, %s", evt.getButton(), evt.getPoint());
   }
 
   public void nativeMouseReleased(NativeMouseEvent evt) {
