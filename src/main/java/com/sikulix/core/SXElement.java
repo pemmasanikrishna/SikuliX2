@@ -73,7 +73,7 @@ public abstract class SXElement implements Comparable<SXElement> {
   }
 
   public boolean isElement() {
-    return eType.ELEMENT.equals(clazz) || isPicture() || isTarget() || isWindow();
+    return eType.SYMBOL.equals(clazz) || eType.ELEMENT.equals(clazz) || isPicture() || isTarget() || isWindow();
   }
 
   public boolean isPicture() {

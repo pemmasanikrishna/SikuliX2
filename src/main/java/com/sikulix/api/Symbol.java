@@ -43,6 +43,10 @@ public class Symbol extends Element {
     RECTANGLE, CIRCLE, LINE, IMAGE, TEXT, BUTTON;
   }
 
+  public boolean isActive() {
+    return Type.BUTTON.equals(type);
+  }
+
   public Symbol() {}
 
   public Symbol(int w, int h) {
@@ -50,20 +54,24 @@ public class Symbol extends Element {
     init(-1, -1, w, h);
   }
 
+  public static Symbol button(int w, int h) {
+    return new Symbol(w, h).setType(Type.BUTTON).setName();
+  }
+
   public static Symbol rectangle(int w, int h) {
-    return new Symbol(w, h);
+    return new Symbol(w, h).setName();
   }
 
   public static Symbol square(int w) {
-    return new Symbol(w, w);
+    return new Symbol(w, w).setName();
   }
 
   public static Symbol circle(int diameter) {
-    return new Symbol(diameter, diameter).setType(Type.CIRCLE);
+    return new Symbol(diameter, diameter).setType(Type.CIRCLE).setName();
   }
 
   public static Symbol ellipse(int w, int h) {
-    return new Symbol(w, h).setType(Type.CIRCLE);
+    return new Symbol(w, h).setType(Type.CIRCLE).setName();
   }
 
   public Symbol setType(Type type) {
@@ -73,9 +81,22 @@ public class Symbol extends Element {
 
   private Type type = Type.RECTANGLE;
 
+  public Symbol setName(String name) {
+    super.setName(name);
+    return this;
+  }
+
+  public Symbol setName() {
+    return setName(this.type.toString());
+  }
+
   @Override
   public boolean isRectangle() {
-    return Type.RECTANGLE.equals(type);
+    return Type.RECTANGLE.equals(type) || Type.BUTTON.equals(type);
+  }
+
+  public boolean isButton() {
+    return Type.BUTTON.equals(type);
   }
 
   public boolean isCircle() {

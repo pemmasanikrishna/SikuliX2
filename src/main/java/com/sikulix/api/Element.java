@@ -574,8 +574,7 @@ public class Element extends SXElement {
    */
   public Element click(Object... args) {
     Element target = findForClick(Finder.CLICK, args);
-    target.getElementDevice().click(target);
-    return target;
+    return target.getElementDevice().click(target);
   }
 
   /**

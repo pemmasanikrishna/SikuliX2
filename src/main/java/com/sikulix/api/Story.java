@@ -30,6 +30,8 @@ public class Story {
   private JFrame frame = new JFrame();
   private Element story = new Element();
   private java.util.List<Element> elements = new ArrayList<>();
+  private java.util.List<Symbol> activeElements = new ArrayList<>();
+  private Symbol activeElement = null;
   private boolean shouldClose = false;
 
   private BufferedImage storyImg = null;
@@ -59,11 +61,31 @@ public class Story {
     frame.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseReleased(MouseEvent e) {
+        Element loc = new Element(e.getPoint());
+        loc.setName("MousePosition");
+        log.trace("clicked at: %s", loc);
+        activeElement = null;
+        if (activeElements.size() > 0) {
+          for (Symbol symbol : activeElements) {
+            if (symbol.contains(loc)) {
+              log.trace("clicked active symbol: %s", symbol);
+              activeElement = symbol;
+            }
+          }
+        }
         stop();
       }
     });
 
     log.trace("init: %s: %s", contentLoaded, story);
+  }
+
+  public Symbol getClickedSymbol() {
+    return activeElement;
+  }
+
+  public boolean hasClickedSymbol() {
+    return SX.isNotNull(activeElement);
   }
 
   JPanel panel = new JPanel() {
@@ -156,7 +178,7 @@ public class Story {
   private static void drawElement(Graphics2D g2d, Element currentBase, Element elem) {
     if (elem.isSymbol()) {
       Symbol symbol = (Symbol) elem;
-      if (symbol.isRectangle() || symbol.isCircle()) {
+      if (symbol.isRectangle() || symbol.isCircle() || symbol.isButton()) {
         g2d.setColor(symbol.getColor());
         int stroke = symbol.getLine();
         g2d.setStroke(new BasicStroke(stroke));
@@ -167,7 +189,7 @@ public class Story {
         if (SX.isNotNull(symbol.getOver())) {
           topLeft = symbol.getCentered(symbol.getOver());
         }
-        if (symbol.isRectangle()) {
+        if (symbol.isRectangle() || symbol.isButton()) {
           g2d.drawRect(topLeft.x, topLeft.y, symbol.w, symbol.h);
           if (SX.isNotNull(symbol.getFillColor())) {
             g2d.setColor(symbol.getFillColor());
@@ -182,6 +204,8 @@ public class Story {
                     symbol.w - 2 * (stroke / 2), symbol.h - 2 * (stroke / 2), 0, 360);
           }
         }
+        symbol.x = topLeft.x;
+        symbol.y = topLeft.y;
       }
     } else {
       drawBorder(g2d, elem.x - currentBase.x, elem.y - currentBase.y, elem.w, elem.h,
@@ -277,6 +301,7 @@ public class Story {
     log.trace("starting");
     SX.pause(pauseBefore);
     showThread = new ShowIt();
+    showThread.running = true;
     new Thread(showThread).start();
     SX.pause(waitForFrame);
     if (pauseAfter > 0) {
@@ -306,6 +331,10 @@ public class Story {
     }
   }
 
+  public boolean isRunning() {
+    return showThread.running;
+  }
+
   public void show() {
     show(showTime);
   }
@@ -333,6 +362,9 @@ public class Story {
   public Story add(Element elem) {
     if (elem.isSymbol()) {
       elements.add(elem);
+      if (((Symbol) elem).isActive()) {
+        activeElements.add((Symbol) elem);
+      }
       return this;
     }
     return add(elem, SX.isNull(elem.getLineColor()) ? lineColor : elem.getLineColor());

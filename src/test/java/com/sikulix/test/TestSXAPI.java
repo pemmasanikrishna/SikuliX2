@@ -745,6 +745,30 @@ public class TestSXAPI {
   }
 
   @Test
+  public void test_110_mouseClickWithHookCheck() {
+    currentTest = "test_110_mouseClick";
+    if (!SX.isHeadless()) {
+      result = "mouse click direct";
+      boolean success = false;
+      Story story = new Story();
+      Symbol button = Symbol.button(200, 70).setColor(Color.red).fill(Color.cyan).setLine(10);
+      story.add(button);
+      story.start();
+      SX.pause(2);
+      while (story.isRunning()) {
+        Do.click();
+      }
+      story.stop();
+      if (story.hasClickedSymbol()) {
+        log.p("********** clicked: %s", story.getClickedSymbol());
+        success = true;
+      }
+      assert success;
+    }
+    assert true;
+  }
+
+  @Test
   public void test_200_popat() {
     currentTest = "test_200_popat";
     boolean assertVal = true;
@@ -792,7 +816,7 @@ public class TestSXAPI {
       if (!SX.isHeadless()) {
 // start
         result = "nothing to do here";
-// end
+        // end
       } else {
         result = "headless: not testing";
       }

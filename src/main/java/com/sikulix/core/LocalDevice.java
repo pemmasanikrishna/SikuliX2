@@ -247,7 +247,7 @@ public class LocalDevice extends IDevice {
   //<editor-fold desc="*** click ***">
   @Override
   public Element click(Element loc) {
-    return click(loc, Action.LEFT);
+    return click(loc.getTarget(), Action.LEFT);
   }
 
   @Override
@@ -280,6 +280,7 @@ public class LocalDevice extends IDevice {
     }
     lock();
     if (shouldMove) {
+      loc = loc.getTarget();
       smoothMove(loc, robot);
     }
     log.trace("click: %s at %s%s", action, loc, (shouldMove ? " with move" : ""));
