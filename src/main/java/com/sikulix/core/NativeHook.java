@@ -37,7 +37,6 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
     log = SX.getLogger("SX.NativeHook");
     log.isSX();
     log.on(SXLog.INFO);
-    mainMonitor = SX.getSXLOCALDEVICE().getMonitor(SX.getSXLOCALDEVICE().getMainMonitorID());
   }
 
   static NativeHook listener = null;
@@ -45,10 +44,27 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
   static Map<Integer, NativeHookCallback> toBeConsumed = new HashMap<Integer, NativeHookCallback>();
 
   private ConcurrentLinkedQueue<NativeInputEvent> eventQueue = new ConcurrentLinkedQueue<NativeInputEvent>();
-  double distMPos = Math.sqrt(mainMonitor.getWidth() * mainMonitor.getWidth() +
-          mainMonitor.getHeight() * mainMonitor.getHeight()) / 150;
-  private int eventQueueSize = (int) ((mainMonitor.width + mainMonitor.height) / distMPos * 1.2);
-  static Rectangle mainMonitor;
+
+//  public Rectangle getMainMonitor() {
+//    return mainMonitor;
+//  }
+//
+//  public void setMainMonitor(Rectangle mainMonitor) {
+//    this.mainMonitor = mainMonitor;
+//  }
+//
+//  public double getDistMPos() {
+//    return distMPos;
+//  }
+//
+//  public void setDistMPos(double distMPos) {
+//    this.distMPos = distMPos;
+//  }
+
+  private Rectangle mainMonitor;
+  double distMPos = 0;
+
+  private int eventQueueSize = 0;
 
   private Integer keyStop = NativeKeyEvent.VC_ESCAPE;
 
@@ -74,13 +90,25 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
   public Point getMousePosition() {
     return lastMousePosition;
   }
+
   //</editor-fold>
 
   //<editor-fold desc="hook start / stop">
+  private NativeHook() {
+  }
+
+  private void init() {
+    if (eventQueueSize == 0) {
+      mainMonitor = SX.getSXLOCALDEVICE().getMonitor(SX.getSXLOCALDEVICE().getMainMonitorID());
+      distMPos = Math.sqrt(mainMonitor.getWidth() * mainMonitor.getWidth() +
+              mainMonitor.getHeight() * mainMonitor.getHeight()) / 150;
+      eventQueueSize = (int) ((mainMonitor.width + mainMonitor.height) / distMPos * 1.2);
+    }
+  }
+
   public static NativeHook start() {
     if (SX.isNull(listener)) {
       listener = new NativeHook();
-
       Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
       logger.setLevel(Level.INFO);
       logger.setUseParentHandlers(false);
@@ -303,6 +331,7 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
   }
 
   private NativeInputEvent collectEvent(NativeInputEvent evt) {
+    init();
     while (eventQueue.size() >= eventQueueSize) {
       eventQueue.poll();
     }
@@ -311,6 +340,7 @@ public class NativeHook implements NativeKeyListener, NativeMouseInputListener, 
   }
 
   public void clearQueue(int max) {
+
     eventQueue.clear();
     currentEvent = null;
     if (max > 0) {

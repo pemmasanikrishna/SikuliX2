@@ -11,6 +11,7 @@ import org.apache.commons.cli.*;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.sikuli.script.Region;
 
 import java.awt.*;
 import java.io.*;
@@ -1398,7 +1399,7 @@ public class SX {
     OPENCV, TESSERACT, SYSUTIL, HOTKEY
   }
 
-  static boolean loadNative(NATIVES type) {
+  public static boolean loadNative(NATIVES type) {
     boolean success = true;
     if (libsLoaded.isEmpty()) {
       for (NATIVES nType : NATIVES.values()) {
@@ -1451,7 +1452,7 @@ public class SX {
       } else {
         String sf_aLib = new File(getSXNATIVE(), aLib).getAbsolutePath();
         System.load(sf_aLib);
-        debug("loadNativeLibrary: bundled: %s", aLib);
+        trace("loadNativeLibrary: bundled: %s", aLib);
       }
     } catch (UnsatisfiedLinkError ex) {
       terminate(1, "loadNativeLibrary: loading library error: %s (%s)", aLib, ex.getMessage());
@@ -1677,6 +1678,21 @@ public class SX {
       } else {
         return val.equals(var);
       }
+    }
+    return false;
+  }
+
+  public static boolean isRectangleEqual(Object base, Rectangle rect) {
+    Rectangle rBase = null;
+    if (base instanceof SXElement) {
+      rBase = ((SXElement) base).getRectangle();
+    } else if (base instanceof Region){
+      rBase = ((Region) base).getRect();
+    } else if (base instanceof Rectangle) {
+      rBase = (Rectangle) base;
+    }
+    if (SX.isNotNull(rBase)) {
+      return rBase.x == rect.x && rBase.y == rect.y && rBase.width == rect.width && rBase.height == rect.height;
     }
     return false;
   }

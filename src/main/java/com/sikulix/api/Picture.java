@@ -41,7 +41,7 @@ public class Picture extends Element {
     if (elem.hasContent()) {
       setContent(elem.getContent().clone());
     } else {
-      setContent(new Mat());
+      setContent();
     }
     urlImg = elem.urlImg;
     setName(elem.getName());
@@ -64,7 +64,7 @@ public class Picture extends Element {
   public Picture(Mat mat) {
     this();
     if (SX.isNull(mat)) {
-      setContent(new Mat());
+      setContent();
     } else {
       long start = new Date().getTime();
       setContent(mat.clone());
@@ -131,13 +131,13 @@ public class Picture extends Element {
     if (SX.isSet(url)) {
       setContent(url);
     } else {
-      setContent(new Mat());
+      setContent();
       setName(getNameFromFileL(new File(fpImg)));
     }
   }
 
   private void setContent(URL url) {
-    setContent(new Mat());
+    setContent();
     if (SX.isSet(url)) {
       urlImg = url;
       setName(getNameFromURL(urlImg));
@@ -509,7 +509,7 @@ public class Picture extends Element {
   public Mat getResizedMat(double factor) {
     Mat newMat = getContent();
     if (isValid()) {
-      newMat = new Mat();
+      newMat = getNewMat();
       Size newS = new Size(w * factor, h * factor);
       Imgproc.resize(getContent(), newMat, newS, 0, 0, Imgproc.INTER_AREA);
     }

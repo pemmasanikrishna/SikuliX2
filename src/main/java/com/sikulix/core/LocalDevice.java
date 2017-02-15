@@ -27,11 +27,17 @@ public class LocalDevice extends IDevice {
   //<editor-fold desc="*** houskeeping ***">
   @Override
   public LocalDevice start(Object... args) {
-    getMonitors();
-    try {
-      robot = new LocalRobot();
-    } catch (AWTException e) {
-      log.terminate(1, "LocalRobot: %s", e.getMessage());
+    if (0 < getMonitors()) {
+      try {
+        robot = new LocalRobot();
+      } catch (AWTException e) {
+        log.terminate(1, "LocalRobot: %s", e.getMessage());
+      }
+    } else {
+      log.terminate(1, "No monitors - might be headless %s");
+    }
+    if (SX.isOption("SX.withHook", false)) {
+      hook = NativeHook.start();
     }
     return this;
   }
@@ -40,6 +46,12 @@ public class LocalDevice extends IDevice {
   public void stop() {
     SX.setSXLOCALDEVICE(null);
   }
+
+  public NativeHook getHook() {
+    return hook;
+  }
+
+  NativeHook hook = null;
   
   private Object synchObject = new Object();
   private boolean locked = false;
@@ -307,7 +319,6 @@ public class LocalDevice extends IDevice {
         smoothMove(loc.getTarget(), robot);
         unlock();
       }
-      return loc;
     }
     return at();
   }
@@ -438,7 +449,7 @@ public class LocalDevice extends IDevice {
     getMonitors();
   }
 
-  private void getMonitors() {
+  private int getMonitors() {
     if (!SX.isHeadless()) {
       genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
       gdevs = genv.getScreenDevices();
@@ -475,6 +486,7 @@ public class LocalDevice extends IDevice {
     } else {
       log.error("running in headless environment");
     }
+    return nMonitors;
   }
 
   @Override
@@ -512,7 +524,7 @@ public class LocalDevice extends IDevice {
     if (img.hasContent()) {
       elem.setContent(img.getContent());
     } else {
-      elem.setContent(new Mat());
+      elem.setContent();
     }
     return img;
   }

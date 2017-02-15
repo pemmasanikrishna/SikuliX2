@@ -4,6 +4,7 @@
 
 package org.sikuli.script;
 
+import com.sikulix.api.Do;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
@@ -21,9 +22,9 @@ public class Location {
     if (otherScreen != null) {
       return otherScreen;
     }
-    int numScreens = SX.getSXLOCALDEVICE().getNumberOfMonitors();
+    int numScreens = Do.getDevice().getNumberOfMonitors();
     for (int i = 0; i < numScreens; i++) {
-      r = SX.getSXLOCALDEVICE().getMonitor(i);
+      r = Do.getDevice().getMonitor(i);
       if (r.contains(x, y)) {
         return Screen.getScreen(i);
       }

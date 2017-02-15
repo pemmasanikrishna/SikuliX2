@@ -36,24 +36,19 @@ public class Region {
     return h;
   }
 
-  /**
-   * X-coordinate of the Region
-   */
   public int x;
-  /**
-   * Y-coordinate of the Region
-   */
   public int y;
-  /**
-   * Width of the Region
-   */
   public int w;
-  /**
-   * Height of the Region
-   */
   public int h;
 
-  private Element regionElement;
+  private Element regionElement = null;
+
+  public Element getElement() {
+    if (SX.isNull(regionElement)) {
+      regionElement = new Element(x, y, w, h);
+    }
+    return regionElement;
+  }
 
   private IScreen scr;
 
@@ -63,18 +58,10 @@ public class Region {
 
   private boolean otherScreen = false;
 
-  /**
-   * INTERNAL USE: checks wether this region belongs to a non-Desktop screen
-   *
-   * @return true/false
-   */
   public boolean isOtherScreen() {
     return otherScreen;
   }
 
-  /**
-   * INTERNAL USE: flags this region as belonging to a non-Desktop screen
-   */
   public void setOtherScreen() {
     otherScreen = true;
   }
@@ -88,9 +75,7 @@ public class Region {
     if (screen == null) {
       return null;
     }
-    // get intersection of Region and Screen
     Rectangle rect = screen.getRect().intersection(getRect());
-    // no Intersection, Region is not on the Screen
     if (rect.isEmpty()) {
       return null;
     }
@@ -146,7 +131,7 @@ public class Region {
 //      isVNC = iscr instanceof VNCScreen;
 //    }
     if (!isVNC) {
-      for (int i = 0; i < SX.getSXLOCALDEVICE().getNumberOfMonitors(); i++) {
+      for (int i = 0; i < Do.getDevice().getNumberOfMonitors(); i++) {
         screen = Screen.getScreen(i);
         rect = regionOnScreen(screen);
         if (rect != null) {

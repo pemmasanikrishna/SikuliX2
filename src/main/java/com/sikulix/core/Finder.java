@@ -22,8 +22,8 @@ public class Finder {
   private static final SXLog log = SX.getLogger("SX.Finder");
 
   private Element baseElement = null;
-  private Mat base = new Mat();
-  private Mat result = new Mat();
+  private Mat base = SXElement.getNewMat();
+  private Mat result = SXElement.getNewMat();
 
   private enum FindType {
     ONE, ALL
@@ -114,7 +114,7 @@ public class Finder {
       begin_t = new Date().getTime();
       double imgFactor = target.getResizeFactor();
       Size sb, sp;
-      Mat mBase = new Mat(), mPattern = new Mat();
+      Mat mBase = SXElement.getNewMat(), mPattern = SXElement.getNewMat();
       result = null;
       for (double factor : resizeLevels) {
         rfactor = factor * imgFactor;
@@ -177,7 +177,7 @@ public class Finder {
     if (SX.isNull(probe)) {
       probe = target.getContent();
     }
-    Mat result = new Mat();
+    Mat result = SXElement.getNewMat();
     Mat plainBase = base;
     Mat plainProbe = probe;
     if (!target.isPlainColor()) {
@@ -418,9 +418,9 @@ public class Finder {
   //<editor-fold desc="detect edges">
   public static Picture detectEdges(Picture src) {
     Mat mSource;
-    Mat mSourceGray = new Mat();
-    Mat mDestination = new Mat();
-    Mat mDetectedEdges = new Mat();
+    Mat mSourceGray = SXElement.getNewMat();
+    Mat mDestination = SXElement.getNewMat();
+    Mat mDetectedEdges = SXElement.getNewMat();
 
     int edgeThresh = 1;
     int lowThreshold = 100;
@@ -463,11 +463,11 @@ public class Finder {
   public static List<Element> detectChanges(Mat base, Mat changed) {
     int PIXEL_DIFF_THRESHOLD = 3;
     int IMAGE_DIFF_THRESHOLD = 5;
-    Mat mBase = new Mat();
-    Mat mChanged = new Mat();
-    Mat mDiffAbs = new Mat();
-    Mat mDiffTresh = new Mat();
-    Mat mChanges = new Mat();
+    Mat mBase = SXElement.getNewMat();
+    Mat mChanged = SXElement.getNewMat();
+    Mat mDiffAbs = SXElement.getNewMat();
+    Mat mDiffTresh = SXElement.getNewMat();
+    Mat mChanges = SXElement.getNewMat();
     Size size = mBase.size();
     List<Element> rectangles = new ArrayList<>();
 
@@ -477,12 +477,12 @@ public class Finder {
     Imgproc.threshold(mDiffAbs, mDiffTresh, PIXEL_DIFF_THRESHOLD, 0.0, Imgproc.THRESH_TOZERO);
     if (Core.countNonZero(mDiffTresh) > IMAGE_DIFF_THRESHOLD) {
       Imgproc.threshold(mDiffAbs, mDiffAbs, PIXEL_DIFF_THRESHOLD, 255, Imgproc.THRESH_BINARY);
-      Imgproc.dilate(mDiffAbs, mDiffAbs, new Mat());
+      Imgproc.dilate(mDiffAbs, mDiffAbs, SXElement.getNewMat());
       Mat se = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
       Imgproc.morphologyEx(mDiffAbs, mDiffAbs, Imgproc.MORPH_CLOSE, se);
 
       List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-      Mat mHierarchy = new Mat();
+      Mat mHierarchy = SXElement.getNewMat();
       Imgproc.findContours(mDiffAbs, contours, mHierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
       rectangles = contoursToRectangle(contours);
 
@@ -520,7 +520,7 @@ public class Finder {
   private static void logShow(Mat mat) {
     Picture image = new Picture();
     if (isGray(mat)) {
-      Mat colored = new Mat();
+      Mat colored = SXElement.getNewMat();
       Imgproc.cvtColor(mat, colored, toColor);
       image = new Picture(colored);
     } else if (isColored(mat)) {

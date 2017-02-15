@@ -166,41 +166,19 @@ public class Element extends SXElement {
     this.content = content;
   }
 
+  public Element setContent() {
+    content = getNewMat();
+    return this;
+  }
+
   public boolean hasContent() {
     return SX.isNotNull(content) && !content.empty();
   }
 
   private Mat content = null;
 
-  protected boolean plainColor = false;
-  protected boolean blackColor = false;
-  protected boolean whiteColor = false;
-
-  public boolean isPlainColor() {
-    return isValid() && plainColor;
-  }
-
-  public boolean isBlack() {
-    return isValid() && blackColor;
-  }
-
-  public boolean isWhite() {
-    return isValid() && blackColor;
-  }
-
-  public double getResizeFactor() {
-    return isValid() ? resizeFactor : 1;
-  }
-
-  protected double resizeFactor;
-
-  protected Element setContent() {
-    capture();
-    return this;
-  }
-
   public Element load() {
-    setContent();
+    capture();
     return this;
   }
 
@@ -254,6 +232,29 @@ public class Element extends SXElement {
     }
     return false;
   }
+
+  protected boolean plainColor = false;
+  protected boolean blackColor = false;
+  protected boolean whiteColor = false;
+
+  public boolean isPlainColor() {
+    return isValid() && plainColor;
+  }
+
+  public boolean isBlack() {
+    return isValid() && blackColor;
+  }
+
+  public boolean isWhite() {
+    return isValid() && blackColor;
+  }
+
+  public double getResizeFactor() {
+    return isValid() ? resizeFactor : 1;
+  }
+
+  protected double resizeFactor;
+
   //</editor-fold>
 
   //<editor-fold desc="***** capture">
@@ -332,12 +333,13 @@ public class Element extends SXElement {
   }
 
   public void show(int time, int... times) {
-    if (hasContent()) {
-      showing = new Story(this, times);
-      showing.setBorder();
-      showing.show(time);
-      showing = null;
+    if (!hasContent()) {
+      load();
     }
+    showing = new Story(this, times);
+    showing.setBorder();
+    showing.show(time);
+    showing = null;
   }
 
   public void show(Element elem) {
@@ -561,8 +563,8 @@ public class Element extends SXElement {
    */
   public Element hover(Object... args) {
     Element target = findForClick(Finder.HOVER, args);
-    target.getElementDevice().move(target);
-    return target;
+    Element moveTarget = target.getElementDevice().move(target);
+    return moveTarget;
   }
 
   /**
@@ -774,7 +776,9 @@ public class Element extends SXElement {
     events.remove(evt);
   }
 
-  public void removeEvents() { events.clear(); }
+  public void removeEvents() {
+    events.clear();
+  }
 
   public boolean hasEvents() {
     return Events.hasHappened(this);

@@ -81,11 +81,14 @@ public class TestSXAPI {
       });
     }
     SX.setBaseClass();
+    SX.setOption("SX.withHook", "yes");
   }
 
   @AfterClass
   public static void tearDownClass() {
-    hook.stop();
+    if (SX.isNotNull(hook)) {
+      hook.stop();
+    }
     log.info("hook stopped");
   }
 
@@ -101,9 +104,9 @@ public class TestSXAPI {
       log.startTimer();
     }
     if (SX.isNull(hook)) {
-      hook = NativeHook.start();
+      hook = Do.getHook();
+      log.info("hook started");
     }
-    log.info("hook started");
   }
 
   @After
@@ -719,43 +722,24 @@ public class TestSXAPI {
 
   @Test
   public void test_101_mouseHoverWithHookCheck() {
-    //log.startTimer();
     currentTest = "test_101_mouseHoverWithHookCheck";
     if (!SX.isHeadless()) {
       result = "some mouse moves checked with NativeHook";
       SX.pause(1);
       Element elem = new Element(100, 100);
       Do.hover();
-      Point mousePos = hook.getMousePosition();
       Element center = Do.on().getCenter();
-      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
-              mousePos.x, mousePos.y, center.x, center.y);
-      assert mousePos.x - center.x == 0 && mousePos.y - center.y == 0;
+      assert Do.isMouseposition(hook, center.x, center.y);
       elem.hover();
-      mousePos = hook.getMousePosition();
-      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
-              mousePos.x, mousePos.y, elem.x, elem.y);
-      assert mousePos.x - elem.x == 0 && mousePos.y - elem.y == 0;
+      assert Do.isMouseposition(hook, elem.x, elem.y);
       Do.hover();
-      mousePos = hook.getMousePosition();
-      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
-              mousePos.x, mousePos.y, center.x, center.y);
-      assert mousePos.x - center.x == 0 && mousePos.y - center.y == 0;
+      assert Do.isMouseposition(hook, center.x, center.y);
       elem.hover(elem);
-      mousePos = hook.getMousePosition();
-      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
-              mousePos.x, mousePos.y, elem.x, elem.y);
-      assert mousePos.x - elem.x == 0 && mousePos.y - elem.y == 0;
+      assert Do.isMouseposition(hook, elem.x, elem.y);
       Do.hover();
-      mousePos = hook.getMousePosition();
-      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
-              mousePos.x, mousePos.y, center.x, center.y);
-      assert mousePos.x - center.x == 0 && mousePos.y - center.y == 0;
+      assert Do.isMouseposition(hook, center.x, center.y);
       Do.hover(elem);
-      mousePos = hook.getMousePosition();
-      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
-              mousePos.x, mousePos.y, elem.x, elem.y);
-      assert mousePos.x - elem.x == 0 && mousePos.y - elem.y == 0;
+      assert Do.isMouseposition(hook, elem.x, elem.y);
     }
     assert true;
   }
@@ -767,7 +751,7 @@ public class TestSXAPI {
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       Do.popat(300, 300);
       Do.popup("Use mouse to click OK", "testing popat");
-      Element loc = SX.getSXLOCALDEVICE().at();
+      Element loc = Do.at();
       result = String.format("clicked at (%d, %d)", loc.x, loc.y);
       assertVal = loc.x > 300 && loc.x < 450;
     } else {
@@ -780,8 +764,19 @@ public class TestSXAPI {
   public void test_300_oldAPI_Screen() {
     currentTest = "test_300_oldAPI_Screen";
     Screen.showMonitors();
-//    new Screen(1).show();
-    result = new Screen(1).toString();
+    Screen scr = new Screen();
+    assert scr.getID() == 0;
+    assert SX.isRectangleEqual(scr, Do.on().getRectangle());
+    result = "Screen basics: " + scr.toString();
+    if (Do.getDevice().getNumberOfMonitors() > 1) {
+      scr = new Screen(1);
+      Element elem = scr.getElement();
+      elem = elem.hover();
+      assert Do.isMouseposition(hook, elem.x, elem.y);
+      elem.grow((int) (scr.w / 3), (int) (scr.h / 3));
+      elem.show(3);
+      result += " with second monitor";
+    }
   }
   //</editor-fold>
 

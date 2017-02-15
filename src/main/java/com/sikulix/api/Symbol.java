@@ -24,7 +24,7 @@ public class Symbol extends Element {
     if (elem.hasContent()) {
       setContent(elem.getContent().clone());
     } else {
-      setContent(new Mat());
+      setContent();
     }
     urlImg = elem.urlImg;
     setName(elem.getName());

@@ -29,12 +29,12 @@ import java.util.regex.Pattern;
 
 public abstract class SXElement implements Comparable<SXElement> {
 
-  //<editor-fold desc="housekeeping">
-  static {
-    SX.trace("SXElement: loadNative(SX.NATIVES.OPENCV)");
+  public static Mat getNewMat() {
     SX.loadNative(SX.NATIVES.OPENCV);
+    return new Mat();
   }
 
+  //<editor-fold desc="housekeeping">
   public enum eType {
     SXELEMENT, ELEMENT, SYMBOL, PICTURE, TARGET, WINDOW,
     REGION, MATCH, SCREEN, PATTERN, LOCATION;
@@ -93,10 +93,18 @@ public abstract class SXElement implements Comparable<SXElement> {
   }
 
   public boolean isSpecial() {
-    return !SX.isNull(containingScreen);
+    return !SX.isNull(containingDevice);
   }
 
-  Object containingScreen = null;
+  public Object getContainingDevice() {
+    return containingDevice;
+  }
+
+  public void setContainingDevice(Object containingDevice) {
+    this.containingDevice = containingDevice;
+  }
+
+  Object containingDevice = null;
 
   /**
    * @return true if the element is useable and/or has valid content
@@ -117,7 +125,12 @@ public abstract class SXElement implements Comparable<SXElement> {
 
   public IDevice getElementDevice() {
     if (SX.isNull(elementDevice)) {
-      elementDevice = SX.getSXLOCALDEVICE();
+      if (!isSpecial()) {
+        elementDevice = SX.getSXLOCALDEVICE();
+      } else {
+        log.error("not implemented: non-local devices");
+        elementDevice = SX.getSXLOCALDEVICE();
+      }
     }
     return elementDevice;
   }
@@ -338,6 +351,13 @@ public abstract class SXElement implements Comparable<SXElement> {
     return new Rectangle(x, y, w, h);
   }
 
+  public void setRectangle(Rectangle rect) {
+    x = rect.x;
+    y = rect.y;
+    w = rect.width;
+    h = rect.height;
+  }
+
   public Element getCenter() {
     return new Element(x + w / 2, y + h / 2);
   }
@@ -526,13 +546,15 @@ public abstract class SXElement implements Comparable<SXElement> {
   }
 
   public void grow(int margin) {
-    x -= margin;
-    y -= margin;
-    if (isPoint()) {
-      w = h = 1;
-    }
-    w += 2 * margin;
-    h += 2 * margin;
+    Rectangle r = getRectangle();
+    r.grow(margin, margin);
+    setRectangle(r);
+  }
+
+  public void grow(int hori, int verti) {
+    Rectangle r = getRectangle();
+    r.grow(hori, verti);
+    setRectangle(r);
   }
 
   //<editor-fold desc="***** move">
@@ -643,7 +665,8 @@ public abstract class SXElement implements Comparable<SXElement> {
   protected final static String dotPNG = "." + PNG;
 
   protected static Mat makeMat(BufferedImage bImg) {
-    Mat aMat = new Mat();
+
+    Mat aMat = getNewMat() ;
     if (bImg.getType() == BufferedImage.TYPE_INT_RGB) {
       log.trace("makeMat: INT_RGB (%dx%d)", bImg.getWidth(), bImg.getHeight());
       int[] data = ((DataBufferInt) bImg.getRaster().getDataBuffer()).getData();
@@ -692,7 +715,7 @@ public abstract class SXElement implements Comparable<SXElement> {
     BufferedImage bImg = null;
     MatOfByte bytemat = new MatOfByte();
     if (SX.isNull(mat)) {
-      mat = new Mat();
+      mat = getNewMat();
     }
     Imgcodecs.imencode(type, mat, bytemat);
     byte[] bytes = bytemat.toArray();

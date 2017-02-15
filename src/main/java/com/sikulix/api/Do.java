@@ -56,7 +56,7 @@ public class Do {
   }
 
   private static Point getLocPopAt() {
-    Rectangle screen0 = SX.getSXLOCALDEVICE().getMonitor();
+    Rectangle screen0 = Do.getDevice().getMonitor();
     if (null == screen0) {
       return null;
     }
@@ -297,7 +297,7 @@ public class Do {
   }
 
   public static String popFile(String title) {
-    popat(SX.getSXLOCALDEVICE().getMonitor());
+    popat(Do.getDevice().getMonitor());
     JFrame anchor = popLocation();
     File ret = FileChooser.load(anchor);
     popat();
@@ -851,16 +851,16 @@ public class Do {
   //</editor-fold>
 
   //<editor-fold desc="Screen related">
-  private static Element allMonitorsAsElement = new Element(SX.getSXLOCALDEVICE().getAllMonitors());
+  private static Element allMonitorsAsElement = null;
 
   /**
    * show the current monitor setup
    */
   public static void showMonitors() {
-    log.p("*** monitor configuration [ %s Screen(s)] ***", SX.getSXLOCALDEVICE().getNumberOfMonitors());
-    log.p("*** Primary is Screen %d", SX.getSXLOCALDEVICE().getMainMonitorID());
-    for (int i = 0; i < SX.getSXLOCALDEVICE().getNumberOfMonitors(); i++) {
-      log.p("Screen %d: %s", i, new Element(SX.getSXLOCALDEVICE().getMonitor(i)));
+    log.p("*** monitor configuration [ %s Screen(s)] ***", Do.getDevice().getNumberOfMonitors());
+    log.p("*** Primary is Screen %d", Do.getDevice().getMainMonitorID());
+    for (int i = 0; i < Do.getDevice().getNumberOfMonitors(); i++) {
+      log.p("Screen %d: %s", i, new Element(Do.getDevice().getMonitor(i)));
     }
     log.p("*** end monitor configuration ***");
   }
@@ -871,7 +871,7 @@ public class Do {
   public static void resetMonitors() {
     showMonitors();
     log.p("*** TRYING *** to reset the monitor configuration");
-    SX.getSXLOCALDEVICE().resetMonitors();
+    Do.getDevice().resetMonitors();
     showMonitors();
   }
 
@@ -883,11 +883,11 @@ public class Do {
 
   private static Element getScreenAsElement(int monitor) {
     if (screensAsElements.size() == 0) {
-      for (int i = 0; i < SX.getSXLOCALDEVICE().getNumberOfMonitors(); i++) {
-        screensAsElements.add(new Element(SX.getSXLOCALDEVICE().getMonitor(i)));
+      for (int i = 0; i < Do.getDevice().getNumberOfMonitors(); i++) {
+        screensAsElements.add(new Element(Do.getDevice().getMonitor(i)));
       }
     }
-    if (monitor > -1 && monitor < SX.getSXLOCALDEVICE().getNumberOfMonitors()) {
+    if (monitor > -1 && monitor < Do.getDevice().getNumberOfMonitors()) {
       return screensAsElements.get(monitor);
     } else {
       return screensAsElements.get(0);
@@ -895,6 +895,9 @@ public class Do {
   }
 
   public static Element all() {
+    if (SX.isNull(allMonitorsAsElement)) {
+      allMonitorsAsElement = new Element(Do.getDevice().getAllMonitors());
+    }
     return allMonitorsAsElement;
   }
 
@@ -950,6 +953,37 @@ public class Do {
   //</editor-fold>
 
   //<editor-fold desc="actions like find, wait, click">
+  public static IDevice getDevice() {
+    if (!Do.on().isSpecial()) {
+      return SX.getSXLOCALDEVICE();
+    } else {
+      log.error("not implemented: non-local devices");
+      return SX.getSXLOCALDEVICE();
+    }
+  }
+
+  public static NativeHook getHook() {
+    return SX.getSXLOCALDEVICE().getHook();
+  }
+
+  public static boolean isMouseposition(NativeHook hook, int x, int y) {
+    if (SX.isNotNull(hook)) {
+      Point mousePos = hook.getMousePosition();
+      log.trace("hook mouse position: (%d, %d) should be (%d, %d)",
+              mousePos.x, mousePos.y, x, y);
+      return mousePos.x == x && mousePos.y == y;
+    } else {
+      Element mousePos = getDevice().at();
+      log.trace("MouseInfo.getPointerInfo(): mouse position: (%d, %d) should be (%d, %d)",
+              mousePos.x, mousePos.y, x, y);
+      return mousePos.x == x && mousePos.y == y;
+    }
+  }
+
+  public static Element at() {
+    return getDevice().at();
+  }
+
   public static Element click(Object... args) {
     log.trace("click: start");
     Element target = findForClick(Finder.CLICK, args);
