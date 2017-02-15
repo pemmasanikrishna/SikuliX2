@@ -64,6 +64,8 @@ public class TestSXAPI {
     return duration;
   }
 
+  private static NativeHook hook = null;
+
   @BeforeClass
   public static void setUpClass() {
     if (SX.existsFile(SX.getFolder(SX.getSXAPP()))) {
@@ -83,6 +85,8 @@ public class TestSXAPI {
 
   @AfterClass
   public static void tearDownClass() {
+    hook.stop();
+    log.info("hook stopped");
   }
 
   @Before
@@ -96,6 +100,10 @@ public class TestSXAPI {
     if (log.isLevel(SXLog.TRACE)) {
       log.startTimer();
     }
+    if (SX.isNull(hook)) {
+      hook = NativeHook.start();
+    }
+    log.info("hook started");
   }
 
   @After
@@ -711,34 +719,43 @@ public class TestSXAPI {
 
   @Test
   public void test_101_mouseHoverWithHookCheck() {
-    log.startTimer();
+    //log.startTimer();
     currentTest = "test_101_mouseHoverWithHookCheck";
     if (!SX.isHeadless()) {
       result = "some mouse moves checked with NativeHook";
-      NativeHook hook = NativeHook.start();
       SX.pause(1);
       Element elem = new Element(100, 100);
       Do.hover();
       Point mousePos = hook.getMousePosition();
       Element center = Do.on().getCenter();
-      log.trace("******************* hook mouse position: (%d, %d) to (%d, %d)", mousePos.x, mousePos.y, center.x, center.y);
+      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
+              mousePos.x, mousePos.y, center.x, center.y);
       assert mousePos.x - center.x == 0 && mousePos.y - center.y == 0;
       elem.hover();
       mousePos = hook.getMousePosition();
+      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
+              mousePos.x, mousePos.y, elem.x, elem.y);
       assert mousePos.x - elem.x == 0 && mousePos.y - elem.y == 0;
       Do.hover();
       mousePos = hook.getMousePosition();
+      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
+              mousePos.x, mousePos.y, center.x, center.y);
       assert mousePos.x - center.x == 0 && mousePos.y - center.y == 0;
       elem.hover(elem);
       mousePos = hook.getMousePosition();
+      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
+              mousePos.x, mousePos.y, elem.x, elem.y);
       assert mousePos.x - elem.x == 0 && mousePos.y - elem.y == 0;
       Do.hover();
       mousePos = hook.getMousePosition();
+      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
+              mousePos.x, mousePos.y, center.x, center.y);
       assert mousePos.x - center.x == 0 && mousePos.y - center.y == 0;
       Do.hover(elem);
       mousePos = hook.getMousePosition();
+      log.info("hook mouse position: (%d, %d) should be (%d, %d)",
+              mousePos.x, mousePos.y, elem.x, elem.y);
       assert mousePos.x - elem.x == 0 && mousePos.y - elem.y == 0;
-      hook.stop();
     }
     assert true;
   }
@@ -778,9 +795,9 @@ public class TestSXAPI {
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
-// ******************* start
+// start
         result = "nothing to do here";
-// ******************* end
+// end
       } else {
         result = "headless: not testing";
       }
