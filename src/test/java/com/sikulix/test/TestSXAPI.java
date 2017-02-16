@@ -65,6 +65,7 @@ public class TestSXAPI {
   }
 
   private static NativeHook hook = null;
+  private static Symbol button = null;
 
   @BeforeClass
   public static void setUpClass() {
@@ -107,6 +108,7 @@ public class TestSXAPI {
       hook = Do.getHook();
       log.info("hook started");
     }
+    button = Symbol.button(200, 70).setColor(Color.red).fill(Color.cyan).setLine(10);
   }
 
   @After
@@ -750,10 +752,7 @@ public class TestSXAPI {
     if (!SX.isHeadless()) {
       result = "mouse click direct";
       boolean success = false;
-      Story story = new Story();
-      Symbol button = Symbol.button(200, 70).setColor(Color.red).fill(Color.cyan).setLine(10);
-      story.add(button);
-      story.start();
+      Story story = new Story(button).start();
       SX.pause(2);
       while (story.isRunning()) {
         Do.click();
@@ -810,12 +809,15 @@ public class TestSXAPI {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    //log.startTimer();
+    log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
         result = "nothing to do here";
+        Symbol button = Symbol.button(200, 70).setColor(Color.red).fill(Color.cyan).setLine(10);
+        Story story = new Story(button);
+        story.show(10);
 //end
       } else {
         result = "headless: not testing";

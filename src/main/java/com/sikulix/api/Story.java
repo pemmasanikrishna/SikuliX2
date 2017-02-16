@@ -8,9 +8,11 @@ import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
 import javax.swing.*;
+import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
@@ -28,11 +30,15 @@ public class Story {
   private static int showTime = (int) SX.getOptionNumber("SXShow.showTime", 2);
 
   private JFrame frame = new JFrame();
-  private Element story = new Element();
+  private Element storyBackground = new Element();
   private java.util.List<Element> elements = new ArrayList<>();
   private java.util.List<Symbol> activeElements = new ArrayList<>();
   private Symbol activeElement = null;
   private boolean shouldClose = false;
+  private boolean canDrag = false;
+  private boolean isDragging = false;
+  private Element dragStart = null;
+  private Element storyTopLeft = null;
 
   private BufferedImage storyImg = null;
 
@@ -40,8 +46,8 @@ public class Story {
     this(Do.on());
   }
 
-  public Story(Element story, int... times) {
-    this.story = story;
+  public Story(Element background, int... times) {
+    storyBackground = background;
     if (times.length > 0) {
       pauseAfter = times[0];
     }
@@ -50,34 +56,89 @@ public class Story {
     }
     waitForFrame = 0;
     String contentLoaded = "with content";
-    if (story.hasContent()) {
-      storyImg = story.get();
+    if (storyBackground.isSymbol()) {
+      storyImg = plainBackground(storyBackground);
+      storyTopLeft = storyBackground.getCentered(borderThickness);
+      add(storyBackground);
+      canDrag = true;
+      addBorder();
+    } else if (storyBackground.hasContent()) {
+      storyImg = storyBackground.get();
     } else {
       storyImg = Do.capture().get();
       contentLoaded = "captured";
     }
     frame.setUndecorated(true);
     frame.setAlwaysOnTop(false);
-    frame.addMouseListener(new MouseAdapter() {
+    frame.addMouseListener(new MouseInputAdapter() {
+      @Override
+      public void mousePressed(MouseEvent e) {
+        super.mousePressed(e);
+      }
+
       @Override
       public void mouseReleased(MouseEvent e) {
+        super.mouseReleased(e);
         Element loc = new Element(e.getPoint());
         loc.setName("MousePosition");
-        log.trace("clicked at: %s", loc);
+        log.trace("released at: %s", loc);
         activeElement = null;
-        if (activeElements.size() > 0) {
-          for (Symbol symbol : activeElements) {
-            if (symbol.contains(loc)) {
-              log.trace("clicked active symbol: %s", symbol);
-              activeElement = symbol;
+        if (!isDragging) {
+          if (activeElements.size() > 0) {
+            for (Symbol symbol : activeElements) {
+              if (symbol.contains(loc)) {
+                log.trace("clicked active symbol: %s", symbol);
+                activeElement = symbol;
+              }
             }
           }
+          stop();
+        } else {
+          log.trace("dragged: from: %s to: %s", dragStart, loc);
+          int xStart = storyTopLeft.x + dragStart.x;
+          int yStart = storyTopLeft.y + dragStart.y;
+          int xEnd = storyTopLeft.x + loc.x;
+          int yEnd = storyTopLeft.y + loc.y;
+          int xMove = xEnd - xStart;
+          int yMove = yEnd - yStart;
+          log.trace("real: from: %d,%d to: %d,%d moved: %d,%d", xStart, yStart, xEnd, yEnd, xMove, yMove);
+          storyTopLeft.x += xMove;
+          storyTopLeft.y += yMove;
+          frame.setLocation(storyTopLeft.x, storyTopLeft.y);
+          frame.repaint();
+          isDragging = false;
+          dragStart = null;
         }
-        stop();
+      }
+    });
+    frame.addMouseMotionListener(new MouseMotionAdapter() {
+      @Override
+      public void mouseDragged(MouseEvent e) {
+        super.mouseDragged(e);
+        if (!canDrag) {
+          return;
+        }
+        if (!isDragging) {
+          isDragging = true;
+          dragStart = new Element(e.getPoint());
+        }
+      }
+
+      @Override
+      public void mouseMoved(MouseEvent e) {
+        super.mouseMoved(e);
       }
     });
 
-    log.trace("init: %s: %s", contentLoaded, story);
+    log.trace("init: %s: %s", contentLoaded, storyBackground);
+  }
+
+  private BufferedImage plainBackground(Element elem) {
+    BufferedImage bImg = new BufferedImage(elem.w, elem.h, BufferedImage.TYPE_3BYTE_BGR);
+    Graphics2D graphics = bImg.createGraphics();
+    graphics.setPaint(new Color(255, 255, 255));
+    graphics.fillRect(0, 0, bImg.getWidth(), bImg.getHeight());
+    return bImg;
   }
 
   public Symbol getClickedSymbol() {
@@ -96,12 +157,12 @@ public class Story {
       if (!withBorder) {
         Graphics2D bg = (Graphics2D) storyImg.getGraphics().create();
         for (Element element : elements) {
-          drawElement(bg, story, element);
+          drawElement(bg, storyBackground, element);
         }
         g2d.drawImage(storyImg, 0, 0, null);
       }
       if (withBorder || shouldAddBorder) {
-        drawBorder(g2d, 0, 0, story.w, story.h, borderThickness, borderColor);
+        drawBorder(g2d, 0, 0, storyBackground.w, storyBackground.h, borderThickness, borderColor);
         g2d.drawImage(storyImg, borderThickness, borderThickness, null);
       }
       g2d.dispose();
@@ -256,10 +317,10 @@ public class Story {
       boolean hasBorder = withBorder || shouldAddBorder;
       Element location = new Element();
       Element onElement = Do.on();
-      panel.setPreferredSize(new Dimension(story.w + (hasBorder ? borderThickness * 2 : 0),
-              story.h + (hasBorder ? borderThickness * 2 : 0)));
-      if (story.w < onElement.w || story.h < onElement.h) {
-        location = story.getCentered(onElement, (hasBorder ? new Element(-borderThickness) : null));
+      panel.setPreferredSize(new Dimension(storyBackground.w + (hasBorder ? borderThickness * 2 : 0),
+              storyBackground.h + (hasBorder ? borderThickness * 2 : 0)));
+      if (storyBackground.w < onElement.w || storyBackground.h < onElement.h) {
+        location = storyBackground.getCentered(onElement, (hasBorder ? new Element(-borderThickness) : null));
       }
       Container contentPane = frame.getContentPane();
       contentPane.setLayout(new OverlayLayout(contentPane));

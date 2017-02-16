@@ -362,6 +362,26 @@ public abstract class SXElement implements Comparable<SXElement> {
     return new Element(x + w / 2, y + h / 2);
   }
 
+  public void setCentered() {
+    Element centered = getCentered(new Element(SX.getSXLOCALDEVICE().getMonitor()));
+    x = centered.x;
+    y = centered.y;
+  }
+
+  public void setCentered(Element base) {
+    Element centered = getCentered(base);
+    x = centered.x;
+    y = centered.y;
+  }
+
+  public Element getCentered(int... args) {
+    if (args.length == 0) {
+      return getCentered(new Element(SX.getSXLOCALDEVICE().getMonitor()), null);
+    } else {
+      return getCentered(new Element(SX.getSXLOCALDEVICE().getMonitor()), new Element(-args[0]));
+    }
+  }
+
   public Element getCentered(Element base) {
     return getCentered(base, null);
   }
