@@ -745,7 +745,7 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_110_mouseClickWithHookCheck() {
+  public void test_110_mouseClick() {
     currentTest = "test_110_mouseClick";
     if (!SX.isHeadless()) {
       result = "mouse click direct";

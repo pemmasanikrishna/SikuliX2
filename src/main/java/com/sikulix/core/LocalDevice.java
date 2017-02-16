@@ -88,7 +88,7 @@ public class LocalDevice extends IDevice {
   }
 
   public String toString() {
-    return "GlobalDevice";
+    return "LocalDevice";
   }
   //</editor-fold>
 
