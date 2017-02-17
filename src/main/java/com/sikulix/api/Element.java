@@ -839,5 +839,20 @@ public class Element extends SXElement {
   public long getClicked() {
     return clickedTime;
   }
+
+  public enum Component {
+    RECTANGLE, CIRCLE, LINE, IMAGE, TEXT, BUTTON;
+  }
+
+  public Symbol setComponent(Component component) {
+    this.component = component;
+    return (Symbol) this;
+  }
+
+  public Component getComponent() {
+    return component;
+  }
+
+  private Component component = Component.RECTANGLE;
   //</editor-fold>
 }

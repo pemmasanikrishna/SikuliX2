@@ -6,7 +6,6 @@ package com.sikulix.api;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import org.opencv.core.Mat;
 
 import java.awt.Color;
 
@@ -21,30 +20,22 @@ public class Symbol extends Element {
   }
 
   protected void copy(Element elem) {
+    super.copy(elem);
     if (elem.hasContent()) {
       setContent(elem.getContent().clone());
     } else {
       setContent();
     }
-    urlImg = elem.urlImg;
     setName(elem.getName());
-    setAttributes();
+    setComponent(elem.getComponent());
   }
 
   protected void initAfter() {
     initName(eClazz);
   }
 
-  private void setAttributes() {
-
-  }
-
-  public enum Type {
-    RECTANGLE, CIRCLE, LINE, IMAGE, TEXT, BUTTON;
-  }
-
   public boolean isActive() {
-    return Type.BUTTON.equals(type);
+    return Component.BUTTON.equals(getComponent());
   }
 
   public Symbol() {}
@@ -54,8 +45,13 @@ public class Symbol extends Element {
     init(-1, -1, w, h);
   }
 
+  public Symbol(Element element) {
+    super.copy(element);
+    copy(element);
+  }
+
   public static Symbol button(int w, int h) {
-    return new Symbol(w, h).setType(Type.BUTTON).setName();
+    return new Symbol(w, h).setComponent(Component.BUTTON).setName();
   }
 
   public static Symbol rectangle(int w, int h) {
@@ -67,19 +63,12 @@ public class Symbol extends Element {
   }
 
   public static Symbol circle(int diameter) {
-    return new Symbol(diameter, diameter).setType(Type.CIRCLE).setName();
+    return new Symbol(diameter, diameter).setComponent(Component.CIRCLE).setName();
   }
 
   public static Symbol ellipse(int w, int h) {
-    return new Symbol(w, h).setType(Type.CIRCLE).setName();
+    return new Symbol(w, h).setComponent(Component.CIRCLE).setName();
   }
-
-  public Symbol setType(Type type) {
-    this.type = type;
-    return this;
-  }
-
-  private Type type = Type.RECTANGLE;
 
   public Symbol setName(String name) {
     super.setName(name);
@@ -87,20 +76,20 @@ public class Symbol extends Element {
   }
 
   public Symbol setName() {
-    return setName(this.type.toString());
+    return setName(getComponent().toString());
   }
 
   @Override
   public boolean isRectangle() {
-    return Type.RECTANGLE.equals(type) || Type.BUTTON.equals(type);
+    return Component.RECTANGLE.equals(getComponent()) || Component.BUTTON.equals(getComponent());
   }
 
   public boolean isButton() {
-    return Type.BUTTON.equals(type);
+    return Component.BUTTON.equals(getComponent());
   }
 
   public boolean isCircle() {
-    return Type.CIRCLE.equals(type);
+    return Component.CIRCLE.equals(getComponent());
   }
 
   private Color fillColor = null;

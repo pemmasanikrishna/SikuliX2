@@ -815,9 +815,11 @@ public class TestSXAPI {
       if (!SX.isHeadless()) {
 // start
         result = "nothing to do here";
-        Symbol button = Symbol.button(200, 70).setColor(Color.red).fill(Color.cyan).setLine(10);
         Story story = new Story(button);
         story.show(10);
+        if (story.hasClickedSymbol()) {
+          log.p("********** clicked: %s", story.getClickedSymbol());
+        }
 //end
       } else {
         result = "headless: not testing";

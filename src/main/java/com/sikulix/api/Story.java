@@ -142,7 +142,9 @@ public class Story {
   }
 
   public Symbol getClickedSymbol() {
-    return activeElement;
+    Symbol clicked = new Symbol(activeElement);
+    clicked.at(whereShowing());
+    return clicked;
   }
 
   public boolean hasClickedSymbol() {
