@@ -134,6 +134,7 @@ public class TestSXAPI {
   int showPauseAfter = 0;
   int showPauseBefore = 0;
   Story theShow = null;
+  //</editor-fold>
 
   private void prepareDefaultScreen() {
     prepareDefaultScreen(null, null);
@@ -152,7 +153,7 @@ public class TestSXAPI {
       Do.setBundlePath(mavenRoot, "Images");
       base = new Picture(fnBase);
       if (base.hasContent()) {
-        theShow = base.showStart(showPauseAfter, showPauseBefore);
+        theShow = new Story(base).start();
         elemDisplayed = theShow.whereShowing();
         if (SX.isNull(fnImg)) {
           return true;
@@ -180,7 +181,6 @@ public class TestSXAPI {
     showPauseAfter = 3;
     showPauseBefore = 0;
   }
-  //</editor-fold>
 
   //<editor-fold desc="running">
   @Test
@@ -304,7 +304,7 @@ public class TestSXAPI {
     success &= img.isValid();
     if (success) {
       result = set("(%s) Image %s from " + img.getURL(), img.getTimeToLoad(), img.getName());
-      if (log.isLevel(SXLog.DEBUG)) {
+      if (log.isGlobalLevel(SXLog.TRACE)) {
         img.show();
       }
     }
@@ -320,7 +320,7 @@ public class TestSXAPI {
     success &= img.isValid();
     if (success) {
       result = set("(%s) Image %s from " + img.getURL(), img.getTimeToLoad(), img.getName());
-      if (log.isLevel(SXLog.DEBUG)) {
+      if (log.isGlobalLevel(SXLog.TRACE)) {
         img.show();
       }
     }
@@ -336,7 +336,7 @@ public class TestSXAPI {
     success &= img.isValid();
     if (success) {
       result = set("(%s) Image %s from " + img.getURL(), img.getTimeToLoad(), img.getName());
-      if (log.isLevel(SXLog.DEBUG)) {
+      if (log.isGlobalLevel(SXLog.TRACE)) {
         img.show();
       }
     }
@@ -449,6 +449,7 @@ public class TestSXAPI {
 
   @Test
   public void test_051_capturePartOfDefaultScreen() {
+    log.startTimer();
     currentTest = "test_051_capturePartOfDefaultScreen";
     assert prepareDefaultScreen(imageNameDefault);
     if (isHeadless) {
@@ -458,7 +459,9 @@ public class TestSXAPI {
     elemDisplayed.grow(20);
     Picture img = Do.capture(elemDisplayed);
     result = end() + img.toString();
+    Do.wait(1.0);
     theShow.stop();
+    Do.wait(1.0);
     if (img.hasContent()) {
       img.show();
       return;
@@ -708,20 +711,6 @@ public class TestSXAPI {
     changed.show(3);
   }
 
-//  @Test
-//  public void test_100_nativeHook() {
-//    currentTest = "test_100_nativeHook";
-//    if (!SX.isHeadless()) {
-//      NativeHook hook = NativeHook.start();
-//      SX.pause(3);
-//      hook.stop();
-//      result = "NativeHook works";
-//    } else {
-//      result = "headless: NativeHook not tested";
-//    }
-//    assert true;
-//  }
-
   @Test
   public void test_101_mouseHoverWithHookCheck() {
     currentTest = "test_101_mouseHoverWithHookCheck";
@@ -754,15 +743,57 @@ public class TestSXAPI {
       boolean success = false;
       Story story = new Story(button).start();
       SX.pause(2);
-      while (story.isRunning()) {
-        Do.click();
-      }
-      story.stop();
+      Picture button = story.whereShowing().capture();
+      Do.find(button);
+      Do.on().showMatch(2);
+      Do.click();
+      assert !story.isRunning();
+      assert !Do.exists(button, 0);
       if (story.hasClickedSymbol()) {
-        log.p("********** clicked: %s", story.getClickedSymbol());
+        log.p("*** Story: clicked: %s", story.getClickedSymbol());
         success = true;
       }
       assert success;
+    }
+    assert true;
+  }
+
+  @Test
+  public void test_111_mouseDragDrop() {
+    currentTest = "test_111_mouseDragDrop";
+    if (!SX.isHeadless()) {
+      result = "mouse click direct";
+      for (int i = 0; i < 10; i++ ) {
+        boolean success = false;
+        Story story = new Story(button).start();
+        SX.pause(2);
+        Picture pButton = story.whereShowing().capture();
+        Element mButton = Do.find(pButton);
+        IDevice device = Do.getDevice();
+        if (mButton.isMatch()) {
+          mButton.hover();
+          device.button(IDevice.Action.LEFTDOWN);
+          Do.wait(0.5);
+          int xOff = (int) (device.getMonitor().getWidth() / 3);
+          int yOff = (int) (device.getMonitor().getHeight() / 3);
+          device.move(mButton.offset(xOff, yOff));
+          device.button(IDevice.Action.LEFTUP);
+          Do.wait(1.0);
+          mButton = Do.find(pButton);
+          assert mButton.isMatch();
+          device.click(IDevice.Action.LEFT);
+        }
+        assert !Do.exists(pButton, 0);
+        Do.on().showMatch(2);
+        if (story.hasClickedSymbol()) {
+          Symbol clickedSymbol = story.getClickedSymbol();
+          log.p("*** Story: clicked: %s", clickedSymbol);
+          success = mButton.contains(clickedSymbol);
+        } else {
+          log.p("*** Story: timeout - no valid action");
+        }
+//        assert success;
+      }
     }
     assert true;
   }
@@ -815,11 +846,17 @@ public class TestSXAPI {
       if (!SX.isHeadless()) {
 // start
         result = "nothing to do here";
-        Story story = new Story(button);
-        story.show(10);
-        if (story.hasClickedSymbol()) {
-          log.p("********** clicked: %s", story.getClickedSymbol());
+        Do.setBundlePath(mavenRoot, "Images");
+        base = new Picture(imageNameDefault);
+        if (base.hasContent()) {
+          Story test = new Story(base);
+          test.start();
+
+          Element where = test.whereShowing();
+          log.p("%s", where);
+          test.stop();
         }
+
 //end
       } else {
         result = "headless: not testing";

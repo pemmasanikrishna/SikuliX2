@@ -23,8 +23,6 @@ public class Symbol extends Element {
     super.copy(elem);
     if (elem.hasContent()) {
       setContent(elem.getContent().clone());
-    } else {
-      setContent();
     }
     setName(elem.getName());
     setComponent(elem.getComponent());

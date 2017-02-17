@@ -314,32 +314,13 @@ public class Element extends SXElement {
     this.showTime = showTime;
   }
 
-  public Story showStart(int... times) {
-    showing = new Story(this, times);
-    showing.setWaitForFrame();
-    showing.start();
-    return showing;
-  }
-
-  public void showStop() {
-    if (isShowing()) {
-      showing.stop();
-    }
-    showing = null;
-  }
-
   public void show() {
     show(showTime);
   }
 
   public void show(int time, int... times) {
-    if (!hasContent()) {
-      load();
-    }
-    showing = new Story(this, times);
-    showing.setBorder();
+    Story showing = new Story(this, times);
     showing.show(time);
-    showing = null;
   }
 
   public void show(Element elem) {
@@ -347,23 +328,21 @@ public class Element extends SXElement {
   }
 
   public void show(Element elem, int time, int... times) {
-    showing = new Story(this, times);
+    Story showing = new Story(this, times);
     showing.add(elem);
     showing.show(time);
-    showing = null;
   }
 
   public void showMatch(int... times) {
     if (hasMatch()) {
-      showing = new Story(this);
+      Story showing = new Story(this);
       showing.add(getLastMatch()).show(times.length > 0 ? times[0] : showTime);
-      showing = null;
     }
   }
 
   public void showVanish(int... times) {
     if (SX.isNotNull(getLastVanish())) {
-      showing = new Story(this);
+      Story showing = new Story(this);
       showing.add(getLastVanish()).show(times.length > 0 ? times[0] : showTime);
       showing = null;
     }
@@ -371,7 +350,7 @@ public class Element extends SXElement {
 
   public void showMatches(int... times) {
     if (hasMatches()) {
-      showing = new Story(this);
+      Story showing = new Story(this);
       for (Element match : getLastMatches()) {
         showing.add(match);
       }
@@ -379,12 +358,6 @@ public class Element extends SXElement {
       showing = null;
     }
   }
-
-  public boolean isShowing() {
-    return SX.isNotNull(showing);
-  }
-
-  private Story showing = null;
   //</editor-fold>
 
   //<editor-fold desc="***** target">

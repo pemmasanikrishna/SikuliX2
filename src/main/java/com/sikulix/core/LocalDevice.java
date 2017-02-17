@@ -267,7 +267,7 @@ public class LocalDevice extends IDevice {
 
   @Override
   public Element click(Element loc, Action action) {
-    if (loc.isSpecial()) {
+    if (SX.isNotNull(loc) && loc.isSpecial()) {
       return null;
     }
     boolean shouldMove = true;
@@ -325,13 +325,13 @@ public class LocalDevice extends IDevice {
   }
 
   private void smoothMove(Element dest, LocalRobot robot) {
-    smoothMove(at(), dest, (long) (Settings.MoveMouseDelay * 1000L), robot);
+    smoothMove(at(), dest, (long) (SX.getOptionNumber("Settings.MoveMouseDelay") * 1000L), robot);
   }
 
   private void smoothMove(Element src, Element dest, long ms, LocalRobot robot) {
     int x = dest.x;
     int y = dest.y;
-    log.trace("smoothMove (%.1f): (%d, %d) to (%d, %d)", Settings.MoveMouseDelay, src.x, src.y, x, y);
+    log.trace("smoothMove (%.1f): (%d, %d) to (%d, %d)", (0.0 + ms)/1000, src.x, src.y, x, y);
     if (ms == 0) {
       robot.mouseMove(x, y);
     } else {

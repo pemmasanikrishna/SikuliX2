@@ -691,11 +691,19 @@ public class Finder {
   }
 
   public static Element runWait(String type, Object... args) {
-    PossibleMatch possibleMatch = new PossibleMatch();
+    PossibleMatch possibleMatch;
+    if (Finder.WAIT.equals(type)) {
+      possibleMatch = new PossibleMatch(PossibleMatch.Type.WAIT);
+    } else {
+      possibleMatch = new PossibleMatch();
+    }
     Element match = new Element();
     boolean shouldRepeat = true;
     while (shouldRepeat) {
       Element where = possibleMatch.get(args);
+      if (!where.isValid()) {
+        return where;
+      }
       if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
         shouldRepeat = Picture.handleImageMissing(type, possibleMatch);
       } else {
@@ -794,7 +802,7 @@ public class Finder {
     Element target = new Element();
 
     public static enum Type {
-      FIND, ALL, OBSERVE, DEVICE
+      FIND, WAIT, ALL, OBSERVE, DEVICE
     }
 
     Type type = Type.FIND;
@@ -873,6 +881,12 @@ public class Finder {
         } else if (args0 instanceof Element) {
           what = (Element) args0;
         } else {
+          if (Type.WAIT.equals(type)) {
+            if (args0 instanceof Float || args0 instanceof Double) {
+              SX.pause((Double) args0);
+              return new Element();
+            }
+          }
           log.error("EvaluateTarget: args0 invalid: %s", args0);
           what = new Element();
         }
