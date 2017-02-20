@@ -774,21 +774,17 @@ public class TestSXAPI {
         int yOff = (int) (Do.on().h / 3);
         Element drag = null;
         Element drop = null;
-        Picture pButton = story.whereShowing().capture();
+        Element button = story.whereShowing();
+        Picture pButton = button.capture();
+        drag = new Element(button);
+        drop = new Element(button, xOff, yOff);
+        Do.dragDrop(button, drop);
         Element mButton = Do.find(pButton);
-        if (mButton.isMatch()) {
-          drag = new Element(mButton);
-          drop = new Element(mButton, xOff, yOff);
-          Do.dragDrop(mButton, drop);
-          mButton = Do.find(pButton);
-          String assertMsg = String.format("mouse (%d,%d) after dragDrop not in mButton: %s",
-                  Do.at().x, Do.at().y, mButton);
-          assert (mButton.isMatch() && mButton.contains(Do.at())) : assertMsg;
-          Do.at().click();
-          story.stop();
-        } else {
-          assert false : "Story did not start correctly";
-        }
+        String assertMsg = String.format("mouse (%d,%d) after dragDrop not in mButton: %s",
+                Do.at().x, Do.at().y, mButton);
+        assert (mButton.isMatch() && mButton.contains(Do.at())) : assertMsg;
+        Do.at().click();
+        story.stop();
         assert (!Do.exists(pButton, 0)) : "Story still visible after action";
         if (story.hasClickedSymbol()) {
           Symbol clickedSymbol = story.getClickedSymbol();
