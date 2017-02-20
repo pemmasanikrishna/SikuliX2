@@ -108,7 +108,7 @@ public class TestSXAPI {
       hook = Do.getHook();
       log.info("hook started");
     }
-    button = Symbol.button(200, 70).setColor(Color.red).fill(Color.cyan).setLine(10);
+    button = Symbol.button(188, 68).setColor(Color.red).fill(Color.cyan).setLine(10);
   }
 
   @After
@@ -122,6 +122,7 @@ public class TestSXAPI {
     if (SX.isSetSXLOCALDEVICE()) {
       Do.on().removeEvents();
     }
+    SX.setOption("Settings.MoveMouseDelay", "0.5");
     log.info("!%2d: result: %s: %s ", nTest++, currentTest, result);
   }
 
@@ -131,7 +132,7 @@ public class TestSXAPI {
   List<Element> matches = new ArrayList<>();
   boolean isHeadless = false;
   Element elemDisplayed = null;
-  int showPauseAfter = 0;
+  int showPauseAfter = 2;
   int showPauseBefore = 0;
   Story theShow = null;
   //</editor-fold>
@@ -153,7 +154,7 @@ public class TestSXAPI {
       Do.setBundlePath(mavenRoot, "Images");
       base = new Picture(fnBase);
       if (base.hasContent()) {
-        theShow = new Story(base).start();
+        theShow = new Story(base, showPauseAfter, showPauseBefore).start();
         elemDisplayed = theShow.whereShowing();
         if (SX.isNull(fnImg)) {
           return true;
@@ -178,7 +179,7 @@ public class TestSXAPI {
     matches = new ArrayList<>();
     isHeadless = false;
     elemDisplayed = null;
-    showPauseAfter = 3;
+    showPauseAfter = 2;
     showPauseBefore = 0;
   }
 
@@ -394,7 +395,7 @@ public class TestSXAPI {
     success &= base.isValid();
     Element element = null;
     if (success) {
-      base.show();
+      base.show(2);
       element = Do.find(target, base);
       success &= element.isMatch();
     }
@@ -403,7 +404,7 @@ public class TestSXAPI {
     }
     result = end() + result;
     if (success) {
-      base.showMatch();
+      base.showMatch(2);
     }
     assert success;
   }
@@ -421,7 +422,7 @@ public class TestSXAPI {
     success &= base.isValid();
     List<Element> elements = new ArrayList<>();
     if (success) {
-      base.show();
+      base.show(2);
       elements = Do.findAll(target, base);
       success &= elements.size() == expected;
     }
@@ -429,7 +430,7 @@ public class TestSXAPI {
             base.w, base.h, 100 * base.getLastScores()[0], 100 * base.getLastScores()[2]);
     result = end() + result;
     if (success) {
-      base.showMatches();
+      base.showMatches(2);
     }
     assert success;
   }
@@ -449,7 +450,6 @@ public class TestSXAPI {
 
   @Test
   public void test_051_capturePartOfDefaultScreen() {
-    log.startTimer();
     currentTest = "test_051_capturePartOfDefaultScreen";
     assert prepareDefaultScreen(imageNameDefault);
     if (isHeadless) {
@@ -477,10 +477,10 @@ public class TestSXAPI {
       return;
     }
     match = Do.find(img);
-    theShow.stop();
+    theShow.waitForEnd();
     result = end() + match.toString();
     assert match.isValid();
-    Do.on().showMatch();
+    Do.on().showMatch(2);
   }
 
   @Test
@@ -491,6 +491,7 @@ public class TestSXAPI {
       return;
     }
     int expected = (int) (base.w / 200) * (int) (base.h / 200);
+    Do.wait(1.0);
     matches = Do.findAll(img);
     theShow.stop();
     assert matches.size() == expected;
@@ -503,14 +504,16 @@ public class TestSXAPI {
   @Test
   public void test_054_waitForOnDefaultScreen() {
     currentTest = "test_054_waitForOnDefaultScreen";
-    showPauseBefore = 2;
+    showPauseBefore = 1;
+    showPauseAfter = 2;
     assert prepareDefaultScreen("shot", imageNameDefault);
     if (isHeadless) {
       return;
     }
-    int waitTime = (int) SX.getOptionNumber("Settings.AutoWaitTimeout", 5);
-    match = Do.wait(img, waitTime);
-    theShow.stop();
+    int waitTime = (int) SX.getOptionNumber("Settings.AutoWaitTimeout", 3);
+    Do.wait(img, waitTime);
+    match = Do.getLastMatch();
+    theShow.waitForEnd();
     result = end() + match.toString();
     assert match.isValid();
     Do.on().showMatch();
@@ -526,6 +529,7 @@ public class TestSXAPI {
     }
     int waitTime = 5; //(int) SX.getOptionNumber("Settings.AutoWaitTimeout", 3);
     boolean vanished = Do.waitVanish(img, waitTime);
+    theShow.waitForEnd();
     result = end() + "vanished: " + vanished + " " + Do.onMain().getLastVanish();
     assert vanished && Do.onMain().hasVanish() && !Do.onMain().hasMatch();
     Do.on().showVanish();
@@ -539,7 +543,6 @@ public class TestSXAPI {
       return;
     }
     boolean isThere = Do.exists(img);
-    theShow.stop();
     result = end() + "exists: " + Do.getLastMatch().toString();
     assert isThere;
     Do.on().showMatch();
@@ -633,6 +636,7 @@ public class TestSXAPI {
   @Test
   public void test_081_ObserveOnAppearWithHandler() {
     currentTest = "test_081_ObserveOnAppearWithHandler";
+    showPauseAfter = 0;
     assert prepareDefaultScreen("shot", imageNameDefault);
     result = "observe onAppear with handler";
     Element where = Do.on();
@@ -671,7 +675,7 @@ public class TestSXAPI {
     });
     where.observe();
     Events.waitUntilFinished();
-    theShow.stop();
+    theShow.waitForEnd();
   }
 
   @Test
@@ -762,40 +766,39 @@ public class TestSXAPI {
   public void test_111_mouseDragDrop() {
     currentTest = "test_111_mouseDragDrop";
     if (!SX.isHeadless()) {
-      result = "mouse click direct";
-      for (int i = 0; i < 10; i++ ) {
-        boolean success = false;
+      result = "mouse drag drop";
+      SX.setOption("Settings.MoveMouseDelay", "0.5");
+      for (int i = 0; i < 5; i++) {
         Story story = new Story(button).start();
-        SX.pause(2);
+        int xOff = (int) (Do.on().w / 3);
+        int yOff = (int) (Do.on().h / 3);
+        Element drag = null;
+        Element drop = null;
         Picture pButton = story.whereShowing().capture();
         Element mButton = Do.find(pButton);
-        IDevice device = Do.getDevice();
         if (mButton.isMatch()) {
-          mButton.hover();
-          device.button(IDevice.Action.LEFTDOWN);
-          Do.wait(0.5);
-          int xOff = (int) (device.getMonitor().getWidth() / 3);
-          int yOff = (int) (device.getMonitor().getHeight() / 3);
-          device.move(mButton.offset(xOff, yOff));
-          device.button(IDevice.Action.LEFTUP);
-          Do.wait(1.0);
+          drag = new Element(mButton);
+          drop = new Element(mButton, xOff, yOff);
+          Do.dragDrop(mButton, drop);
           mButton = Do.find(pButton);
-          assert mButton.isMatch();
-          device.click(IDevice.Action.LEFT);
+          String assertMsg = String.format("mouse (%d,%d) after dragDrop not in mButton: %s",
+                  Do.at().x, Do.at().y, mButton);
+          assert (mButton.isMatch() && mButton.contains(Do.at())) : assertMsg;
+          Do.at().click();
+          story.stop();
+        } else {
+          assert false : "Story did not start correctly";
         }
-        assert !Do.exists(pButton, 0);
-        Do.on().showMatch(2);
+        assert (!Do.exists(pButton, 0)) : "Story still visible after action";
         if (story.hasClickedSymbol()) {
           Symbol clickedSymbol = story.getClickedSymbol();
-          log.p("*** Story: clicked: %s", clickedSymbol);
-          success = mButton.contains(clickedSymbol);
+          log.p("dragDrop from: %s to %s clicked %s", drag.logString(), drop.logString(), clickedSymbol);
+          assert (mButton.contains(clickedSymbol)) : "dragDrop not exact";
         } else {
-          log.p("*** Story: timeout - no valid action");
+          assert false : "no valid action";
         }
-//        assert success;
       }
     }
-    assert true;
   }
 
   @Test
@@ -840,23 +843,12 @@ public class TestSXAPI {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    log.startTimer();
+    //log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
         result = "nothing to do here";
-        Do.setBundlePath(mavenRoot, "Images");
-        base = new Picture(imageNameDefault);
-        if (base.hasContent()) {
-          Story test = new Story(base);
-          test.start();
-
-          Element where = test.whereShowing();
-          log.p("%s", where);
-          test.stop();
-        }
-
 //end
       } else {
         result = "headless: not testing";

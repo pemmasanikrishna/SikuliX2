@@ -902,6 +902,7 @@ public class Do {
   }
 
   private static Element defaultScreenAsElement = null;
+
   private static Element getDefaultScreenAsElement() {
     if (SX.isNull(defaultScreenAsElement)) {
       defaultScreenAsElement = new Element(SX.getSXLOCALDEVICE().getMonitor().getBounds());
@@ -910,6 +911,7 @@ public class Do {
   }
 
   private static Element defaultElement = null;
+
   private static Element getDefaultElement() {
     if (SX.isNull(defaultElement)) {
       defaultElement = getDefaultScreenAsElement();
@@ -1016,10 +1018,27 @@ public class Do {
     return target;
   }
 
+  public static Element drag(Element from, Object... times) {
+    log.trace("drag: delegating to dragDrop");
+    return dragDrop(from, null, times);
+  }
+
+  public static Element drop(Element to, Object... times) {
+    log.trace("drop: delegating to dragDrop");
+    return dragDrop(null, to, times);
+  }
+
+  public static Element dragDrop(Element from, Element to, Object... times) {
+    log.trace("dragDrop: start");
+    Element target = Do.on().dragDrop(from, to, times);
+    log.trace("dragDrop: end");
+    return target;
+  }
+
   private static Element findForClick(String type, Object... args) {
     Element match;
     if (args.length == 0) {
-      match = Do.on();
+      match = Do.on().getLastMatch();
     } else if (args.length == 1) {
       match = Finder.runFind(type, args);
     } else {

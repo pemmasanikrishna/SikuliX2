@@ -4,6 +4,7 @@
 
 package com.sikulix.api;
 
+import com.sikulix.core.LocalDevice;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
@@ -38,8 +39,10 @@ public class Story {
   private boolean canDrag = false;
   private boolean isDragging = false;
   private Element dragStart = null;
+  private Element lastDrag = null;
+  private Element currentDrag = null;
   private Element storyTopLeft = null;
-  private Element storyTopLeftStart = null;
+  private LocalDevice localDevice;
 
   private BufferedImage storyImg = null;
 
@@ -65,18 +68,19 @@ public class Story {
         canDrag = true;
       }
       addBorder();
-    } else if (storyBackground.isPicture()) {
+    } else if (storyBackground.hasContent()) {
       storyImg = storyBackground.get();
     } else {
       storyImg = storyBackground.capture().get();
       contentLoaded = "captured";
     }
+    localDevice = new LocalDevice().start();
     log.trace("init: %s: %s", contentLoaded, storyBackground);
   }
   //</editor-fold>
 
   //<editor-fold desc="attributes">
-  private boolean withBorder = false;
+  private boolean withBorder = true;
 
   public void setBorder() {
     withBorder = true;
@@ -146,14 +150,13 @@ public class Story {
   //<editor-fold desc="showing">
   public Story start() {
     log.trace("starting");
-    SX.pause(pauseBefore);
-    showThread = new ShowIt();
+    showThread = new ShowIt(pauseBefore);
     showThread.running = true;
-//    new Thread(showThread).start();
-//    SX.pause(waitForFrame);
     SwingUtilities.invokeLater(showThread);
-    while (!showThread.isVisible()) {
-      SX.pause(0.3);
+    if (pauseBefore == 0) {
+      while (!showThread.isVisible()) {
+        SX.pause(0.3);
+      }
     }
     if (pauseAfter > 0) {
       new Thread(new ShowStop(showThread, pauseAfter)).start();
@@ -184,6 +187,10 @@ public class Story {
     stop();
   }
 
+  public void waitForEnd() {
+    while (isRunning()) SX.pause(0.3);
+  }
+
   public boolean isRunning() {
     return showThread.running;
   }
@@ -193,29 +200,43 @@ public class Story {
   private ShowIt showThread = null;
 
   private class ShowIt implements Runnable {
-    private Object shouldStop = new Object();
     public boolean running = false;
     private JFrame frame = new JFrame();
+    private int storyWidth, storyHeight;
+    private int waitBefore = 0;
+
+    public ShowIt() {
+    }
+
+    public ShowIt(int waitBefore) {
+      this.waitBefore = waitBefore;
+    }
+
+    private String logStoryFrame() {
+      return String.format("[%d,%d %dx%d]", storyTopLeft.x, storyTopLeft.y, storyWidth, storyHeight);
+    }
 
     @Override
     public void run() {
       frame.setUndecorated(true);
       frame.setAlwaysOnTop(false);
+
       frame.addMouseListener(new MouseInputAdapter() {
         @Override
         public void mousePressed(MouseEvent e) {
           super.mousePressed(e);
-          Element loc = new Element(e.getPoint());
-          loc.setName("MousePosition");
-          log.trace("pressed at: %s", loc);
+          if (canDrag) {
+            Element loc = new Element(e.getPoint());
+            log.trace("pressed at: (%d,%d) story: %s", loc.x, loc.y, logStoryFrame());
+            dragStart = loc;
+          }
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
           super.mouseReleased(e);
           Element loc = new Element(e.getPoint());
-          loc.setName("MousePosition");
-          log.trace("released at: %s", loc);
+          log.trace("released at: (%d,%d) story: %s", loc.x, loc.y, logStoryFrame());
           activeElement = null;
           if (!isDragging) {
             if (activeElements.size() > 0) {
@@ -223,25 +244,24 @@ public class Story {
                 if (symbol.contains(loc)) {
                   activeElement = symbol;
                 }
-                log.trace("clicked active symbol: %s", getClickedSymbol());
+                log.trace("clicked active symbol: %s story: %s", getClickedSymbol(), logStoryFrame());
               }
             }
             stop();
           } else {
-            if (SX.isNotNull(storyTopLeftStart)) {
-              int xStart = storyTopLeftStart.x + dragStart.x;
-              int yStart = storyTopLeftStart.y + dragStart.y;
-              int xEnd = storyTopLeftStart.x + loc.x;
-              int yEnd = storyTopLeftStart.y + loc.y;
-              frame.setLocation(storyTopLeftStart.x + xEnd - xStart, storyTopLeftStart.y + yEnd - yStart);
-              frame.repaint();
-              SX.pause(0.5);
-            }
-            isDragging = false;
-            dragStart = null;
+            currentDrag = localDevice.at();
+            storyTopLeft.x = currentDrag.x - dragStart.x;
+            storyTopLeft.y = currentDrag.y - dragStart.y;
+            frame.setLocation(storyTopLeft.x, storyTopLeft.y);
+            frame.repaint();
+            log.trace("end dragging at: (%d,%d) story: %s", loc.x, loc.y, logStoryFrame());
+            SX.pause(0.5);
           }
+          dragStart = null;
+          isDragging = false;
         }
       });
+
       frame.addMouseMotionListener(new MouseMotionAdapter() {
         @Override
         public void mouseDragged(MouseEvent e) {
@@ -249,21 +269,21 @@ public class Story {
           if (!canDrag) {
             return;
           }
-          Element loc = new Element(e.getPoint());
+          String dragState = "continue";
           if (!isDragging) {
             isDragging = true;
-            dragStart = loc;
-            storyTopLeftStart = new Element(storyTopLeft.x, storyTopLeft.y);
-          } else {
-            int xStart = storyTopLeft.x + dragStart.x;
-            int yStart = storyTopLeft.y + dragStart.y;
-            int xEnd = storyTopLeft.x + loc.x;
-            int yEnd = storyTopLeft.y + loc.y;
-            storyTopLeft.x += xEnd - xStart;
-            storyTopLeft.y += yEnd - yStart;
-            frame.setLocation(storyTopLeft.x, storyTopLeft.y);
-            frame.repaint();
+            lastDrag = dragStart;
+            dragState = "start";
           }
+          currentDrag = localDevice.at();
+          storyTopLeft.x = currentDrag.x - dragStart.x;
+          storyTopLeft.y = currentDrag.y - dragStart.y;
+//          currentDrag = new Element(e.getPoint());
+//          storyTopLeft.x += (currentDrag.x - dragStart.x);
+//          storyTopLeft.y += (currentDrag.y - dragStart.y);
+          frame.setLocation(storyTopLeft.x, storyTopLeft.y);
+          frame.repaint();
+          log.trace("%s dragging at (%d,%d) story: %s", dragState, currentDrag.x, currentDrag.y, logStoryFrame());
         }
 
         @Override
@@ -271,6 +291,7 @@ public class Story {
           super.mouseMoved(e);
         }
       });
+
       JPanel panel = new JPanel() {
         @Override
         public void paintComponent(Graphics g) {
@@ -280,8 +301,12 @@ public class Story {
           for (Element element : elements) {
             drawElement(bg, storyBackground, element);
           }
-          drawBorder(g2d, 0, 0, storyBackground.w, storyBackground.h, borderThickness, borderColor);
-          g2d.drawImage(storyImg, borderThickness, borderThickness, null);
+          if (withBorder) {
+            drawBorderInside(g2d, 0, 0, storyBackground.w, storyBackground.h, borderThickness, borderColor);
+            g2d.drawImage(storyImg, borderThickness, borderThickness, null);
+          } else {
+            g2d.drawImage(storyImg, 0, 0, null);
+          }
           g2d.dispose();
         }
       };
@@ -289,9 +314,13 @@ public class Story {
       Element location = new Element();
       Element onElement = Do.on();
       panel.setPreferredSize(new Dimension(storyBackground.w + borderThickness * 2,
-              storyBackground.h + borderThickness * 2 ));
-      if (storyBackground.w < onElement.w || storyBackground.h < onElement.h) {
+              storyBackground.h + borderThickness * 2));
+      if (panel.getPreferredSize().getWidth() < onElement.w &&
+              panel.getPreferredSize().getHeight() < onElement.h) {
         location = storyBackground.getCentered(onElement, new Element(-borderThickness));
+      } else {
+        panel.setPreferredSize(new Dimension(storyBackground.w, storyBackground.h));
+        withBorder = false;
       }
       Container contentPane = frame.getContentPane();
       contentPane.setLayout(new OverlayLayout(contentPane));
@@ -301,16 +330,22 @@ public class Story {
       contentPane.add(ovl);
       frame.pack();
       frame.setLocation(location.x, location.y);
-      frame.setVisible(true);
+      storyWidth = (int) panel.getPreferredSize().getWidth();
+      storyHeight = (int) panel.getPreferredSize().getHeight();
+      if (waitBefore > 0) {
+        new Thread(new ShowWaitBefore(frame, waitBefore)).start();
+      } else {
+        frame.setVisible(true);
+        log.trace("Story frame visible");
+      }
     }
 
     public void stop() {
-//      synchronized (shouldStop) {
-//        shouldStop.notify();
-//      }
-      frame.dispose();
-      running = false;
-      //SX.pause(0.5);
+      if (running) {
+        frame.dispose();
+        running = false;
+        log.trace("Story frame disposed");
+      }
     }
 
     //<editor-fold desc="painting">
@@ -355,7 +390,7 @@ public class Story {
           symbol.y = topLeft.y;
         }
       } else {
-        drawBorder(g2d, elem.x - currentBase.x, elem.y - currentBase.y, elem.w, elem.h,
+        drawBorderAround(g2d, elem.x - currentBase.x, elem.y - currentBase.y, elem.w, elem.h,
                 elem.getHighLightLine(), elem.getLineColor());
         if (elem.isMatch()) {
           g2d.setColor(labelColor);
@@ -377,9 +412,26 @@ public class Story {
       }
     }
 
-    private void drawBorder(Graphics2D g2d, int x, int y, int w, int h, int thickness, Color color) {
-      x = Math.max(0 + thickness / 2, x - thickness / 2);
-      y = Math.max(0 + thickness / 2, y - thickness / 2);
+    private int BORDERINSIDE = 0;
+    private int BORDERAROUND = 1;
+
+    private void drawBorderInside(Graphics2D g2d, int x, int y, int w, int h, int thickness, Color color) {
+      drawBorder(BORDERINSIDE, g2d, x, y, w, h, thickness, color);
+    }
+
+    private void drawBorderAround(Graphics2D g2d, int x, int y, int w, int h, int thickness, Color color) {
+      drawBorder(BORDERAROUND, g2d, x, y, w, h, thickness, color);
+    }
+
+    private void drawBorder(int whereBorder, Graphics2D g2d, int x, int y, int w, int h, int thickness, Color color) {
+      if (whereBorder == BORDERINSIDE) {
+        x = 0 + thickness / 2;
+        y = 0 + thickness / 2;
+      }
+      if (whereBorder == BORDERAROUND) {
+        x = x - thickness / 2;
+        y = y - thickness / 2;
+      }
       w = w + thickness;
       h = h + thickness;
       g2d.setStroke(new BasicStroke(thickness));
@@ -403,8 +455,27 @@ public class Story {
 
     @Override
     public void run() {
+      log.trace("Story pause after visible before stop: %d", waitTime);
       SX.pause(waitTime);
       showThread.stop();
+    }
+  }
+
+  private class ShowWaitBefore implements Runnable {
+    private Frame frame = null;
+    private int waitTime;
+
+    public ShowWaitBefore(Frame frame, int waitTime) {
+      this.frame = frame;
+      this.waitTime = waitTime;
+    }
+
+    @Override
+    public void run() {
+      log.trace("Story pause before visible after start: %d", waitTime);
+      SX.pause(waitTime);
+      frame.setVisible(true);
+      log.trace("Story frame visible");
     }
   }
 

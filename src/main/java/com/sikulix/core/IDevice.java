@@ -27,6 +27,7 @@ public abstract class IDevice {
   public abstract Element rightClick(Element loc);
   public abstract Element click(Action action);
   public abstract Element click(Element loc, Action action);
+  public abstract Element dragDrop(Element from, Element to, Object... times);
 
   /**
    * move the mouse from the current position to the offset given by the parameters

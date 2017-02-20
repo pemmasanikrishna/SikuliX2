@@ -13,6 +13,7 @@ import com.sikulix.util.animation.Animator;
 import com.sikulix.util.animation.AnimatorOutQuarticEase;
 import com.sikulix.util.animation.AnimatorTimeBased;
 import org.opencv.core.Mat;
+import sun.awt.CGraphicsDevice;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -299,9 +300,42 @@ public class LocalDevice extends IDevice {
       robot.mouseUp(button);
       SX.pause(afterButton);
     }
-    robot.waitForIdle();
     unlock();
     return loc;
+  }
+
+  @Override
+  public Element dragDrop(Element from, Element to, Object... times) {
+    if (SX.isNotNull(from) && from.isSpecial()) {
+      return null;
+    }
+    if (SX.isNotNull(to) && to.isSpecial()) {
+      return null;
+    }
+    boolean shouldMove = true;
+    if (SX.isNull(from)) {
+      shouldMove = false;
+      from = at();
+    }
+    if (SX.isNull(robot)) {
+      return from;
+    }
+    lock();
+    if (shouldMove) {
+      from = from.getTarget();
+      smoothMove(from, robot);
+    }
+    button(IDevice.Action.LEFTDOWN, false);
+    if (SX.isNull(to)) {
+      to = at();
+    } else {
+      to = to.getTarget();
+      smoothMove(to, robot);
+    }
+    button(IDevice.Action.LEFTUP, false);
+    log.trace("dragDrop %s from: %s%s to: %s", "LEFT", from, (shouldMove ? " with move" : ""), to);
+    unlock();
+    return to;
   }
   //</editor-fold>
 
@@ -329,11 +363,16 @@ public class LocalDevice extends IDevice {
   }
 
   private void smoothMove(Element src, Element dest, long ms, LocalRobot robot) {
+    if (src.x == dest.x && src.y == src.y) {
+      return;
+    }
     int x = dest.x;
     int y = dest.y;
     log.trace("smoothMove (%.1f): (%d, %d) to (%d, %d)", (0.0 + ms)/1000, src.x, src.y, x, y);
     if (ms == 0) {
+      robot.waitForIdle();
       robot.mouseMove(x, y);
+      robot.waitForIdle();
     } else {
       Animator aniX = new AnimatorTimeBased(
               new AnimatorOutQuarticEase(src.x, dest.x, ms));
@@ -342,10 +381,11 @@ public class LocalDevice extends IDevice {
       while (aniX.running()) {
         x = (int) aniX.step();
         y = (int) aniY.step();
+        robot.waitForIdle();
         robot.mouseMove(x, y);
+        robot.waitForIdle();
       }
     }
-    robot.waitForIdle();
     checkMouseMoved(dest);
   }
 
@@ -382,9 +422,15 @@ public class LocalDevice extends IDevice {
   //<editor-fold desc="*** buttons ***">
   @Override
   public void button(Action action) {
+    button(action, true);
+  }
+
+  private void button(Action action, boolean withLock) {
     int button = action.toString().startsWith("L") ? LEFT : (action.toString().startsWith("R") ? RIGHT : MIDDLE);
     if (action.toString().contains("DOWN")) {
-      lock();
+      if (withLock) {
+        lock();
+      }
       SX.pause(beforeButtonDown);
       robot.mouseDown(button);
       SX.pause(afterButtonDown);
@@ -392,7 +438,9 @@ public class LocalDevice extends IDevice {
       SX.pause(beforeButtonUp);
       robot.mouseUp(button);
       SX.pause(afterButtonUp);
-      unlock();
+      if (withLock) {
+        unlock();
+      }
     }
   }
   //</editor-fold>
@@ -517,7 +565,19 @@ public class LocalDevice extends IDevice {
   public GraphicsDevice getGraphicsDevice(int id) {
     return gdevs[id];
   }
-  
+  //TODO implement more support for Retina (HiDpi)
+  public static boolean isRetina(int id) {
+    LocalDevice localDevice = new LocalDevice().start();
+    if (SX.isMac()) {
+      GraphicsDevice screen = localDevice.getGraphicsDevice(0);
+      if (screen instanceof CGraphicsDevice) {
+        return 2 == ((CGraphicsDevice) screen).getScaleFactor();
+      }
+    }
+    return false;
+  }
+
+
   //TODO implement capture, show coordination
 
   public Picture capture(Element elem) {
@@ -604,15 +664,15 @@ public class LocalDevice extends IDevice {
 
     private void doMouseDown(int buttons) {
       Element.fakeHighlight(true);
-      setAutoDelay(stdAutoDelay);
-      setAutoWaitForIdle(false);
       pause(100);
       Element.fakeHighlight(false);
       pause(100);
+      waitForIdle();
       mousePress(buttons);
       if (stdAutoDelay == 0) {
         pause(stdDelay);
       }
+      waitForIdle();
     }
 
     public int mouseUp(int buttons) {
@@ -627,12 +687,12 @@ public class LocalDevice extends IDevice {
     }
 
     private void doMouseUp(int buttons) {
-      setAutoDelay(stdAutoDelay);
-      setAutoWaitForIdle(false);
+      waitForIdle();
       mouseRelease(buttons);
       if (stdAutoDelay == 0) {
         pause(stdDelay);
       }
+      waitForIdle();
     }
 
     public void pause(int ms) {
@@ -649,7 +709,9 @@ public class LocalDevice extends IDevice {
 
     //<editor-fold desc="Screen">
     public Picture captureScreen(Rectangle rect) {
+      waitForIdle();
       BufferedImage bImg = createScreenCapture(rect);
+      waitForIdle();
       log.trace("captureScreen: [%d,%d, %dx%d]",
               rect.x, rect.y, rect.width, rect.height);
       return new Picture(bImg);
@@ -719,12 +781,12 @@ public class LocalDevice extends IDevice {
     }
 
     private void doKeyPress(int keyCode) {
-      setAutoDelay(stdAutoDelay);
-      setAutoWaitForIdle(false);
+      waitForIdle();
       keyPress(keyCode);
       if (stdAutoDelay == 0) {
         pause(stdDelay);
       }
+      waitForIdle();
     }
 
     public void keyUp(String keys) {
@@ -756,12 +818,12 @@ public class LocalDevice extends IDevice {
     }
 
     private void doKeyRelease(int keyCode) {
-      setAutoDelay(stdAutoDelay);
-      setAutoWaitForIdle(false);
+      waitForIdle();
       keyRelease(keyCode);
       if (stdAutoDelay == 0) {
         pause(stdDelay);
       }
+      waitForIdle();
     }
     //</editor-fold>
 
@@ -800,6 +862,7 @@ public class LocalDevice extends IDevice {
     }
 
     private void doType(KeyMode mode, int... keyCodes) {
+      waitForIdle();
       if (mode == KeyMode.PRESS_ONLY) {
         for (int i = 0; i < keyCodes.length; i++) {
           doKeyPress(keyCodes[i]);
@@ -816,6 +879,7 @@ public class LocalDevice extends IDevice {
           doKeyRelease(keyCodes[i]);
         }
       }
+      waitForIdle();
     }
     //</editor-fold>
   }

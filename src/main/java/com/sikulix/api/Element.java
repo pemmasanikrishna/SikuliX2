@@ -85,6 +85,13 @@ public class Element extends SXElement {
     copy(elem);
   }
 
+  public Element(Element elem, int xOffset, int yOffset) {
+    this();
+    copy(elem);
+    x += xOffset;
+    y += yOffset;
+  }
+
   public Element(Element elem, double score) {
     this(elem);
     setScore(score);
@@ -453,7 +460,10 @@ public class Element extends SXElement {
   }
 
   public Element getLastMatch() {
-    return lastMatch;
+    if (SX.isNotNull(lastMatch)) {
+      return lastMatch;
+    }
+    return getTarget();
   }
 
   public Element getLastVanish() {
@@ -570,6 +580,38 @@ public class Element extends SXElement {
     Element target = findForClick(Finder.RIGHTCLICK, args);
     target.getElementDevice().rightClick(target);
     return target;
+  }
+
+  public Element dragDrop(Element from, Element to, Object... times) {
+    Element targetFrom = null;
+    if (SX.isNotNull(from)) {
+      targetFrom = findForClick(Finder.DRAG, from);
+    }
+    Element targetTo = null ;
+    if (SX.isNotNull(to)) {
+      targetTo = findForClick(Finder.DROP, to);
+    }
+    if (times.length == 0) {
+      times = new Double[]{SX.getOptionNumber("Settings.MoveMouseDelay")};
+    }
+    targetTo = getElementDevice().dragDrop(targetFrom, targetTo, times);
+    return targetTo;
+  }
+
+  public Element drag(Element from, Object... times) {
+    return dragDrop(from, this, times);
+  }
+
+  public Element drag(Object... times) {
+    return dragDrop(null, this, times);
+  }
+
+  public Element drop(Element to, Object... times) {
+    return dragDrop(this, to, times);
+  }
+
+  public Element drop(Object... times) {
+    return dragDrop(this, null, times);
   }
   //</editor-fold>
 

@@ -260,6 +260,10 @@ public abstract class SXElement implements Comparable<SXElement> {
     return "";
   }
 
+  public String logString() {
+    return String.format("[%d,%d %dx%d]", x, y, w, h);
+  }
+
   //</editor-fold>
 
   //<editor-fold desc="waiting times">

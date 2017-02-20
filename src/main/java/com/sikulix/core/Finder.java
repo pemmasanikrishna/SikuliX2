@@ -656,6 +656,8 @@ public class Finder {
   public static final String DOUBLECLICK = "doubleClick()";
   public static final String RIGHTCLICK = "rightClick()";
   public static final String HOVER = "hover()";
+  public static final String DRAG = "drag()";
+  public static final String DROP = "drop()";
   public static final String FIND = "find()";
   public static final String WAIT = "wait()";
   public static final String EXISTS = "exists()";
@@ -924,7 +926,7 @@ public class Finder {
                 waitTime = (int) (1000 * Math.max(where.getWaitForMatch(), what.getWaitForThis()));
               }
               endTime = startTime + waitTime;
-              if (Type.FIND.equals(type)) {
+              if (Type.FIND.equals(type) || Type.WAIT.equals(type)) {
                 lastRepeatTime = new Date().getTime();
                 finder.find(what);
               } else if (Type.ALL.equals(type)) {
@@ -955,7 +957,7 @@ public class Finder {
           where.capture();
           finder.refreshBase();
         }
-        if (Type.FIND.equals(type)) {
+        if (Type.FIND.equals(type) || Type.WAIT.equals(type)) {
           finder.find(what);
         } else if (Type.ALL.equals(type)) {
           finder.findAll(what);
