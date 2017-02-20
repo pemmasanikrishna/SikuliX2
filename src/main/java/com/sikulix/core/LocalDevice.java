@@ -8,12 +8,9 @@ import com.sikulix.api.Element;
 import com.sikulix.api.Event;
 import com.sikulix.api.Handler;
 import com.sikulix.api.Picture;
-import com.sikulix.util.Settings;
 import com.sikulix.util.animation.Animator;
 import com.sikulix.util.animation.AnimatorOutQuarticEase;
 import com.sikulix.util.animation.AnimatorTimeBased;
-import org.opencv.core.Mat;
-import sun.awt.CGraphicsDevice;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -570,9 +567,9 @@ public class LocalDevice extends IDevice {
     LocalDevice localDevice = new LocalDevice().start();
     if (SX.isMac()) {
       GraphicsDevice screen = localDevice.getGraphicsDevice(0);
-      if (screen instanceof CGraphicsDevice) {
-        return 2 == ((CGraphicsDevice) screen).getScaleFactor();
-      }
+//      if (screen instanceof CGraphicsDevice) {
+//        return 2 == ((CGraphicsDevice) screen).getScaleFactor();
+//      }
     }
     return false;
   }
