@@ -744,7 +744,7 @@ public class TestSXAPI {
   public void test_110_mouseClick() {
     currentTest = "test_110_mouseClick";
     if (!SX.isHeadless()) {
-      result = "mouse click direct";
+      result = "mouse click story button";
       boolean success = false;
       Story story = new Story(button).start();
       SX.pause(2);
@@ -752,15 +752,15 @@ public class TestSXAPI {
       Do.find(button);
       Do.on().showMatch(2);
       Do.click();
-      assert !story.isRunning();
-      assert !Do.exists(button, 0);
+      story.waitForEnd();
+      assert !story.isRunning() : "story still running";
+      assert !Do.exists(button, 0) : "button still visible";
       if (story.hasClickedSymbol()) {
         log.p("*** Story: clicked: %s", story.getClickedSymbol());
         success = true;
       }
-      assert success;
+      assert success : "story does not have clicked symbol";
     }
-    assert true;
   }
 
   @Test
