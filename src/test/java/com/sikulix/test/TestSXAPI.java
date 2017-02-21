@@ -804,6 +804,8 @@ public class TestSXAPI {
     if (!SX.isHeadless()) {
       result = "running JavaScript: mouse moves to center";
       Runner.run(Runner.ScriptType.JAVASCRIPT);
+      Element center = Do.on().getCenter();
+      assert Do.isMouseposition(hook, center.x, center.y) : "mouse should be at center of screen";
     }
   }
 
