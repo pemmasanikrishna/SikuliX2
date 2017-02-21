@@ -7,6 +7,7 @@ package com.sikulix.test;
 import com.sikulix.api.*;
 import com.sikulix.api.Event;
 import com.sikulix.core.*;
+import com.sikulix.util.Runner;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
@@ -794,6 +795,15 @@ public class TestSXAPI {
           assert false : "no valid action";
         }
       }
+    }
+  }
+
+  @Test
+  public void test_190_runJavaScriptBasic() {
+    currentTest = "test_190_runJavaScriptBasic";
+    if (!SX.isHeadless()) {
+      result = "running JavaScript: mouse moves to center";
+      Runner.run(Runner.ScriptType.JAVASCRIPT);
     }
   }
 
