@@ -331,6 +331,7 @@ public class TestSXAPI {
 
   @Test
   public void test_033_loadImageFromHttp() {
+    log.startTimer();
     currentTest = "test_033_loadImageFromHttp";
     boolean success = Do.setBundlePath(httpRoot, "master");
     result = "BundlePath: " + Do.getBundlePath();
