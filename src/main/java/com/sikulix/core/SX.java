@@ -1234,6 +1234,7 @@ public class SX {
   //</editor-fold>
 
   //<editor-fold desc="*** monitor info">
+
   /**
    * checks, whether Java runs with a valid GraphicsEnvironment (usually means real screens connected)
    *
@@ -1461,6 +1462,7 @@ public class SX {
   //</editor-fold>
 
   //<editor-fold desc="*** global helper methods">
+
   /**
    * check wether the given object is in JSON format as ["ID", ...]
    *
@@ -1558,7 +1560,7 @@ public class SX {
       error("getFile: %s error(not available)", fPath);
       return null;
     }
-    return  fPath;
+    return fPath;
   }
 
   public static File getFolder(Object... args) {
@@ -1613,7 +1615,67 @@ public class SX {
   public static URL getNetURL(Object... args) {
     //TODO implment getNetURL()
     URL netURL = null;
+    String path = null;
+    if (args.length > 0) {
+      String sSub = "";
+      if (args.length > 1) {
+        sSub = args[1].toString();
+        if (sSub.startsWith("/")) {
+          sSub = sSub.substring(1);
+        }
+      }
+      if (args[0] instanceof String) {
+        path = (String) args[0];
+        if (!path.startsWith("http://") && !path.startsWith("https://")) {
+          path = "http://" + path;
+        }
+      } else if (args[0] instanceof URL && ((URL) args[0]).getProtocol().startsWith("http")) {
+        path = ((URL) args[0]).toExternalForm();
+      } else {
+        log.error("getNetURL: invalid arg0: %s", args[0]);
+        return null;
+      }
+      if (!sSub.isEmpty()) {
+        if (!path.endsWith("/")) {
+          path += "/";
+        }
+        path += sSub;
+      }
+      try {
+        return new URL(path);
+      } catch (MalformedURLException e) {
+        error("getURL: %s %s error(%s)", args[0], (args.length > 1 ? args[1] : ""), e.getMessage());
+        return null;
+      }
+    }
     return netURL;
+  }
+
+  public static URL getURL(Object... args) {
+    URL theURL = null;
+    if (args.length > 0) {
+      if (args[0] instanceof String) {
+        String path = (String) args[0];
+        if (path.startsWith("http")) {
+          return getNetURL(args);
+        } else if (path.startsWith("jar:") || path.endsWith(".jar")) {
+          return getJarURL(args);
+        } else {
+          return getFileURL(args);
+        }
+      } else if (args[0] instanceof URL) {
+        if (((URL) args[0]).getProtocol().startsWith("http")) {
+          theURL = getNetURL(args);
+        } else {
+          log.error("getURL: not implemented: %s", args[0]);
+        }
+      } else if (args[0] instanceof File) {
+        log.error("getURL: File not implemented: %s", args[0]);
+      } else {
+        log.error("getURL: invalid arg: %s", args[0]);
+      }
+    }
+    return theURL;
   }
 
   public static boolean existsFile(Object aPath) {
@@ -1686,7 +1748,7 @@ public class SX {
     Rectangle rBase = null;
     if (base instanceof SXElement) {
       rBase = ((SXElement) base).getRectangle();
-    } else if (base instanceof Region){
+    } else if (base instanceof Region) {
       rBase = ((Region) base).getRect();
     } else if (base instanceof Rectangle) {
       rBase = (Rectangle) base;
@@ -1763,7 +1825,7 @@ public class SX {
         fpMain = canonicalPath(getFile(strMain));
         // check for class based path
         if (isSet(strMain) &&
-                ! new File(fpMain).exists() && ! new File(strMain).isAbsolute()) {
+                !new File(fpMain).exists() && !new File(strMain).isAbsolute()) {
           url = makeURLfromClass(strMain, fpSubOrAlt);
         }
       }

@@ -15,6 +15,7 @@ import org.sikuli.script.Screen;
 
 import java.awt.*;
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -860,6 +861,11 @@ public class TestSXAPI {
       if (!SX.isHeadless()) {
 // start
         result = "nothing to do here";
+        assert Runner.setScriptPath(httpRoot, "master/scripts");
+        URL scriptURL = SX.getURL(Runner.getScriptPath(), "basic/basic.js");
+        String script = Content.downloadURLtoString(scriptURL);
+        Runner.run(Runner.ScriptType.JAVASCRIPT, "basic", Runner.ScriptType.WITHTRACE);
+        result = String.format("script: %s", scriptURL);
 //end
       } else {
         result = "headless: not testing";
