@@ -869,6 +869,15 @@ public class SX {
   //</editor-fold>
 
   //<editor-fold desc="*** SX app data folder">
+  public static String getSXWEBHOME() {
+    if (isNotSet(SXWEBHOME)) {
+      SXWEBHOME = SXWEBHOMEdefault;
+    }
+    return SXWEBHOME;
+  }
+
+  static String SXWEBHOME = "";
+  static String SXWEBHOMEdefault = "http://sikulix.com";
 
   /**
    * ***** Property SXAPP *****

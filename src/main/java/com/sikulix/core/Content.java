@@ -33,7 +33,7 @@ public class Content {
     log.trace("!start: class init");
   }
 
-  static final int DOWNLOAD_BUFFER_SIZE = 153600;
+  public static final int DOWNLOAD_BUFFER_SIZE = 153600;
   private static SplashFrame _progress = null;
   private static final String EXECUTABLE = "#executable";
 
@@ -340,6 +340,30 @@ public class Content {
         } catch (IOException ex) {
         }
       }
+    }
+    return content;
+  }
+
+  public static String downloadFileToString(URL url) {
+    HttpURLConnection httpConn = null;
+    String content = "";
+    try {
+      httpConn = (HttpURLConnection) url.openConnection();
+      if (httpConn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+        InputStream inputStream = httpConn.getInputStream();
+        int bytesRead = -1;
+        byte[] buffer = new byte[Content.DOWNLOAD_BUFFER_SIZE];
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+          content += (new String(Arrays.copyOfRange(buffer, 0, bytesRead), Charset.forName("utf-8")));
+        }
+        inputStream.close();
+        log.trace("downloadFileToString: %s (%s)", url, httpConn.getContentType());
+      } else {
+        log.error("downloadFileToString: (HTTP:%d) %s", httpConn.getResponseCode(), url);
+      }
+      httpConn.disconnect();
+    } catch (IOException e) {
+      log.error("downloadFileToString: (%s) %s", e.getMessage(), url);
     }
     return content;
   }
@@ -1569,9 +1593,20 @@ public class Content {
    *
    * @param inPrefix a subtree from root found in classpath (leading /)
    * @param inFile   the filename combined with the prefix on classpath
-   * @param encoding
-   * @return file content
+   * @return file content in UTF-8 encoding
    */
+  public static String extractResourceToString(String inPrefix, String inFile) {
+    return extractResourceToString(inPrefix, inFile, "");
+  }
+
+    /**
+     * store the content of a resource found on classpath in the returned string
+     *
+     * @param inPrefix a subtree from root found in classpath (leading /)
+     * @param inFile   the filename combined with the prefix on classpath
+     * @param encoding
+     * @return file content
+     */
   public static String extractResourceToString(String inPrefix, String inFile, String encoding) {
     InputStream aIS = null;
     String out = null;

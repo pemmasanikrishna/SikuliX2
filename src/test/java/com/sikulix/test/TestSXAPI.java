@@ -15,7 +15,6 @@ import org.sikuli.script.Screen;
 
 import java.awt.*;
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -332,7 +331,6 @@ public class TestSXAPI {
 
   @Test
   public void test_033_loadImageFromHttp() {
-    log.startTimer();
     currentTest = "test_033_loadImageFromHttp";
     boolean success = Do.setBundlePath(httpRoot, "master");
     result = "BundlePath: " + Do.getBundlePath();
@@ -807,7 +805,29 @@ public class TestSXAPI {
       result = "running JavaScript: mouse moves to center";
       String script = "var element = Do.hover();\n" +
               "print('Hello from JavaScript: mouse at: ' + element);";
-      Runner.run(Runner.ScriptType.JAVASCRIPT, script, Runner.ScriptType.WITHTRACE);
+      Runner.run(Runner.ScriptType.JAVASCRIPT, script);
+      Element center = Do.on().getCenter();
+      assert Do.isMouseposition(hook, center.x, center.y) : "mouse should be at center of screen";
+    }
+  }
+
+  @Test
+  public void test_191_runJavaScriptFromJar() {
+    currentTest = "test_191_runJavaScriptFromJar";
+    if (!SX.isHeadless()) {
+      result = "running JavaScript from jar: mouse moves to center";
+      Runner.run("basic");
+      Element center = Do.on().getCenter();
+      assert Do.isMouseposition(hook, center.x, center.y) : "mouse should be at center of screen";
+    }
+  }
+
+  @Test
+  public void test_192_runJavaScriptFromNet() {
+    currentTest = "test_192_runJavaScriptFromNet";
+    if (!SX.isHeadless()) {
+      result = "running JavaScript from net: mouse moves to center";
+      Runner.run(Runner.ScriptType.FROMNET, "basic");
       Element center = Do.on().getCenter();
       assert Do.isMouseposition(hook, center.x, center.y) : "mouse should be at center of screen";
     }
@@ -861,11 +881,6 @@ public class TestSXAPI {
       if (!SX.isHeadless()) {
 // start
         result = "nothing to do here";
-        assert Runner.setScriptPath(httpRoot, "master/scripts");
-        URL scriptURL = SX.getURL(Runner.getScriptPath(), "basic/basic.js");
-        String script = Content.downloadURLtoString(scriptURL);
-        Runner.run(Runner.ScriptType.JAVASCRIPT, "basic", Runner.ScriptType.WITHTRACE);
-        result = String.format("script: %s", scriptURL);
 //end
       } else {
         result = "headless: not testing";

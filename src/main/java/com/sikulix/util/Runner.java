@@ -4,6 +4,7 @@
 
 package com.sikulix.util;
 
+import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
@@ -11,15 +12,35 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Runner {
 
   static SXLog log = SX.getLogger("SX.Runner");
 
-  public enum ScriptType {JAVASCRIPT, PYTHON, RUBY, WITHTRACE}
+  public enum ScriptType {FROMUNKNOWN, JAVASCRIPT, PYTHON, RUBY, FROMJAR, FROMNET}
+
+  public enum ScriptOption {WITHTRACE}
+
+  ;
+  private static Map<ScriptType, String> scriptTypes = new HashMap<>();
+
+  static {
+    scriptTypes.put(ScriptType.JAVASCRIPT, ".js");
+    scriptTypes.put(ScriptType.PYTHON, ".py");
+    scriptTypes.put(ScriptType.RUBY, ".rb");
+  }
 
   static URL scriptPath = null;
+  static String inJarFolderSX = "/Scripts";
+
 
   public static URL getScriptPath() {
     return scriptPath;
@@ -51,17 +72,17 @@ public class Runner {
 
   private static class RunBox implements Runnable {
 
-    ScriptType type = null;
-    Object[] args = new Object[0];
+    Object[] args;
     boolean running = false;
     boolean valid = false;
-    String script = "";
+    ScriptType type = ScriptType.FROMUNKNOWN;
     String scriptName = "";
     URL scriptURL = null;
+    String script = "";
 
     public RunBox(Object[] args) {
       this.args = args;
-      if (ScriptType.WITHTRACE.equals(args[args.length - 1])) {
+      if (ScriptOption.WITHTRACE.equals(args[args.length - 1])) {
         log.on(SXLog.TRACE);
       }
       init();
@@ -73,18 +94,45 @@ public class Runner {
         if (args.length > 1) {
           firstarg = 1;
           type = (ScriptType) args[0];
-
         }
       }
       if (args[firstarg] instanceof String) {
         if (ScriptType.JAVASCRIPT.equals(type)) {
           scriptName = "givenAsText";
-          valid = true;
+          setValid();
           script = (String) args[firstarg];
-        } else if (SX.isNotNull(type)){
+          return;
+        }
+        if (SX.isNotNull(type) && !type.toString().startsWith("FROM")) {
           log.error("RunBox.init: %s not implemented", type);
-        } else {
-
+          return;
+        }
+        scriptName = (String) args[firstarg];
+        String args1 = "";
+        String args2 = "";
+        if (args.length > firstarg + 1 && args[firstarg + 1] instanceof String) {
+          args1 = (String) args[firstarg + 1];
+        }
+        if (args.length > firstarg + 2 && args[firstarg + 2] instanceof String) {
+          args2 = (String) args[firstarg + 2];
+        }
+        if (ScriptType.FROMUNKNOWN.equals(type) || ScriptType.FROMJAR.equals(type)) {
+          String scriptFolder = args1;
+          String classReference = args2;
+          script = getScriptFromJar(scriptName, scriptFolder, classReference);
+          if (SX.isSet(script)) {
+            setValid();
+            return;
+          }
+        }
+        if (ScriptType.FROMUNKNOWN.equals(type) || ScriptType.FROMNET.equals(type)) {
+          String scriptFolder = args1;
+          String httpRoot = args2;
+          script = getScriptFromNet(scriptName, scriptFolder, httpRoot);
+          if (SX.isSet(script)) {
+            setValid();
+            return;
+          }
         }
       } else if (args[firstarg] instanceof File) {
 
@@ -96,10 +144,62 @@ public class Runner {
       if (SX.isNotNull(scriptURL)) {
         //TODO load script
       }
+      if (isValid()) {
+        log.trace("Runbox: init: success for: %s", args[firstarg]);
+      }
+    }
+
+    private String getScriptFromJar(String scriptName, String scriptFolder, String classReference) {
+      String scriptText = "";
+      if (SX.isNotSet(classReference)) {
+        if (SX.isNotSet(scriptFolder)) {
+          scriptFolder = inJarFolderSX;
+        }
+        scriptFolder += "/" + scriptName;
+        for (ScriptType scriptType : scriptTypes.keySet()) {
+          String scriptFile = scriptName + ".js";
+          scriptText = Content.extractResourceToString(scriptFolder, scriptFile);
+          if (SX.isNotNull(scriptText)) {
+            type = scriptType;
+            break;
+          }
+          scriptText = "";
+        }
+      } else {
+        log.error("RunBox: getScriptFromJar: non-SX classRefernce not implemented");
+      }
+      return scriptText;
+    }
+
+    private String getScriptFromNet(String scriptName, String scriptFolder, String httpRoot) {
+      String scriptText = "";
+      if (SX.isNotSet(httpRoot)) {
+        httpRoot = SX.getSXWEBHOME();
+      }
+      if (SX.isNotSet(scriptFolder)) {
+        scriptFolder = "/Scripts";
+      }
+      URL url = SX.getNetURL(httpRoot, scriptFolder + "/" + scriptName);
+      if (SX.isNotNull(url)) {
+        for (ScriptType scriptType : scriptTypes.keySet()) {
+          String scriptFile = scriptName + scriptTypes.get(scriptType);
+          scriptText = Content.downloadFileToString(SX.getURL(url, scriptFile));
+          if (SX.isNotNull(scriptText)) {
+            type = scriptType;
+            break;
+          }
+          scriptText = "";
+        }
+      }
+      return scriptText;
     }
 
     public boolean isValid() {
       return valid;
+    }
+
+    public void setValid() {
+      valid = true;
     }
 
     public Object getReturnObject() {
@@ -116,8 +216,10 @@ public class Runner {
 
     private boolean runJS() {
       ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
-      String scriptBefore = "var Do = Java.type('com.sikulix.api.Do');\n" +
-              "print('Hello from JavaScript: SikuliX support loaded');\n";
+      String scriptBefore = "var Do = Java.type('com.sikulix.api.Do');\n";
+      if (log.isLevel(SXLog.TRACE)) {
+        scriptBefore += "print('Hello from JavaScript: SikuliX support loaded');\n";
+      }
       String scriptText = scriptBefore;
       scriptText += script;
       log.trace("%s: running script %s", ScriptType.JAVASCRIPT, scriptName);
