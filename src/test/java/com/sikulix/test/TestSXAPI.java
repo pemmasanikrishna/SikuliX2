@@ -834,6 +834,18 @@ public class TestSXAPI {
   }
 
   @Test
+  public void test_193_runJavaScriptWithFind() {
+    currentTest = "test_193_runJavaScriptWithFind";
+    if (!SX.isHeadless()) {
+      result = "running JavaScript: find image on screen";
+      Do.setBundlePath(mavenRoot, "Images");
+      Story story = new Story(new Picture("shot-tile"), 3).start();
+      Runner.run("basic1");
+      story.waitForEnd();
+    }
+  }
+
+  @Test
   public void test_200_popat() {
     currentTest = "test_200_popat";
     boolean assertVal = true;

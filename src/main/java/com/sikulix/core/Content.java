@@ -1617,16 +1617,15 @@ public class Content {
     try {
       content = SX.isWindows() ? content.replace("\\", "/") : content;
       aIS = (InputStream) SX.sxGlobalClassReference.getResourceAsStream(content);
-      if (aIS == null) {
-        throw new IOException("extractResourceToString: resource not accessible: " + content);
+      if (aIS != null) {
+        if (encoding == null || encoding.isEmpty()) {
+          encoding = "UTF-8";
+          out = new String(copy(aIS), "UTF-8");
+        } else {
+          out = new String(copy(aIS), encoding);
+        }
+        aIS.close();
       }
-      if (encoding == null || encoding.isEmpty()) {
-        encoding = "UTF-8";
-        out = new String(copy(aIS), "UTF-8");
-      } else {
-        out = new String(copy(aIS), encoding);
-      }
-      aIS.close();
       aIS = null;
     } catch (Exception ex) {
       log.error("extractResourceToString error: %s from: %s (%s)", encoding, content, ex);

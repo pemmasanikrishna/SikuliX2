@@ -51,6 +51,40 @@ public class Picture extends Element {
     initName(eClazz);
   }
 
+  public static Picture create(Object... args) {
+    Picture picture = new Picture();
+    int aLen = args.length;
+    if (aLen > 0) {
+      Object args0 = args[0];
+      if (args0 instanceof BufferedImage) {
+        picture = new Picture((BufferedImage) args0);
+      } else if (args0 instanceof Mat) {
+        picture = new Picture((Mat) args0);
+      } else if (args0 instanceof String) {
+        picture = new Picture((String) args0);
+      } else if (args0 instanceof URL) {
+        picture = new Picture((URL) args0);
+      } else if (args0 instanceof Element) {
+        if (aLen == 1) {
+          picture = new Picture((Element) args0);
+        } else {
+          Object args1 = args[1];
+          Object args2 = (aLen == 3 ? args[2] : null);
+          if (aLen == 3) {
+            if (args2 instanceof Element && args1 instanceof Double) {
+              picture = new Picture((Element) args0, (Double) args1, (Element) args2);
+            }
+          } else {
+            if (args1 instanceof Element) {
+              picture = new Picture((Element) args0, (Element) args1);
+            }
+          }
+        }
+      }
+    }
+    return picture;
+  }
+
   public Picture(BufferedImage bimg) {
     this();
     long start = new Date().getTime();
@@ -95,13 +129,13 @@ public class Picture extends Element {
     copy(elem);
   }
 
-  public Picture(Element elem, double score, Element off) {
-    super(elem, score, off);
+  public Picture(Element elem, double score, Element offset) {
+    super(elem, score, offset);
     copy(elem);
   }
 
-  public Picture(Element elem, Element off) {
-    super(elem, off);
+  public Picture(Element elem, Element offset) {
+    super(elem, offset);
     copy(elem);
   }
 

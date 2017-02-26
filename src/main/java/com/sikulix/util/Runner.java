@@ -152,8 +152,12 @@ public class Runner {
         }
         scriptFolder += "/" + scriptName;
         for (ScriptType scriptType : scriptTypes.keySet()) {
-          String scriptFile = scriptName + ".js";
-          scriptText = Content.extractResourceToString(scriptFolder, scriptFile);
+          String scriptFile = scriptName + scriptTypes.get(scriptType);
+          try {
+            scriptText = Content.extractResourceToString(scriptFolder, scriptFile);
+          } catch (Exception ex) {
+            continue;
+          }
           if (SX.isNotNull(scriptText)) {
             type = scriptType;
             break;
@@ -161,7 +165,7 @@ public class Runner {
           scriptText = "";
         }
       } else {
-        log.error("RunBox: getScriptFromJar: non-SX classRefernce not implemented");
+        log.error("RunBox: getScriptFromJar: non-SX classReference not implemented");
       }
       return scriptText;
     }

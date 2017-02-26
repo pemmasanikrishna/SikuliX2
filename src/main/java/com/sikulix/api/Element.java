@@ -45,6 +45,14 @@ public class Element extends SXElement {
     initName(eClazz);
   }
 
+  public static Element create(Object... args) {
+    Element element = new Element();
+    if (args.length > 0) {
+
+    }
+    return element;
+  }
+
   public Element(int x, int y, int w, int h) {
     setClazz();
     init(x, y, w, h);

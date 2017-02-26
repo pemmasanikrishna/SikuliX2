@@ -1117,4 +1117,18 @@ public class Do {
   }
   //</editor-fold>
   //</editor-fold>
+
+  public static Element element(Object... args) {
+    Element elem = Element.create(args);
+    return elem;
+  }
+
+  public static Picture picture(Object... args) {
+    Picture pic = Picture.create(args);
+    return pic;
+  }
+
+  public static void print(String msg, Object... args) {
+    log.p(msg, args);
+  }
 }
