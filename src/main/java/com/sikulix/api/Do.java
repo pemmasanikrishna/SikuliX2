@@ -8,6 +8,7 @@ import com.sikulix.core.*;
 //import com.sikulix.scripting.JythonHelper;
 //import com.sikulix.scripting.SXRunner;
 import com.sikulix.util.FileChooser;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.sikuli.script.Key;
 
 import javax.swing.*;
@@ -1130,5 +1131,16 @@ public class Do {
 
   public static void print(String msg, Object... args) {
     log.p(msg, args);
+  }
+
+  public static void showcase(Object... args) {
+    Element eShowcase = new Element();
+    eShowcase.setName("SHOWCASE");
+    for (Object arg: args) {
+      log.trace("arg: %s", arg);
+      if (((ScriptObjectMirror) arg).isFunction()) {
+        ((ScriptObjectMirror) arg).call(arg, eShowcase);
+      }
+    }
   }
 }
