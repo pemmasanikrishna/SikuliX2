@@ -23,7 +23,7 @@ public class Sikulix {
   static String stars = repeat("*", 50);
 
   public static String repeat(String str, int count) {
-    return String.format("%0" + 50 + "d", 0).replace("0", "*");
+    return String.format("%0" + count + "d", 0).replace("0", str);
   }
 
   private static void traceBlock(String message) {

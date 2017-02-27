@@ -348,30 +348,32 @@ public class Element extends SXElement {
     showing.show(time);
   }
 
-  public void showMatch(int... times) {
+  public Element showMatch(int... times) {
     if (hasMatch()) {
       Story showing = new Story(this);
       showing.add(getLastMatch()).show(times.length > 0 ? times[0] : showTime);
+      return getLastMatch();
     }
+    return null;
   }
 
   public void showVanish(int... times) {
     if (SX.isNotNull(getLastVanish())) {
       Story showing = new Story(this);
       showing.add(getLastVanish()).show(times.length > 0 ? times[0] : showTime);
-      showing = null;
     }
   }
 
-  public void showMatches(int... times) {
+  public List<Element> showMatches(int... times) {
     if (hasMatches()) {
       Story showing = new Story(this);
       for (Element match : getLastMatches()) {
         showing.add(match);
       }
       showing.show(times.length > 0 ? times[0] : showTime);
-      showing = null;
+      return getLastMatches();
     }
+    return null;
   }
   //</editor-fold>
 

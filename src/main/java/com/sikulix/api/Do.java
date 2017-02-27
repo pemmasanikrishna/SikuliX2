@@ -1116,6 +1116,14 @@ public class Do {
     }
     return matches;
   }
+
+  public static void showMatch(int... times) {
+    getDefaultElement().showMatch(times);
+  }
+
+  public static void showMatches(int... times) {
+    getDefaultElement().showMatches(times);
+  }
   //</editor-fold>
   //</editor-fold>
 

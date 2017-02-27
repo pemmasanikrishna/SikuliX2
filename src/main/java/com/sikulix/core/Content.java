@@ -344,7 +344,15 @@ public class Content {
     return content;
   }
 
+  public static String downloadScriptToString(URL url) {
+    return downloadFileToString(url, true);
+  }
+
   public static String downloadFileToString(URL url) {
+    return downloadFileToString(url, true);
+  }
+
+  public static String downloadFileToString(URL url, boolean silent) {
     HttpURLConnection httpConn = null;
     String content = "";
     try {
@@ -359,11 +367,19 @@ public class Content {
         inputStream.close();
         log.trace("downloadFileToString: %s (%s)", url, httpConn.getContentType());
       } else {
-        log.error("downloadFileToString: (HTTP:%d) %s", httpConn.getResponseCode(), url);
+        if (silent) {
+          log.trace("downloadFileToString: (HTTP:%d) %s", httpConn.getResponseCode(), url);
+        } else {
+          log.error("downloadFileToString: (HTTP:%d) %s", httpConn.getResponseCode(), url);
+        }
       }
       httpConn.disconnect();
     } catch (IOException e) {
-      log.error("downloadFileToString: (%s) %s", e.getMessage(), url);
+      if (silent) {
+        log.trace("downloadFileToString: (%s) %s", e.getMessage(), url);
+      } else {
+        log.error("downloadFileToString: (%s) %s", e.getMessage(), url);
+      }
     }
     return content;
   }

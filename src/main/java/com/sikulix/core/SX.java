@@ -879,6 +879,16 @@ public class SX {
   static String SXWEBHOME = "";
   static String SXWEBHOMEdefault = "http://sikulix.com";
 
+  public static String getSXWEBDOWNLOAD() {
+    if (isNotSet(SXWEBDOWNLOAD)) {
+      SXWEBDOWNLOAD = SXWEBDOWNLOADdefault;
+    }
+    return SXWEBDOWNLOAD;
+  }
+
+  static String SXWEBDOWNLOAD = "";
+  static String SXWEBDOWNLOADdefault = "http://download.sikulix.com";
+
   /**
    * ***** Property SXAPP *****
    *

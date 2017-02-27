@@ -7,7 +7,6 @@ package com.sikulix.test;
 import com.sikulix.api.*;
 import com.sikulix.api.Event;
 import com.sikulix.core.*;
-import com.sikulix.util.Runner;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
@@ -799,53 +798,6 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_190_runJavaScriptBasic() {
-    currentTest = "test_190_runJavaScriptBasic";
-    if (!SX.isHeadless()) {
-      result = "running JavaScript: mouse moves to center";
-      String script = "var element = Do.hover();\n" +
-              "print('Hello from JavaScript: mouse at: ' + element);";
-      Runner.run(Runner.ScriptType.JAVASCRIPT, script);
-      Element center = Do.on().getCenter();
-      assert Do.isMouseposition(hook, center.x, center.y) : "mouse should be at center of screen";
-    }
-  }
-
-  @Test
-  public void test_191_runJavaScriptFromJar() {
-    currentTest = "test_191_runJavaScriptFromJar";
-    if (!SX.isHeadless()) {
-      result = "running JavaScript from jar: mouse moves to center";
-      Runner.run("basic");
-      Element center = Do.on().getCenter();
-      assert Do.isMouseposition(hook, center.x, center.y) : "mouse should be at center of screen";
-    }
-  }
-
-  @Test
-  public void test_192_runJavaScriptFromNet() {
-    currentTest = "test_192_runJavaScriptFromNet";
-    if (!SX.isHeadless()) {
-      result = "running JavaScript from net: mouse moves to center";
-      Runner.run(Runner.ScriptType.FROMNET, "basic");
-      Element center = Do.on().getCenter();
-      assert Do.isMouseposition(hook, center.x, center.y) : "mouse should be at center of screen";
-    }
-  }
-
-  @Test
-  public void test_193_runJavaScriptWithFind() {
-    currentTest = "test_193_runJavaScriptWithFind";
-    if (!SX.isHeadless()) {
-      result = "running JavaScript: find image on screen";
-      Do.setBundlePath(mavenRoot, "Images");
-      Story story = new Story(new Picture("shot-tile"), 3).start();
-      Runner.run("basic1");
-      story.waitForEnd();
-    }
-  }
-
-  @Test
   public void test_200_popat() {
     currentTest = "test_200_popat";
     boolean assertVal = true;
@@ -887,13 +839,11 @@ public class TestSXAPI {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    log.startTimer();
+    //log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        Do.setBundlePath(mavenRoot, "Images");
-        Runner.run("showcase");
         result = "nothing to do here";
 //end
       } else {
