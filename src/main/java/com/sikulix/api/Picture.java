@@ -24,31 +24,26 @@ import java.util.List;
 
 public class Picture extends Element {
 
-  private static eType eClazz = eType.PICTURE;
-  private static SXLog log = SX.getLogger("SX." + eClazz.toString());
+  eType eClazz = eType.PICTURE;
+  public eType getType() {
+    return eClazz;
+  }
+
+  private static SXLog log = SX.getLogger("SX.PICTURE");
 
   //<editor-fold desc="*** construction">
   public Picture() {
   }
 
-  protected void setClazz() {
-    clazz = eClazz;
-  }
-
-  protected void copy(Element elem) {
-    super.copy(elem);
+  private void copyPlus(Element elem) {
+    copy(elem);
     if (elem.hasContent()) {
       setContent(elem.getContent().clone());
     } else {
       setContent();
     }
     urlImg = elem.urlImg;
-    setName(elem.getName());
     setAttributes();
-  }
-
-  protected void initAfter() {
-    initName(eClazz);
   }
 
   public static Picture create(Object... args) {
@@ -86,7 +81,6 @@ public class Picture extends Element {
   }
 
   public Picture(BufferedImage bimg) {
-    this();
     long start = new Date().getTime();
     setContent(makeMat(bimg));
     timeToLoad = new Date().getTime() - start;
@@ -95,7 +89,6 @@ public class Picture extends Element {
   }
 
   public Picture(Mat mat) {
-    this();
     if (SX.isNull(mat)) {
       setContent();
     } else {
@@ -108,35 +101,33 @@ public class Picture extends Element {
   }
 
   public Picture(String fpImg) {
-    this();
     setContent(fpImg);
     init(0, 0, getContent().width(), getContent().height());
   }
 
   public Picture(URL url) {
-    this();
     setContent(url);
     init(0, 0, getContent().width(), getContent().height());
   }
 
   public Picture(Element elem) {
-    super(elem);
-    copy(elem);
+    copyPlus(elem);
   }
 
   public Picture(Element elem, double score) {
-    super(elem, score);
-    copy(elem);
+    copyPlus(elem);
+    setScore(score);
   }
 
   public Picture(Element elem, double score, Element offset) {
-    super(elem, score, offset);
-    copy(elem);
+    copyPlus(elem);
+    setScore(score);
+    setTarget(offset);
   }
 
   public Picture(Element elem, Element offset) {
-    super(elem, offset);
-    copy(elem);
+    copyPlus(elem);
+    setTarget(offset);
   }
 
   /**
@@ -537,16 +528,6 @@ public class Picture extends Element {
   public Picture resize(double factor) {
     setContent(getResizedMat(factor));
     return this;
-  }
-
-  public Mat getResizedMat(double factor) {
-    Mat newMat = getContent();
-    if (isValid()) {
-      newMat = getNewMat();
-      Size newS = new Size(w * factor, h * factor);
-      Imgproc.resize(getContent(), newMat, newS, 0, 0, Imgproc.INTER_AREA);
-    }
-    return newMat;
   }
 
   /**

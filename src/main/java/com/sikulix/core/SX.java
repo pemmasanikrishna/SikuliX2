@@ -1765,8 +1765,8 @@ public class SX {
 
   public static boolean isRectangleEqual(Object base, Rectangle rect) {
     Rectangle rBase = null;
-    if (base instanceof SXElement) {
-      rBase = ((SXElement) base).getRectangle();
+    if (base instanceof Element) {
+      rBase = ((Element) base).getRectangle();
     } else if (base instanceof Region) {
       rBase = ((Region) base).getRect();
     } else if (base instanceof Rectangle) {

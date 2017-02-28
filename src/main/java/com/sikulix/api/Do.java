@@ -945,12 +945,12 @@ public class Do {
   }
 
   public static Picture capture() {
-    return capture(defaultElement);
+    return capture(getDefaultElement());
   }
 
   public static Picture capture(Element elem) {
     if (SX.isNull(elem)) {
-      elem = defaultElement;
+      elem = getDefaultElement();
     }
     return elem.capture();
   }

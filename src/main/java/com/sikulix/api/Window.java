@@ -10,14 +10,13 @@ import com.sikulix.core.SXLog;
 public class Window extends Element {
 
   private static eType eClazz = eType.WINDOW;
-  private static SXLog log = SX.getLogger("SX." + eClazz.toString());
-
-  protected void initAfter() {
-    initName(eClazz);
+  public eType getType() {
+    return eClazz;
   }
 
+  private static SXLog log = SX.getLogger("SX." + eClazz.toString());
+
+
   public Window() {
-    clazz = eClazz;
-    init(0, 0, 0, 0);
   }
 }

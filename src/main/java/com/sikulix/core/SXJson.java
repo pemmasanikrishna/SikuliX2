@@ -49,21 +49,21 @@ public class SXJson {
     return new SXJson(bean).theJsonObject;
   }
 
-  public static class SXElementFlat {
+  public static class ElementFlat {
 
     int x = 0;
     int y = 0;
     int w = 0;
     int h = 0;
 
-    SXElementFlat lastMatch = null;
+    ElementFlat lastMatch = null;
     double score = 0;
 
     int[] target = null;
 
-    SXElement.eType clazz = SXElement.eType.ELEMENT;
+    Element.eType clazz = Element.eType.ELEMENT;
 
-    public SXElementFlat(Element vis) {
+    public ElementFlat(Element vis) {
       clazz = vis.getType();
       x = vis.x;
       y = vis.y;
@@ -72,7 +72,7 @@ public class SXJson {
       if (vis.isRectangle()) {
         Element match = vis.getLastMatch();
         if (SX.isNotNull(match)) {
-          lastMatch = new SXElementFlat(match);
+          lastMatch = new ElementFlat(match);
         }
       }
       score = vis.getScore();
@@ -99,7 +99,7 @@ public class SXJson {
       return h;
     }
 
-    public SXElementFlat getLastMatch() {
+    public ElementFlat getLastMatch() {
       return lastMatch;
     }
 
@@ -113,7 +113,7 @@ public class SXJson {
   }
 
   public static JSONObject makeElement(Element elem) {
-    return new SXJson(new SXElementFlat(elem)).theJsonObject;
+    return new SXJson(new ElementFlat(elem)).theJsonObject;
   }
 
   public static JSONObject makeObject(String strJson) {

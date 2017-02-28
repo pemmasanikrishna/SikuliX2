@@ -319,8 +319,7 @@ public class Tool {
     }
     status.setText(String.format("%s%04d, %04d [%04d, %04d %04dx%04d] %s ",
             dirty ? "*" : "",
-            rect.x + mousePos.x, rect.y + mousePos.y, rect.x, rect.y, rect.w, rect.h,
-            (base.hasName() ? base.getName() : "?name?")));
+            rect.x + mousePos.x, rect.y + mousePos.y, rect.x, rect.y, rect.w, rect.h, base.getName()));
   }
   //</editor-fold>
 

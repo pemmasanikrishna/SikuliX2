@@ -274,26 +274,26 @@ public class TestSXAPI {
     currentTest = "test_030_elementConstructors";
     Element elem = new Element();
     result = "Element();";
-    assert SXElement.eType.ELEMENT.equals(elem.getType());
+    assert Element.eType.ELEMENT.equals(elem.getType());
     Picture img = new Picture();
     result += " Picture();";
-    assert SXElement.eType.PICTURE.equals(img.getType());
+    assert Element.eType.PICTURE.equals(img.getType());
     Target tgt = new Target();
     result += " Target();";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
+    assert Element.eType.TARGET.equals(tgt.getType());
     tgt = new Target(img);
     result += " Target(image);";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
+    assert Element.eType.TARGET.equals(tgt.getType());
     tgt = new Target(tgt);
     result += " Target(target);";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
+    assert Element.eType.TARGET.equals(tgt.getType());
     Mat aMat = tgt.getContent();
     tgt = new Target(aMat);
     result += " Target(mat);";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
+    assert Element.eType.TARGET.equals(tgt.getType());
     tgt = new Target(img, 0.95, new Element(2, 3));
     result += " Target(image, 0.95, new Element(2,3));";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
+    assert Element.eType.TARGET.equals(tgt.getType());
   }
 
   @Test
@@ -367,16 +367,16 @@ public class TestSXAPI {
     Picture base = new Picture(imageNameDefault);
     success &= base.isValid();
     Picture img = new Picture(base);
-    Element element = null;
+    Element match = null;
     if (success) {
       base.show();
-      element = Do.find(img, base);
-      success &= element.isMatch() && 0.99 < element.getScore() &&
-              0 == element.x && 0 == element.y &&
-              element.w == (int) base.w && element.h == (int) base.h;
+      match = Do.find(img, base);
+      success &= match.isMatch() && 0.99 < match.getScore() &&
+              0 == match.x && 0 == match.y &&
+              match.w == (int) base.w && match.h == (int) base.h;
     }
     if (success) {
-      result = element.toString();
+      result = match.toString();
       base.showMatch();
     }
     result = end() + result;
