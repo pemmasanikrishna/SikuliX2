@@ -1,14 +1,12 @@
 /*
- * Copyright (c) 2010-2016, Sikuli.org, sikulix.com
- * Released under the MIT License.
- *
+ * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.sikuli.basics;
+package com.sikulix.util;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -19,10 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JSeparator;
 // import org.sikuli.script.RunTime;
 
-/**
- *
- * @author rhocke
- */
+@Deprecated
 public class SplashFrame extends JFrame {
 
   private static JFrame splash = null;

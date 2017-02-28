@@ -5,23 +5,20 @@
 package org.sikuli.script;
 
 import com.sikulix.api.Do;
+import com.sikulix.api.Element;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
 import java.awt.*;
 
-public class Location {
+public class Location extends Element {
   private static SXLog log = SX.getLogger("SX.LOCATION");
 
   public int x = 0;
   public int y = 0;
-  private IScreen otherScreen = null;
 
-  public IScreen getScreen() {
+  public Screen getScreen() {
     Rectangle r;
-    if (otherScreen != null) {
-      return otherScreen;
-    }
     int numScreens = Do.getDevice().getNumberOfMonitors();
     for (int i = 0; i < numScreens; i++) {
       r = Do.getDevice().getMonitor(i);

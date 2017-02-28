@@ -456,7 +456,7 @@ public class TestSXAPI {
       return;
     }
     start();
-    elemDisplayed.grow(20);
+    elemDisplayed = elemDisplayed.grow(20);
     Picture img = Do.capture(elemDisplayed);
     result = end() + img.toString();
     Do.wait(1.0);
@@ -556,7 +556,7 @@ public class TestSXAPI {
       return;
     }
     start();
-    elemDisplayed.grow(20);
+    elemDisplayed = elemDisplayed.grow(20);
     elemDisplayed.load();
     result = end() + elemDisplayed.toString();
     theShow.stop();
@@ -826,7 +826,7 @@ public class TestSXAPI {
       Element elem = scr.getElement();
       elem = elem.hover();
       assert Do.isMouseposition(hook, elem.x, elem.y);
-      elem.grow((int) (scr.w / 3), (int) (scr.h / 3));
+      elem = elem.grow(scr.w / 3, scr.h / 3);
       elem.show(3);
       result += " with second monitor";
     }

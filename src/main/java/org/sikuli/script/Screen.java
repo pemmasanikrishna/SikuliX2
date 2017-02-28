@@ -5,13 +5,15 @@
 package org.sikuli.script;
 
 import com.sikulix.api.Do;
+import com.sikulix.api.Element;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Screen extends Region implements IScreen {
+public class Screen extends Region {
   private static SXLog log = SX.getLogger("SX.SCREEN");
 
   private int id = -1;
@@ -31,24 +33,31 @@ public class Screen extends Region implements IScreen {
     this.id = id;
   }
 
+  public Screen(Element elem) {
+    init(elem.getRectangle());
+  }
+
   public String toString() {
     return String.format("Screen(%d,%d %dx%d #%d)", x, y, w, h, id);
   }
 
-  public IScreen getScreen() {
+  public Screen getScreen() {
     return this;
   }
 
-  private static List<IScreen> screens = new ArrayList<>();
+  private static List<Screen> screens = new ArrayList<>();
 
-  public static IScreen getScreen(int num) {
-    int numScreens = Do.getDevice().getNumberOfMonitors();
-    if (screens.size() == 0) {
-      for (int i = 0; i < numScreens; i++) {
-        screens.add(new Screen(i));
+  public static Screen getScreen(int num) {
+    if (screens.isEmpty()) {
+      for (Rectangle monitor : Do.getDevice().getMonitors()) {
+        screens.add(new Screen(new Element(monitor)));
       }
     }
-    return (num >= 0 && num <= numScreens ? screens.get(num) : screens.get(0));
+    if (num > -1 && num < screens.size()) {
+      return screens.get(num);
+    } else {
+      return screens.get(0);
+    }
   }
 
   public String toStringPlus() {

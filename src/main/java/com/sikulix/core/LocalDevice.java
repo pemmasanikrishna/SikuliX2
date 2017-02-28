@@ -25,7 +25,7 @@ public class LocalDevice extends IDevice {
   //<editor-fold desc="*** houskeeping ***">
   @Override
   public LocalDevice start(Object... args) {
-    if (0 < getMonitors()) {
+    if (0 < initMonitors()) {
       try {
         robot = new LocalRobot();
       } catch (AWTException e) {
@@ -492,10 +492,10 @@ public class LocalDevice extends IDevice {
   private int nMonitors = 0;
 
   public void resetMonitors() {
-    getMonitors();
+    initMonitors();
   }
 
-  private int getMonitors() {
+  private int initMonitors() {
     if (!SX.isHeadless()) {
       genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
       gdevs = genv.getScreenDevices();
@@ -557,6 +557,19 @@ public class LocalDevice extends IDevice {
 
   public Rectangle getAllMonitors() {
     return rAllMonitors;
+  }
+
+  public Rectangle[] getMonitors() {
+    return monitorBounds;
+  }
+
+  public Element getContainingMonitor(Element element) {
+    for (Rectangle monitor : getMonitors()) {
+      if (monitor.contains(element.x, element.y)) {
+        return new Element(monitor);
+      }
+    }
+    return new Element(monitorBounds[mainMonitor]);
   }
 
   public GraphicsDevice getGraphicsDevice(int id) {

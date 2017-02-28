@@ -6,40 +6,16 @@ package org.sikuli.script;
 
 import com.sikulix.api.Do;
 import com.sikulix.api.Element;
-import com.sikulix.api.Picture;
-import com.sikulix.core.LocalDevice;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
-import org.sikuli.basics.Debug;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class Region {
+public class Region extends Element {
   private static SXLog log = SX.getLogger("SX.REGION");
-
-  public int getX() {
-    return x;
-  }
-
-  public int getY() {
-    return y;
-  }
-
-  public int getW() {
-    return w;
-  }
-
-  public int getH() {
-    return h;
-  }
-
-  public int x;
-  public int y;
-  public int w;
-  public int h;
 
   private Element regionElement = null;
 
@@ -50,28 +26,13 @@ public class Region {
     return regionElement;
   }
 
-  private IScreen scr;
+  private Screen scr;
 
-  public IScreen getScreen() {
+  public Screen getScreen() {
     return scr;
   }
 
-  private boolean otherScreen = false;
-
-  public boolean isOtherScreen() {
-    return otherScreen;
-  }
-
-  public void setOtherScreen() {
-    otherScreen = true;
-  }
-
-  public void setOtherScreen(IScreen aScreen) {
-    scr = aScreen;
-    setOtherScreen();
-  }
-
-  protected Rectangle regionOnScreen(IScreen screen) {
+  protected Rectangle regionOnScreen(Screen screen) {
     if (screen == null) {
       return null;
     }
@@ -86,32 +47,19 @@ public class Region {
     return (Screen) Screen.getScreen(0);
   }
 
-  public void initScreen(IScreen iscr) {
+  public void initScreen(Screen scr) {
     // check given screen first
     Rectangle rect, screenRect;
-    IScreen screen, screenOn;
-    if (iscr != null) {
-      if (iscr.isOtherScreen()) {
-        if (x < 0) {
-          w = w + x;
-          x = 0;
-        }
-        if (y < 0) {
-          h = h + y;
-          y = 0;
-        }
-        this.scr = iscr;
-        this.otherScreen = true;
-        return;
-      }
-      if (iscr.getID() > -1) {
-        rect = regionOnScreen(iscr);
+    Screen screen, screenOn;
+    if (scr != null) {
+      if (scr.getID() > -1) {
+        rect = regionOnScreen(scr);
         if (rect != null) {
           x = rect.x;
           y = rect.y;
           w = rect.width;
           h = rect.height;
-          this.scr = iscr;
+          this.scr = scr;
           return;
         }
       } else {
@@ -119,39 +67,17 @@ public class Region {
         return;
       }
     }
-    // check all possible screens if no screen was given or the region is not on given screen
-    // crop to the screen with the largest intersection
     screenRect = new Rectangle(0, 0, 0, 0);
     screenOn = null;
-    boolean isVNC = false;
-    //TODO VNCScreen
-//    if (iscr == null) {
-//      isVNC = scr instanceof VNCScreen;
-//    } else {
-//      isVNC = iscr instanceof VNCScreen;
-//    }
-    if (!isVNC) {
-      for (int i = 0; i < Do.getDevice().getNumberOfMonitors(); i++) {
-        screen = Screen.getScreen(i);
-        rect = regionOnScreen(screen);
-        if (rect != null) {
-          if (rect.width * rect.height > screenRect.width * screenRect.height) {
-            screenRect = rect;
-            screenOn = screen;
-          }
+    for (int i = 0; i < Do.getDevice().getNumberOfMonitors(); i++) {
+      screen = Screen.getScreen(i);
+      rect = regionOnScreen(screen);
+      if (rect != null) {
+        if (rect.width * rect.height > screenRect.width * screenRect.height) {
+          screenRect = rect;
+          screenOn = screen;
         }
       }
-    } else {
-//      for (int i = 0; i < VNCScreen.getNumberScreens(); i++) {
-//        screen = VNCScreen.getScreen(i);
-//        rect = regionOnScreen(screen);
-//        if (rect != null) {
-//          if (rect.width * rect.height > screenRect.width * screenRect.height) {
-//            screenRect = rect;
-//            screenOn = screen;
-//          }
-//        }
-//      }
     }
     if (screenOn != null) {
       x = screenRect.x;
@@ -190,7 +116,7 @@ public class Region {
    * @param H            heigth
    * @param parentScreen the screen containing the Region
    */
-  public Region(int X, int Y, int W, int H, IScreen parentScreen) {
+  public Region(int X, int Y, int W, int H, Screen parentScreen) {
     this.x = X;
     this.y = Y;
     this.w = W > 1 ? W : 1;
@@ -234,7 +160,6 @@ public class Region {
     w = r.w;
     h = r.h;
     scr = r.getScreen();
-    otherScreen = r.isOtherScreen();
     autoWaitTimeout = r.autoWaitTimeout;
     findFailedResponse = r.findFailedResponse;
     throwException = r.throwException;
@@ -264,14 +189,14 @@ public class Region {
     return Region.create(X, Y, W, H, null);
   }
 
-  private static Region create(int X, int Y, int W, int H, IScreen scr) {
+  private static Region create(int X, int Y, int W, int H, Screen scr) {
     return new Region(X, Y, W, H, scr);
   }
 
   public static Region create(Location loc, int w, int h) {
     int _x = loc.x;
     int _y = loc.y;
-    IScreen s = loc.getScreen();
+    Screen s = loc.getScreen();
     if (s == null) {
       _x = _y = 0;
       s = Screen.getPrimaryScreen();
@@ -314,7 +239,7 @@ public class Region {
   public static Region create(Location loc, int create_x_direction, int create_y_direction, int w, int h) {
     int _x = loc.x;
     int _y = loc.y;
-    IScreen s = loc.getScreen();
+    Screen s = loc.getScreen();
     if (s == null) {
       _x = _y = 0;
       s = Screen.getPrimaryScreen();
@@ -376,7 +301,7 @@ public class Region {
    * @param parentScreen the new parent screen
    * @return the new region
    */
-  protected static Region create(Rectangle r, IScreen parentScreen) {
+  protected static Region create(Rectangle r, Screen parentScreen) {
     return Region.create(r.x, r.y, r.width, r.height, parentScreen);
   }
 
@@ -405,7 +330,7 @@ public class Region {
   public static Region grow(Location loc, int w, int h) {
     int _x = loc.x;
     int _y = loc.y;
-    IScreen s = loc.getScreen();
+    Screen s = loc.getScreen();
     if (s == null) {
       _x = _y = 0;
       s = Screen.getPrimaryScreen();
@@ -424,7 +349,7 @@ public class Region {
   public static Region grow(Location loc) {
     int _x = loc.x;
     int _y = loc.y;
-    IScreen s = loc.getScreen();
+    Screen s = loc.getScreen();
     if (s == null) {
       _x = _y = 0;
       s = Screen.getPrimaryScreen();
@@ -613,16 +538,6 @@ public class Region {
   //<editor-fold defaultstate="collapsed" desc="spatial operators - new regions">
 
   /**
-   * check if current region contains given region
-   *
-   * @param region the other Region
-   * @return true/false
-   */
-  public boolean contains(Region region) {
-    return getRect().contains(region.getRect());
-  }
-
-  /**
    * create a Location object, that can be used as an offset taking the width and hight of this Region
    *
    * @return a new Location object with width and height as x and y
@@ -683,7 +598,7 @@ public class Region {
    * @return the new region
    */
   public Region grow() {
-    return grow(defaultPadding, defaultPadding);
+    return (Region) super.grow();
   }
 
   /**
@@ -693,7 +608,7 @@ public class Region {
    * @return the new region
    */
   public Region grow(int range) {
-    return grow(range, range);
+    return (Region) super.grow(range);
   }
 
   /**
@@ -704,9 +619,7 @@ public class Region {
    * @return the new region
    */
   public Region grow(int w, int h) {
-    Rectangle r = getRect();
-    r.grow(w, h);
-    return Region.create(r.x, r.y, r.width, r.height, scr);
+    return (Region) super.grow(w, h);
   }
 
   /**
@@ -739,7 +652,7 @@ public class Region {
    * @return point with given offset horizontally to middle point on right edge
    */
   public Location rightAt(int offset) {
-    return new Location(x + w + offset, y + h / 2);
+    return (Location) super.right(offset);
   }
 
   /**
@@ -749,8 +662,7 @@ public class Region {
    * @return the new region
    */
   public Region right() {
-    int distToRightScreenBorder = getScreen().getX() + getScreen().getW() - (getX() + getW());
-    return right(distToRightScreenBorder);
+    return (Region) right(getScreen().w);
   }
 
   /**
@@ -762,13 +674,7 @@ public class Region {
    * @return the new region
    */
   public Region right(int width) {
-    int _x;
-    if (width < 0) {
-      _x = x + w + width;
-    } else {
-      _x = x + w;
-    }
-    return Region.create(_x, y, Math.abs(width), h, scr);
+    return (Region) super.right(width);
   }
 
   /**

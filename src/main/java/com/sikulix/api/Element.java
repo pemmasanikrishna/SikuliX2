@@ -377,8 +377,23 @@ public class Element implements Comparable<Element> {
    * @param xoff x offset
    * @return new location
    */
-  public Element right(Integer xoff) {
+  public Element rightAt(Integer xoff) {
     return new Element(rightAt().x + xoff, rightAt().y);
+  }
+
+  public Element right() {
+    return right(getElementDevice().getContainingMonitor(this).w);
+  }
+
+  public Element right(Integer xoff) {
+    Element monitor = getElementDevice().getContainingMonitor(this);
+    int _x;
+    if (xoff < 0) {
+      _x = x + w + xoff;
+    } else {
+      _x = x + w;
+    }
+    return monitor.intersection(new Element(_x, y, Math.abs(xoff), h));
   }
 
   public Element aboveAt() {
@@ -461,20 +476,18 @@ public class Element implements Comparable<Element> {
   //<editor-fold desc="***** move, grow">
   private static int growDefault = 2;
 
-  public void grow() {
-    grow(growDefault);
+  public Element grow() {
+    return grow(growDefault);
   }
 
-  public void grow(int margin) {
-    Rectangle r = getRectangle();
-    r.grow(margin, margin);
-    setRectangle(r);
+  public Element grow(int margin) {
+    return grow(margin, margin);
   }
 
-  public void grow(int hori, int verti) {
+  public Element grow(int hori, int verti) {
     Rectangle r = getRectangle();
     r.grow(hori, verti);
-    setRectangle(r);
+    return new Element(r);
   }
 
   public void at(Integer x, Integer y) {
@@ -528,21 +541,16 @@ public class Element implements Comparable<Element> {
   }
 
   public boolean contains(Element elem) {
-    if (!isRectangle()) {
-      return false;
-    }
-    if (!elem.isRectangle() && !elem.isPoint()) {
+    if (!isRectangle() || (!elem.isRectangle() && !elem.isPoint())) {
       return false;
     }
     Rectangle r1 = new Rectangle(x, y, w, h);
-    Rectangle r2 = new Rectangle(elem.x, elem.y, elem.w, elem.h);
+    Rectangle r2 = elem.getRectangle();
     if (elem.isRectangle()) {
-      return r1.contains(elem.x, elem.y, elem.w, elem.h);
-    }
-    if (elem.isPoint()) {
+      return r1.contains(r2);
+    } else {
       return r1.contains(elem.x, elem.y);
     }
-    return false;
   }
   //</editor-fold>
 
@@ -709,9 +717,9 @@ public class Element implements Comparable<Element> {
     return getTopLeft();
   }
 
-  public Element getRect() {
-    return (Element) this;
-  }
+//  public Element getRect() {
+//    return this;
+//  }
 
   public Dimension getSize() {
     return new Dimension(w, h);

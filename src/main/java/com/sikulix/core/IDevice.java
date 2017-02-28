@@ -22,6 +22,8 @@ public abstract class IDevice {
   public abstract Rectangle getAllMonitors();
   public abstract int getMainMonitorID();
   public abstract void resetMonitors();
+  public abstract Rectangle[] getMonitors();
+  public abstract Element getContainingMonitor(Element element);
   public abstract Element click(Element loc);
   public abstract Element doubleClick(Element loc);
   public abstract Element rightClick(Element loc);

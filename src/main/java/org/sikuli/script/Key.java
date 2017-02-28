@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.sikulix.core.SX;
-import org.sikuli.basics.Debug;
+import com.sikulix.util.Debug;
 import com.sikulix.core.SXJNA;
 
 /**

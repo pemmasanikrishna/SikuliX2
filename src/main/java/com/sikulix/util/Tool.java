@@ -1022,8 +1022,7 @@ public class Tool {
 
   private void checkSelection() {
     rect.intersect(base);
-    Element minimum = rect.getCenter();
-    minimum.grow();
+    Element minimum = rect.getCenter().grow();
     if (rect.w < minWidthHeight || rect.h < minWidthHeight) {
       rect.change(minimum);
     }

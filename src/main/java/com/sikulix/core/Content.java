@@ -5,8 +5,8 @@
 package com.sikulix.core;
 
 import com.sikulix.api.Picture;
-import org.sikuli.basics.PreferencesUser;
-import org.sikuli.basics.SplashFrame;
+//import org.sikuli.basics.PreferencesUser;
+import com.sikulix.util.SplashFrame;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -161,11 +161,11 @@ public class Content {
       proxyIP = adr;
       proxyPort = pPort;
       sxProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(a, p));
-//TODO options
-      PreferencesUser prefs = PreferencesUser.getInstance();
-      prefs.put("ProxyName", (host == null ? "" : host));
-      prefs.put("ProxyIP", (adr == null ? "" : adr));
-      prefs.put("ProxyPort", ""+p);
+////TODO options
+//      PreferencesUser prefs = PreferencesUser.getInstance();
+//      prefs.put("ProxyName", (host == null ? "" : host));
+//      prefs.put("ProxyIP", (adr == null ? "" : adr));
+//      prefs.put("ProxyPort", ""+p);
       return true;
     }
     return false;

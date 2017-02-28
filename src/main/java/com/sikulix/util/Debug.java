@@ -1,9 +1,7 @@
 /*
- * Copyright (c) 2010-2016, Sikuli.org, sikulix.com
- * Released under the MIT License.
- *
+ * Copyright (c) 2016 - sikulix.com - MIT license
  */
-package org.sikuli.basics;
+package com.sikulix.util;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -33,6 +31,7 @@ import com.sikulix.core.SX;
  *
  * This solution is NOT threadsafe !!!
  */
+@Deprecated
 public class Debug {
 
   private static int DEBUG_LEVEL = 0;
