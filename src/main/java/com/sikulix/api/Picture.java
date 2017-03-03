@@ -28,6 +28,9 @@ public class Picture extends Element {
   public eType getType() {
     return eClazz;
   }
+  public String getTypeFirstLetter() {
+    return "I";
+  }
 
   private static SXLog log = SX.getLogger("SX.PICTURE");
 

@@ -10,6 +10,8 @@ import com.sikulix.core.*;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
+import org.sikuli.script.Location;
+import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
 import java.awt.*;
@@ -814,22 +816,39 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_300_oldAPI_Screen() {
-    currentTest = "test_300_oldAPI_Screen";
+  public void test_300_oldAPI_Basic() {
+    currentTest = "test_300_oldAPI_Basic";
     Screen.showMonitors();
     Screen scr = new Screen();
     assert scr.getID() == 0;
     assert SX.isRectangleEqual(scr, Do.on().getRectangle());
+    scr.hover();
+    Location center = scr.getCenter();
+    assert Do.isMouseposition(hook, center.x, center.y);
+    Element grow = center.grow(scr.w / 3, scr.h / 3);
+    grow.show(3);
     result = "Screen basics: " + scr.toString();
     if (Do.getDevice().getNumberOfMonitors() > 1) {
       scr = new Screen(1);
-      Element elem = scr.getElement();
-      elem = elem.hover();
-      assert Do.isMouseposition(hook, elem.x, elem.y);
-      elem = elem.grow(scr.w / 3, scr.h / 3);
-      elem.show(3);
+      scr.hover();
+      center = scr.getCenter();
+      assert Do.isMouseposition(hook, center.x, center.y);
+      grow = center.grow(scr.w / 3, scr.h / 3);
+      grow.show(3);
       result += " with second monitor";
     }
+  }
+
+  @Test
+  public void test_300_oldAPI_Region() {
+    currentTest = "test_300_oldAPI_Region";
+    result = "old API: Region";
+    Region region = new Region(100, 100, 100, 100);
+    assert region.isValid() && region instanceof Region : "new Region(100, 100, 100, 100)";
+    region = Region.create(100, 100, 100, 100);
+    assert region.isValid() && region instanceof Region : "Region.create(100, 100, 100, 100)";
+    region = Region.create(-200, -200, 100, 100);
+    assert !region.isValid() && region instanceof Region : "Region.create(-200, -200, 100, 100)";
   }
   //</editor-fold>
 

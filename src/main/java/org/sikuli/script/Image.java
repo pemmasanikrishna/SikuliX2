@@ -4,26 +4,14 @@ import com.sikulix.api.Picture;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
-public class Image {
-  private static SXLog log = SX.getLogger("SX.IMAGE");
-
-  Picture image = null;
+public class Image extends Picture {
+  private static SXLog log = SX.getLogger("API.IMAGE");
 
   public String toString() {
-    return String.format("Image(%s)", name);
+    return String.format("Image(%s)", getName());
   }
 
   public Image(String name) {
-    image = new Picture(name);
+    super(name);
   }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  private String name = "";
 }

@@ -15,6 +15,11 @@ public class Symbol extends Element {
   public eType getType() {
     return eClazz;
   }
+  public String getTypeFirstLetter() {
+    return "Y";
+  }
+
+
 
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
@@ -105,11 +110,6 @@ public class Symbol extends Element {
   public Symbol setLine(int line) {
     this.line = line;
     return this;
-  }
-
-  @Override
-  public Element getTarget() {
-    return target;
   }
 
   @Override

@@ -14,35 +14,40 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Screen extends Region {
-  private static SXLog log = SX.getLogger("SX.SCREEN");
+  private static SXLog log = SX.getLogger("API.SCREEN");
+
+  private static eType eClazz = eType.SCREEN;
+  public eType getType() {
+    return eClazz;
+  }
 
   private int id = -1;
-  private int curID = -1;
 
   public int getID() {
     return id;
   }
 
   public Screen() {
-    init(Do.getDevice().getMonitor());
+    initRegion(Do.getDevice().getMonitor());
     id = 0;
   }
 
   public Screen(int id) {
-    init(Do.getDevice().getMonitor(id));
+    initRegion(Do.getDevice().getMonitor(id));
     this.id = id;
   }
 
   public Screen(Element elem) {
-    init(elem.getRectangle());
-  }
-
-  public String toString() {
-    return String.format("Screen(%d,%d %dx%d #%d)", x, y, w, h, id);
+    initRegion(elem.getRectangle().x, elem.getRectangle().y,
+            elem.getRectangle().width, elem.getRectangle().height);
   }
 
   public Screen getScreen() {
     return this;
+  }
+
+  public static Screen getPrimaryScreen() {
+    return Screen.getScreen(Do.getDevice().getMonitorID());
   }
 
   private static List<Screen> screens = new ArrayList<>();
@@ -56,7 +61,7 @@ public class Screen extends Region {
     if (num > -1 && num < screens.size()) {
       return screens.get(num);
     } else {
-      return screens.get(0);
+      return screens.get(Do.getDevice().getMonitorID());
     }
   }
 
@@ -69,7 +74,7 @@ public class Screen extends Region {
    */
   public static void showMonitors() {
     log.p("*** monitor configuration [ %s Screen(s)] ***", Do.getDevice().getNumberOfMonitors());
-    log.p("*** Primary is Screen %d", Do.getDevice().getMainMonitorID());
+    log.p("*** Primary is Screen %d", Do.getDevice().getMonitorID());
     for (int i = 0; i < Do.getDevice().getNumberOfMonitors(); i++) {
       log.p("%d: %s", i, getScreen(i));
     }

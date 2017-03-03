@@ -11,6 +11,7 @@ import com.sikulix.api.Picture;
 import com.sikulix.util.animation.Animator;
 import com.sikulix.util.animation.AnimatorOutQuarticEase;
 import com.sikulix.util.animation.AnimatorTimeBased;
+import org.sikuli.script.Screen;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -551,7 +552,7 @@ public class LocalDevice extends IDevice {
     return monitorBounds[mainMonitor];
   }
 
-  public int getMainMonitorID() {
+  public int getMonitorID() {
     return mainMonitor;
   }
 
@@ -563,13 +564,23 @@ public class LocalDevice extends IDevice {
     return monitorBounds;
   }
 
-  public Element getContainingMonitor(Element element) {
+  private int getContainingMonitorID(Element element) {
+    int n = 0;
     for (Rectangle monitor : getMonitors()) {
       if (monitor.contains(element.x, element.y)) {
-        return new Element(monitor);
+        return n;
       }
+      n++;
     }
-    return new Element(monitorBounds[mainMonitor]);
+    return mainMonitor;
+  }
+
+  public Element getContainingMonitor(Element element) {
+    return new Element(monitorBounds[getContainingMonitorID(element)]);
+  }
+
+  public Screen getContainingScreen(Element element) {
+    return new Screen(getContainingMonitorID(element));
   }
 
   public GraphicsDevice getGraphicsDevice(int id) {

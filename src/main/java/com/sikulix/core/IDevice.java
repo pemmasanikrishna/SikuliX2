@@ -2,6 +2,7 @@ package com.sikulix.core;
 
 import com.sikulix.api.Element;
 import com.sikulix.api.Picture;
+import org.sikuli.script.Screen;
 
 import java.awt.*;
 
@@ -20,10 +21,11 @@ public abstract class IDevice {
   public abstract int getNumberOfMonitors();
   public abstract Rectangle getMonitor(int... id);
   public abstract Rectangle getAllMonitors();
-  public abstract int getMainMonitorID();
+  public abstract int getMonitorID();
   public abstract void resetMonitors();
   public abstract Rectangle[] getMonitors();
   public abstract Element getContainingMonitor(Element element);
+  public abstract Screen getContainingScreen(Element element);
   public abstract Element click(Element loc);
   public abstract Element doubleClick(Element loc);
   public abstract Element rightClick(Element loc);

@@ -8,6 +8,7 @@ import com.sikulix.core.*;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.sikuli.script.Screen;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -24,8 +25,6 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.*;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Element implements Comparable<Element> {
 
@@ -36,12 +35,73 @@ public class Element implements Comparable<Element> {
     return eClazz;
   }
 
+  private boolean throwException = SX.isOption("Settings.ThrowException");
+
+  public boolean getThrowException() {
+    return throwException;
+  }
+
+  public void setThrowException(boolean throwException) {
+    this.throwException = throwException;
+  }
+
+  private float waitScanRate = (float) SX.getOptionNumber("Settings.WaitScanRate");
+
+  public float getWaitScanRate() {
+    return waitScanRate;
+  }
+
+  public void setWaitScanRate(float waitScanRate) {
+    this.waitScanRate = waitScanRate;
+  }
+
+  private float observeScanRate = (float) SX.getOptionNumber("Settings.ObserveScanRate");
+
+  public float getObserveScanRate() {
+    return observeScanRate;
+  }
+
+  public void setObserveScanRate(float observeScanRate) {
+    this.observeScanRate = observeScanRate;
+  }
+
+  private int repeatWaitTime = (int) SX.getOptionNumber("Settings.RepeatWaitTime");
+
+  public int getRepeatWaitTime() {
+    return repeatWaitTime;
+  }
+
+  public void setRepeatWaitTime(int repeatWaitTime) {
+    this.repeatWaitTime = repeatWaitTime;
+  }
+
+  private Screen scr;
+
+  public Screen getScreen() {
+    return scr;
+  }
+
+  protected void initScreen(Screen screen) {
+    if (screen != null) {
+      if (screen.getID() < 0) {
+        setSpecial();
+        scr = screen;
+        return;
+      }
+    }
+    scr = getDevice().getContainingScreen(this);
+  }
+
   //<editor-fold desc="***** construction, info">
   public String getName() {
     if (SX.isNotSet(name)) {
-      setName(String.format("%s_%d_%d_%dx%d", getType().toString().substring(0, 1), x, y, w, h));
+      setName(String.format("%s_%d_%d_%dx%d", getTypeFirstLetter(), x, y, w, h));
     }
     return name;
+  }
+
+  public String getTypeFirstLetter() {
+    return getType().toString().substring(0, 1);
   }
 
   public void setName(String name) {
@@ -206,17 +266,17 @@ public class Element implements Comparable<Element> {
       // hack: special for even margin all sides and for onChange()
       init(-id, -id, -id, -id);
     } else {
-      Rectangle rect = getElementDevice().getMonitor(id);
+      Rectangle rect = getDevice().getMonitor(id);
       init(rect.x, rect.y, rect.width, rect.height);
     }
   }
 
-  public Element(Core.MinMaxLocResult mMinMax, Target target, Rect rect) {
-    init((int) mMinMax.maxLoc.x + target.getTarget().x +
-                    rect.x, (int) mMinMax.maxLoc.y + target.getTarget().y + rect.y,
-            target.w, target.h);
-    setScore(mMinMax.maxVal);
-  }
+//  public Element(Core.MinMaxLocResult mMinMax, Target target, Rect rect) {
+//    init((int) mMinMax.maxLoc.x + target.getTarget().x +
+//                    rect.x, (int) mMinMax.maxLoc.y + target.getTarget().y + rect.y,
+//            target.w, target.h);
+//    setScore(mMinMax.maxVal);
+//  }
 
   public boolean isMatch() {
     return score > -1;
@@ -349,83 +409,77 @@ public class Element implements Comparable<Element> {
     return new Element(x, y + h);
   }
 
-  public Element leftAt() {
-    return new Element(x, y + h / 2);
-  }
-
-  /**
-   * creates a point at the given offset to the left<br>
-   * negative means the opposite direction<br>
-   * for rectangles the reference point is the middle of the left side
-   *
-   * @param xoff x offset
-   * @return new location
-   */
-  public Element left(Integer xoff) {
-    return new Element(x - xoff, leftAt().y);
-  }
-
+  //<editor-fold desc="right">
   public Element rightAt() {
     return new Element(x + w, y + h / 2);
   }
 
-  /**
-   * creates a point at the given offset to the right<br>
-   * negative means the opposite direction<br>
-   * for rectangles the reference point is the middle of the right side
-   *
-   * @param xoff x offset
-   * @return new location
-   */
-  public Element rightAt(Integer xoff) {
+  public Element rightAt(int xoff) {
     return new Element(rightAt().x + xoff, rightAt().y);
   }
 
   public Element right() {
-    return right(getElementDevice().getContainingMonitor(this).w);
+    return right(getDevice().getContainingMonitor(this).w);
   }
 
-  public Element right(Integer xoff) {
-    Element monitor = getElementDevice().getContainingMonitor(this);
-    int _x;
-    if (xoff < 0) {
-      _x = x + w + xoff;
-    } else {
-      _x = x + w;
-    }
-    return monitor.intersection(new Element(_x, y, Math.abs(xoff), h));
+  public Element right(int xoff) {
+    Element monitor = getDevice().getContainingMonitor(this);
+    int newX = xoff < 0 ? x + w + xoff : x + w;
+    return monitor.intersection(new Element(newX, y, Math.abs(xoff), h));
   }
+  //</editor-fold>
+
+  //<editor-fold desc="left">
+  public Element leftAt() {
+    return new Element(x, y + h / 2);
+  }
+
+  public Element leftAt(int xoff) {
+    return new Element(leftAt().x - xoff, leftAt().y);
+  }
+
+  public Element left() {
+    return left(getDevice().getContainingMonitor(this).w);
+  }
+
+  public Element left(int xoff) {
+    Element monitor = getDevice().getContainingMonitor(this);
+    return monitor.intersection(new Element(x - xoff, y, Math.abs(xoff), h));
+  }
+  //</editor-fold>
 
   public Element aboveAt() {
     return new Element(x + w / 2, y);
   }
 
-  /**
-   * creates a point at the given offset above<br>
-   * negative means the opposite direction<br>
-   * for rectangles the reference point is the middle of upper side
-   *
-   * @param yoff y offset
-   * @return new location
-   */
-  public Element above(Integer yoff) {
-    return new Element(aboveAt().x, y - yoff);
+  public Element aboveAt(int xoff) {
+    return new Element(aboveAt().x, aboveAt().y - xoff);
+  }
+
+  public Element above() {
+    return above(getDevice().getContainingMonitor(this).h);
+  }
+
+  public Element above(int xoff) {
+    Element monitor = getDevice().getContainingMonitor(this);
+    return monitor.intersection(new Element(x , y - xoff, w, Math.abs(xoff)));
   }
 
   public Element belowAt() {
     return new Element(x + w / 2, y + h);
   }
 
-  /**
-   * creates a point at the given offset below<br>
-   * negative means the opposite direction<br>
-   * for rectangles the reference point is the middle of the lower side
-   *
-   * @param yoff y offset
-   * @return new location
-   */
-  public Element below(Integer yoff) {
-    return new Element(belowAt().x, belowAt().y + yoff);
+  public Element belowAt(int xoff) {
+    return new Element(belowAt().x, belowAt().y + xoff);
+  }
+
+  public Element below() {
+    return below(getDevice().getContainingMonitor(this).h);
+  }
+
+  public Element below(int xoff) {
+    Element monitor = getDevice().getContainingMonitor(this);
+    return monitor.intersection(new Element(x , y + h + xoff, w, Math.abs(xoff)));
   }
 
 // TODO getColor() implement more support and make it useable
@@ -566,7 +620,7 @@ public class Element implements Comparable<Element> {
 
   private Element lastTarget = null;
 
-  protected Element target = null;
+  private Element target = null;
 
   public void setTarget(Element elem) {
     target = elem.getCenter();
@@ -742,7 +796,7 @@ public class Element implements Comparable<Element> {
   //<editor-fold desc="***** variants">
   public enum eType {
     ELEMENT, SYMBOL, PICTURE, TARGET, WINDOW,
-    REGION, MATCH, SCREEN, PATTERN, LOCATION;
+    REGION, MATCH, SCREEN, LOCATION, PATTERN, IMAGE;
 
     static eType isType(String strType) {
       for (eType t : eType.values()) {
@@ -759,11 +813,16 @@ public class Element implements Comparable<Element> {
   }
 
   public boolean isRectangle() {
-    return (isElement() && !isPoint()) || isWindow();
+    return (isElement() && !isPoint()) || isWindow() || isRegion();
+  }
+
+  public boolean isRegion() {
+    return eType.REGION.equals(getType()) || eType.SCREEN.equals(getType()) ||
+            eType.MATCH.equals(getType());
   }
 
   public boolean isPoint() {
-    return isElement() && w < 2 && h < 2;
+    return (isElement() && w < 2 && h < 2) || eType.LOCATION.equals(getType());
   }
 
   public boolean isElement() {
@@ -787,8 +846,18 @@ public class Element implements Comparable<Element> {
   }
 
   public boolean isSpecial() {
-    return !SX.isNull(containingDevice);
+    return special;
   }
+
+  public void setSpecial(boolean special) {
+    this.special = special;
+  }
+
+  public void setSpecial() {
+    this.special = true;
+  }
+
+  private boolean special = false;
 
   /**
    * @return true if the element is useable and/or has valid content
@@ -799,17 +868,7 @@ public class Element implements Comparable<Element> {
   //</editor-fold>
 
   //<editor-fold desc="***** device related">
-  public Object getContainingDevice() {
-    return containingDevice;
-  }
-
-  public void setContainingDevice(Object containingDevice) {
-    this.containingDevice = containingDevice;
-  }
-
-  Object containingDevice = null;
-
-  public IDevice getElementDevice() {
+  public IDevice getDevice() {
     if (SX.isNull(elementDevice)) {
       if (!isSpecial()) {
         elementDevice = SX.getSXLOCALDEVICE();
@@ -821,8 +880,9 @@ public class Element implements Comparable<Element> {
     return elementDevice;
   }
 
-  public void setElementDevice(IDevice elementDevice) {
+  public void setDevice(IDevice elementDevice) {
     this.elementDevice = elementDevice;
+    setSpecial();
   }
 
   protected IDevice elementDevice = null;
@@ -834,8 +894,8 @@ public class Element implements Comparable<Element> {
    */
   public int isOn() {
     Rectangle r;
-    for (int i = 0; i < getElementDevice().getNumberOfMonitors(); i++) {
-      r = getElementDevice().getMonitor(i);
+    for (int i = 0; i < getDevice().getNumberOfMonitors(); i++) {
+      r = getDevice().getMonitor(i);
       if (r.contains(this.x, this.y)) {
         return i;
       }
@@ -1045,7 +1105,7 @@ public class Element implements Comparable<Element> {
   }
 
   public Picture capture() {
-    return getElementDevice().capture(this);
+    return getDevice().capture(this);
   }
   //</editor-fold>
 
@@ -1177,7 +1237,7 @@ public class Element implements Comparable<Element> {
    */
   public Element hover(Object... args) {
     Element target = findForClick(Finder.HOVER, args);
-    Element moveTarget = target.getElementDevice().move(target);
+    Element moveTarget = target.getDevice().move(target.getTarget());
     return moveTarget;
   }
 
@@ -1188,7 +1248,7 @@ public class Element implements Comparable<Element> {
    */
   public Element click(Object... args) {
     Element target = findForClick(Finder.CLICK, args);
-    return target.getElementDevice().click(target);
+    return target.getDevice().click(target);
   }
 
   /**
@@ -1198,7 +1258,7 @@ public class Element implements Comparable<Element> {
    */
   public Element doubleClick(Object... args) {
     Element target = findForClick(Finder.DOUBLECLICK, args);
-    target.getElementDevice().doubleClick(target);
+    target.getDevice().doubleClick(target);
     return target;
   }
 
@@ -1209,7 +1269,7 @@ public class Element implements Comparable<Element> {
    */
   public Element rightClick(Object... args) {
     Element target = findForClick(Finder.RIGHTCLICK, args);
-    target.getElementDevice().rightClick(target);
+    target.getDevice().rightClick(target);
     return target;
   }
 
@@ -1225,7 +1285,7 @@ public class Element implements Comparable<Element> {
     if (times.length == 0) {
       times = new Double[]{SX.getOptionNumber("Settings.MoveMouseDelay")};
     }
-    targetTo = getElementDevice().dragDrop(targetFrom, targetTo, times);
+    targetTo = getDevice().dragDrop(targetFrom, targetTo, times);
     return targetTo;
   }
 
