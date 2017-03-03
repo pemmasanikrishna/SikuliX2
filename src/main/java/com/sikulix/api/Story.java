@@ -31,7 +31,6 @@ public class Story {
   private static float darker_factor = 0.85f;
   private static int showTime = (int) SX.getOptionNumber("SXShow.showTime", 2);
 
-  private Element storyBackground = new Element();
   private java.util.List<Element> elements = new ArrayList<>();
   private java.util.List<Symbol> activeElements = new ArrayList<>();
   private Symbol activeElement = null;
@@ -44,6 +43,7 @@ public class Story {
   private Element storyTopLeft = null;
   private LocalDevice localDevice;
 
+  private Element storyBackground = new Element();
   private BufferedImage storyImg = null;
 
   public Story() {
@@ -64,10 +64,8 @@ public class Story {
       storyImg = plainBackground(storyBackground);
       storyTopLeft = storyBackground.getCentered(borderThickness);
       add(storyBackground);
-      if (storyBackground.isSymbol()) {
-        canDrag = true;
-      }
-      addBorder();
+      canDrag = true;
+      //addBorder();
     } else if (storyBackground.hasContent()) {
       storyImg = storyBackground.get();
     } else {

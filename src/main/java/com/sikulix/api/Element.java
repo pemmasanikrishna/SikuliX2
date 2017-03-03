@@ -1306,7 +1306,7 @@ public class Element implements Comparable<Element> {
   }
   //</editor-fold>
 
-  //<editor-fold desc="waiting times">
+  //<editor-fold desc="***** waiting times">
   private double waitForThis = -1;
 
   public double getWaitForThis() {
@@ -1554,7 +1554,7 @@ public class Element implements Comparable<Element> {
   }
   //</editor-fold>
 
-  //<editor-fold desc="is clicked">
+  //<editor-fold desc="***** Tool, Symbol">
   Element click = null;
   long clickedTime = 0;
 

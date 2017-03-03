@@ -858,11 +858,13 @@ public class TestSXAPI {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    //log.startTimer();
+    log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
+        Element element = new Element(100, 100, 300, 300);
+        element.show();
         result = "nothing to do here";
 //end
       } else {
