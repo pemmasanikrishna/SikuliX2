@@ -5,37 +5,34 @@
 package org.sikuli.script;
 
 import com.sikulix.api.Do;
+import com.sikulix.api.Element;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
 import java.awt.*;
 
-public class Location {
-  private static SXLog log = SX.getLogger("SX.LOCATION");
+public class Location extends Element {
+  private static SXLog log = SX.getLogger("API.LOCATION");
 
-  public int x = 0;
-  public int y = 0;
-  private IScreen otherScreen = null;
+  private static eType eClazz = eType.LOCATION;
+  public eType getType() {
+    return eClazz;
+  }
 
-  public IScreen getScreen() {
-    Rectangle r;
-    if (otherScreen != null) {
-      return otherScreen;
-    }
-    int numScreens = Do.getDevice().getNumberOfMonitors();
-    for (int i = 0; i < numScreens; i++) {
-      r = Do.getDevice().getMonitor(i);
-      if (r.contains(x, y)) {
-        return Screen.getScreen(i);
-      }
-    }
-    log.error("Location: outside any screen (%s, %s) - subsequent actions might not work as expected", x, y);
-    return null;
+  public String toStringPlus() {
+    return " #" + getScreen().getID();
   }
 
   public Location(int x, int y) {
     this.x = x;
     this.y = y;
+    initScreen(null);
+  }
+
+  public Location(Element element) {
+    x = element.x;
+    y = element.y;
+    initScreen(null);
   }
 
 }

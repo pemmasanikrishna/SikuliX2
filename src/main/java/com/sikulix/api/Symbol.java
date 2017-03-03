@@ -12,24 +12,24 @@ import java.awt.Color;
 public class Symbol extends Element {
 
   private static eType eClazz = eType.SYMBOL;
+  public eType getType() {
+    return eClazz;
+  }
+  public String getTypeFirstLetter() {
+    return "Y";
+  }
+
+
+
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
   //<editor-fold desc="*** construction">
-  protected void setClazz() {
-    clazz = eClazz;
-  }
-
-  protected void copy(Element elem) {
-    super.copy(elem);
+  private void copyPlus(Element elem) {
+    copy(elem);
     if (elem.hasContent()) {
       setContent(elem.getContent().clone());
     }
-    setName(elem.getName());
     setComponent(elem.getComponent());
-  }
-
-  protected void initAfter() {
-    initName(eClazz);
   }
 
   public boolean isActive() {
@@ -44,7 +44,6 @@ public class Symbol extends Element {
   }
 
   public Symbol(Element element) {
-    super.copy(element);
     copy(element);
   }
 
@@ -68,13 +67,9 @@ public class Symbol extends Element {
     return new Symbol(w, h).setComponent(Component.CIRCLE).setName();
   }
 
-  public Symbol setName(String name) {
-    super.setName(name);
-    return this;
-  }
-
   public Symbol setName() {
-    return setName(getComponent().toString());
+     setName(getComponent().toString());
+     return this;
   }
 
   @Override
@@ -115,11 +110,6 @@ public class Symbol extends Element {
   public Symbol setLine(int line) {
     this.line = line;
     return this;
-  }
-
-  @Override
-  public Element getTarget() {
-    return target;
   }
 
   @Override

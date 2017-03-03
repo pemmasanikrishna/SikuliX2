@@ -18,7 +18,6 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.*;
 import java.io.*;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
@@ -860,7 +859,7 @@ public class Do {
    */
   public static void showMonitors() {
     log.p("*** monitor configuration [ %s Screen(s)] ***", Do.getDevice().getNumberOfMonitors());
-    log.p("*** Primary is Screen %d", Do.getDevice().getMainMonitorID());
+    log.p("*** Primary is Screen %d", Do.getDevice().getMonitorID());
     for (int i = 0; i < Do.getDevice().getNumberOfMonitors(); i++) {
       log.p("Screen %d: %s", i, new Element(Do.getDevice().getMonitor(i)));
     }
@@ -945,12 +944,12 @@ public class Do {
   }
 
   public static Picture capture() {
-    return capture(defaultElement);
+    return capture(getDefaultElement());
   }
 
   public static Picture capture(Element elem) {
     if (SX.isNull(elem)) {
-      elem = defaultElement;
+      elem = getDefaultElement();
     }
     return elem.capture();
   }

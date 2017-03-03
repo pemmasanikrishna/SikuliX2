@@ -11,6 +11,7 @@ import com.sikulix.api.Picture;
 import com.sikulix.util.animation.Animator;
 import com.sikulix.util.animation.AnimatorOutQuarticEase;
 import com.sikulix.util.animation.AnimatorTimeBased;
+import org.sikuli.script.Screen;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -25,7 +26,7 @@ public class LocalDevice extends IDevice {
   //<editor-fold desc="*** houskeeping ***">
   @Override
   public LocalDevice start(Object... args) {
-    if (0 < getMonitors()) {
+    if (0 < initMonitors()) {
       try {
         robot = new LocalRobot();
       } catch (AWTException e) {
@@ -492,10 +493,10 @@ public class LocalDevice extends IDevice {
   private int nMonitors = 0;
 
   public void resetMonitors() {
-    getMonitors();
+    initMonitors();
   }
 
-  private int getMonitors() {
+  private int initMonitors() {
     if (!SX.isHeadless()) {
       genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
       gdevs = genv.getScreenDevices();
@@ -551,12 +552,35 @@ public class LocalDevice extends IDevice {
     return monitorBounds[mainMonitor];
   }
 
-  public int getMainMonitorID() {
+  public int getMonitorID() {
     return mainMonitor;
   }
 
   public Rectangle getAllMonitors() {
     return rAllMonitors;
+  }
+
+  public Rectangle[] getMonitors() {
+    return monitorBounds;
+  }
+
+  private int getContainingMonitorID(Element element) {
+    int n = 0;
+    for (Rectangle monitor : getMonitors()) {
+      if (monitor.contains(element.x, element.y)) {
+        return n;
+      }
+      n++;
+    }
+    return mainMonitor;
+  }
+
+  public Element getContainingMonitor(Element element) {
+    return new Element(monitorBounds[getContainingMonitorID(element)]);
+  }
+
+  public Screen getContainingScreen(Element element) {
+    return new Screen(getContainingMonitorID(element));
   }
 
   public GraphicsDevice getGraphicsDevice(int id) {

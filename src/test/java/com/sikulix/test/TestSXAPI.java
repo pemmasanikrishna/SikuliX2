@@ -10,6 +10,8 @@ import com.sikulix.core.*;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
+import org.sikuli.script.Location;
+import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
 import java.awt.*;
@@ -274,26 +276,26 @@ public class TestSXAPI {
     currentTest = "test_030_elementConstructors";
     Element elem = new Element();
     result = "Element();";
-    assert SXElement.eType.ELEMENT.equals(elem.getType());
+    assert Element.eType.ELEMENT.equals(elem.getType());
     Picture img = new Picture();
     result += " Picture();";
-    assert SXElement.eType.PICTURE.equals(img.getType());
+    assert Element.eType.PICTURE.equals(img.getType());
     Target tgt = new Target();
     result += " Target();";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
+    assert Element.eType.TARGET.equals(tgt.getType());
     tgt = new Target(img);
     result += " Target(image);";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
+    assert Element.eType.TARGET.equals(tgt.getType());
     tgt = new Target(tgt);
     result += " Target(target);";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
+    assert Element.eType.TARGET.equals(tgt.getType());
     Mat aMat = tgt.getContent();
     tgt = new Target(aMat);
     result += " Target(mat);";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
+    assert Element.eType.TARGET.equals(tgt.getType());
     tgt = new Target(img, 0.95, new Element(2, 3));
     result += " Target(image, 0.95, new Element(2,3));";
-    assert SXElement.eType.TARGET.equals(tgt.getType());
+    assert Element.eType.TARGET.equals(tgt.getType());
   }
 
   @Test
@@ -367,16 +369,16 @@ public class TestSXAPI {
     Picture base = new Picture(imageNameDefault);
     success &= base.isValid();
     Picture img = new Picture(base);
-    Element element = null;
+    Element match = null;
     if (success) {
       base.show();
-      element = Do.find(img, base);
-      success &= element.isMatch() && 0.99 < element.getScore() &&
-              0 == element.x && 0 == element.y &&
-              element.w == (int) base.w && element.h == (int) base.h;
+      match = Do.find(img, base);
+      success &= match.isMatch() && 0.99 < match.getScore() &&
+              0 == match.x && 0 == match.y &&
+              match.w == (int) base.w && match.h == (int) base.h;
     }
     if (success) {
-      result = element.toString();
+      result = match.toString();
       base.showMatch();
     }
     result = end() + result;
@@ -456,7 +458,7 @@ public class TestSXAPI {
       return;
     }
     start();
-    elemDisplayed.grow(20);
+    elemDisplayed = elemDisplayed.grow(20);
     Picture img = Do.capture(elemDisplayed);
     result = end() + img.toString();
     Do.wait(1.0);
@@ -556,7 +558,7 @@ public class TestSXAPI {
       return;
     }
     start();
-    elemDisplayed.grow(20);
+    elemDisplayed = elemDisplayed.grow(20);
     elemDisplayed.load();
     result = end() + elemDisplayed.toString();
     theShow.stop();
@@ -814,22 +816,39 @@ public class TestSXAPI {
   }
 
   @Test
-  public void test_300_oldAPI_Screen() {
-    currentTest = "test_300_oldAPI_Screen";
+  public void test_300_oldAPI_Basic() {
+    currentTest = "test_300_oldAPI_Basic";
     Screen.showMonitors();
     Screen scr = new Screen();
     assert scr.getID() == 0;
     assert SX.isRectangleEqual(scr, Do.on().getRectangle());
+    scr.hover();
+    Location center = scr.getCenter();
+    assert Do.isMouseposition(hook, center.x, center.y);
+    Element grow = center.grow(scr.w / 3, scr.h / 3);
+    grow.show(3);
     result = "Screen basics: " + scr.toString();
     if (Do.getDevice().getNumberOfMonitors() > 1) {
       scr = new Screen(1);
-      Element elem = scr.getElement();
-      elem = elem.hover();
-      assert Do.isMouseposition(hook, elem.x, elem.y);
-      elem.grow((int) (scr.w / 3), (int) (scr.h / 3));
-      elem.show(3);
+      scr.hover();
+      center = scr.getCenter();
+      assert Do.isMouseposition(hook, center.x, center.y);
+      grow = center.grow(scr.w / 3, scr.h / 3);
+      grow.show(3);
       result += " with second monitor";
     }
+  }
+
+  @Test
+  public void test_300_oldAPI_Region() {
+    currentTest = "test_300_oldAPI_Region";
+    result = "old API: Region";
+    Region region = new Region(100, 100, 100, 100);
+    assert region.isValid() && region instanceof Region : "new Region(100, 100, 100, 100)";
+    region = Region.create(100, 100, 100, 100);
+    assert region.isValid() && region instanceof Region : "Region.create(100, 100, 100, 100)";
+    region = Region.create(-200, -200, 100, 100);
+    assert !region.isValid() && region instanceof Region : "Region.create(-200, -200, 100, 100)";
   }
   //</editor-fold>
 

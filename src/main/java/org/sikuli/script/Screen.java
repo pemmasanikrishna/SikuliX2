@@ -5,50 +5,64 @@
 package org.sikuli.script;
 
 import com.sikulix.api.Do;
+import com.sikulix.api.Element;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Screen extends Region implements IScreen {
-  private static SXLog log = SX.getLogger("SX.SCREEN");
+public class Screen extends Region {
+  private static SXLog log = SX.getLogger("API.SCREEN");
+
+  private static eType eClazz = eType.SCREEN;
+  public eType getType() {
+    return eClazz;
+  }
 
   private int id = -1;
-  private int curID = -1;
 
   public int getID() {
     return id;
   }
 
   public Screen() {
-    init(Do.getDevice().getMonitor());
+    initRegion(Do.getDevice().getMonitor());
     id = 0;
   }
 
   public Screen(int id) {
-    init(Do.getDevice().getMonitor(id));
+    initRegion(Do.getDevice().getMonitor(id));
     this.id = id;
   }
 
-  public String toString() {
-    return String.format("Screen(%d,%d %dx%d #%d)", x, y, w, h, id);
+  public Screen(Element elem) {
+    initRegion(elem.getRectangle().x, elem.getRectangle().y,
+            elem.getRectangle().width, elem.getRectangle().height);
   }
 
-  public IScreen getScreen() {
+  public Screen getScreen() {
     return this;
   }
 
-  private static List<IScreen> screens = new ArrayList<>();
+  public static Screen getPrimaryScreen() {
+    return Screen.getScreen(Do.getDevice().getMonitorID());
+  }
 
-  public static IScreen getScreen(int num) {
-    int numScreens = Do.getDevice().getNumberOfMonitors();
-    if (screens.size() == 0) {
-      for (int i = 0; i < numScreens; i++) {
-        screens.add(new Screen(i));
+  private static List<Screen> screens = new ArrayList<>();
+
+  public static Screen getScreen(int num) {
+    if (screens.isEmpty()) {
+      for (Rectangle monitor : Do.getDevice().getMonitors()) {
+        screens.add(new Screen(new Element(monitor)));
       }
     }
-    return (num >= 0 && num <= numScreens ? screens.get(num) : screens.get(0));
+    if (num > -1 && num < screens.size()) {
+      return screens.get(num);
+    } else {
+      return screens.get(Do.getDevice().getMonitorID());
+    }
   }
 
   public String toStringPlus() {
@@ -60,7 +74,7 @@ public class Screen extends Region implements IScreen {
    */
   public static void showMonitors() {
     log.p("*** monitor configuration [ %s Screen(s)] ***", Do.getDevice().getNumberOfMonitors());
-    log.p("*** Primary is Screen %d", Do.getDevice().getMainMonitorID());
+    log.p("*** Primary is Screen %d", Do.getDevice().getMonitorID());
     for (int i = 0; i < Do.getDevice().getNumberOfMonitors(); i++) {
       log.p("%d: %s", i, getScreen(i));
     }

@@ -13,22 +13,14 @@ import java.awt.image.BufferedImage;
 public class Target extends Picture {
 
   private static eType eClazz = eType.TARGET;
+  public eType getType() {
+    return eClazz;
+  }
+
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
   //<editor-fold desc="***** construct">
   public Target() {
-  }
-
-  protected void setClazz() {
-    clazz = eClazz;
-  }
-
-  protected void copy(Element elem) {
-    super.copy(elem);
-  }
-
-  protected void initAfter() {
-    initName(eClazz);
   }
 
   public Target(BufferedImage bimg) {

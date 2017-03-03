@@ -7,12 +7,13 @@ package com.sikulix.core;
 import org.bridj.BridJ;
 import org.bridj.Pointer;
 import org.bridj.ann.Library;
-import org.sikuli.basics.Debug;
 
 /**
  * Direct access to system functions via JNI, JNA, BridJ, ...
  */
 public class SXJNA {
+
+  private static SXLog log = SX.getLogger("SX.JNA");
   /**
    * Direct access to Windows API kernel32.dll via BridJ
    */
@@ -56,7 +57,7 @@ public class SXJNA {
       Pointer<Character> buffer = Pointer.allocateArray(Character.class, BUFFER_SIZE);
       int result = GetEnvironmentVariableW(Pointer.pointerToWideCString(name), buffer, BUFFER_SIZE);
       if (result == 0) {
-        Debug.error("WinKernel32: getEnvironmentVariable: does not work for: %s", name);
+        log.error("WinKernel32: getEnvironmentVariable: does not work for: %s", name);
         return null;
       }
       return buffer.getWideCString();
@@ -71,7 +72,7 @@ public class SXJNA {
      */
     public static boolean setEnvironmentVariable(String name, String value) {
       if (!SetEnvironmentVariableW(Pointer.pointerToWideCString(name), Pointer.pointerToWideCString(value))) {
-        Debug.error("WinKernel32: setEnvironmentVariable: does not work for: %s = %s", name, value);
+        log.error("WinKernel32: setEnvironmentVariable: does not work for: %s = %s", name, value);
         return false;
       }
       return true;
