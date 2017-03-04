@@ -171,6 +171,9 @@ public class Events {
 
   //<editor-fold desc="EventLoop">
   private static void waitForEventLoopToFinish() {
+    if (SX.isNull(get().eventLoop)) {
+      return;
+    }
     log.trace("waitForEventLoopToFinish: start");
     while (get().eventLoop.isLooping()) {
       SX.pause(0.5);

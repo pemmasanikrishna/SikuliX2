@@ -1123,7 +1123,7 @@ public class Element implements Comparable<Element> {
     //TODO implement fakeHighlight
   }
 
-  private Color lineColor = Story.getLineColor();
+  private Color lineColor = Story.defaultlineColor;
 
   public Color getLineColor() {
     return lineColor;

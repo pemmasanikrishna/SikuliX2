@@ -1120,6 +1120,10 @@ public class Do {
     getDefaultElement().showMatch(times);
   }
 
+  public static void showVanish(int... times) {
+    getDefaultElement().showVanish(times);
+  }
+
   public static void showMatches(int... times) {
     getDefaultElement().showMatches(times);
   }

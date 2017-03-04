@@ -11,7 +11,6 @@ import com.sikulix.core.SXLog;
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
@@ -31,7 +30,7 @@ public class Story {
   private static float darker_factor = 0.85f;
   private static int showTime = (int) SX.getOptionNumber("SXShow.showTime", 2);
 
-  private java.util.List<Element> elements = new ArrayList<>();
+  private java.util.List<ShowElement> elements = new ArrayList<>();
   private java.util.List<Symbol> activeElements = new ArrayList<>();
   private Symbol activeElement = null;
   private boolean shouldClose = false;
@@ -90,55 +89,39 @@ public class Story {
     shouldAddBorder = true;
   }
 
-  private static Color borderColor = Color.green;
+  private static Color defaultBorderColor = Color.green;
+  private Color borderColor = defaultBorderColor;
 
-  public static Color getBorderColor() {
+  public Color getBorderColor() {
     return borderColor;
   }
 
-  public static void setBorderColor(Color borderColor) {
-    Story.borderColor = borderColor;
+  public void setBorderColor(Color borderColor) {
+    this.borderColor = borderColor;
   }
 
-  private static int borderThickness = 6;
+  private static int defaultBorderThickness = 6;
+  private int borderThickness = defaultBorderThickness;
 
-  public static int getBorderThickness() {
+  public int getBorderThickness() {
     return borderThickness;
   }
 
-  public static void setBorderThickness(int borderThickness) {
-    Story.borderThickness = borderThickness;
+  public void setBorderThickness(int borderThickness) {
+    this.borderThickness = borderThickness;
   }
 
-  private static Color lineColor = Color.red;
+  protected static Color defaultlineColor = Color.red;
+  private static int defaultLineThickness = 3;
 
-  public static Color getLineColor() {
-    return lineColor;
-  }
+  private Color labelColor = new Color(200, 200, 200);
 
-  public static void setLineColor(Color lineColor) {
-    Story.lineColor = lineColor;
-  }
-
-  private int lineThickness = 3;
-  private static int defaultlineThickness = 3;
-
-  public int getLineThickness() {
-    return lineThickness;
-  }
-
-  public void setLineThickness(int lineThickness) {
-    this.lineThickness = lineThickness;
-  }
-
-  private static Color labelColor = new Color(200, 200, 200);
-
-  public static Color getLabelColor() {
+  public Color getLabelColor() {
     return labelColor;
   }
 
-  public static void setLabelColor(Color labelColor) {
-    Story.labelColor = labelColor;
+  public void setLabelColor(Color labelColor) {
+    this.labelColor = labelColor;
   }
 
   int pauseAfter = 0;
@@ -296,7 +279,7 @@ public class Story {
           super.paintComponent(g);
           Graphics2D g2d = (Graphics2D) g.create();
           Graphics2D bg = (Graphics2D) storyImg.getGraphics().create();
-          for (Element element : elements) {
+          for (ShowElement element : elements) {
             drawElement(bg, storyBackground, element);
           }
           if (withBorder) {
@@ -355,7 +338,8 @@ public class Story {
       return new Element(frame.getLocation().x, frame.getLocation().y, frame.getWidth(), frame.getHeight());
     }
 
-    private void drawElement(Graphics2D g2d, Element currentBase, Element elem) {
+    private void drawElement(Graphics2D g2d, Element currentBase, ShowElement showElement) {
+      Element elem = showElement.getWhat();
       if (elem.isSymbol()) {
         Symbol symbol = (Symbol) elem;
         if (symbol.isRectangle() || symbol.isCircle() || symbol.isButton()) {
@@ -514,13 +498,13 @@ public class Story {
 
   public Story add(Element elem) {
     if (elem.isSymbol()) {
-      elements.add(elem);
+      elements.add(new ShowElement(elem));
       if (((Symbol) elem).isActive()) {
         activeElements.add((Symbol) elem);
       }
       return this;
     }
-    return add(elem, SX.isNull(elem.getLineColor()) ? lineColor : elem.getLineColor());
+    return add(elem, SX.isNull(elem.getLineColor()) ? defaultlineColor : elem.getLineColor());
   }
 
   public Story add(Element elem, Color lineColor) {
@@ -528,8 +512,41 @@ public class Story {
     element.setScore(elem.getScore());
     element.setLineColor(lineColor);
     element.setShowTime(elem.getShowTime() > 0 ? elem.getShowTime() : showTime);
-    elements.add(elem);
+    elements.add(new ShowElement(elem));
     return this;
+  }
+
+  private class ShowElement {
+    Element what = null;
+    Element where = null;
+
+    public ShowElement(Element what) {
+      this.what = what;
+    }
+
+    public Element getWhat() { return what; }
+
+    //<editor-fold desc="housekeeping">
+    private Color lineColor = defaultlineColor;
+
+    public Color getLineColor() {
+      return lineColor;
+    }
+
+    public void setLineColor(Color lineColor) {
+      this.lineColor = lineColor;
+    }
+
+    private int lineThickness = defaultLineThickness;
+
+    public int getLineThickness() {
+      return lineThickness;
+    }
+
+    public void setLineThickness(int lineThickness) {
+      this.lineThickness = lineThickness;
+    }
+    //</editor-fold>
   }
   //</editor-fold>
 }

@@ -120,9 +120,14 @@ public class TestSXAPI {
     }
     Picture.clearPath();
     resetDefaultScreen();
+    Events.waitUntilFinished();
     Events.reset();
     if (SX.isSetSXLOCALDEVICE()) {
       Do.on().removeEvents();
+    }
+    if (SX.isNotNull(theShow)) {
+      theShow.stop();
+      theShow.waitForEnd();
     }
     SX.setOption("Settings.MoveMouseDelay", "0.5");
     log.info("!%2d: result: %s: %s ", nTest++, currentTest, result);
@@ -462,8 +467,6 @@ public class TestSXAPI {
     Picture img = Do.capture(elemDisplayed);
     result = end() + img.toString();
     Do.wait(1.0);
-    theShow.stop();
-    Do.wait(1.0);
     if (img.hasContent()) {
       img.show();
       return;
@@ -479,7 +482,6 @@ public class TestSXAPI {
       return;
     }
     match = Do.find(img);
-    theShow.waitForEnd();
     result = end() + match.toString();
     assert match.isValid();
     Do.on().showMatch(2);
@@ -495,12 +497,11 @@ public class TestSXAPI {
     int expected = (int) (base.w / 200) * (int) (base.h / 200);
     Do.wait(1.0);
     matches = Do.findAll(img);
-    theShow.stop();
     assert matches.size() == expected;
     result = String.format("#%d in (%dx%d) %% %.2f +- %.4f]", matches.size(),
             base.w, base.h, 100 * Do.onMain().getLastScores()[0], 100 * Do.onMain().getLastScores()[2]);
     result = end() + result;
-    Do.on().showMatches();
+    Do.showMatches();
   }
 
   @Test
@@ -515,10 +516,9 @@ public class TestSXAPI {
     int waitTime = (int) SX.getOptionNumber("Settings.AutoWaitTimeout", 3);
     Do.wait(img, waitTime);
     match = Do.getLastMatch();
-    theShow.waitForEnd();
     result = end() + match.toString();
     assert match.isValid();
-    Do.on().showMatch();
+    Do.showMatch();
   }
 
   @Test
@@ -531,10 +531,9 @@ public class TestSXAPI {
     }
     int waitTime = 5; //(int) SX.getOptionNumber("Settings.AutoWaitTimeout", 3);
     boolean vanished = Do.waitVanish(img, waitTime);
-    theShow.waitForEnd();
     result = end() + "vanished: " + vanished + " " + Do.onMain().getLastVanish();
     assert vanished && Do.onMain().hasVanish() && !Do.onMain().hasMatch();
-    Do.on().showVanish();
+    Do.showVanish();
   }
 
   @Test
@@ -547,7 +546,7 @@ public class TestSXAPI {
     boolean isThere = Do.exists(img);
     result = end() + "exists: " + Do.getLastMatch().toString();
     assert isThere;
-    Do.on().showMatch();
+    Do.showMatch();
   }
 
   @Test
@@ -561,7 +560,6 @@ public class TestSXAPI {
     elemDisplayed = elemDisplayed.grow(20);
     elemDisplayed.load();
     result = end() + elemDisplayed.toString();
-    theShow.stop();
     if (elemDisplayed.hasContent()) {
       elemDisplayed.show();
       elemDisplayed.save("test_057_saveCapturePartOfDefaultScreen");
@@ -655,8 +653,6 @@ public class TestSXAPI {
       }
     });
     where.observe();
-    Events.waitUntilFinished();
-    theShow.stop();
   }
 
   @Test
@@ -676,8 +672,6 @@ public class TestSXAPI {
       }
     });
     where.observe();
-    Events.waitUntilFinished();
-    theShow.waitForEnd();
   }
 
   @Test
@@ -858,13 +852,11 @@ public class TestSXAPI {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    log.startTimer();
+    //log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        Element element = new Element(100, 100, 300, 300);
-        element.show();
         result = "nothing to do here";
 //end
       } else {
