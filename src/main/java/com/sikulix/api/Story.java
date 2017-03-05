@@ -20,14 +20,14 @@ public class Story {
 
   static SXLog log;
 
-  private static Font myFont;
+  public static Font myFont;
 
   static {
     log = SX.getLogger("SX.STORY");
     log.isSX();
     log.on(SXLog.INFO);
     myFont = new Font(Font.DIALOG, Font.BOLD, 16);
-    BufferedImage bImg= new BufferedImage(1, 1, BufferedImage.TYPE_3BYTE_BGR);
+    BufferedImage bImg = new BufferedImage(1, 1, BufferedImage.TYPE_3BYTE_BGR);
     Graphics2D gImg = (Graphics2D) bImg.getGraphics().create();
     myFont.getLineMetrics("", gImg.getFontRenderContext());
   }
@@ -394,7 +394,7 @@ public class Story {
               g2d.fillRoundRect(topLeft.x, topLeft.y, symbol.w, symbol.h, corner, corner);
             }
             drawRect(ROUNDED, g2d, topLeft.x, topLeft.y, symbol.w, symbol.h, stroke, symbol.getColor());
-          } else if(symbol.isRectangle()) {
+          } else if (symbol.isRectangle()) {
             drawRect(INSIDE, g2d, topLeft.x, topLeft.y, symbol.w, symbol.h, stroke, symbol.getColor());
             if (SX.isNotNull(symbol.getFillColor())) {
               g2d.setColor(symbol.getFillColor());
@@ -404,8 +404,8 @@ public class Story {
           } else if (symbol.isCircle()) {
             g2d.setStroke(new BasicStroke(stroke));
             g2d.setColor(symbol.getColor());
-            g2d.drawArc(topLeft.x + stroke/2, topLeft.y + stroke/2,
-                    symbol.w - stroke, symbol.h -stroke, 0, 360);
+            g2d.drawArc(topLeft.x + stroke / 2, topLeft.y + stroke / 2,
+                    symbol.w - stroke, symbol.h - stroke, 0, 360);
             if (SX.isNotNull(symbol.getFillColor())) {
               g2d.setColor(symbol.getFillColor());
               g2d.fillArc(topLeft.x + stroke, topLeft.y + stroke,
@@ -450,14 +450,14 @@ public class Story {
       int margin = -stroke;
       if (type == AROUND) {
         stroke = ((stroke + 1) / 2) * 2;
-        offset = -stroke/2;
+        offset = -stroke / 2;
         margin = stroke;
       }
       g2d.setStroke(new BasicStroke(stroke));
       if (type == ROUNDED) {
-        g2d.drawRoundRect(x + offset, y + offset,w + margin, h + margin, corner, corner);
+        g2d.drawRoundRect(x + offset, y + offset, w + margin, h + margin, corner, corner);
       } else {
-        g2d.drawRect(x + offset, y + offset,w + margin, h + margin);
+        g2d.drawRect(x + offset, y + offset, w + margin, h + margin);
       }
     }
     //</editor-fold>
@@ -573,57 +573,46 @@ public class Story {
     return this;
   }
 
-  private class ShowElement {
-    Element what = null;
-    Element where = null;
+  public static void testTransparency() {
+    LocalDevice device = (LocalDevice) Do.getLocalDevice();
+    GraphicsDevice gd = device.getGraphicsDevice(0);
+    boolean hasTransparency = gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.PERPIXEL_TRANSLUCENT);
+//        hasTransparency = gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.PERPIXEL_TRANSPARENT);
+//        hasTransparency = gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.TRANSLUCENT);
+    if (hasTransparency) {
+      JFrame frame = new JFrame();
+      frame.setUndecorated(true);
+      frame.setBackground(new Color(0, 0, 0, 0.1f));
 
-    public ShowElement(Element what, Element where) {
-      this.what = what;
-      this.where = where;
+      Container contentPane = frame.getContentPane();
+      contentPane.setLayout(new OverlayLayout(contentPane));
+
+      JLabel label = new JLabel("TRANSPARENCY");
+      label.setOpaque(false);
+      label.setAlignmentX(0.5f);
+      label.setAlignmentY(0.5f);
+      Font font = Story.myFont;
+      label.setFont(font.deriveFont(Font.PLAIN, 72f));
+      label.setForeground(Color.WHITE);
+      label.setBackground(Color.RED);
+      label.setOpaque(true);
+      contentPane.add(label);
+
+      Dimension fSize = new Dimension(800, 500);
+      Element where = new Element(fSize).getCentered();
+      frame.setLocation(where.x, where.y);
+      frame.setPreferredSize(fSize);
+      frame.pack();
+      frame.setVisible(true);
+      Do.wait(1.0);
+      int n = 3;
+      while(n > 0) {
+        label.setVisible(false);
+        Do.wait(0.3);
+        label.setVisible(true);
+        Do.wait(0.3);
+        n--;
+      }
     }
-
-    public ShowElement(Element what, Element where, Color lineColor, int lineThickness) {
-      this.what = what;
-      this.where = where;
-      this.lineColor = lineColor;
-      this.lineThickness = lineThickness;
-      score = what.getScore();
-    }
-
-    public Element getWhat() {
-      return what;
-    }
-
-    public Element getWhere() {
-      return where;
-    }
-
-    public double getScore() {
-      return score;
-    }
-
-    //<editor-fold desc="housekeeping">
-    private double score = 0;
-
-    private Color lineColor = defaultlineColor;
-
-    public Color getLineColor() {
-      return lineColor;
-    }
-
-    public void setLineColor(Color lineColor) {
-      this.lineColor = lineColor;
-    }
-
-    private int lineThickness = defaultLineThickness;
-
-    public int getLineThickness() {
-      return lineThickness;
-    }
-
-    public void setLineThickness(int lineThickness) {
-      this.lineThickness = lineThickness;
-    }
-    //</editor-fold>
   }
 }
