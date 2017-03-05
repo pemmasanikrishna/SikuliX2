@@ -20,37 +20,65 @@ public class Story {
 
   static SXLog log;
 
+  private static Font myFont;
+
   static {
     log = SX.getLogger("SX.STORY");
     log.isSX();
     log.on(SXLog.INFO);
+    myFont = new Font(Font.DIALOG, Font.BOLD, 16);
+    BufferedImage bImg= new BufferedImage(1, 1, BufferedImage.TYPE_3BYTE_BGR);
+    Graphics2D gImg = (Graphics2D) bImg.getGraphics().create();
+    myFont.getLineMetrics("", gImg.getFontRenderContext());
   }
 
   //<editor-fold desc="housekeeping">
   private static float darker_factor = 0.85f;
   private static int showTime = (int) SX.getOptionNumber("SXShow.showTime", 2);
 
-  private java.util.List<ShowElement> elements = new ArrayList<>();
+  private java.util.List<Element> elements = new ArrayList<>();
+  private java.util.Map<Element, Object[]> options = new HashMap<>();
   private java.util.List<Symbol> activeElements = new ArrayList<>();
   private Symbol activeElement = null;
-  private boolean shouldClose = false;
   private boolean canDrag = false;
   private boolean isDragging = false;
   private Element dragStart = null;
-  private Element lastDrag = null;
   private Element currentDrag = null;
   private Element storyTopLeft = null;
   private LocalDevice localDevice;
+  private int onMonitor = -1;
+  private boolean isFullScreenCapture = false;
 
   private Element storyBackground = new Element();
   private BufferedImage storyImg = null;
+  private BufferedImage showImg = null;
 
   public Story() {
-    this(Do.on());
+    log.terminate(1, "transparent story: not implemented");
+  }
+
+  public Story(int monitor, int... times) {
+    init(monitor, null, times);
   }
 
   public Story(Element background, int... times) {
-    storyBackground = background;
+    init(-1, background, times);
+  }
+
+  public Story(int monitor, Element background, int... times) {
+    init(monitor, background, times);
+  }
+
+  private void init(int monitor, Element background, int... times) {
+    if (SX.isNull(background)) {
+      storyBackground = new Element(Do.getLocalDevice().getMonitor(monitor));
+      onMonitor = storyBackground.getDevice().getContainingMonitorID(storyBackground);
+    } else {
+      if (monitor > -1) {
+        onMonitor = Do.getLocalDevice().getMonitorID(monitor);
+      }
+      storyBackground = background;
+    }
     if (times.length > 0) {
       pauseAfter = times[0];
     }
@@ -59,25 +87,30 @@ public class Story {
     }
     waitForFrame = 0;
     String contentLoaded = "with content";
+    storyTopLeft = storyBackground.getCentered();
     if (storyBackground.isSymbol()) {
-      storyImg = plainBackground(storyBackground);
-      storyTopLeft = storyBackground.getCentered(borderThickness);
       add(storyBackground);
       canDrag = true;
-      //addBorder();
-    } else if (storyBackground.hasContent()) {
-      storyImg = storyBackground.get();
     } else {
-      storyImg = storyBackground.capture().get();
-      contentLoaded = "captured";
+      if (storyBackground.hasContent()) {
+        showImg = storyBackground.get();
+      } else {
+        showImg = storyBackground.capture().get();
+        contentLoaded = "captured";
+      }
+      Element screen = new Element(Do.getLocalDevice().getMonitor(monitor));
+      if (!storyBackground.equals(screen)) {
+        withBorder = true;
+      }
     }
-    localDevice = new LocalDevice().start();
+    storyImg = plainBackground(storyBackground);
+    localDevice = (LocalDevice) Do.getLocalDevice();
     log.trace("init: %s: %s", contentLoaded, storyBackground);
   }
   //</editor-fold>
 
   //<editor-fold desc="attributes">
-  private boolean withBorder = true;
+  private boolean withBorder = false;
 
   public void setBorder() {
     withBorder = true;
@@ -102,6 +135,9 @@ public class Story {
 
   private static int defaultBorderThickness = 6;
   private int borderThickness = defaultBorderThickness;
+  private int margin = 0;
+  private int corner = 20;
+
 
   public int getBorderThickness() {
     return borderThickness;
@@ -112,7 +148,7 @@ public class Story {
   }
 
   protected static Color defaultlineColor = Color.red;
-  private static int defaultLineThickness = 3;
+  protected static int defaultLineThickness = 3;
 
   private Color labelColor = new Color(200, 200, 200);
 
@@ -123,6 +159,8 @@ public class Story {
   public void setLabelColor(Color labelColor) {
     this.labelColor = labelColor;
   }
+
+  protected static int defaultShowTime = (int) SX.getOptionNumber("SXShow.showTime", 3);
 
   int pauseAfter = 0;
   int pauseBefore = 0;
@@ -183,7 +221,7 @@ public class Story {
   private class ShowIt implements Runnable {
     public boolean running = false;
     private JFrame frame = new JFrame();
-    private int storyWidth, storyHeight;
+    private int storyW, storyH;
     private int waitBefore = 0;
 
     public ShowIt() {
@@ -194,7 +232,7 @@ public class Story {
     }
 
     private String logStoryFrame() {
-      return String.format("[%d,%d %dx%d]", storyTopLeft.x, storyTopLeft.y, storyWidth, storyHeight);
+      return String.format("[%d,%d %dx%d]", storyTopLeft.x, storyTopLeft.y, storyW, storyH);
     }
 
     @Override
@@ -253,15 +291,11 @@ public class Story {
           String dragState = "continue";
           if (!isDragging) {
             isDragging = true;
-            lastDrag = dragStart;
             dragState = "start";
           }
           currentDrag = localDevice.at();
           storyTopLeft.x = currentDrag.x - dragStart.x;
           storyTopLeft.y = currentDrag.y - dragStart.y;
-//          currentDrag = new Element(e.getPoint());
-//          storyTopLeft.x += (currentDrag.x - dragStart.x);
-//          storyTopLeft.y += (currentDrag.y - dragStart.y);
           frame.setLocation(storyTopLeft.x, storyTopLeft.y);
           frame.repaint();
           log.trace("%s dragging at (%d,%d) story: %s", dragState, currentDrag.x, currentDrag.y, logStoryFrame());
@@ -273,46 +307,46 @@ public class Story {
         }
       });
 
+      //<editor-fold desc="panel">
       JPanel panel = new JPanel() {
         @Override
         public void paintComponent(Graphics g) {
           super.paintComponent(g);
-          Graphics2D g2d = (Graphics2D) g.create();
-          Graphics2D bg = (Graphics2D) storyImg.getGraphics().create();
-          for (ShowElement element : elements) {
-            drawElement(bg, storyBackground, element);
+          Graphics2D gPanel = (Graphics2D) g.create();
+          Graphics2D gStory = (Graphics2D) storyImg.getGraphics().create();
+          if (SX.isNotNull(showImg)) {
+            if (withBorder) {
+              gStory.drawImage(showImg, borderThickness, borderThickness, null);
+            } else {
+              gStory.drawImage(showImg, 0, 0, null);
+            }
           }
           if (withBorder) {
-            drawBorderInside(g2d, 0, 0, storyBackground.w, storyBackground.h, borderThickness, borderColor);
-            g2d.drawImage(storyImg, borderThickness, borderThickness, null);
-          } else {
-            g2d.drawImage(storyImg, 0, 0, null);
+            drawRect(INSIDE, gStory, 0, 0, storyW, storyH, borderThickness, borderColor);
           }
-          g2d.dispose();
+          for (Element element : elements) {
+            drawElement(gStory, storyBackground, element);
+          }
+          gPanel.drawImage(storyImg, 0, 0, null);
+          gPanel.dispose();
         }
       };
-      boolean hasBorder = withBorder || shouldAddBorder;
-      Element location = new Element();
-      Element onElement = Do.on();
-      panel.setPreferredSize(new Dimension(storyBackground.w + borderThickness * 2,
-              storyBackground.h + borderThickness * 2));
-      if (panel.getPreferredSize().getWidth() < onElement.w &&
-              panel.getPreferredSize().getHeight() < onElement.h) {
-        location = storyBackground.getCentered(onElement, new Element(-borderThickness));
-      } else {
-        panel.setPreferredSize(new Dimension(storyBackground.w, storyBackground.h));
-        withBorder = false;
+      //</editor-fold>
+
+      Element onElement = new Element(Do.getDevice().getMonitor(onMonitor));
+      if (withBorder || shouldAddBorder) {
+        margin = borderThickness;
       }
+      storyW = storyBackground.w + margin * 2;
+      storyH = storyBackground.h + margin * 2;
+      Dimension panelSize = new Dimension(storyW, storyH);
+      panel.setPreferredSize(panelSize);
+      Element location = new Element(panelSize).getCentered(onElement);
       Container contentPane = frame.getContentPane();
       contentPane.setLayout(new OverlayLayout(contentPane));
       contentPane.add(panel);
-      JLabel ovl = new JLabel();
-      ovl.setPreferredSize(new Dimension(1, 1));
-      contentPane.add(ovl);
       frame.pack();
       frame.setLocation(location.x, location.y);
-      storyWidth = (int) panel.getPreferredSize().getWidth();
-      storyHeight = (int) panel.getPreferredSize().getHeight();
       if (waitBefore > 0) {
         new Thread(new ShowWaitBefore(frame, waitBefore)).start();
       } else {
@@ -338,90 +372,93 @@ public class Story {
       return new Element(frame.getLocation().x, frame.getLocation().y, frame.getWidth(), frame.getHeight());
     }
 
-    private void drawElement(Graphics2D g2d, Element currentBase, ShowElement showElement) {
-      Element elem = showElement.getWhat();
-      if (elem.isSymbol()) {
-        Symbol symbol = (Symbol) elem;
+    private void drawElement(Graphics2D g2d, Element currentBase, Element what) {
+      Element topLeft;
+      Element where = null;
+      Object[] whatOptions = options.get(what);
+      if (SX.isNotNull(whatOptions)) {
+        where = (Element) whatOptions[0];
+      }
+      if (what.isSymbol()) {
+        Symbol symbol = (Symbol) what;
         if (symbol.isRectangle() || symbol.isCircle() || symbol.isButton()) {
-          g2d.setColor(symbol.getColor());
+          if (SX.isNull(where)) {
+            topLeft = what.getCentered(currentBase);
+          } else {
+            topLeft = where;
+          }
           int stroke = symbol.getLine();
-          g2d.setStroke(new BasicStroke(stroke));
-          Element topLeft = new Element(symbol.x, symbol.y);
-          if (topLeft.x < 0 || topLeft.y < 0) {
-            topLeft = symbol.getCentered(currentBase);
-          }
-          if (SX.isNotNull(symbol.getOver())) {
-            topLeft = symbol.getCentered(symbol.getOver());
-          }
-          if (symbol.isRectangle() || symbol.isButton()) {
-            g2d.drawRect(topLeft.x, topLeft.y, symbol.w, symbol.h);
+          if (symbol.isButton()) {
             if (SX.isNotNull(symbol.getFillColor())) {
               g2d.setColor(symbol.getFillColor());
-              g2d.fillRect(topLeft.x + stroke / 2, topLeft.y + stroke / 2,
-                      symbol.w - 2 * (stroke / 2), symbol.h - 2 * (stroke / 2));
+              g2d.fillRoundRect(topLeft.x, topLeft.y, symbol.w, symbol.h, corner, corner);
+            }
+            drawRect(ROUNDED, g2d, topLeft.x, topLeft.y, symbol.w, symbol.h, stroke, symbol.getColor());
+          } else if(symbol.isRectangle()) {
+            drawRect(INSIDE, g2d, topLeft.x, topLeft.y, symbol.w, symbol.h, stroke, symbol.getColor());
+            if (SX.isNotNull(symbol.getFillColor())) {
+              g2d.setColor(symbol.getFillColor());
+              g2d.fillRect(topLeft.x + stroke, topLeft.y + stroke,
+                      symbol.w - 2 * (stroke), symbol.h - 2 * (stroke));
             }
           } else if (symbol.isCircle()) {
-            g2d.drawArc(topLeft.x, topLeft.y, symbol.w, symbol.h, 0, 360);
+            g2d.setStroke(new BasicStroke(stroke));
+            g2d.setColor(symbol.getColor());
+            g2d.drawArc(topLeft.x + stroke/2, topLeft.y + stroke/2,
+                    symbol.w - stroke, symbol.h -stroke, 0, 360);
             if (SX.isNotNull(symbol.getFillColor())) {
               g2d.setColor(symbol.getFillColor());
-              g2d.fillArc(topLeft.x + stroke / 2, topLeft.y + stroke / 2,
-                      symbol.w - 2 * (stroke / 2), symbol.h - 2 * (stroke / 2), 0, 360);
+              g2d.fillArc(topLeft.x + stroke, topLeft.y + stroke,
+                      symbol.w - 2 * stroke, symbol.h - 2 * stroke, 0, 360);
             }
           }
           symbol.x = topLeft.x;
           symbol.y = topLeft.y;
         }
       } else {
-        drawBorderAround(g2d, elem.x - currentBase.x, elem.y - currentBase.y, elem.w, elem.h,
-                elem.getHighLightLine(), elem.getLineColor());
-        if (elem.isMatch()) {
-          g2d.setColor(labelColor);
+        int locX = what.x - currentBase.x + margin;
+        int locY = what.y - currentBase.y + margin;
+        if (what.isMatch()) {
           int rectW = 50;
           int rectH = 20;
-          int rectX = elem.x - currentBase.x;
-          int rectY = elem.y - currentBase.y - elem.getHighLightLine() - rectH;
+          int rectX = locX;
+          int rectY = locY - what.getHighLightLine() - rectH;
           if (rectY < 30) {
-            rectY += elem.h + rectH + 3 * elem.getHighLightLine();
+            rectY += what.h + rectH + 3 * what.getHighLightLine();
           }
           int margin = 2;
           int fontSize = rectH - margin * 2;
+          g2d.setColor(labelColor);
           g2d.fillRect(rectX, rectY, rectW, rectH);
           g2d.setColor(Color.black);
-          g2d.setFont(new Font(Font.DIALOG, Font.BOLD, fontSize));
-          double hlScore = elem.isMatch() ? Math.min(elem.getScore(), 0.9999) : 0;
+          g2d.setFont(myFont);
+          double hlScore = what.isMatch() ? Math.min(what.getScore(), 0.9999) : 0;
           g2d.drawString(String.format("%05.2f", 100 * hlScore), rectX + margin, rectY + fontSize);
         }
+        drawRect(AROUND, g2d, locX, locY, what.w, what.h,
+                what.getHighLightLine(), what.getLineColor());
       }
     }
 
-    private int BORDERINSIDE = 0;
-    private int BORDERAROUND = 1;
+    private int INSIDE = 0;
+    private int AROUND = 1;
+    private int ROUNDED = 2;
 
-    private void drawBorderInside(Graphics2D g2d, int x, int y, int w, int h, int thickness, Color color) {
-      drawBorder(BORDERINSIDE, g2d, x, y, w, h, thickness, color);
-    }
-
-    private void drawBorderAround(Graphics2D g2d, int x, int y, int w, int h, int thickness, Color color) {
-      drawBorder(BORDERAROUND, g2d, x, y, w, h, thickness, color);
-    }
-
-    private void drawBorder(int whereBorder, Graphics2D g2d, int x, int y, int w, int h, int thickness, Color color) {
-      if (whereBorder == BORDERINSIDE) {
-        x = 0 + thickness / 2;
-        y = 0 + thickness / 2;
-      }
-      if (whereBorder == BORDERAROUND) {
-        x = x - thickness / 2;
-        y = y - thickness / 2;
-      }
-      w = w + thickness;
-      h = h + thickness;
-      g2d.setStroke(new BasicStroke(thickness));
+    private void drawRect(int type, Graphics2D g2d, int x, int y, int w, int h, int stroke, Color color) {
       g2d.setColor(color);
-      g2d.drawLine(x, y, x + w, y);
-      g2d.drawLine(x + w, y, x + w, y + h);
-      g2d.drawLine(x + w, y + h, x, y + h);
-      g2d.drawLine(x, y + h, x, y);
+      int offset = stroke / 2;
+      int margin = -stroke;
+      if (type == AROUND) {
+        stroke = ((stroke + 1) / 2) * 2;
+        offset = -stroke/2;
+        margin = stroke;
+      }
+      g2d.setStroke(new BasicStroke(stroke));
+      if (type == ROUNDED) {
+        g2d.drawRoundRect(x + offset, y + offset,w + margin, h + margin, corner, corner);
+      } else {
+        g2d.drawRect(x + offset, y + offset,w + margin, h + margin);
+      }
     }
     //</editor-fold>
   }
@@ -475,7 +512,8 @@ public class Story {
 
   //<editor-fold desc="handling">
   private BufferedImage plainBackground(Element elem) {
-    BufferedImage bImg = new BufferedImage(elem.w, elem.h, BufferedImage.TYPE_3BYTE_BGR);
+    int margin = withBorder ? 2 * borderThickness : 0;
+    BufferedImage bImg = new BufferedImage(elem.w + margin, elem.h + margin, BufferedImage.TYPE_3BYTE_BGR);
     Graphics2D graphics = bImg.createGraphics();
     graphics.setPaint(new Color(255, 255, 255));
     graphics.fillRect(0, 0, bImg.getWidth(), bImg.getHeight());
@@ -495,24 +533,43 @@ public class Story {
   public boolean hasClickedSymbol() {
     return SX.isNotNull(activeElement);
   }
+  //</editor-fold>
 
-  public Story add(Element elem) {
-    if (elem.isSymbol()) {
-      elements.add(new ShowElement(elem));
-      if (((Symbol) elem).isActive()) {
-        activeElements.add((Symbol) elem);
-      }
+  public Story add(Object... args) {
+//                (Element elem, Element where, Color lineColor, int lineThickness) {
+    if (args.length == 0) {
       return this;
     }
-    return add(elem, SX.isNull(elem.getLineColor()) ? defaultlineColor : elem.getLineColor());
-  }
-
-  public Story add(Element elem, Color lineColor) {
-    Element element = new Element(elem);
-    element.setScore(elem.getScore());
-    element.setLineColor(lineColor);
-    element.setShowTime(elem.getShowTime() > 0 ? elem.getShowTime() : showTime);
-    elements.add(new ShowElement(elem));
+    if (!(args[0] instanceof Element)) {
+      return this;
+    }
+    int nextOption = 1;
+    Element what = (Element) args[0];
+    Element where = null;
+    if (args.length > 1 && args[1] instanceof Element) {
+      where = (Element) args[1];
+      nextOption = 2;
+    }
+    Color lineColor = null;
+    Integer lineThickness = null;
+    while (args.length > nextOption) {
+      if (args[nextOption] instanceof Color) {
+        lineColor = (Color) args[nextOption];
+      } else if (args[nextOption] instanceof Integer) {
+        lineThickness = (Integer) args[nextOption];
+      }
+      nextOption++;
+    }
+    if (what.isSymbol()) {
+      elements.add(what);
+      options.put(what, new Object[]{where});
+      if (((Symbol) what).isActive()) {
+        activeElements.add((Symbol) what);
+      }
+    } else {
+      elements.add(what);
+      options.put(what, new Object[]{where, lineColor, lineThickness});
+    }
     return this;
   }
 
@@ -520,13 +577,34 @@ public class Story {
     Element what = null;
     Element where = null;
 
-    public ShowElement(Element what) {
+    public ShowElement(Element what, Element where) {
       this.what = what;
+      this.where = where;
     }
 
-    public Element getWhat() { return what; }
+    public ShowElement(Element what, Element where, Color lineColor, int lineThickness) {
+      this.what = what;
+      this.where = where;
+      this.lineColor = lineColor;
+      this.lineThickness = lineThickness;
+      score = what.getScore();
+    }
+
+    public Element getWhat() {
+      return what;
+    }
+
+    public Element getWhere() {
+      return where;
+    }
+
+    public double getScore() {
+      return score;
+    }
 
     //<editor-fold desc="housekeeping">
+    private double score = 0;
+
     private Color lineColor = defaultlineColor;
 
     public Color getLineColor() {
@@ -548,5 +626,4 @@ public class Story {
     }
     //</editor-fold>
   }
-  //</editor-fold>
 }

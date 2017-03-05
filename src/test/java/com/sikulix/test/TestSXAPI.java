@@ -110,7 +110,7 @@ public class TestSXAPI {
       hook = Do.getHook();
       log.info("hook started");
     }
-    button = Symbol.button(188, 68).setColor(Color.red).fill(Color.cyan).setLine(10);
+    button = Symbol.button(200, 80).setColor(Color.gray).fill(Color.lightGray).setLine(4);
   }
 
   @After
@@ -376,7 +376,7 @@ public class TestSXAPI {
     Picture img = new Picture(base);
     Element match = null;
     if (success) {
-      base.show();
+      base.show(1);
       match = Do.find(img, base);
       success &= match.isMatch() && 0.99 < match.getScore() &&
               0 == match.x && 0 == match.y &&
@@ -384,7 +384,7 @@ public class TestSXAPI {
     }
     if (success) {
       result = match.toString();
-      base.showMatch();
+      base.showMatch(1);
     }
     result = end() + result;
     assert success;
@@ -402,7 +402,7 @@ public class TestSXAPI {
     success &= base.isValid();
     Element element = null;
     if (success) {
-      base.show(2);
+      base.show(1);
       element = Do.find(target, base);
       success &= element.isMatch();
     }
@@ -429,7 +429,7 @@ public class TestSXAPI {
     success &= base.isValid();
     List<Element> elements = new ArrayList<>();
     if (success) {
-      base.show(2);
+      base.show(1);
       elements = Do.findAll(target, base);
       success &= elements.size() == expected;
     }
@@ -573,11 +573,11 @@ public class TestSXAPI {
     currentTest = "test_058_basicStory";
     result = "showing some grafics";
     if (!SX.isHeadless()) {
-      Story story = new Story();
+      Story story = new Story(0);
       story.add(Symbol.circle(700).setColor(Color.black).setLine(20).fill(Color.yellow));
       story.add(Symbol.rectangle(500, 300).setColor(Color.red).fill(Color.cyan).setLine(10));
       story.add(Symbol.ellipse(300, 100).setColor(Color.blue).setLine(8).fill());
-      story.add(Symbol.square(50).setColor(Color.yellow));
+      story.add(Symbol.square(200).setColor(Color.yellow).setLine(20), new Element(100, 100));
       story.show(5);
     } else {
       result = "headless: not testing";
@@ -764,7 +764,7 @@ public class TestSXAPI {
     if (!SX.isHeadless()) {
       result = "mouse drag drop";
       SX.setOption("Settings.MoveMouseDelay", "0.5");
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < 3; i++) {
         Story story = new Story(button).start();
         int xOff = (int) (Do.on().w / 3);
         int yOff = (int) (Do.on().h / 3);

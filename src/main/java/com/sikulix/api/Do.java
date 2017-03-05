@@ -958,11 +958,15 @@ public class Do {
   //<editor-fold desc="actions like find, wait, click">
   public static IDevice getDevice() {
     if (!Do.on().isSpecial()) {
-      return SX.getSXLOCALDEVICE();
+      return getLocalDevice();
     } else {
       log.error("not implemented: non-local devices");
-      return SX.getSXLOCALDEVICE();
+      return getLocalDevice();
     }
+  }
+
+  public static IDevice getLocalDevice() {
+    return SX.getSXLOCALDEVICE();
   }
 
   public static NativeHook getHook() {
@@ -1147,7 +1151,7 @@ public class Do {
   public static void showcase(Object... args) {
     Element eShowcase = new Element();
     eShowcase.setName("SHOWCASE");
-    for (Object arg: args) {
+    for (Object arg : args) {
       log.trace("arg: %s", arg);
       if (((ScriptObjectMirror) arg).isFunction()) {
         ((ScriptObjectMirror) arg).call(arg, eShowcase);

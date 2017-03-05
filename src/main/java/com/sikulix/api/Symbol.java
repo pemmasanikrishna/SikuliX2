@@ -40,7 +40,7 @@ public class Symbol extends Element {
 
   public Symbol(int w, int h) {
     this();
-    init(-1, -1, w, h);
+    init(0, 0, w, h);
   }
 
   public Symbol(Element element) {
@@ -127,16 +127,5 @@ public class Symbol extends Element {
   public Symbol at(int x, int y) {
     super.at(x, y);
     return this;
-  }
-
-  private Element elementOver = null;
-
-  public Symbol over(Element elem) {
-    elementOver = elem;
-    return this;
-  }
-
-  public Element getOver() {
-    return elementOver;
   }
 }

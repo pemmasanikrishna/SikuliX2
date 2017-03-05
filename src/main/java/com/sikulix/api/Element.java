@@ -35,6 +35,7 @@ public class Element implements Comparable<Element> {
     return eClazz;
   }
 
+  //<editor-fold desc="old API">
   private boolean throwException = SX.isOption("Settings.ThrowException");
 
   public boolean getThrowException() {
@@ -91,6 +92,7 @@ public class Element implements Comparable<Element> {
     }
     scr = getDevice().getContainingScreen(this);
   }
+  //</editor-fold>
 
   //<editor-fold desc="***** construction, info">
   public String getName() {
@@ -511,7 +513,7 @@ public class Element implements Comparable<Element> {
       return false;
     }
     Element that = (Element) oThat;
-    return x == that.x && y == that.y;
+    return x.equals(that.x) && y.equals(that.y) && w.equals(that.w) && h.equals(that.h);
   }
 
   public int compareTo(Element elem) {
@@ -1133,7 +1135,17 @@ public class Element implements Comparable<Element> {
     this.lineColor = lineColor;
   }
 
-  private int highLightLine = (int) SX.getOptionNumber("highLightLine", 3);
+  private int lineThickness = Story.defaultLineThickness;
+
+  public int getLineThickness() {
+    return lineThickness;
+  }
+
+  public void setLineThickness(int lineThickness) {
+    this.lineThickness = lineThickness;
+  }
+
+  private int highLightLine = (int) SX.getOptionNumber("highLightLine", 1);
 
   public int getHighLightLine() {
     return highLightLine;
@@ -1143,39 +1155,31 @@ public class Element implements Comparable<Element> {
     this.highLightLine = highLightLine;
   }
 
-  private int showTime = (int) SX.getOptionNumber("SXShow.showTime", 3);
+  private int showTime = Story.defaultShowTime;
 
-  public int getShowTime() {
-    return showTime;
-  }
-
-  public void setShowTime(int showTime) {
-    this.showTime = showTime;
-  }
+//  public int getShowTime() {
+//    return showTime;
+//  }
+//
+//  public void setShowTime(int showTime) {
+//    this.showTime = showTime;
+//  }
 
   public void show() {
     show(showTime);
   }
 
   public void show(int time, int... times) {
-    Story showing = new Story(this, times);
-    showing.show(time);
-  }
-
-  public void show(Element elem) {
-    show(elem, showTime);
-  }
-
-  public void show(Element elem, int time, int... times) {
-    Story showing = new Story(this, times);
-    showing.add(elem);
+    Story showing;
+    showing = new Story(this, times);
     showing.show(time);
   }
 
   public Element showMatch(int... times) {
     if (hasMatch()) {
       Story showing = new Story(this);
-      showing.add(getLastMatch()).show(times.length > 0 ? times[0] : showTime);
+      showing.add(getLastMatch());
+      showing.show(times.length > 0 ? times[0] : showTime);
       return getLastMatch();
     }
     return null;

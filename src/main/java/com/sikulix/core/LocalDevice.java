@@ -492,6 +492,7 @@ public class LocalDevice extends IDevice {
   private int mainMonitor = -1;
   private int nMonitors = 0;
 
+  @Override
   public void resetMonitors() {
     initMonitors();
   }
@@ -552,19 +553,31 @@ public class LocalDevice extends IDevice {
     return monitorBounds[mainMonitor];
   }
 
+  @Override
   public int getMonitorID() {
     return mainMonitor;
   }
 
+  @Override
+  public int getMonitorID(int id) {
+    if (id > -1 && id < nMonitors) {
+      return id;
+    }
+    return mainMonitor;
+  }
+
+  @Override
   public Rectangle getAllMonitors() {
     return rAllMonitors;
   }
 
+  @Override
   public Rectangle[] getMonitors() {
     return monitorBounds;
   }
 
-  private int getContainingMonitorID(Element element) {
+  @Override
+  public int getContainingMonitorID(Element element) {
     int n = 0;
     for (Rectangle monitor : getMonitors()) {
       if (monitor.contains(element.x, element.y)) {
@@ -575,10 +588,12 @@ public class LocalDevice extends IDevice {
     return mainMonitor;
   }
 
+  @Override
   public Element getContainingMonitor(Element element) {
     return new Element(monitorBounds[getContainingMonitorID(element)]);
   }
 
+  @Override
   public Screen getContainingScreen(Element element) {
     return new Screen(getContainingMonitorID(element));
   }
