@@ -858,7 +858,6 @@ public class TestSXAPI {
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        Story.testTransparency();
         result = "nothing to do here";
 //end
       } else {
