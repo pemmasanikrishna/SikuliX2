@@ -201,6 +201,158 @@ public class Region extends Element {
 //
   //</editor-fold>
 
+  //<editor-fold desc="offset">
+  public Location asOffset() {
+    return new Location(w, h);
+  }
+
+  public Region offset(Location loc) {
+    return Region.create(x + loc.x, y + loc.y, w, h, getScreen());
+  }
+
+  public Region offset(int x, int y) {
+    return Region.create(this.x + x, this.y + y, w, h, getScreen());
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="grow">
+  @Deprecated
+  public Region nearby() {
+    return grow();
+  }
+
+  @Deprecated
+  public Region nearby(int range) {
+    return (Region) grow(range);
+  }
+
+  public Region grow() {
+    return (Region) super.grow();
+  }
+
+  public Region grow(int range) {
+    return (Region) super.grow(range);
+  }
+
+  public Region grow(int w, int h) {
+    return (Region) super.grow(w, h);
+  }
+
+  public Region grow(int l, int r, int t, int b) {
+    return Region.create(x - l, y - t, w + l + r, h + t + b, getScreen());
+  }
+
+  public static Region grow(Location loc, int x, int y, int w, int h) {
+    return Region.create(loc, x, y, w, h);
+  }
+
+  public static Region grow(Location loc, int w, int h) {
+    int _x = loc.x;
+    int _y = loc.y;
+    Screen s = loc.getScreen();
+    if (s == null) {
+      _x = _y = 0;
+      s = Screen.getPrimaryScreen();
+    }
+    int X = _x - (int) w / 2;
+    int Y = _y - (int) h / 2;
+    return Region.create(X, Y, w, h, s);
+  }
+
+  public static Region grow(Location loc) {
+    int _x = loc.x;
+    int _y = loc.y;
+    Screen s = loc.getScreen();
+    if (s == null) {
+      _x = _y = 0;
+      s = Screen.getPrimaryScreen();
+    }
+    return Region.create(_x, _y, 1, 1, s);
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="right">
+  public Location rightAt() {
+    return rightAt(0);
+  }
+
+  public Location rightAt(int offset) {
+    return new Location(super.right(offset));
+  }
+
+  public Region right() {
+    return new Region(super.right());
+  }
+
+  public Region right(int width) {
+    return new Region(super.right(width));
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="left">
+  public Location leftAt() {
+    return leftAt(0);
+  }
+
+  public Location leftAt(int offset) {
+    return new Location(super.left(offset));
+  }
+
+  public Region left() {
+    return new Region(super.left());
+  }
+
+  public Region left(int width) {
+    return new Region(super.left(width));
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="above">
+  public Location aboveAt() {
+    return aboveAt(0);
+  }
+
+  public Location aboveAt(int offset) {
+    return new Location(super.above(offset));
+  }
+
+  public Region above() {
+    return new Region(super.above());
+  }
+
+  public Region above(int height) {
+    return new Region(super.above(height));
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="below">
+  public Location belowAt() {
+    return belowAt(0);
+  }
+
+  public Location belowAt(int offset) {
+    return new Location(super.below(offset));
+  }
+
+  public Region below() {
+    return new Region(super.below());
+  }
+
+  public Region below(int height) {
+    return new Region(super.below(height));
+  }
+  //</editor-fold>
+  
+  //<editor-fold defaultstate="collapsed" desc="new regions">
+  public Region union(Region region) {
+    return new Region(super.union(region));
+  }
+
+  public Region intersection(Region region) {
+    return new Region(super.intersection(region));
+  }
+  //</editor-fold>
+
   //<editor-fold desc="find">
   public <PSI> Match find(PSI target) throws FindFailed {
     if (getAutoWaitTimeout() > 0) {
@@ -319,227 +471,4 @@ public class Region extends Element {
     return new Match(super.getLastMatch());
   }
   //</editor-fold>
-
-  //<editor-fold desc="offset">
-  public Location asOffset() {
-    return new Location(w, h);
-  }
-
-  public Region offset(Location loc) {
-    return Region.create(x + loc.x, y + loc.y, w, h, getScreen());
-  }
-
-  public Region offset(int x, int y) {
-    return Region.create(this.x + x, this.y + y, w, h, getScreen());
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="grow">
-  @Deprecated
-  public Region nearby() {
-    return grow();
-  }
-
-  @Deprecated
-  public Region nearby(int range) {
-    return (Region) grow(range);
-  }
-
-  public Region grow() {
-    return (Region) super.grow();
-  }
-
-  public Region grow(int range) {
-    return (Region) super.grow(range);
-  }
-
-  public Region grow(int w, int h) {
-    return (Region) super.grow(w, h);
-  }
-
-  public Region grow(int l, int r, int t, int b) {
-    return Region.create(x - l, y - t, w + l + r, h + t + b, getScreen());
-  }
-
-  public static Region grow(Location loc, int x, int y, int w, int h) {
-    return Region.create(loc, x, y, w, h);
-  }
-
-  public static Region grow(Location loc, int w, int h) {
-    int _x = loc.x;
-    int _y = loc.y;
-    Screen s = loc.getScreen();
-    if (s == null) {
-      _x = _y = 0;
-      s = Screen.getPrimaryScreen();
-    }
-    int X = _x - (int) w / 2;
-    int Y = _y - (int) h / 2;
-    return Region.create(X, Y, w, h, s);
-  }
-
-  public static Region grow(Location loc) {
-    int _x = loc.x;
-    int _y = loc.y;
-    Screen s = loc.getScreen();
-    if (s == null) {
-      _x = _y = 0;
-      s = Screen.getPrimaryScreen();
-    }
-    return Region.create(_x, _y, 1, 1, s);
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="right">
-  public Location rightAt() {
-    return rightAt(0);
-  }
-
-  public Location rightAt(int offset) {
-    return new Location(super.right(offset));
-  }
-
-  public Region right() {
-    return new Region(super.right());
-  }
-
-  public Region right(int width) {
-    return new Region(super.right(width));
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="left">
-  public Location leftAt() {
-    return leftAt(0);
-  }
-
-  public Location leftAt(int offset) {
-    return new Location(super.left(offset));
-  }
-
-  public Region left() {
-    return new Region(super.left());
-  }
-
-  public Region left(int width) {
-    return new Region(super.left(width));
-  }
-  //</editor-fold>
-
-  //<editor-fold defaultstate="collapsed" desc="spatial operators - new regions">
-
-  /**
-   * @return point middle on top edge
-   */
-  public Location aboveAt() {
-    return aboveAt(0);
-  }
-
-  /**
-   * negative offset goes towards top of screen <br>might be off current screen
-   *
-   * @param offset pixels
-   * @return point with given offset vertically to middle point on top edge
-   */
-  public Location aboveAt(int offset) {
-    return new Location(x + w / 2, y + offset);
-  }
-
-  /**
-   * create a region above the top side with same width<br> the new region extends to the top screen border<br> use
-   * grow() to include the current region
-   *
-   * @return the new region
-   */
-  public Region above() {
-    int distToAboveScreenBorder = getY() - getScreen().getY();
-    return above(distToAboveScreenBorder);
-  }
-
-  /**
-   * create a region above the top side with same width and given height<br>
-   * negative height creates the top part with height inside the region use grow() to include the current region
-   *
-   * @param height pixels
-   * @return the new region
-   */
-  public Region above(int height) {
-    int _y;
-    if (height < 0) {
-      _y = y;
-    } else {
-      _y = y - height;
-    }
-    return Region.create(getScreen().getBounds().intersection(new Rectangle(x, _y, w, Math.abs(height))), getScreen());
-  }
-
-  /**
-   * @return point middle on bottom edge
-   */
-  public Location belowAt() {
-    return belowAt(0);
-  }
-
-  /**
-   * positive offset goes towards bottom of screen <br>might be off current screen
-   *
-   * @param offset pixels
-   * @return point with given offset vertically to middle point on bottom edge
-   */
-  public Location belowAt(int offset) {
-    return new Location(x + w / 2, y + h - offset);
-  }
-
-  /**
-   * create a region below the bottom side with same width<br> the new region extends to the bottom screen border<br>
-   * use grow() to include the current region
-   *
-   * @return the new region
-   */
-  public Region below() {
-    int distToBelowScreenBorder = getScreen().getY() + getScreen().getH() - (getY() + getH());
-    return below(distToBelowScreenBorder);
-  }
-
-  /**
-   * create a region below the bottom side with same width and given height<br>
-   * negative height creates the bottom part with height inside the region use grow() to include the current region
-   *
-   * @param height pixels
-   * @return the new region
-   */
-  public Region below(int height) {
-    int _y;
-    if (height < 0) {
-      _y = y + h + height;
-    } else {
-      _y = y + h;
-    }
-    return Region.create(x, _y, w, Math.abs(height), getScreen());
-  }
-
-  /**
-   * create a new region containing both regions
-   *
-   * @param ur region to unite with
-   * @return the new region
-   */
-  public Region union(Region ur) {
-    Rectangle r = getRect().union(ur.getRect());
-    return Region.create(r.x, r.y, r.width, r.height, getScreen());
-  }
-
-  /**
-   * create a region that is the intersection of the given regions
-   *
-   * @param ir the region to intersect with like AWT Rectangle API
-   * @return the new region
-   */
-  public Region intersection(Region ir) {
-    Rectangle r = getRect().intersection(ir.getRect());
-    return Region.create(r.x, r.y, r.width, r.height, getScreen());
-  }
-
-  //</editor-fold>
-
 }
