@@ -57,26 +57,32 @@ public class SXJson {
     int h = 0;
 
     ElementFlat lastMatch = null;
-    double score = 0;
+    double score = -1;
 
     int[] target = null;
 
     Element.eType clazz = Element.eType.ELEMENT;
 
-    public ElementFlat(Element vis) {
-      clazz = vis.getType();
-      x = vis.x;
-      y = vis.y;
-      w = vis.w;
-      h = vis.h;
-      if (vis.isRectangle()) {
-        Element match = vis.getLastMatch();
-        if (SX.isNotNull(match)) {
+    String name = null;
+
+    public ElementFlat(Element element) {
+      clazz = element.getType();
+      x = element.x;
+      y = element.y;
+      w = element.w;
+      h = element.h;
+      if (element.hasName()) {
+        name = element.getName();
+      }
+      if (element.isRectangle()) {
+        if (element.hasMatch()) {
+          Element match = element.getLastMatch();
           lastMatch = new ElementFlat(match);
+          lastMatch.score = match.getScore();
+          lastMatch.target = new int[]{match.getTarget().x, match.getTarget().y};
         }
       }
-      score = vis.getScore();
-      target = new int[]{vis.getTarget().x, vis.getTarget().x};
+      target = new int[]{element.getTarget().x, element.getTarget().x};
     }
 
     public String getType() {
@@ -98,6 +104,8 @@ public class SXJson {
     public int getH() {
       return h;
     }
+
+    public String getName() { return name; }
 
     public ElementFlat getLastMatch() {
       return lastMatch;

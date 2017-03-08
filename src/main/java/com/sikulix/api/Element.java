@@ -5,6 +5,8 @@
 package com.sikulix.api;
 
 import com.sikulix.core.*;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -273,6 +275,44 @@ public class Element implements Comparable<Element> {
     }
   }
 
+  public Element(JSONObject jElement) {
+    init(jElement);
+  }
+
+  private void init(JSONObject jElement) {
+    if (jElement.has("type") && "ELEMENT".equals(jElement.getString("type"))) {
+      x = jElement.optInt("x", 0);
+      y = jElement.optInt("y", 0);
+      h = jElement.optInt("h", -1);
+      w = jElement.optInt("w", -1);
+      score = jElement.optDouble("score", -1);
+      if (!jElement.isNull("name")) {
+        name = jElement.getString("name");
+      }
+      if (!jElement.isNull("lastMatch")) {
+        lastMatch = new Element();
+        JSONObject jLastMatch = jElement.getJSONObject("lastMatch");
+        lastMatch.x = jLastMatch.optInt("x", 0);
+        lastMatch.y = jLastMatch.optInt("y", 0);
+        lastMatch.h = jLastMatch.optInt("h", -1);
+        lastMatch.w = jLastMatch.optInt("w", -1);
+        lastMatch.score = jLastMatch.optDouble("score", 0);
+      }
+    } else {
+      log.error("new (JSONObject jElement): not of type ELEMENT");
+    }
+  }
+
+  public Element(String possibleJSON) {
+    this();
+    try {
+      JSONObject jElement = new JSONObject(possibleJSON);
+      init(jElement);
+    } catch (JSONException jEx) {
+      log.error("new (String possibleJSON): not valid JSON: %s", jEx.getMessage());
+    }
+  }
+
 //  public Element(Core.MinMaxLocResult mMinMax, Target target, Rect rect) {
 //    init((int) mMinMax.maxLoc.x + target.getTarget().x +
 //                    rect.x, (int) mMinMax.maxLoc.y + target.getTarget().y + rect.y,
@@ -297,6 +337,10 @@ public class Element implements Comparable<Element> {
       return " %" + score * 100;
     }
     return "";
+  }
+
+  public String toJSON() {
+    return SXJson.makeElement(this).toString();
   }
 
   public String logString() {

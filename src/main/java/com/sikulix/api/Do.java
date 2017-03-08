@@ -907,6 +907,7 @@ public class Do {
   private static Element getDefaultScreenAsElement() {
     if (SX.isNull(defaultScreenAsElement)) {
       defaultScreenAsElement = new Element(SX.getSXLOCALDEVICE().getMonitor().getBounds());
+      defaultScreenAsElement.setName("SCREEN0");
     }
     return defaultScreenAsElement;
   }
