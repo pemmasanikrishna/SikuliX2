@@ -7,6 +7,7 @@ package com.sikulix.test;
 import com.sikulix.api.*;
 import com.sikulix.api.Event;
 import com.sikulix.core.*;
+import com.sikulix.run.Runner;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.Mat;
@@ -22,7 +23,7 @@ import java.util.Date;
 import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class TestSXAPI {
+public class TestAll {
 
   //<editor-fold desc="housekeeping">
   static final int logLevel = SX.INFO;
@@ -42,7 +43,7 @@ public class TestSXAPI {
   private static String imageNameDefault = "sikulix2";
   private static String imageDefault = imageNameDefault + ".png";
 
-  public TestSXAPI() {
+  public TestAll() {
     log.trace("TestAPI()");
   }
 
@@ -871,6 +872,56 @@ public class TestSXAPI {
     assert region.isValid() && region instanceof Region : "Region.create(100, 100, 100, 100)";
     region = Region.create(-200, -200, 100, 100);
     assert !region.isValid() && region instanceof Region : "Region.create(-200, -200, 100, 100)";
+  }
+
+  @Test
+  public void test_501_runJavaScriptBasic() {
+    currentTest = "test_001_runJavaScriptBasic";
+    if (!SX.isHeadless()) {
+      result = "running JavaScript: mouse moves to center";
+      String script = "var element = Do.hover();\n" +
+              "print('Hello from JavaScript: mouse at: ' + element);";
+      Runner.run(Runner.ScriptType.JAVASCRIPT, script);
+      Element center = Do.on().getCenter();
+      assert Do.isMouseposition(hook, center.x, center.y) : "mouse should be at center of screen";
+    }
+  }
+
+  @Test
+  public void test_502_runJavaScriptFromJar() {
+    currentTest = "test_002_runJavaScriptFromJar";
+    if (!SX.isHeadless()) {
+      result = "running JavaScript from jar: mouse moves to center";
+      Runner.run("basic");
+      Element center = Do.on().getCenter();
+      assert Do.isMouseposition(hook, center.x, center.y) : "mouse should be at center of screen";
+    }
+  }
+
+  @Test
+  public void test_503_runJavaScriptFromNet() {
+    currentTest = "test_003_runJavaScriptFromNet";
+    if (!SX.isHeadless()) {
+      result = "running JavaScript from net: mouse moves to center";
+      Object result = Runner.run(Runner.ScriptType.FROMNET, "basic");
+      assert SX.isNotNull(result) : "script from net not valid";
+      Element center = Do.on().getCenter();
+      assert Do.isMouseposition(hook, center.x, center.y) : "mouse should be at center of screen";
+    }
+  }
+
+  @Test
+  public void test_504_runJavaScriptWithFind() {
+    currentTest = "test_004_runJavaScriptWithFind";
+    if (!SX.isHeadless()) {
+      result = "running JavaScript: find image on screen";
+      Do.setBundlePath(mavenRoot, "Images");
+      Picture picture = new Picture("shot-tile");
+      assert picture.isValid() : "Image: shot-tile not valid";
+      Story story = new Story(picture, 3).start();
+      Runner.run("basic1");
+      story.waitForEnd();
+    }
   }
   //</editor-fold>
 

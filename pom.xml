@@ -85,6 +85,16 @@
       <version>2.0.3</version>
     </dependency>
     <dependency>
+      <groupId>org.nanohttpd</groupId>
+      <artifactId>nanohttpd</artifactId>
+      <version>2.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.mashape.unirest</groupId>
+      <artifactId>unirest-java</artifactId>
+      <version>1.4.9</version>
+    </dependency>
+    <dependency>
       <groupId>somegroup</groupId>
       <artifactId>someartifact</artifactId>
       <version>1.0</version>
