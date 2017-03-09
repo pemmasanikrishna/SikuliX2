@@ -92,7 +92,7 @@ public class Element implements Comparable<Element> {
         return;
       }
     }
-    scr = getDevice().getContainingScreen(this);
+    scr = getLocalDevice().getContainingScreen(this);
   }
   //</editor-fold>
 
@@ -1015,6 +1015,13 @@ public class Element implements Comparable<Element> {
       }
     }
     return elementDevice;
+  }
+
+  public LocalDevice getLocalDevice() {
+    if (SX.isNull(elementDevice)) {
+      elementDevice = SX.getSXLOCALDEVICE();
+    }
+    return (LocalDevice) elementDevice;
   }
 
   public void setDevice(IDevice elementDevice) {
