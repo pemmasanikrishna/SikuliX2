@@ -99,7 +99,11 @@ public class Element implements Comparable<Element> {
   //<editor-fold desc="***** construction, info">
   public String getName() {
     if (SX.isNotSet(name)) {
-      setName(String.format("%s_%d_%d_%dx%d", getTypeFirstLetter(), x, y, w, h));
+      if (isPoint()) {
+        setName(String.format("%s_%d_%d", getTypeFirstLetter(), x, y));
+      } else {
+        setName(String.format("%s_%d_%d_%dx%d", getTypeFirstLetter(), x, y, w, h));
+      }
     }
     return name;
   }
@@ -299,7 +303,7 @@ public class Element implements Comparable<Element> {
         lastMatch.score = jLastMatch.optDouble("score", 0);
       }
     } else {
-      log.error("new (JSONObject jElement): not of type ELEMENT");
+      log.error("new (JSONObject jElement): not super-type ELEMENT: %s", jElement);
     }
   }
 
@@ -339,12 +343,99 @@ public class Element implements Comparable<Element> {
     return "";
   }
 
-  public String toJSON() {
-    return SXJson.makeElement(this).toString();
-  }
-
   public String logString() {
     return String.format("[%d,%d %dx%d]", x, y, w, h);
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="***** JSON">
+  public String toJSON() {
+    ElementFlat elementFlat = new ElementFlat(this);
+    JSONObject jElementFlat = new JSONObject(elementFlat);
+    return toJSONplus(jElementFlat).toString();
+  }
+
+  protected JSONObject toJSONplus(JSONObject jElementFlat) {
+    return jElementFlat;
+  }
+
+  public static class ElementFlat {
+
+    int x = 0;
+    int y = 0;
+    Integer w = 0;
+    Integer h = 0;
+
+    ElementFlat lastMatch = null;
+    Double score = null;
+
+    int[] target = null;
+
+    Element.eType clazz = Element.eType.ELEMENT;
+
+    String name = null;
+    
+
+    public ElementFlat(Element element) {
+      clazz = element.getType();
+      String clazz1 = clazz.toString().substring(0, 1) + "_";
+      x = element.x;
+      y = element.y;
+      w = element.w < 1 ? null : element.w;
+      h = element.h < 1 ? null : element.h;
+      if (element.hasName()) {
+        name = element.getName();
+        if (name.startsWith(clazz1)) {
+          name = null;
+        }
+      }
+      if (element.getScore() > 0) {
+        score = element.getScore();
+      }
+      target = new int[]{element.getTarget().x, element.getTarget().y};
+      if (element.isRectangle() && !element.isMatch()) {
+        if (element.hasMatch()) {
+          Element match = element.getLastMatch();
+          lastMatch = new ElementFlat(match);
+          lastMatch.score = match.getScore();
+          lastMatch.target = new int[]{match.getTarget().x, match.getTarget().y};
+        }
+      }
+    }
+    
+    public String getType() {
+      return clazz.toString();
+    }
+
+    public int getX() {
+      return x;
+    }
+
+    public int getY() {
+      return y;
+    }
+
+    public int getW() {
+      return w;
+    }
+
+    public int getH() {
+      return h;
+    }
+
+    public String getName() { return name; }
+
+    public ElementFlat getLastMatch() {
+      return lastMatch;
+    }
+
+    public Double getScore() {
+      return score;
+    }
+
+    public int[] getTarget() {
+      return target;
+    }
   }
   //</editor-fold>
 

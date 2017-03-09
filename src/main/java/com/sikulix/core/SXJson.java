@@ -4,7 +4,6 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.Element;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -47,81 +46,6 @@ public class SXJson {
 
   public static JSONObject makeBean(Object bean) {
     return new SXJson(bean).theJsonObject;
-  }
-
-  public static class ElementFlat {
-
-    int x = 0;
-    int y = 0;
-    int w = 0;
-    int h = 0;
-
-    ElementFlat lastMatch = null;
-    double score = -1;
-
-    int[] target = null;
-
-    Element.eType clazz = Element.eType.ELEMENT;
-
-    String name = null;
-
-    public ElementFlat(Element element) {
-      clazz = element.getType();
-      x = element.x;
-      y = element.y;
-      w = element.w;
-      h = element.h;
-      if (element.hasName()) {
-        name = element.getName();
-      }
-      if (element.isRectangle()) {
-        if (element.hasMatch()) {
-          Element match = element.getLastMatch();
-          lastMatch = new ElementFlat(match);
-          lastMatch.score = match.getScore();
-          lastMatch.target = new int[]{match.getTarget().x, match.getTarget().y};
-        }
-      }
-      target = new int[]{element.getTarget().x, element.getTarget().x};
-    }
-
-    public String getType() {
-      return clazz.toString();
-    }
-
-    public int getX() {
-      return x;
-    }
-
-    public int getY() {
-      return y;
-    }
-
-    public int getW() {
-      return w;
-    }
-
-    public int getH() {
-      return h;
-    }
-
-    public String getName() { return name; }
-
-    public ElementFlat getLastMatch() {
-      return lastMatch;
-    }
-
-    public Double getScore() {
-      return score;
-    }
-
-    public int[] getTarget() {
-      return target;
-    }
-  }
-
-  public static JSONObject makeElement(Element elem) {
-    return new SXJson(new ElementFlat(elem)).theJsonObject;
   }
 
   public static JSONObject makeObject(String strJson) {

@@ -20,4 +20,8 @@ public class Match extends Region {
     setTarget(elem.getTarget());
   }
 
+  public boolean isMatch() {
+    return true;
+  }
+
 }

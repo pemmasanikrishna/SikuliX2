@@ -24,7 +24,7 @@ public class Region extends Element {
   }
 
   public Element asElement() {
-    return this;
+    return new Element(this);
   }
 
   public boolean isValid() {
@@ -65,21 +65,25 @@ public class Region extends Element {
 
   public Region(Element element) {
     initRegion(element.x, element.y, element.w, element.h);
+    initMore(element);
     initScreen(null);
   }
 
-  public void initRegion(int x, int y, int w, int h) {
+  protected void initRegion(int x, int y, int w, int h) {
     this.x = x;
     this.y = y;
     this.w = w;
     this.h = h;
   }
 
-  public void initRegion(Rectangle rectangle) {
+  protected void initRegion(Rectangle rectangle) {
     this.x = rectangle.x;
     this.y = rectangle.y;
     this.w = rectangle.width;
     this.h = rectangle.height;
+  }
+
+  private void initMore(Element element) {
   }
   //</editor-fold>
 
@@ -361,7 +365,7 @@ public class Region extends Element {
     Do.find(toFindTarget(target), this);
     if (hasMatch()) {
       setLastMatch(getLastMatch());
-      return getLastMatch();
+      return (Match) getLastMatch();
     }
     throw new FindFailed(String.format("%s in %s", target, this));
   }
@@ -385,7 +389,7 @@ public class Region extends Element {
     Do.wait(toFindTarget(target), this, timeout);
     if (hasMatch()) {
       setLastMatch(getLastMatch());
-      return getLastMatch();
+      return (Match) getLastMatch();
     }
     throw new FindFailed(String.format("%s in %s", target, this));
   }
@@ -398,7 +402,7 @@ public class Region extends Element {
     Do.wait(toFindTarget(target), this, timeout);
     if (hasMatch()) {
       setLastMatch(getLastMatch());
-      return getLastMatch();
+      return (Match) getLastMatch();
     }
     return null;
   }
@@ -463,12 +467,12 @@ public class Region extends Element {
     }
   }
 
-  public boolean hasMatch() {
-    return SX.isNotNull(super.getLastMatch());
-  }
-
-  public Match getLastMatch() {
-    return new Match(super.getLastMatch());
-  }
+//  public boolean hasMatch() {
+//    return SX.isNotNull(super.getLastMatch());
+//  }
+//
+//  public Match getLastMatch() {
+//    return new Match(super.getLastMatch());
+//  }
   //</editor-fold>
 }

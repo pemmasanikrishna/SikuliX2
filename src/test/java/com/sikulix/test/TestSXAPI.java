@@ -795,6 +795,33 @@ public class TestSXAPI {
   }
 
   @Test
+  public void test_130_toJSONbasic() {
+    currentTest = "test_130_toJSONbasic";
+    assert prepareDefaultScreen("shot", imageNameDefault);
+    if (isHeadless) {
+      return;
+    }
+    match = Do.find(img);
+    result = end() + match.toString();
+    assert match.isValid();
+    result = "basic toJSON() calls";
+    log.p("String: %s", Do.on());
+    log.p("asJSON: %s", Do.on().toJSON());
+    log.p("String: %s", match);
+    log.p("asJSON: %s", match.toJSON());
+    log.p("String: %s", img);
+    log.p("asJSON: %s", img.toJSON());
+    Region scr = new Region(Do.on());
+    log.p("String: %s", scr);
+    log.p("asJSON: %s", scr.toJSON());
+    log.p("String: %s", scr.getCenter());
+    log.p("asJSON: %s", scr.getCenter().toJSON());
+    log.p("String: %s", scr.getScreen());
+    log.p("asJSON: %s", scr.getScreen().toJSON());
+    Element eScr = new Element(scr.toJSON());
+  }
+
+  @Test
   public void test_200_popat() {
     currentTest = "test_200_popat";
     boolean assertVal = true;
@@ -853,7 +880,7 @@ public class TestSXAPI {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    log.startTimer();
+    //log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
