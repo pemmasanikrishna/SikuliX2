@@ -126,6 +126,7 @@ public class TestAll {
     Events.reset();
     if (SX.isSetSXLOCALDEVICE()) {
       Do.on().removeEvents();
+      Do.on().setLastMatch(null);
     }
     if (SX.isNotNull(theShow)) {
       theShow.stop();
@@ -876,7 +877,7 @@ public class TestAll {
 
   @Test
   public void test_501_runJavaScriptBasic() {
-    currentTest = "test_001_runJavaScriptBasic";
+    currentTest = "test_501_runJavaScriptBasic";
     if (!SX.isHeadless()) {
       result = "running JavaScript: mouse moves to center";
       String script = "var element = Do.hover();\n" +
@@ -889,7 +890,7 @@ public class TestAll {
 
   @Test
   public void test_502_runJavaScriptFromJar() {
-    currentTest = "test_002_runJavaScriptFromJar";
+    currentTest = "test_502_runJavaScriptFromJar";
     if (!SX.isHeadless()) {
       result = "running JavaScript from jar: mouse moves to center";
       Runner.run("basic");
@@ -900,7 +901,7 @@ public class TestAll {
 
   @Test
   public void test_503_runJavaScriptFromNet() {
-    currentTest = "test_003_runJavaScriptFromNet";
+    currentTest = "test_503_runJavaScriptFromNet";
     if (!SX.isHeadless()) {
       result = "running JavaScript from net: mouse moves to center";
       Object result = Runner.run(Runner.ScriptType.FROMNET, "basic");
@@ -912,7 +913,7 @@ public class TestAll {
 
   @Test
   public void test_504_runJavaScriptWithFind() {
-    currentTest = "test_004_runJavaScriptWithFind";
+    currentTest = "test_504_runJavaScriptWithFind";
     if (!SX.isHeadless()) {
       result = "running JavaScript: find image on screen";
       Do.setBundlePath(mavenRoot, "Images");
