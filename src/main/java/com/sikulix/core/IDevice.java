@@ -6,34 +6,33 @@ import org.sikuli.script.Screen;
 
 import java.awt.*;
 
-public abstract class IDevice {
+public interface IDevice {
 
-  public static enum Action {
+  enum Action {
     LEFT, LEFTDOWN, LEFTUP, LEFTDOUBLE,
     RIGHT, RIGHTDOWN, RIGHTUP, RIGHTDOUBLE,
     MIDDLE, MIDDLEDOWN, MIDDLEUP, MIDDLEDOUBLE,
     UP, DOWN
   }
 
-  public abstract IDevice start(Object... args);
-  public abstract void stop();
+  IDevice start(Object... args);
+  void stop();
 
-  public abstract int getNumberOfMonitors();
-  public abstract Rectangle getMonitor(int... id);
-  public abstract Rectangle getAllMonitors();
-  public abstract int getMonitorID();
-  public abstract int getMonitorID(int id);
-  public abstract void resetMonitors();
-  public abstract Rectangle[] getMonitors();
-  public abstract int getContainingMonitorID(Element element);
-  public abstract Element getContainingMonitor(Element element);
-  public abstract Screen getContainingScreen(Element element);
-  public abstract Element click(Element loc);
-  public abstract Element doubleClick(Element loc);
-  public abstract Element rightClick(Element loc);
-  public abstract Element click(Action action);
-  public abstract Element click(Element loc, Action action);
-  public abstract Element dragDrop(Element from, Element to, Object... times);
+  int getNumberOfMonitors();
+  Rectangle getMonitor(int... id);
+  Rectangle getAllMonitors();
+  int getMonitorID();
+  int getMonitorID(int id);
+  void resetMonitors();
+  Rectangle[] getMonitors();
+  int getContainingMonitorID(Element element);
+  Element getContainingMonitor(Element element);
+  Element click(Element loc);
+  Element doubleClick(Element loc);
+  Element rightClick(Element loc);
+  Element click(Action action);
+  Element click(Element loc, Action action);
+  Element dragDrop(Element from, Element to, Object... times);
 
   /**
    * move the mouse from the current position to the offset given by the parameters
@@ -42,7 +41,7 @@ public abstract class IDevice {
    * @param yoff vertical offset (&lt; 0 up, &gt; 0 down)
    * @return the new mouseposition as Element (might be invalid)
    */
-  public abstract Element move(int xoff, int yoff);
+  Element move(int xoff, int yoff);
 
   /**
    * move the mouse to the target of given Element (default center)
@@ -50,16 +49,16 @@ public abstract class IDevice {
    * @param loc
    * @return the new mouseposition as Element (might be invalid)
    */
-  public abstract Element move(Element loc);
+  Element move(Element loc);
 
   /**
    * @return the current mouseposition as Element (might be invalid)
    */
-  public abstract Element at();
+  Element at();
 
-  public abstract void button(Action action);
+  void button(Action action);
 
-  public abstract void wheel(Action action, int steps);
+  void wheel(Action action, int steps);
 
-  public abstract Picture capture(Element what);
+  Picture capture(Element what);
 }

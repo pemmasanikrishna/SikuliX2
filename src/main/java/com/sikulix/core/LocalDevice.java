@@ -19,7 +19,7 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-public class LocalDevice extends IDevice {
+public class LocalDevice implements IDevice {
 
   private static SXLog log = SX.getLogger("SX.Device");
 
@@ -593,7 +593,6 @@ public class LocalDevice extends IDevice {
     return new Element(monitorBounds[getContainingMonitorID(element)]);
   }
 
-  @Override
   public Screen getContainingScreen(Element element) {
     return new Screen(getContainingMonitorID(element));
   }
