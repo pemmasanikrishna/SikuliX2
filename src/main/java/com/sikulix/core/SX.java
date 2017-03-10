@@ -1955,7 +1955,7 @@ public class SX {
    */
   public static LocalDevice getSXLOCALDEVICE() {
     if (isNotSet(SXLOCALDEVICE)) {
-      SXLOCALDEVICE = new LocalDevice().start();
+      SXLOCALDEVICE = (LocalDevice) new LocalDevice().start();
     }
     return SXLOCALDEVICE;
   }
