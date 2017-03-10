@@ -2,6 +2,7 @@ package com.sikulix.core;
 
 import com.sikulix.api.Element;
 import com.sikulix.api.Picture;
+import com.sikulix.run.Server;
 
 import java.awt.Rectangle;
 
@@ -9,7 +10,17 @@ public class RemoteDevice implements IDevice {
 
   @Override
   public IDevice start(Object... args) {
-    return null;
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        Server.start(new String[0]);
+      }
+    }).start();
+    return this;
+  }
+
+  public boolean isValid() {
+    return true;
   }
 
   @Override

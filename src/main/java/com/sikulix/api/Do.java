@@ -851,7 +851,7 @@ public class Do {
   }
   //</editor-fold>
 
-  //<editor-fold desc="Screen related">
+  //<editor-fold desc="Device related">
   private static Element allMonitorsAsElement = null;
 
   /**
@@ -954,15 +954,25 @@ public class Do {
     }
     return elem.capture();
   }
-  //</editor-fold>
 
-  //<editor-fold desc="actions like find, wait, click">
+  public static boolean use(IDevice device) {
+    device.start();
+    if (device.isValid()) {
+      Element element = new Element(device.getMonitor());
+      element.setDevice(device);
+      use(element);
+    } else {
+      log.error("use(device): not valid: %s", device);
+      return false;
+    }
+    return true;
+  }
+
   public static IDevice getDevice() {
     if (!Do.on().isSpecial()) {
       return getLocalDevice();
     } else {
-      log.error("not implemented: non-local devices");
-      return getLocalDevice();
+      return Do.on().getDevice();
     }
   }
 
@@ -982,12 +992,14 @@ public class Do {
       return mousePos.x == x && mousePos.y == y;
     } else {
       Element mousePos = getDevice().at();
-      log.trace("MouseInfo.getPointerInfo(): mouse position: (%d, %d) should be (%d, %d)",
+      log.trace("device mouse position: (%d, %d) should be (%d, %d)",
               mousePos.x, mousePos.y, x, y);
       return mousePos.x == x && mousePos.y == y;
     }
   }
+  //</editor-fold>
 
+  //<editor-fold desc="actions like find, wait, click">
   public static Element at() {
     return getDevice().at();
   }
@@ -995,33 +1007,33 @@ public class Do {
   public static Element click(Object... args) {
     log.trace("click: start");
     Element target = findForClick(Finder.CLICK, args);
-    target.click();
+    Element clicked = target.click();
     log.trace("click: end");
-    return target;
+    return clicked;
   }
 
   public static Element doubleClick(Object... args) {
     log.trace("doubleClick: start");
     Element target = findForClick(Finder.DOUBLECLICK, args);
-    target.doubleClick();
+    Element clicked = target.doubleClick();
     log.trace("doubleClick: end");
-    return target;
+    return clicked;
   }
 
   public static Element rightClick(Object... args) {
     log.trace("rightClick: start");
     Element target = findForClick(Finder.RIGHTCLICK, args);
-    target.rightClick();
+    Element clicked = target.rightClick();
     log.trace("rightClick: end");
-    return target;
+    return clicked;
   }
 
   public static Element hover(Object... args) {
     log.trace("hover: start");
     Element target = findForClick(Finder.HOVER, args);
-    target.hover();
+    Element hovered = target.hover();
     log.trace("hover: end");
-    return target;
+    return hovered;
   }
 
   public static Element drag(Element from, Object... times) {

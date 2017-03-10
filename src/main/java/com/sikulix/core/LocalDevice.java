@@ -25,7 +25,7 @@ public class LocalDevice implements IDevice {
 
   //<editor-fold desc="*** houskeeping ***">
   @Override
-  public LocalDevice start(Object... args) {
+  public IDevice start(Object... args) {
     if (0 < initMonitors()) {
       try {
         robot = new LocalRobot();
@@ -44,6 +44,10 @@ public class LocalDevice implements IDevice {
   @Override
   public void stop() {
     SX.setSXLOCALDEVICE(null);
+  }
+
+  public boolean isValid() {
+    return true;
   }
 
   public NativeHook getHook() {
@@ -602,7 +606,7 @@ public class LocalDevice implements IDevice {
   }
   //TODO implement more support for Retina (HiDpi)
   public static boolean isRetina(int id) {
-    LocalDevice localDevice = new LocalDevice().start();
+    LocalDevice localDevice = (LocalDevice) new LocalDevice().start();
     if (SX.isMac()) {
       GraphicsDevice screen = localDevice.getGraphicsDevice(0);
 //      if (screen instanceof CGraphicsDevice) {

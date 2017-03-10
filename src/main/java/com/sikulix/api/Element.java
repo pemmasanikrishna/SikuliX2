@@ -154,6 +154,7 @@ public class Element implements Comparable<Element> {
     w = elem.w;
     h = elem.h;
     elementDevice = elem.elementDevice;
+    setSpecial(elem.isSpecial());
   }
 
   protected void init(int _x, int _y, int _w, int _h) {
@@ -208,6 +209,14 @@ public class Element implements Comparable<Element> {
     Element element = new Element();
     if (args.length > 0) {
 
+    }
+    return element;
+  }
+
+  public Element make(Object... args) {
+    Element element = Element.create(args);
+    if (isSpecial()) {
+      element.setDevice(getDevice());
     }
     return element;
   }
@@ -374,7 +383,7 @@ public class Element implements Comparable<Element> {
     Element.eType clazz = Element.eType.ELEMENT;
 
     String name = null;
-    
+
 
     public ElementFlat(Element element) {
       clazz = element.getType();
@@ -402,7 +411,7 @@ public class Element implements Comparable<Element> {
         }
       }
     }
-    
+
     public String getType() {
       return clazz.toString();
     }
@@ -423,7 +432,9 @@ public class Element implements Comparable<Element> {
       return h;
     }
 
-    public String getName() { return name; }
+    public String getName() {
+      return name;
+    }
 
     public ElementFlat getLastMatch() {
       return lastMatch;
@@ -599,7 +610,7 @@ public class Element implements Comparable<Element> {
 
   public Element above(int xoff) {
     Element monitor = getDevice().getContainingMonitor(this);
-    return monitor.intersection(new Element(x , y - xoff, w, Math.abs(xoff)));
+    return monitor.intersection(new Element(x, y - xoff, w, Math.abs(xoff)));
   }
 
   public Element belowAt() {
@@ -616,7 +627,7 @@ public class Element implements Comparable<Element> {
 
   public Element below(int xoff) {
     Element monitor = getDevice().getContainingMonitor(this);
-    return monitor.intersection(new Element(x , y + h + xoff, w, Math.abs(xoff)));
+    return monitor.intersection(new Element(x, y + h + xoff, w, Math.abs(xoff)));
   }
 
 // TODO getColor() implement more support and make it useable
@@ -982,6 +993,33 @@ public class Element implements Comparable<Element> {
     return eType.WINDOW.equals(getType());
   }
 
+  /**
+   * @return true if the element is useable and/or has valid content
+   */
+  public boolean isValid() {
+    return w > 1 && h > 1;
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="***** device related">
+  public IDevice getDevice() {
+    if (SX.isNull(elementDevice)) {
+      elementDevice = SX.getSXLOCALDEVICE();
+    }
+    return elementDevice;
+  }
+
+  public LocalDevice getLocalDevice() {
+    return SX.getSXLOCALDEVICE();
+  }
+
+  public void setDevice(IDevice elementDevice) {
+    this.elementDevice = elementDevice;
+    setSpecial();
+  }
+
+  protected IDevice elementDevice = null;
+
   public boolean isSpecial() {
     return special;
   }
@@ -995,41 +1033,6 @@ public class Element implements Comparable<Element> {
   }
 
   private boolean special = false;
-
-  /**
-   * @return true if the element is useable and/or has valid content
-   */
-  public boolean isValid() {
-    return w > 1 && h > 1;
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="***** device related">
-  public IDevice getDevice() {
-    if (SX.isNull(elementDevice)) {
-      if (!isSpecial()) {
-        elementDevice = SX.getSXLOCALDEVICE();
-      } else {
-        log.error("not implemented: non-local devices");
-        elementDevice = SX.getSXLOCALDEVICE();
-      }
-    }
-    return elementDevice;
-  }
-
-  public LocalDevice getLocalDevice() {
-    if (SX.isNull(elementDevice)) {
-      elementDevice = SX.getSXLOCALDEVICE();
-    }
-    return (LocalDevice) elementDevice;
-  }
-
-  public void setDevice(IDevice elementDevice) {
-    this.elementDevice = elementDevice;
-    setSpecial();
-  }
-
-  protected IDevice elementDevice = null;
 
   /**
    * returns -1, if outside of any screen <br>

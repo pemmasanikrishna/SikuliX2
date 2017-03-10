@@ -17,6 +17,7 @@ public interface IDevice {
 
   IDevice start(Object... args);
   void stop();
+  boolean isValid();
 
   int getNumberOfMonitors();
   Rectangle getMonitor(int... id);
