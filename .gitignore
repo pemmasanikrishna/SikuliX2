@@ -4,6 +4,7 @@
 # Package Files #
 *.jar
 !testjar.jar
+!vncviewer-1.7.1.jar
 *.war
 *.ear
 

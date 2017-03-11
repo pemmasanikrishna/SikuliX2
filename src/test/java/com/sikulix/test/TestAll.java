@@ -819,7 +819,7 @@ public class TestAll {
     log.p("String: %s", scr.getCenter());
     log.p("asJSON: %s", scr.getCenter().toJSON());
     log.p("String: %s", scr.getScreen());
-    log.p("asJSON: %s", scr.getScreen().toJSON());
+    log.p("asJSON: %s", scr.getScreen().asElement().toJSON());
     Element eScr = new Element(scr.toJSON());
   }
 

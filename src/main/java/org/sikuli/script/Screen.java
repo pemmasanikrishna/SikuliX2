@@ -13,7 +13,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Screen extends Region {
+public class Screen extends Region implements IScreen {
   private static SXLog log = SX.getLogger("API.SCREEN");
 
   private static eType eClazz = eType.SCREEN;
@@ -22,6 +22,11 @@ public class Screen extends Region {
   }
 
   private int id = -1;
+
+  @Override
+  public boolean isOtherScreen() {
+    return false;
+  }
 
   public int getID() {
     return id;

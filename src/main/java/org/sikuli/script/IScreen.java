@@ -1,5 +1,7 @@
 package org.sikuli.script;
 
+import com.sikulix.api.Element;
+
 import java.awt.*;
 
 public interface IScreen {
@@ -12,4 +14,5 @@ public interface IScreen {
   public int getW();
   public int getH();
   public Rectangle getBounds();
+  public Element asElement();
 }

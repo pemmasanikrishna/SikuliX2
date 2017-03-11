@@ -99,7 +99,7 @@ public class Region extends Element {
   public static Region create(Location loc, int w, int h) {
     int _x = loc.x;
     int _y = loc.y;
-    Screen s = loc.getScreen();
+    Screen s = (Screen) loc.getScreen();
     if (s == null) {
       _x = _y = 0;
       s = Screen.getPrimaryScreen();
@@ -115,7 +115,7 @@ public class Region extends Element {
   public static Region create(Location loc, int create_x_direction, int create_y_direction, int w, int h) {
     int _x = loc.x;
     int _y = loc.y;
-    Screen s = loc.getScreen();
+    Screen s = (Screen) loc.getScreen();
     if (s == null) {
       _x = _y = 0;
       s = Screen.getPrimaryScreen();
@@ -211,11 +211,11 @@ public class Region extends Element {
   }
 
   public Region offset(Location loc) {
-    return Region.create(x + loc.x, y + loc.y, w, h, getScreen());
+    return (Region) Region.create(x + loc.x, y + loc.y, w, h, getScreen());
   }
 
   public Region offset(int x, int y) {
-    return Region.create(this.x + x, this.y + y, w, h, getScreen());
+    return (Region) Region.create(this.x + x, this.y + y, w, h, getScreen());
   }
   //</editor-fold>
 
@@ -243,7 +243,7 @@ public class Region extends Element {
   }
 
   public Region grow(int l, int r, int t, int b) {
-    return Region.create(x - l, y - t, w + l + r, h + t + b, getScreen());
+    return (Region) Region.create(x - l, y - t, w + l + r, h + t + b, getScreen());
   }
 
   public static Region grow(Location loc, int x, int y, int w, int h) {
@@ -253,7 +253,7 @@ public class Region extends Element {
   public static Region grow(Location loc, int w, int h) {
     int _x = loc.x;
     int _y = loc.y;
-    Screen s = loc.getScreen();
+    Screen s = (Screen) loc.getScreen();
     if (s == null) {
       _x = _y = 0;
       s = Screen.getPrimaryScreen();
@@ -266,7 +266,7 @@ public class Region extends Element {
   public static Region grow(Location loc) {
     int _x = loc.x;
     int _y = loc.y;
-    Screen s = loc.getScreen();
+    Screen s = (Screen) loc.getScreen();
     if (s == null) {
       _x = _y = 0;
       s = Screen.getPrimaryScreen();

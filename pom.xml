@@ -43,6 +43,13 @@
     <maven.build.timestamp.format>yyyy-MM-dd_HH:mm</maven.build.timestamp.format>
   </properties>
 
+  <repositories>
+    <repository>
+      <id>sikulix-local</id>
+      <url>file://${project.basedir}/lib</url>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>commons-cli</groupId>
@@ -93,6 +100,16 @@
       <groupId>com.mashape.unirest</groupId>
       <artifactId>unirest-java</artifactId>
       <version>1.4.9</version>
+    </dependency>
+    <dependency>
+      <groupId>com.tigervnc</groupId>
+      <artifactId>vncviewer</artifactId>
+      <version>1.7.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.vidstige</groupId>
+      <artifactId>jadb</artifactId>
+      <version>-v1.0-g94ebf38-23</version>
     </dependency>
     <dependency>
       <groupId>somegroup</groupId>

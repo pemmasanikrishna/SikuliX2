@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.sikuli.script.IScreen;
 import org.sikuli.script.Screen;
 
 import javax.imageio.ImageIO;
@@ -78,13 +79,13 @@ public class Element implements Comparable<Element> {
     this.repeatWaitTime = repeatWaitTime;
   }
 
-  private Screen scr;
+  private IScreen scr;
 
-  public Screen getScreen() {
+  public IScreen getScreen() {
     return scr;
   }
 
-  protected void initScreen(Screen screen) {
+  protected void initScreen(IScreen screen) {
     if (screen != null) {
       if (screen.getID() < 0) {
         setSpecial();
