@@ -25,7 +25,7 @@ public class ADBClient {
     getConnection(true);
     if (jadb == null) {
       try {
-        new AdbServerLauncher().launch();
+        new AdbServerLauncher(null, null).launch();
         log.trace("ADBClient: ADBServer started");
         getConnection(false);
         if (jadb != null) {
