@@ -1,12 +1,16 @@
-package com.sikulix.core;
+/*
+ * Copyright (c) 2016 - sikulix.com - MIT license
+ */
+
+package com.sikulix.remote.server;
 
 import com.sikulix.api.Element;
 import com.sikulix.api.Picture;
-import com.sikulix.run.Server;
+import com.sikulix.core.IDevice;
 
 import java.awt.Rectangle;
 
-public class RemoteDevice implements IDevice {
+public class ServerDevice implements IDevice {
 
   @Override
   public IDevice start(Object... args) {

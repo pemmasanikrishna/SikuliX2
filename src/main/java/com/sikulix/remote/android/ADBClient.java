@@ -30,7 +30,6 @@ public class ADBClient {
         getConnection(false);
         if (jadb != null) {
           shouldStopServer = true;
-
         }
       } catch (Exception e) {
         //Cannot run program "adb": error=2, No such file or directory

@@ -2,7 +2,7 @@
  * Copyright (c) 2016 - sikulix.com - MIT license
  */
 
-package com.sikulix.run;
+package com.sikulix.remote.server;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
