@@ -7,6 +7,7 @@ package com.sikulix.test;
 import com.sikulix.api.*;
 import com.sikulix.api.Event;
 import com.sikulix.core.*;
+import com.sikulix.remote.vnc.VNCDevice;
 import com.sikulix.run.Runner;
 import org.junit.*;
 import org.junit.runners.MethodSorters;

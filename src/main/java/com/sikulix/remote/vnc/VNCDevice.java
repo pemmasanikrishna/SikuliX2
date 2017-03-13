@@ -7,12 +7,108 @@ package com.sikulix.remote.vnc;
 import com.sikulix.api.Element;
 import com.sikulix.api.Picture;
 import com.sikulix.core.IDevice;
+import com.sikulix.core.Parameters;
+import com.sikulix.core.SX;
+import com.sikulix.core.SXLog;
 
 import java.awt.Rectangle;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class VNCDevice implements IDevice{
+public class VNCDevice implements IDevice, Closeable{
+
+  static SXLog log;
+
+  private static String parameterNames = "ip,port,password,user,connectionTimeout,timeout";
+  private static String parameterClass = "s,i,s,s,i,i";
+
+  static {
+    log = SX.getLogger("SX.VNCDEVICE");
+    log.isSX();
+    log.on(SXLog.TRACE);
+  }
+
+  //<editor-fold desc="parameter: getter, setter">
+  public String getIp() {
+    return ip;
+  }
+
+  public void setIp(Object ip) {
+    this.ip = (String) ip;
+  }
+
+  public Integer getPort() {
+    return port;
+  }
+
+  public void setPort(Object port) {
+    this.port = (Integer) port;
+  }
+
+  public String getUser() {
+    return user;
+  }
+
+  public void setUser(Object user) {
+    this.user = (String) user;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(Object password) {
+    this.password = (String) password;
+  }
+
+  public Integer getConnectionTimeout() {
+    return connectionTimeout;
+  }
+
+  public void setConnectionTimeout(Object connectionTimeout) {
+    this.connectionTimeout = (Integer) connectionTimeout;
+  }
+
+  public Integer getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(Object timeout) {
+    this.timeout = (Integer) timeout;
+  }
+  //</editor-fold>
+
+  Parameters parameters = new Parameters(parameterNames, parameterClass);
+
+  private static List<IDevice> devices = new ArrayList<>();
+
+  private String ip = null;
+  private Integer port = null;
+  private String user = null;
+  private String password = null;
+  private Integer connectionTimeout = null;
+  private Integer timeout = null;
+
+  private VNCClient client = null;
+  private volatile boolean closed;
+  private Picture lastScreenImage;
+
   @Override
   public IDevice start(Object... args) {
+    if (args.length > 0) {
+      parameters.initParameters(this, args);
+      try {
+        client = VNCClient.connect(ip, port, password, true);
+        devices.add(this);
+      } catch (IOException e) {
+        log.error("VNCClient.connect: did not work: %s", e.getMessage());
+      }
+      return this;
+    }
     return null;
   }
 
@@ -22,8 +118,28 @@ public class VNCDevice implements IDevice{
   }
 
   @Override
+  public void close() {
+    closed = true;
+    try {
+      client.close();
+    } catch (IOException e) {
+      log.error("close(): did not work: %s", e.getMessage());
+    }
+    client = null;
+  }
+
+  public static void stopAll() {
+    if (devices.size() > 0) {
+      for (IDevice device : devices.toArray(new IDevice[]{})) {
+        device.stop();
+        devices.remove(device);
+      }
+    }
+  }
+
+  @Override
   public boolean isValid() {
-    return false;
+    return SX.isNotNull(client);
   }
 
   @Override
@@ -102,7 +218,7 @@ public class VNCDevice implements IDevice{
   }
 
   /**
-   * move the mouse from the current position to the offset given by the parameters
+   * move the mouse from the current position to the offset given by the parameterTypes
    *
    * @param xoff horizontal offset (&lt; 0 left, &gt; 0 right)
    * @param yoff vertical offset (&lt; 0 up, &gt; 0 down)
