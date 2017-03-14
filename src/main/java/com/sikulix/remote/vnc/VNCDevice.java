@@ -6,12 +6,10 @@ package com.sikulix.remote.vnc;
 
 import com.sikulix.api.Element;
 import com.sikulix.api.Picture;
-import com.sikulix.core.IDevice;
-import com.sikulix.core.Parameters;
-import com.sikulix.core.SX;
-import com.sikulix.core.SXLog;
+import com.sikulix.core.*;
 
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,14 +21,14 @@ public class VNCDevice implements IDevice, Closeable{
 
   static SXLog log;
 
-  private static String parameterNames = "ip,port,password,user,connectionTimeout,timeout";
-  private static String parameterClass = "s,i,s,s,i,i";
-
   static {
     log = SX.getLogger("SX.VNCDEVICE");
     log.isSX();
     log.on(SXLog.TRACE);
   }
+
+  private static String parameterNames = "ip,port,password,user,connectionTimeout,timeout";
+  private static String parameterClass = "s,i,s,s,i,i";
 
   //<editor-fold desc="parameter: getter, setter">
   public String getIp() {
@@ -100,10 +98,24 @@ public class VNCDevice implements IDevice, Closeable{
   @Override
   public IDevice start(Object... args) {
     if (args.length > 0) {
+      log.trace("start(): trying ...");
       parameters.initParameters(this, args);
       try {
         client = VNCClient.connect(ip, port, password, true);
         devices.add(this);
+        new Thread(new Runnable() {
+          @Override
+          public void run() {
+            try {
+              client.processMessages();
+            } catch (RuntimeException e) {
+              if (!closed) {
+                throw e;
+              }
+            }
+          }
+        }).start();
+        //client.refreshFramebuffer();
       } catch (IOException e) {
         log.error("VNCClient.connect: did not work: %s", e.getMessage());
       }
@@ -114,11 +126,12 @@ public class VNCDevice implements IDevice, Closeable{
 
   @Override
   public void stop() {
-
+    close();
   }
 
   @Override
   public void close() {
+    log.trace("close(): trying ...");
     closed = true;
     try {
       client.close();
@@ -149,6 +162,7 @@ public class VNCDevice implements IDevice, Closeable{
 
   @Override
   public Rectangle getMonitor(int... id) {
+    Rectangle bounds = client.getBounds();
     return null;
   }
 
@@ -258,8 +272,38 @@ public class VNCDevice implements IDevice, Closeable{
 
   }
 
+  int maxChecks = 5;
+
   @Override
   public Picture capture(Element what) {
-    return null;
+    if (SX.isNull(what)) {
+      what = new Element(client.getBounds());
+    }
+    client.refreshFramebuffer(what.x, what.y, what.w, what.h, false);
+    Picture picture1 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));
+    if (maxChecks == 0) {
+      return picture1;
+    }
+    SX.pause(0.15);
+    Picture picture2 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));
+    List<Element> rectangles = Finder.detectChanges(picture1.getContent(), picture2.getContent());
+    while (rectangles.size() == 0) {
+      picture1 = new Picture(picture2);
+      picture2 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));
+      rectangles = Finder.detectChanges(picture1.getContent(), picture2.getContent());
+      log.p("Start*********** changes: %d", rectangles.size());
+      maxChecks--;
+      if (maxChecks < 0) {
+        break;
+      }
+    }
+    while(rectangles.size() > 0) {
+      picture1 = new Picture(picture2);
+      picture2 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));
+      rectangles = Finder.detectChanges(picture1.getContent(), picture2.getContent());
+      log.p("End*********** changes: %d", rectangles.size());
+    }
+    maxChecks = 0;
+    return picture2;
   }
 }
