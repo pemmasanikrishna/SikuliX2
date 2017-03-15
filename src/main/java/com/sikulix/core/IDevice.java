@@ -12,8 +12,12 @@ public interface IDevice {
     LEFT, LEFTDOWN, LEFTUP, LEFTDOUBLE,
     RIGHT, RIGHTDOWN, RIGHTUP, RIGHTDOUBLE,
     MIDDLE, MIDDLEDOWN, MIDDLEUP, MIDDLEDOUBLE,
-    UP, DOWN
+    UP, DOWN, DOWNUP
   }
+
+  enum KeyMode {
+    PRESS_ONLY, RELEASE_ONLY, PRESS_RELEASE
+  };
 
   IDevice start(Object... args);
   void stop();
@@ -34,6 +38,9 @@ public interface IDevice {
   Element click(Action action);
   Element click(Element loc, Action action);
   Element dragDrop(Element from, Element to, Object... times);
+  void keyStart();
+  void keyStop();
+  void key(Action action, Object key);
 
   /**
    * move the mouse from the current position to the offset given by the parameters

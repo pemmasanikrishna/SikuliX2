@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VNCDevice implements IDevice, Closeable{
+public class VNCDevice implements IDevice, Closeable {
 
   static SXLog log;
 
@@ -229,6 +229,21 @@ public class VNCDevice implements IDevice, Closeable{
     return null;
   }
 
+  @Override
+  public void keyStart() {
+
+  }
+
+  @Override
+  public void keyStop() {
+
+  }
+
+  @Override
+  public void key(Action action, Object key) {
+
+  }
+
   /**
    * move the mouse from the current position to the offset given by the parameterTypes
    *
@@ -270,7 +285,7 @@ public class VNCDevice implements IDevice, Closeable{
 
   }
 
-  int maxChecks = 5;
+  int maxChecks = 100;
 
   @Override
   public Picture capture(Object... args) {
@@ -280,31 +295,33 @@ public class VNCDevice implements IDevice, Closeable{
         what = (Element) args[0];
       }
     }
-    client.refreshFramebuffer(what.x, what.y, what.w, what.h, false);
+    if (maxChecks > 0) {
+      client.refreshFramebuffer(what.x, what.y, what.w, what.h, false);
+    }
+    Picture picture2;
     Picture picture1 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));
-    if (maxChecks == 0) {
+    if (maxChecks > 0) {
+      SX.pause(0.15);
+      picture2 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));
+      List<Element> rectangles = Finder.detectChanges(picture1.getContent(), picture2.getContent());
+      while (rectangles.size() == 0) {
+        picture1 = new Picture(picture2);
+        picture2 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));
+        rectangles = Finder.detectChanges(picture1.getContent(), picture2.getContent());
+        maxChecks--;
+        if (maxChecks < 0) {
+          break;
+        }
+      }
+      while (rectangles.size() > 0) {
+        picture1 = new Picture(picture2);
+        picture2 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));
+        rectangles = Finder.detectChanges(picture1.getContent(), picture2.getContent());
+      }
+      maxChecks = 0;
+    } else {
       return picture1;
     }
-    SX.pause(0.15);
-    Picture picture2 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));
-    List<Element> rectangles = Finder.detectChanges(picture1.getContent(), picture2.getContent());
-    while (rectangles.size() == 0) {
-      picture1 = new Picture(picture2);
-      picture2 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));
-      rectangles = Finder.detectChanges(picture1.getContent(), picture2.getContent());
-      log.p("Start*********** changes: %d", rectangles.size());
-      maxChecks--;
-      if (maxChecks < 0) {
-        break;
-      }
-    }
-    while(rectangles.size() > 0) {
-      picture1 = new Picture(picture2);
-      picture2 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));
-      rectangles = Finder.detectChanges(picture1.getContent(), picture2.getContent());
-      log.p("End*********** changes: %d", rectangles.size());
-    }
-    maxChecks = 0;
     return picture2;
   }
 }

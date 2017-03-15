@@ -101,6 +101,21 @@ public class AndroidDevice implements IDevice{
     return null;
   }
 
+  @Override
+  public void keyStart() {
+
+  }
+
+  @Override
+  public void keyStop() {
+
+  }
+
+  @Override
+  public void key(Action action, Object key) {
+
+  }
+
   /**
    * move the mouse from the current position to the offset given by the parameters
    *

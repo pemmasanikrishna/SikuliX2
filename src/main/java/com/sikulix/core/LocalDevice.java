@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 public class LocalDevice implements IDevice {
 
-  private static SXLog log = SX.getLogger("SX.Device");
+  private static SXLog log = SX.getLogger("SX.LocalDevice");
 
   //<editor-fold desc="*** houskeeping ***">
   @Override
@@ -461,6 +461,21 @@ public class LocalDevice implements IDevice {
   //</editor-fold>
 
   //<editor-fold desc="*** keyboard ***">
+  @Override
+  public void keyStart() {
+    lock();
+  }
+
+  @Override
+  public void keyStop() {
+    unlock();
+  }
+
+  @Override
+  public void key(Action action, Object key) {
+    log.trace("key(): %s (%s)", key, action);
+  }
+
   public class Modifier {
     public static final int CTRL = InputEvent.CTRL_MASK;
     public static final int SHIFT = InputEvent.SHIFT_MASK;
@@ -672,10 +687,6 @@ public class LocalDevice implements IDevice {
     callback = new Event(handler);
   }
   //</editor-fold>
-
-  enum KeyMode {
-    PRESS_ONLY, RELEASE_ONLY, PRESS_RELEASE
-  };
 
   private class LocalRobot extends Robot {
 

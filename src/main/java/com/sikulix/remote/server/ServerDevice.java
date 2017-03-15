@@ -108,6 +108,21 @@ public class ServerDevice implements IDevice {
   }
 
   @Override
+  public void keyStart() {
+
+  }
+
+  @Override
+  public void keyStop() {
+
+  }
+
+  @Override
+  public void key(Action action, Object key) {
+
+  }
+
+  @Override
   public Element move(int xoff, int yoff) {
     return null;
   }

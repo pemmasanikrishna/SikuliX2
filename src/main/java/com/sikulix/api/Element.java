@@ -11,7 +11,6 @@ import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.sikuli.script.IScreen;
-import org.sikuli.script.Screen;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -1197,7 +1196,7 @@ public class Element implements Comparable<Element> {
       Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 3, 2, 2, 3, 1));
       return oMatBGR;
     } else if (bImg.getType() == BufferedImage.TYPE_3BYTE_BGR) {
-      log.error("makeMat: 3BYTE_BGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
+      log.trace("makeMat: 3BYTE_BGR (%dx%d)", bImg.getWidth(), bImg.getHeight());
       byte[] data = ((DataBufferByte) bImg.getRaster().getDataBuffer()).getData();
       aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC3);
       aMat.put(0, 0, data);
@@ -1352,9 +1351,153 @@ public class Element implements Comparable<Element> {
   //</editor-fold>
 
   //<editor-fold desc="***** write, paste">
-  public boolean write(String text) {
-    //TODO implement write(String text)
-    return true;
+  /**
+   * Compact alternative for type() with more options <br>
+   * - special keys and options are coded as #XN. or #X+ or #X- <br>
+   * where X is a refrence for a special key and N is an optional repeat factor <br>
+   * A modifier key as #X. modifies the next following key<br>
+   * the trailing . ends the special key, the + (press and hold) or - (release) does the same, <br>
+   * but signals press-and-hold or release additionally.<br>
+   * except #W / #w all special keys are not case-sensitive<br>
+   * a #wn. inserts a wait of n millisecs or n secs if n less than 60 <br>
+   * a #Wn. sets the type delay for the following keys (must be &gt; 60 and denotes millisecs) - otherwise taken as
+   * normal wait<br>
+   * Example: wait 2 secs then type CMD/CTRL - N then wait 1 sec then type DOWN 3 times<br>
+   * Windows/Linux: write("#w2.#C.n#W1.#d3.")<br>
+   * Mac: write("#w2.#M.n#W1.#D3.")<br>
+   * for more details about the special key codes and examples consult the docs <br>
+   *
+   * @param args a coded text interpreted as a series of key actions (press/hold/release)
+   * @return 0 for success 1 otherwise
+   */
+  //TODO how to document Object... parameters
+  public Element write(Object... args) {
+    if (args.length == 0) {
+      return this;
+    }
+    String text = "";
+    if (args[0] instanceof String) {
+      text = (String) args[0];
+    }
+    int typeDelay = 0;
+    log.trace("Write: %s" + text);
+    char c;
+    String token, tokenSave;
+    String modifier = "";
+    int k;
+    IDevice device = getDevice();
+    double pause = 0.020 + (typeDelay > 1 ? 1 : typeDelay / 1000);
+    device.keyStart();
+    for (int i = 0; i < text.length(); i++) {
+      log.trace("write: (%d) %s", i, text.substring(i));
+      c = text.charAt(i);
+      token = null;
+      boolean isModifier = false;
+      if (c == '#') {
+        if (text.charAt(i + 1) == '#') {
+          log.trace("write at: %d: %s", i, c);
+          i += 1;
+          continue;
+        }
+        if (text.charAt(i + 2) == '+' || text.charAt(i + 2) == '-') {
+          token = text.substring(i, i + 3);
+          isModifier = true;
+        } else if (-1 < (k = text.indexOf('.', i))) {
+          if (k > -1) {
+            token = text.substring(i, k + 1);
+            if (token.length() > Keys.keyMaxLength || token.substring(1).contains("#")) {
+              token = null;
+            }
+          }
+        }
+      }
+      Integer key = -1;
+      if (token == null) {
+        log.trace("write: %d: %s", i, c);
+      } else {
+        log.trace("write: token at %d: %s", i, token);
+        int repeat = 0;
+        if (token.toUpperCase().startsWith("#W")) {
+          if (token.length() > 3) {
+            i += token.length() - 1;
+            int t = 0;
+            try {
+              t = Integer.parseInt(token.substring(2, token.length() - 1));
+            } catch (NumberFormatException ex) {
+            }
+            if ((token.startsWith("#w") && t > 60)) {
+              pause = 0.020 + (t > 1000 ? 1 : t/1000);
+              log.trace("write: type delay: " + t);
+            } else {
+              log.trace("write: wait: " + t);
+              SX.pause((double) (t < 60 ? t : t/1000));
+            }
+            continue;
+          }
+        }
+        tokenSave = token;
+        token = token.substring(0, 2).toUpperCase() + ".";
+        if (Keys.isRepeatable(token)) {
+          try {
+            repeat = Integer.parseInt(tokenSave.substring(2, tokenSave.length() - 1));
+          } catch (NumberFormatException ex) {
+            token = tokenSave;
+          }
+        } else if (tokenSave.length() == 3 && Keys.isModifier(tokenSave.toUpperCase())) {
+          i += tokenSave.length() - 1;
+          modifier += tokenSave.substring(1, 2).toUpperCase();
+          continue;
+        } else {
+          token = tokenSave;
+        }
+        if (-1 < (key = Keys.toJavaKeyCodeFromText(token))) {
+          if (repeat > 0) {
+            log.trace("write: %s Repeating: %d", token, repeat);
+          } else {
+            log.trace("write: %s", tokenSave);
+            repeat = 1;
+          }
+          i += tokenSave.length() - 1;
+          if (isModifier) {
+            if (tokenSave.endsWith("+")) {
+              device.key(IDevice.Action.DOWN, key);
+            } else {
+              device.key(IDevice.Action.UP, key);
+            }
+            continue;
+          }
+          if (repeat > 1) {
+            for (int n = 0; n < repeat; n++) {
+              device.key(IDevice.Action.DOWNUP, key);
+            }
+            continue;
+          }
+        }
+      }
+      if (!modifier.isEmpty()) {
+        log.trace("write: modifier + " + modifier);
+        for (int n = 0; n < modifier.length(); n++) {
+          int modifierKey = Keys.toJavaKeyCodeFromText(String.format("#%s.", modifier.substring(n, n + 1)));
+          device.key(IDevice.Action.DOWN, modifierKey);
+        }
+      }
+      if (key > -1) {
+        device.key(IDevice.Action.DOWNUP, key);
+      } else {
+        device.key(IDevice.Action.DOWNUP, c);
+      }
+      if (!modifier.isEmpty()) {
+        log.trace("write: modifier - " + modifier);
+        for (int n = 0; n < modifier.length(); n++) {
+          int modifierKey = Keys.toJavaKeyCodeFromText(String.format("#%s.", modifier.substring(n, n + 1)));
+          device.key(IDevice.Action.UP, modifierKey);
+        }
+      }
+      SX.pause(pause);
+      modifier = "";
+    }
+    device.keyStop();
+    return this;
   }
 
   public boolean paste(String text) {
