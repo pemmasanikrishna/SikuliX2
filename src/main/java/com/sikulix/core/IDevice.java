@@ -61,5 +61,5 @@ public interface IDevice {
 
   void wheel(Action action, int steps);
 
-  Picture capture(Element what);
+  Picture capture(Object... args);
   }

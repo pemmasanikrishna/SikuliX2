@@ -143,7 +143,7 @@ public class AndroidDevice implements IDevice{
   }
 
   @Override
-  public Picture capture(Element what) {
+  public Picture capture(Object... args) {
     return null;
   }
 }

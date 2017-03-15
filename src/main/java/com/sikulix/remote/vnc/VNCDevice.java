@@ -9,13 +9,10 @@ import com.sikulix.api.Picture;
 import com.sikulix.core.*;
 
 import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class VNCDevice implements IDevice, Closeable{
 
@@ -115,10 +112,11 @@ public class VNCDevice implements IDevice, Closeable{
             }
           }
         }).start();
-        //client.refreshFramebuffer();
+        capture();
       } catch (IOException e) {
         log.error("VNCClient.connect: did not work: %s", e.getMessage());
       }
+      devices.add(this);
       return this;
     }
     return null;
@@ -275,9 +273,12 @@ public class VNCDevice implements IDevice, Closeable{
   int maxChecks = 5;
 
   @Override
-  public Picture capture(Element what) {
-    if (SX.isNull(what)) {
-      what = new Element(client.getBounds());
+  public Picture capture(Object... args) {
+    Element what = new Element(client.getBounds());
+    if (args.length > 0) {
+      if (args[0] instanceof Element) {
+        what = (Element) args[0];
+      }
     }
     client.refreshFramebuffer(what.x, what.y, what.w, what.h, false);
     Picture picture1 = new Picture(client.getFrameBuffer(what.x, what.y, what.w, what.h));

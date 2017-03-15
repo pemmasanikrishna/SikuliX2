@@ -925,6 +925,26 @@ public class TestAll {
       story.waitForEnd();
     }
   }
+
+  @Test
+  public void test_601_basicVNC() {
+    currentTest = "test_601_basicVNC";
+    if (!SX.isHeadless() && !SX.onTravisCI()) {
+      result = "capture something on a VNCScreen";
+      IDevice vnc = new VNCDevice();
+      vnc.start("192.168.2.24", 5900);
+      Element area = new Element(100, 100, 300, 300);
+      Picture picture = null;
+      for(int n = 0; n < 20; n++) {
+        start();
+        picture = vnc.capture(area);
+        log.p("time: %s", end());
+        picture.show(2);
+      }
+      SX.pause(1);
+      vnc.stop();
+    }
+  }
   //</editor-fold>
 
   //<editor-fold desc="ignored">
@@ -935,23 +955,10 @@ public class TestAll {
   public void test_999_someThingToTest() {
 //    log.startTimer();
     currentTest = "test_0999_someThingToTest";
-    if (!SX.onTravisCI() ) { //&& log.isGlobalLevel(log.TRACE)) {
+    if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
         result = "nothing to do here";
-        IDevice vnc = new VNCDevice();
-        vnc.start("192.168.2.24", 5900);
-        Element area = new Element(100, 100, 300, 300);
-        area = null;
-        Picture picture = null;
-        for(int n = 0; n < 10; n++) {
-          start();
-          picture = vnc.capture(area);
-          log.p("time: %s", end());
-          picture.show(2);
-        }
-        SX.pause(1);
-        vnc.stop();
 //end
       } else {
         result = "headless: not testing";

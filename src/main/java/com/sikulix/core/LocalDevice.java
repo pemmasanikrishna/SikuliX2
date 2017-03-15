@@ -4,10 +4,8 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.Element;
+import com.sikulix.api.*;
 import com.sikulix.api.Event;
-import com.sikulix.api.Handler;
-import com.sikulix.api.Picture;
 import com.sikulix.util.animation.Animator;
 import com.sikulix.util.animation.AnimatorOutQuarticEase;
 import com.sikulix.util.animation.AnimatorTimeBased;
@@ -619,12 +617,18 @@ public class LocalDevice implements IDevice {
 
   //TODO implement capture, show coordination
 
-  public Picture capture(Element elem) {
-    Picture img = new Picture(robot.createScreenCapture(elem.getRectangle()));
+  public Picture capture(Object... args) {
+    Element what = Do.on();
+    if (args.length > 0) {
+      if (args[0] instanceof Element) {
+        what = (Element) args[0];
+      }
+    }
+    Picture img = new Picture(robot.createScreenCapture(what.getRectangle()));
     if (img.hasContent()) {
-      elem.setContent(img.getContent());
+      what.setContent(img.getContent());
     } else {
-      elem.setContent();
+      what.setContent();
     }
     return img;
   }
