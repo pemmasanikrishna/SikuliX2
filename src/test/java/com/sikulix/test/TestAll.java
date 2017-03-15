@@ -934,10 +934,10 @@ public class TestAll {
       IDevice vnc = new VNCDevice();
       vnc.start("192.168.2.24", 5900);
       Element area = new Element(100, 100, 300, 300);
-      Picture picture = null;
-      for(int n = 0; n < 20; n++) {
+      Picture picture;
+      for(int n = 0; n < 3; n++) {
         start();
-        picture = vnc.capture(area);
+        picture = vnc.capture();
         log.p("time: %s", end());
         picture.show(2);
       }
@@ -953,11 +953,13 @@ public class TestAll {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-//    log.startTimer();
+    log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
+        Picture picture = new Element(Do.on()).capture();
+        picture.show(2);
         result = "nothing to do here";
 //end
       } else {

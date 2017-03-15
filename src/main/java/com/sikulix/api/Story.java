@@ -87,23 +87,37 @@ public class Story {
     }
     waitForFrame = 0;
     String contentLoaded = "with content";
-    storyTopLeft = storyBackground.getCentered();
     if (storyBackground.isSymbol()) {
       add(storyBackground);
       canDrag = true;
     } else {
+      Element screen = new Element(Do.getLocalDevice().getMonitor(monitor));
+      int addBorder = 0;
+      int screenHeight = screen.h;
+      if (!storyBackground.equals(screen)) {
+        withBorder = true;
+        addBorder = 2 * borderThickness;
+        screenHeight = screen.h - (SX.isMac() ? 21 : 0);
+      }
       if (storyBackground.hasContent()) {
         showImg = storyBackground.get();
       } else {
         showImg = storyBackground.capture().get();
         contentLoaded = "captured";
       }
-      Element screen = new Element(Do.getLocalDevice().getMonitor(monitor));
-      if (!storyBackground.equals(screen)) {
+      double storyW = storyBackground.w + addBorder;
+      double storyH = storyBackground.h + addBorder;
+      if (storyW > screen.w || storyH > screenHeight) {
+        double toResize = Math.min(screen.w/storyW, (screenHeight)/storyH);
+        showImg = new Picture(showImg).resize(((int) (toResize * 100))/100.0).get();
         withBorder = true;
       }
     }
-    storyImg = plainBackground(storyBackground);
+    storyImg = plainBackground(new Picture(showImg));
+    storyTopLeft = new Picture(storyImg).getCentered();
+    if (withBorder && SX.isMac()) {
+      storyTopLeft.y += 11;
+    }
     localDevice = (LocalDevice) Do.getLocalDevice();
     log.trace("init: %s: %s", contentLoaded, storyBackground);
   }
@@ -337,8 +351,8 @@ public class Story {
       if (withBorder || shouldAddBorder) {
         margin = borderThickness;
       }
-      storyW = storyBackground.w + margin * 2;
-      storyH = storyBackground.h + margin * 2;
+      storyW = showImg.getWidth() + margin * 2;
+      storyH = showImg.getHeight() + margin * 2;
       Dimension panelSize = new Dimension(storyW, storyH);
       panel.setPreferredSize(panelSize);
       Element location = new Element(panelSize).getCentered(onElement);
@@ -346,7 +360,7 @@ public class Story {
       contentPane.setLayout(new OverlayLayout(contentPane));
       contentPane.add(panel);
       frame.pack();
-      frame.setLocation(location.x, location.y);
+      frame.setLocation(storyTopLeft.x, storyTopLeft.y);
       if (waitBefore > 0) {
         new Thread(new ShowWaitBefore(frame, waitBefore)).start();
       } else {
