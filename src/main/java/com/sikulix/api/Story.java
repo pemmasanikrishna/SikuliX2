@@ -89,6 +89,7 @@ public class Story {
     String contentLoaded = "with content";
     if (storyBackground.isSymbol()) {
       add(storyBackground);
+      storyImg = plainBackground(storyBackground);
       canDrag = true;
     } else {
       Element screen = new Element(Do.getLocalDevice().getMonitor(monitor));
@@ -112,8 +113,8 @@ public class Story {
         showImg = new Picture(showImg).resize(((int) (toResize * 100))/100.0).get();
         withBorder = true;
       }
+      storyImg = plainBackground(new Picture(showImg));
     }
-    storyImg = plainBackground(new Picture(showImg));
     storyTopLeft = new Picture(storyImg).getCentered();
     if (withBorder && SX.isMac()) {
       storyTopLeft.y += 11;
@@ -351,8 +352,13 @@ public class Story {
       if (withBorder || shouldAddBorder) {
         margin = borderThickness;
       }
-      storyW = showImg.getWidth() + margin * 2;
-      storyH = showImg.getHeight() + margin * 2;
+      if (SX.isNotNull(showImg)) {
+        storyW = showImg.getWidth() + margin * 2;
+        storyH = showImg.getHeight() + margin * 2;
+      } else {
+        storyW = storyBackground.w;
+        storyH = storyBackground.h;
+      }
       Dimension panelSize = new Dimension(storyW, storyH);
       panel.setPreferredSize(panelSize);
       Element location = new Element(panelSize).getCentered(onElement);
