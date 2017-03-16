@@ -377,7 +377,7 @@ public class Keys {
     keyTexts.put("#M+", toJavaKeyCode(C_META)[0]);
     keyTexts.put("#M-", toJavaKeyCode(C_META)[0]);
     for (String k : keyTexts.keySet()) {
-      log.trace("Key: %s is: %s", k, KeyEvent.getKeyText(keyTexts.get(k)));
+      //log.trace("Key: %s is: %s", k, KeyEvent.getKeyText(keyTexts.get(k)));
       if (k.length() < 4) {
         continue;
       }

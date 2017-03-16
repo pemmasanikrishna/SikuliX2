@@ -464,16 +464,25 @@ public class LocalDevice implements IDevice {
   @Override
   public void keyStart() {
     lock();
+    log.trace("keyStart");
   }
 
   @Override
   public void keyStop() {
     unlock();
+    log.trace("keyStop");
   }
 
   @Override
   public void key(Action action, Object key) {
-    log.trace("key(): %s (%s)", key, action);
+    if (key instanceof Character) {
+      log.trace("key(char): %s (%s)", key, action);
+      robot.typeChar((Character) key, action);
+    } else if (key instanceof Integer) {
+      robot.typeInt((Integer) key, action);
+    } else {
+      log.trace("key(???): %s (%s)", key, action);
+    }
   }
 
   public class Modifier {
@@ -488,16 +497,6 @@ public class LocalDevice implements IDevice {
 
   public boolean hasModifier(int mods, int mkey) {
     return (mods & mkey) != 0;
-  }
-
-  public int[] toJavaKeyCode(char character) {
-    //TODO implement toJavaKeyCode
-    return new int[0];
-  }
-
-  public int toJavaKeyCodeFromText(String s) {
-    //TODO implement toJavaKeyCodeFromText
-    return 0;
   }
   //</editor-fold>
 
@@ -703,6 +702,17 @@ public class LocalDevice implements IDevice {
       setAutoDelay(stdAutoDelay);
       setAutoWaitForIdle(false);
     }
+
+    public void pause(int ms) {
+      if (ms < 0) {
+        return;
+      }
+      while (ms > MAX_DELAY) {
+        super.delay(MAX_DELAY);
+        ms -= MAX_DELAY;
+      }
+      super.delay(ms);
+    }
     //</editor-fold>
 
     //<editor-fold desc="Mouse">
@@ -747,17 +757,6 @@ public class LocalDevice implements IDevice {
         pause(stdDelay);
       }
       waitForIdle();
-    }
-
-    public void pause(int ms) {
-      if (ms < 0) {
-        return;
-      }
-      while (ms > MAX_DELAY) {
-        super.delay(MAX_DELAY);
-        ms -= MAX_DELAY;
-      }
-      super.delay(ms);
     }
     //</editor-fold>
 
@@ -820,7 +819,7 @@ public class LocalDevice implements IDevice {
         for (int i = 0; i < keys.length(); i++) {
           if (heldKeys.indexOf(keys.charAt(i)) == -1) {
             log.trace("press: " + keys.charAt(i));
-            typeChar(keys.charAt(i), KeyMode.PRESS_ONLY);
+            typeChar(keys.charAt(i), Action.DOWN);
             heldKeys += keys.charAt(i);
           }
         }
@@ -849,7 +848,7 @@ public class LocalDevice implements IDevice {
           int pos;
           if ((pos = heldKeys.indexOf(keys.charAt(i))) != -1) {
             log.trace("release: " + keys.charAt(i));
-            typeChar(keys.charAt(i), KeyMode.RELEASE_ONLY);
+            typeChar(keys.charAt(i), Action.UP);
             heldKeys = heldKeys.substring(0, pos)
                     + heldKeys.substring(pos + 1);
           }
@@ -879,49 +878,53 @@ public class LocalDevice implements IDevice {
       }
       waitForIdle();
     }
-    //</editor-fold>
 
-    //<editor-fold desc="type">
-    public void typeChar(char character, KeyMode mode) {
-      log.trace("Robot: doType: %s ( %d )",
-              KeyEvent.getKeyText(toJavaKeyCode(character)[0]),
-              toJavaKeyCode(character)[0]);
-      doType(mode, toJavaKeyCode(character));
+    public void typeChar(char character, IDevice.Action action) {
+      log.trace("Robot: typeChar(%s): %s ( %d )", action,
+              KeyEvent.getKeyText(Keys.toJavaKeyCode(character)[0]),
+              Keys.toJavaKeyCode(character)[0]);
+      doType(action, Keys.toJavaKeyCode(character));
+    }
+
+    public void typeInt(Integer character, IDevice.Action action) {
+      log.trace("Robot: typeInt(%s): %s ( %d )", action,
+              KeyEvent.getKeyText(character), character);
+      doType(action, character);
     }
 
     public void typeKey(int key) {
       log.trace("Robot: doType: %s ( %d )", KeyEvent.getKeyText(key), key);
       if (SX.isMac()) {
-        if (key == toJavaKeyCodeFromText("#N.")) {
-          doType(KeyMode.PRESS_ONLY, toJavaKeyCodeFromText("#C."));
-          doType(KeyMode.PRESS_RELEASE, key);
-          doType(KeyMode.RELEASE_ONLY, toJavaKeyCodeFromText("#C."));
+        if (key == Keys.toJavaKeyCodeFromText("#N.")) {
+          doType(Action.DOWN, Keys.toJavaKeyCodeFromText("#C."));
+          doType(Action.DOWNUP, key);
+          doType(Action.UP, Keys.toJavaKeyCodeFromText("#C."));
           return;
-        } else if (key == toJavaKeyCodeFromText("#T.")) {
-          doType(KeyMode.PRESS_ONLY, toJavaKeyCodeFromText("#C."));
-          doType(KeyMode.PRESS_ONLY, toJavaKeyCodeFromText("#A."));
-          doType(KeyMode.PRESS_RELEASE, key);
-          doType(KeyMode.RELEASE_ONLY, toJavaKeyCodeFromText("#A."));
-          doType(KeyMode.RELEASE_ONLY, toJavaKeyCodeFromText("#C."));
+        } else if (key == Keys.toJavaKeyCodeFromText("#T.")) {
+          doType(Action.DOWN, Keys.toJavaKeyCodeFromText("#C."));
+          doType(Action.DOWN, Keys.toJavaKeyCodeFromText("#A."));
+          doType(Action.DOWNUP, key);
+          doType(Action.UP, Keys.toJavaKeyCodeFromText("#A."));
+          doType(Action.UP, Keys.toJavaKeyCodeFromText("#C."));
           return;
-        } else if (key == toJavaKeyCodeFromText("#X.")) {
-          key = toJavaKeyCodeFromText("#T.");
-          doType(KeyMode.PRESS_ONLY, toJavaKeyCodeFromText("#A."));
-          doType(KeyMode.PRESS_RELEASE, key);
-          doType(KeyMode.RELEASE_ONLY, toJavaKeyCodeFromText("#A."));
+        } else if (key == Keys.toJavaKeyCodeFromText("#X.")) {
+          key = Keys.toJavaKeyCodeFromText("#T.");
+          doType(Action.DOWN, Keys.toJavaKeyCodeFromText("#A."));
+          doType(Action.DOWNUP, key);
+          doType(Action.UP, Keys.toJavaKeyCodeFromText("#A."));
           return;
         }
       }
-      doType(KeyMode.PRESS_RELEASE, key);
+      doType(Action.DOWNUP, key);
     }
 
-    private void doType(KeyMode mode, int... keyCodes) {
+    private void doType(IDevice.Action action, int... keyCodes) {
       waitForIdle();
-      if (mode == KeyMode.PRESS_ONLY) {
+      if (Action.DOWN.equals(action)) {
         for (int i = 0; i < keyCodes.length; i++) {
           doKeyPress(keyCodes[i]);
         }
-      } else if (mode == KeyMode.RELEASE_ONLY) {
+      } else if (Action.UP.equals(action)) {
         for (int i = 0; i < keyCodes.length; i++) {
           doKeyRelease(keyCodes[i]);
         }

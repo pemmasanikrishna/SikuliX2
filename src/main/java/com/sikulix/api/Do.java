@@ -1147,6 +1147,10 @@ public class Do {
   //</editor-fold>
   //</editor-fold>
 
+  public static boolean write(Object... args) {
+    return Do.on().write(args);
+  }
+
   public static Element element(Object... args) {
     Element elem = Element.create(args);
     return elem;

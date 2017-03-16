@@ -1371,16 +1371,16 @@ public class Element implements Comparable<Element> {
    * @return 0 for success 1 otherwise
    */
   //TODO how to document Object... parameters
-  public Element write(Object... args) {
+  public boolean write(Object... args) {
     if (args.length == 0) {
-      return this;
+      return false;
     }
     String text = "";
     if (args[0] instanceof String) {
       text = (String) args[0];
     }
     int typeDelay = 0;
-    log.trace("Write: %s" + text);
+    log.trace("write: %s", text);
     char c;
     String token, tokenSave;
     String modifier = "";
@@ -1395,7 +1395,6 @@ public class Element implements Comparable<Element> {
       boolean isModifier = false;
       if (c == '#') {
         if (text.charAt(i + 1) == '#') {
-          log.trace("write at: %d: %s", i, c);
           i += 1;
           continue;
         }
@@ -1412,10 +1411,8 @@ public class Element implements Comparable<Element> {
         }
       }
       Integer key = -1;
-      if (token == null) {
-        log.trace("write: %d: %s", i, c);
-      } else {
-        log.trace("write: token at %d: %s", i, token);
+      if (SX.isNotNull(token)) {
+        log.trace("write: (%d) token %s", i, token);
         int repeat = 0;
         if (token.toUpperCase().startsWith("#W")) {
           if (token.length() > 3) {
@@ -1475,7 +1472,7 @@ public class Element implements Comparable<Element> {
         }
       }
       if (!modifier.isEmpty()) {
-        log.trace("write: modifier + " + modifier);
+        log.trace("write: modifier down " + modifier);
         for (int n = 0; n < modifier.length(); n++) {
           int modifierKey = Keys.toJavaKeyCodeFromText(String.format("#%s.", modifier.substring(n, n + 1)));
           device.key(IDevice.Action.DOWN, modifierKey);
@@ -1487,7 +1484,7 @@ public class Element implements Comparable<Element> {
         device.key(IDevice.Action.DOWNUP, c);
       }
       if (!modifier.isEmpty()) {
-        log.trace("write: modifier - " + modifier);
+        log.trace("write: modifier up " + modifier);
         for (int n = 0; n < modifier.length(); n++) {
           int modifierKey = Keys.toJavaKeyCodeFromText(String.format("#%s.", modifier.substring(n, n + 1)));
           device.key(IDevice.Action.UP, modifierKey);
@@ -1497,7 +1494,7 @@ public class Element implements Comparable<Element> {
       modifier = "";
     }
     device.keyStop();
-    return this;
+    return true;
   }
 
   public boolean paste(String text) {

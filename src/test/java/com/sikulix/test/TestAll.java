@@ -953,13 +953,14 @@ public class TestAll {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    log.startTimer();
+    //log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        Picture picture = new Element(Do.on()).capture();
-        picture.show(2);
+        Do.click(new Element(184, 77));
+        SX.pause(2);
+        Do.write("#M.a#B.Test");
         result = "nothing to do here";
 //end
       } else {
