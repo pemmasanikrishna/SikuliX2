@@ -825,19 +825,19 @@ public class TestAll {
   }
 
   @Test
-  public void test_200_popat() {
-    currentTest = "test_200_popat";
-    boolean assertVal = true;
-    if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
-      Do.popat(300, 300);
-      Do.popup("Use mouse to click OK", "testing popat");
-      Element loc = Do.at();
-      result = String.format("clicked at (%d, %d)", loc.x, loc.y);
-      assertVal = loc.x > 300 && loc.x < 450;
-    } else {
-      result = "TravisCI or NonInteractive: not testing";
-    }
-    assert assertVal;
+  public void test_200_popup() {
+    currentTest = "test_200_popup";
+    result = "popup, popAsk, popError";
+    Boolean returnValue;
+    returnValue = Do.popup("click OK", "popup autoclose",
+            3, new Element(300, 300));
+    assert SX.isNull(returnValue);
+    returnValue = Do.popAsk("click No or Yes", "popAsk autoclose",
+            3, new Element(300, 300));
+    assert SX.isNull(returnValue);
+    returnValue = Do.popError("click OK", "popError autoclose",
+            3, new Element(300, 300));
+    assert SX.isNull(returnValue);
   }
 
   @Test
@@ -935,7 +935,7 @@ public class TestAll {
       vnc.start("192.168.2.24", 5900);
       Element area = new Element(100, 100, 300, 300);
       Picture picture;
-      for(int n = 0; n < 3; n++) {
+      for (int n = 0; n < 3; n++) {
         start();
         picture = vnc.capture();
         log.p("time: %s", end());
@@ -945,6 +945,8 @@ public class TestAll {
       vnc.stop();
     }
   }
+
+  //TODO test for write()
   //</editor-fold>
 
   //<editor-fold desc="ignored">
@@ -953,14 +955,14 @@ public class TestAll {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    //log.startTimer();
+    log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        Do.click(new Element(184, 77));
-        SX.pause(2);
-        Do.write("#M.a#B.Test");
+        Do.popup(new Element(300, 300));
+//        log.p("popAsk: %s", Do.popAsk());
+//        Do.popError();
         result = "nothing to do here";
 //end
       } else {
@@ -971,4 +973,7 @@ public class TestAll {
     }
     assert true;
   }
+
+
 }
+

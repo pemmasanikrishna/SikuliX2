@@ -9,6 +9,7 @@ import com.sikulix.core.*;
 //import com.sikulix.scripting.SXRunner;
 import com.sikulix.util.FileChooser;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import org.apache.commons.collections.map.HashedMap;
 import org.sikuli.script.Key;
 
 import javax.swing.*;
@@ -20,9 +21,7 @@ import java.awt.datatransfer.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 
 /**
  * Implements the top level features as static methods to allow the usage somehow like "commands".<br>
@@ -64,18 +63,33 @@ public class Do {
     return new Point((int) screen0.getCenterX(), (int) screen0.getCenterY());
   }
 
-  private static JFrame popLocation() {
-    if (null == locPopAt) {
-      locPopAt = getLocPopAt();
+  public static JFrame popLocation(Object... args) {
+    if (args.length == 0) {
       if (null == locPopAt) {
-        return null;
+        locPopAt = getLocPopAt();
+        if (null == locPopAt) {
+          return null;
+        }
       }
+    }
+    return getFrame(locPopAt);
+  }
+
+  private static JFrame getFrame(Object point) {
+    int x;
+    int y;
+    if (point instanceof Point) {
+      x = ((Point) point).x;
+      y = ((Point) point).y;
+    } else {
+      x = ((Element) point).getCenter().x;
+      y = ((Element) point).getCenter().y;
     }
     JFrame anchor = new JFrame();
     anchor.setAlwaysOnTop(true);
     anchor.setUndecorated(true);
     anchor.setSize(1, 1);
-    anchor.setLocation(locPopAt);
+    anchor.setLocation(x, y);
     anchor.setVisible(true);
     return anchor;
   }
@@ -210,56 +224,118 @@ public class Do {
   }
   //</editor-fold>
 
-  //<editor-fold desc="SX Do popup, popAsk, popError">
-  public static void popup(String message) {
-    popup(message, "Sikuli");
+  private enum PopType {
+    POPUP, POPASK, POPERROR
   }
 
-  public static void popup(String message, String title) {
+  public static Boolean popup(Object... args) {
     if (SX.isHeadless()) {
-      log.error("running headless: [%s] popup(%s)", title, message);
+      log.error("running headless: popup");
     } else {
-      JFrame anchor = popLocation();
-      JOptionPane.showMessageDialog(anchor, message, title, JOptionPane.PLAIN_MESSAGE);
-      if (anchor != null) {
-        anchor.dispose();
+      return (Boolean) doPop(PopType.POPUP, args);
+    }
+    return false;
+  }
+
+  public static Boolean popAsk(Object... args) {
+    if (SX.isHeadless()) {
+      log.error("running headless: popAsk");
+    } else {
+      return (Boolean) doPop(PopType.POPASK, args);
+    }
+    return false;
+  }
+
+  public static Boolean popError(Object... args) {
+    if (SX.isHeadless()) {
+      log.error("running headless: popError");
+    } else {
+      return (Boolean) doPop(PopType.POPERROR, args);
+    }
+    return false;
+  }
+
+  private static Object doPop(PopType popType, Object... args) {
+    class RunInput implements Runnable {
+      PopType popType = PopType.POPUP;
+      JFrame frame = null;
+      String title = "";
+      String message = "";
+      Integer timeout = 0;
+      boolean running = true;
+      Map<String, Object> parameters = new HashedMap();
+      Object returnValue;
+
+      public RunInput(PopType popType, Object... args) {
+        this.popType = popType;
+        parameters = getPopParameters(args);
+        frame = getFrame(parameters.get("location"));
+        title = (String) parameters.get("title");
+        message = (String) parameters.get("message");
+        timeout = (Integer) parameters.get("timeout");
+      }
+
+      @Override
+      public void run() {
+        returnValue = null;
+        if (PopType.POPUP.equals(popType)) {
+          JOptionPane.showMessageDialog(frame, message, title, JOptionPane.PLAIN_MESSAGE);
+          returnValue = new Boolean(true);
+        } else if (PopType.POPASK.equals(popType)) {
+          int ret = JOptionPane.showConfirmDialog(frame, message, title, JOptionPane.YES_NO_OPTION);
+          returnValue = new Boolean(true);
+          if (ret == JOptionPane.CLOSED_OPTION || ret == JOptionPane.NO_OPTION) {
+            returnValue = new Boolean(false);
+          }
+        } else if (PopType.POPERROR.equals(popType)) {
+          JOptionPane.showMessageDialog(frame, message, title, JOptionPane.ERROR_MESSAGE);
+          returnValue = new Boolean(true);
+        }
+        stop();
+      }
+
+      public boolean isRunning() {
+        return running;
+      }
+
+      public void stop() {
+        frame.dispose();
+        running = false;
+      }
+
+      public int getTimeout() {
+        if (Integer.MAX_VALUE == timeout) {
+          return timeout;
+        }
+        return timeout * 1000;
+      }
+
+      public Object getReturnValue() {
+        return returnValue;
       }
     }
+    RunInput popRun = new RunInput(popType, args);
+    new Thread(popRun).start();
+    long end = new Date().getTime() + popRun.getTimeout();
+    while (popRun.isRunning()) {
+      SX.pause(0.3);
+      if (end < new Date().getTime()) {
+        popRun.stop();
+      }
+    }
+    return popRun.getReturnValue();
   }
 
-  public static boolean popAsk(String msg) {
-    return popAsk(msg, null);
-  }
-
-  public static boolean popAsk(String msg, String title) {
-    if (title == null) {
-      title = "... something to decide!";
-    }
-    JFrame anchor = popLocation();
-    int ret = JOptionPane.showConfirmDialog(anchor, msg, title, JOptionPane.YES_NO_OPTION);
-    if (anchor != null) {
-      anchor.dispose();
-    }
-    if (ret == JOptionPane.CLOSED_OPTION || ret == JOptionPane.NO_OPTION) {
-      return false;
-    }
-    return true;
-  }
-
-  public static void popError(String message) {
-    popError(message, "Sikuli");
-  }
-
-  public static void popError(String message, String title) {
-    JFrame anchor = popLocation();
-    JOptionPane.showMessageDialog(anchor, message, title, JOptionPane.ERROR_MESSAGE);
-    if (anchor != null) {
-      anchor.dispose();
-    }
+  private static Map<String, Object> getPopParameters(Object... args) {
+    String parameterNames = "message,title,timeout,location";
+    String parameterClass = "s,s,i,e";
+    Object[] parameterDefault = new Object[]{"not set", "SikuliX", Integer.MAX_VALUE, Do.on()};
+    return Parameters.get(parameterNames, parameterClass, parameterDefault, args);
   }
   //</editor-fold>
 
   //<editor-fold desc="SX Do popSelect, popFile">
+
   public static String popSelect(String msg, String[] options, String preset) {
     return popSelect(msg, null, options, preset);
   }

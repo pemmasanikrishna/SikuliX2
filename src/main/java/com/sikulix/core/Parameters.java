@@ -4,6 +4,8 @@
 
 package com.sikulix.core;
 
+import com.sikulix.api.Element;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -13,7 +15,17 @@ public class Parameters {
 
   private static SXLog log = SX.getLogger("SX.Parameters");
 
+  private Map<String, String> parameterTypes = new HashMap<>();
+  private String[] parameterNames = null;
+  private Object[] parameterDefaults = new Object[0];
+
+  private Map<String, Object> parameters = new HashMap<>();
+
   public Parameters(String theNames, String theClasses) {
+    this(theNames, theClasses, new Object[0]);
+  }
+
+  public Parameters(String theNames, String theClasses, Object[] theDefaults) {
     String[] names = theNames.split(",");
     String[] classes = theClasses.split(",");
     if (names.length == classes.length) {
@@ -27,26 +39,34 @@ public class Parameters {
             clazz = "Integer";
           } else if ("d".equals(clazz)) {
             clazz = "Double";
+          } else if ("e".equals(clazz)) {
+            clazz = "Element";
           }
         }
-        if ("String".equals(clazz) || "Integer".equals(clazz) || "Double".equals(clazz)) {
+        if ("String".equals(clazz) || "Integer".equals(clazz) ||
+                "Double".equals(clazz) || "Element".equals(clazz)) {
           parameterTypes.put(names[n], clazz);
         }
       }
       parameterNames = names;
+      parameterDefaults = theDefaults;
     } else {
       log.error("different length: names: %s classes: %s", theNames, theClasses);
     }
   }
 
+  public static Map<String, Object> get(Object... args) {
+    String theNames = (String) args[0];
+    String theClasses = (String) args[1];
+    Object[] theDefaults = (Object[]) args[2];
+    Object[] theArgs = (Object[]) args[3];
+    Parameters theParameters = new Parameters(theNames, theClasses, theDefaults);
+    return theParameters.getParameters(theArgs);
+  }
+
   public boolean isValid() {
     return parameterTypes.size() > 0;
   }
-
-  private Map<String, String> parameterTypes = new HashMap<>();
-  private String[] parameterNames = null;
-
-  private Map<String, Object> parameters = new HashMap<>();
 
   public Map<String, Object> asParameters(Object... args) {
     Map<String, Object> params = new HashMap<>();
@@ -107,6 +127,10 @@ public class Parameters {
       if (possibleValue instanceof Double) {
         value = possibleValue;
       }
+    } else if ("Element".equals(clazz)) {
+      if (possibleValue instanceof Element) {
+        value = possibleValue;
+      }
     }
     return value;
   }
@@ -140,5 +164,25 @@ public class Parameters {
         }
       }
     }
+  }
+
+  public Map<String, Object> getParameters(Object[] args) {
+    Map<String, Object> params = new HashMap<>();
+    if (SX.isNotNull(parameterNames)) {
+      int n = 0;
+      int argsn = 0;
+      for (String parameterName : parameterNames) {
+        params.put(parameterName, parameterDefaults[n]);
+        if (args.length > 0 && argsn < args.length) {
+          Object arg = getParameter(args[argsn], parameterName);
+          if (SX.isNotNull(arg)) {
+            params.put(parameterName, arg);
+            argsn++;
+          }
+        }
+        n++;
+      }
+    }
+    return params;
   }
 }
