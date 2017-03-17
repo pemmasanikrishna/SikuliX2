@@ -5,7 +5,6 @@
 package com.sikulix.test;
 
 import com.sikulix.api.*;
-import com.sikulix.api.Event;
 import com.sikulix.core.*;
 import com.sikulix.remote.vnc.VNCDevice;
 import com.sikulix.run.Runner;
@@ -16,8 +15,7 @@ import org.sikuli.script.Location;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
