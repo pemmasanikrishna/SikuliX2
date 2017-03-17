@@ -829,20 +829,16 @@ public class TestAll {
     Boolean returnBool;
     Element loc = new Element(300, 300);
     returnBool = Do.popup("click OK", "popup autoclose", 2, loc);
-    assert SX.isNull(returnBool);
-    loc.x += 100;
+    assert SX.isNull(returnBool) : "popup: return not null";
     returnBool = Do.popAsk("click No or Yes", "popAsk autoclose", 2, loc);
-    assert SX.isNull(returnBool);
-    loc.x += 100;
+    assert SX.isNull(returnBool) : "popAsk: return not null";
     returnBool = Do.popError("click OK", "popError autoclose", 2, loc);
-    assert SX.isNull(returnBool);
+    assert SX.isNull(returnBool) : "popError: return not null";
     String returnString;
-    loc.x += 100;
     returnString = Do.input("give me some text", "text input", "preset", 2, loc);
-    assert SX.isNull(returnString);
-    loc.x += 100;
+    assert SX.isNull(returnString) : "input: return not null";
     returnString = Do.input("enter password", "hidden input", "preset", true, 2, loc);
-    assert SX.isNull(returnString);
+    assert SX.isNull(returnString) : "input hidden: return not null";
   }
 
   @Test
