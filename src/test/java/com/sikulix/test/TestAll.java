@@ -825,17 +825,24 @@ public class TestAll {
   @Test
   public void test_200_popup() {
     currentTest = "test_200_popup";
-    result = "popup, popAsk, popError";
-    Boolean returnValue;
-    returnValue = Do.popup("click OK", "popup autoclose",
-            3, new Element(300, 300));
-    assert SX.isNull(returnValue);
-    returnValue = Do.popAsk("click No or Yes", "popAsk autoclose",
-            3, new Element(300, 300));
-    assert SX.isNull(returnValue);
-    returnValue = Do.popError("click OK", "popError autoclose",
-            3, new Element(300, 300));
-    assert SX.isNull(returnValue);
+    result = "popup, popAsk, popError, input, input hidden";
+    Boolean returnBool;
+    Element loc = new Element(300, 300);
+    returnBool = Do.popup("click OK", "popup autoclose", 2, loc);
+    assert SX.isNull(returnBool);
+    loc.x += 100;
+    returnBool = Do.popAsk("click No or Yes", "popAsk autoclose", 2, loc);
+    assert SX.isNull(returnBool);
+    loc.x += 100;
+    returnBool = Do.popError("click OK", "popError autoclose", 2, loc);
+    assert SX.isNull(returnBool);
+    String returnString;
+    loc.x += 100;
+    returnString = Do.input("give me some text", "text input", "preset", 2, loc);
+    assert SX.isNull(returnString);
+    loc.x += 100;
+    returnString = Do.input("enter password", "hidden input", "preset", true, 2, loc);
+    assert SX.isNull(returnString);
   }
 
   @Test

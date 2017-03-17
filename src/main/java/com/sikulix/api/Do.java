@@ -9,19 +9,16 @@ import com.sikulix.core.*;
 //import com.sikulix.scripting.SXRunner;
 import com.sikulix.util.FileChooser;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import org.apache.commons.collections.map.HashedMap;
 import org.sikuli.script.Key;
 
 import javax.swing.*;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.*;
+import java.util.List;
 
 /**
  * Implements the top level features as static methods to allow the usage somehow like "commands".<br>
@@ -103,68 +100,16 @@ public class Do {
    * the dialog works as password input (input text hidden as bullets) <br>
    * take care to destroy the return value as soon as possible (internally the password is deleted on return)
    *
-   * @param msg
-   * @param preset
-   * @param title
-   * @param hidden
+   * @param args: message, title, preset, hidden, timeout, location
    * @return the text entered
    */
-  public static String input(String msg, String preset, String title, boolean hidden) {
-    JFrame anchor = popLocation();
-    String ret = "";
-    if (!hidden) {
-      if ("".equals(title)) {
-        title = "Sikuli input request";
-      }
-      ret = (String) JOptionPane.showInputDialog(anchor, msg, title,
-              JOptionPane.PLAIN_MESSAGE, null, null, preset);
+  public static String input(Object... args) {
+    if (SX.isHeadless()) {
+      log.error("running headless: input");
     } else {
-      preset = "";
-      JTextArea tm = new JTextArea(msg);
-      tm.setColumns(20);
-      tm.setLineWrap(true);
-      tm.setWrapStyleWord(true);
-      tm.setEditable(false);
-      tm.setBackground(new JLabel().getBackground());
-      JPasswordField pw = new JPasswordField(preset);
-      JPanel pnl = new JPanel();
-      pnl.setLayout(new BoxLayout(pnl, BoxLayout.Y_AXIS));
-      pnl.add(pw);
-      pnl.add(Box.createVerticalStrut(10));
-      pnl.add(tm);
-      int retval = JOptionPane.showConfirmDialog(anchor, pnl, title, JOptionPane.OK_CANCEL_OPTION);
-      if (0 == retval) {
-        char[] pwc = pw.getPassword();
-        for (int i = 0; i < pwc.length; i++) {
-          ret = ret + pwc[i];
-          pwc[i] = 0;
-        }
-      }
+      return (String) doPop(PopType.POPINPUT, args);
     }
-    if (anchor != null) {
-      anchor.dispose();
-    }
-    return ret;
-  }
-
-  public static String input(String msg, String title, boolean hidden) {
-    return input(msg, "", title, hidden);
-  }
-
-  public static String input(String msg, boolean hidden) {
-    return input(msg, "", "", hidden);
-  }
-
-  public static String input(String msg, String preset, String title) {
-    return input(msg, preset, title, false);
-  }
-
-  public static String input(String msg, String preset) {
-    return input(msg, preset, "", false);
-  }
-
-  public static String input(String msg) {
-    return input(msg, "", "", false);
+    return null;
   }
   //</editor-fold>
 
@@ -225,7 +170,7 @@ public class Do {
   //</editor-fold>
 
   private enum PopType {
-    POPUP, POPASK, POPERROR
+    POPUP, POPASK, POPERROR, POPINPUT
   }
 
   public static Boolean popup(Object... args) {
@@ -261,18 +206,22 @@ public class Do {
       JFrame frame = null;
       String title = "";
       String message = "";
+      String preset = "";
+      Boolean hidden = false;
       Integer timeout = 0;
       boolean running = true;
-      Map<String, Object> parameters = new HashedMap();
+      Map<String, Object> parameters = new HashMap<>();
       Object returnValue;
 
       public RunInput(PopType popType, Object... args) {
         this.popType = popType;
         parameters = getPopParameters(args);
-        frame = getFrame(parameters.get("location"));
         title = (String) parameters.get("title");
         message = (String) parameters.get("message");
+        preset = (String) parameters.get("preset");
+        hidden = (Boolean) parameters.get("hidden");
         timeout = (Integer) parameters.get("timeout");
+        frame = getFrame(parameters.get("location"));
       }
 
       @Override
@@ -290,8 +239,51 @@ public class Do {
         } else if (PopType.POPERROR.equals(popType)) {
           JOptionPane.showMessageDialog(frame, message, title, JOptionPane.ERROR_MESSAGE);
           returnValue = new Boolean(true);
+        } else if (PopType.POPINPUT.equals(popType)) {
+          if (!hidden) {
+            if ("".equals(title)) {
+              title = "Sikuli input request";
+            }
+            returnValue = JOptionPane.showInputDialog(frame, message, title,
+                    JOptionPane.PLAIN_MESSAGE, null, null, preset);
+          } else {
+            JTextArea messageText = new JTextArea(message);
+            messageText.setColumns(20);
+            messageText.setLineWrap(true);
+            messageText.setWrapStyleWord(true);
+            messageText.setEditable(false);
+            messageText.setBackground(new JLabel().getBackground());
+            final JPasswordField passwordField = new JPasswordField(preset);
+            toGetFocus = passwordField;
+            JPanel panel = new JPanel();
+            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+            panel.add(passwordField);
+            panel.add(Box.createVerticalStrut(10));
+            panel.add(messageText);
+            int retval = JOptionPane.showConfirmDialog(frame, panel, title, JOptionPane.OK_CANCEL_OPTION);
+            returnValue = "";
+            if (0 == retval) {
+              char[] pwchar = passwordField.getPassword();
+              for (int i = 0; i < pwchar.length; i++) {
+                returnValue = (String) returnValue + pwchar[i];
+                pwchar[i] = 0;
+              }
+            }
+          }
         }
         stop();
+      }
+
+      JComponent toGetFocus = null;
+      public void setFocus() {
+        if (SX.isNotNull(toGetFocus)) {
+          SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+              toGetFocus.requestFocusInWindow();
+            }
+          });
+        }
       }
 
       public boolean isRunning() {
@@ -316,6 +308,8 @@ public class Do {
     }
     RunInput popRun = new RunInput(popType, args);
     new Thread(popRun).start();
+    SX.pause(0.3);
+    popRun.setFocus();
     long end = new Date().getTime() + popRun.getTimeout();
     while (popRun.isRunning()) {
       SX.pause(0.3);
@@ -327,9 +321,9 @@ public class Do {
   }
 
   private static Map<String, Object> getPopParameters(Object... args) {
-    String parameterNames = "message,title,timeout,location";
-    String parameterClass = "s,s,i,e";
-    Object[] parameterDefault = new Object[]{"not set", "SikuliX", Integer.MAX_VALUE, Do.on()};
+    String parameterNames = "message,title,preset,hidden,timeout,location";
+    String parameterClass = "s,s,s,b,i,e";
+    Object[] parameterDefault = new Object[]{"not set", "SikuliX", "", false, Integer.MAX_VALUE, Do.on()};
     return Parameters.get(parameterNames, parameterClass, parameterDefault, args);
   }
   //</editor-fold>

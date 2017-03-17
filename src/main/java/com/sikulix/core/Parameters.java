@@ -38,12 +38,14 @@ public class Parameters {
             clazz = "Integer";
           } else if ("d".equals(clazz)) {
             clazz = "Double";
+          } else if ("b".equals(clazz)) {
+            clazz = "Boolean";
           } else if ("e".equals(clazz)) {
             clazz = "Element";
           }
         }
         if ("String".equals(clazz) || "Integer".equals(clazz) ||
-                "Double".equals(clazz) || "Element".equals(clazz)) {
+                "Double".equals(clazz) || "Boolean".equals(clazz) || "Element".equals(clazz)) {
           parameterTypes.put(names[n], clazz);
         }
       }
@@ -124,6 +126,10 @@ public class Parameters {
       }
     } else if ("Double".equals(clazz)) {
       if (possibleValue instanceof Double) {
+        value = possibleValue;
+      }
+    } else if ("Boolean".equals(clazz)) {
+      if (possibleValue instanceof Boolean) {
         value = possibleValue;
       }
     } else if ("Element".equals(clazz)) {
