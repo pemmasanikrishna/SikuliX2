@@ -6,6 +6,7 @@ package com.sikulix.core;
 
 import com.sikulix.api.Element;
 
+import javax.swing.*;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -134,6 +135,8 @@ public class Parameters {
       }
     } else if ("Element".equals(clazz)) {
       if (possibleValue instanceof Element) {
+        value = possibleValue;
+      } else if (possibleValue instanceof JFrame) {
         value = possibleValue;
       }
     }

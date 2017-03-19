@@ -5,8 +5,6 @@
 package com.sikulix.api;
 
 import com.sikulix.core.*;
-//import com.sikulix.scripting.JythonHelper;
-//import com.sikulix.scripting.SXRunner;
 import com.sikulix.util.FileChooser;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.sikuli.script.Key;
@@ -19,6 +17,9 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.*;
 import java.util.List;
+
+//import com.sikulix.scripting.JythonHelper;
+//import com.sikulix.scripting.SXRunner;
 
 /**
  * Implements the top level features as static methods to allow the usage somehow like "commands".<br>
@@ -78,6 +79,8 @@ public class Do {
     if (point instanceof Point) {
       x = ((Point) point).x;
       y = ((Point) point).y;
+    } if (point instanceof Frame) {
+      return (JFrame) point;
     } else {
       x = ((Element) point).getCenter().x;
       y = ((Element) point).getCenter().y;
@@ -89,27 +92,6 @@ public class Do {
     anchor.setLocation(x, y);
     anchor.setVisible(true);
     return anchor;
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="SX Do input one line, password">
-
-  /**
-   * request user's input as one line of text <br>
-   * with hidden = true: <br>
-   * the dialog works as password input (input text hidden as bullets) <br>
-   * take care to destroy the return value as soon as possible (internally the password is deleted on return)
-   *
-   * @param args: message, title, preset, hidden, timeout, location
-   * @return the text entered
-   */
-  public static String input(Object... args) {
-    if (SX.isHeadless()) {
-      log.error("running headless: input");
-    } else {
-      return (String) doPop(PopType.POPINPUT, args);
-    }
-    return null;
   }
   //</editor-fold>
 
@@ -169,8 +151,18 @@ public class Do {
   }
   //</editor-fold>
 
+  //<editor-fold desc="popup, popAsk, popError, input">
   private enum PopType {
     POPUP, POPASK, POPERROR, POPINPUT
+  }
+
+  public static String input(Object... args) {
+    if (SX.isHeadless()) {
+      log.error("running headless: input");
+    } else {
+      return (String) doPop(PopType.POPINPUT, args);
+    }
+    return null;
   }
 
   public static Boolean popup(Object... args) {
@@ -226,6 +218,11 @@ public class Do {
 
       @Override
       public void run() {
+        runPopup();
+        stop();
+      }
+
+      public void runPopup() {
         returnValue = null;
         if (PopType.POPUP.equals(popType)) {
           JOptionPane.showMessageDialog(frame, message, title, JOptionPane.PLAIN_MESSAGE);
@@ -271,10 +268,10 @@ public class Do {
             }
           }
         }
-        stop();
       }
 
       JComponent toGetFocus = null;
+
       public void setFocus() {
         if (SX.isNotNull(toGetFocus)) {
           SwingUtilities.invokeLater(new Runnable() {
@@ -295,6 +292,10 @@ public class Do {
         running = false;
       }
 
+      public boolean isTimed() {
+        return timeout < Integer.MAX_VALUE && frame.getWidth() == 1 && frame.getHeight() == 1;
+      }
+
       public int getTimeout() {
         if (Integer.MAX_VALUE == timeout) {
           return timeout;
@@ -307,15 +308,19 @@ public class Do {
       }
     }
     RunInput popRun = new RunInput(popType, args);
-    new Thread(popRun).start();
-    SX.pause(0.3);
-    popRun.setFocus();
-    long end = new Date().getTime() + popRun.getTimeout();
-    while (popRun.isRunning()) {
+    if (popRun.isTimed()) {
+      new Thread(popRun).start();
       SX.pause(0.3);
-      if (end < new Date().getTime()) {
-        popRun.stop();
+      popRun.setFocus();
+      long end = new Date().getTime() + popRun.getTimeout();
+      while (popRun.isRunning()) {
+        SX.pause(0.3);
+        if (end < new Date().getTime()) {
+          popRun.stop();
+        }
       }
+    } else {
+      popRun.runPopup();
     }
     return popRun.getReturnValue();
   }
