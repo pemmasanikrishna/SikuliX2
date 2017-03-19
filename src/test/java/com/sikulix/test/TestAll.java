@@ -15,7 +15,9 @@ import org.sikuli.script.Location;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
+import java.awt.AWTException;
 import java.awt.Color;
+import java.awt.Robot;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -956,14 +958,11 @@ public class TestAll {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    log.startTimer();
+    //log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        Do.popup(new Element(300, 300));
-//        log.p("popAsk: %s", Do.popAsk());
-//        Do.popError();
         result = "nothing to do here";
 //end
       } else {

@@ -6,6 +6,7 @@ package com.sikulix.api;
 
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
+import com.sikulix.run.Runner;
 
 public class Window extends Element {
 
@@ -16,7 +17,18 @@ public class Window extends Element {
 
   private static SXLog log = SX.getLogger("SX." + eClazz.toString());
 
+  private String application = "";
 
-  public Window() {
+  public Window(String application) {
+    this.application = application;
+  }
+
+  public boolean toFront() {
+    if (SX.isMac()) {
+      String script = String.format("tell app \"%s\" to activate", application);
+      Object run = Runner.run(Runner.ScriptType.APPLESCRIPT, script);
+      return true;
+    }
+    return false;
   }
 }
