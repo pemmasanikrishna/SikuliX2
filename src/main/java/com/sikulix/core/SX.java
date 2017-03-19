@@ -343,7 +343,6 @@ public class SX {
     if (!success) {
       terminate(1, "loadOptions: SX Options not available: %s", urlOptions);
     }
-    setOptions(sxOptions);
 
     PropertiesConfiguration extraOptions = null;
 
@@ -386,7 +385,6 @@ public class SX {
         error("loadOptions: Options not valid: %s", cex.getMessage());
       }
       if (!isNull(extraOptions)) {
-        setOptions(extraOptions);
         mergeExtraOptions(sxOptions, extraOptions);
       }
     } else {
@@ -394,70 +392,26 @@ public class SX {
     }
   }
 
-  private static void setOptions(PropertiesConfiguration someOptions) {
-    if (isNull(someOptions) || someOptions.size() == 0) {
-      return;
-    }
-    Iterator<String> allKeys = someOptions.getKeys();
-    List<String> sxSettings = new ArrayList<>();
-    while (allKeys.hasNext()) {
-      String key = allKeys.next();
-      if (key.startsWith("Settings.")) {
-        sxSettings.add(key);
-        continue;
-      }
-      trace("!setOptions: %s = %s", key, someOptions.getProperty(key));
-    }
-    if (sxSettings.size() > 0) {
-      Class cClass = null;
-//      try {
-//        cClass = Class.forName("org.sikuli.basics.Settings");
-//      } catch (ClassNotFoundException e) {
-//        error("!setOptions: %s", cClass);
-//      }
-      if (!isNull(cClass)) {
-        for (String sKey : sxSettings) {
-          String sAttr = sKey.substring("Settings.".length());
-          Field cField = null;
-          Class ccField = null;
-          try {
-            cField = cClass.getField(sAttr);
-            ccField = cField.getType();
-            if (ccField.getName() == "boolean") {
-              cField.setBoolean(null, someOptions.getBoolean(sKey));
-            } else if (ccField.getName() == "int") {
-              cField.setInt(null, someOptions.getInt(sKey));
-            } else if (ccField.getName() == "float") {
-              cField.setFloat(null, someOptions.getFloat(sKey));
-            } else if (ccField.getName() == "double") {
-              cField.setDouble(null, someOptions.getDouble(sKey));
-            } else if (ccField.getName() == "String") {
-              cField.set(null, someOptions.getString(sKey));
-            }
-            trace("!setOptions: %s = %s", sAttr, someOptions.getProperty(sKey));
-            someOptions.clearProperty(sKey);
-          } catch (Exception ex) {
-            error("!setOptions: %s = %s", sKey, sxOptions.getProperty(sKey));
-          }
-        }
-      }
-    }
-  }
 
   private static void mergeExtraOptions(PropertiesConfiguration baseOptions, PropertiesConfiguration extraOptions) {
-    trace("loadOptions: have to merge extra Options");
     if (isNull(extraOptions) || extraOptions.size() == 0) {
       return;
     }
+    trace("loadOptions: have to merge extra Options");
     Iterator<String> allKeys = extraOptions.getKeys();
     while (allKeys.hasNext()) {
       String key = allKeys.next();
-      if (isNull(baseOptions.getProperty(key))) {
+      Object value = baseOptions.getProperty(key);
+      if (isNull(value)) {
         baseOptions.addProperty(key, extraOptions.getProperty(key));
         trace("Option added: %s", key);
       } else {
-        baseOptions.addProperty(key, extraOptions.getProperty(key));
-        trace("Option changed: %s", key);
+        Object extraValue = extraOptions.getProperty(key);
+        if (!value.getClass().getName().equals(extraValue.getClass().getName()) ||
+                !value.toString().equals(extraValue.toString())) {
+          baseOptions.setProperty(key, extraValue);
+          trace("Option changed: %s = %s", key, extraValue);
+        }
       }
     }
   }
@@ -475,7 +429,11 @@ public class SX {
   }
 
   public static boolean saveOptions() {
-    error("saveOptions: not yet implemented");
+    try {
+      sxOptions.write(new FileWriter(SX.getFile(SX.getSXSTORE(), "sxoptions.txt")));
+    } catch (Exception e) {
+      log.error("saveOptions: %s", e);
+    }
     return false;
   }
 
