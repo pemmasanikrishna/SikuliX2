@@ -4,9 +4,7 @@
 
 package com.sikulix.util;
 
-import com.sikulix.api.Do;
-import com.sikulix.api.Element;
-import com.sikulix.api.Picture;
+import com.sikulix.api.*;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
 import org.opencv.core.Mat;
@@ -14,7 +12,13 @@ import org.opencv.core.Mat;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -94,6 +98,7 @@ public class Tool {
   }
 
   String bundlePath = "";
+  String appName = "";
 
   int scrW = 0;
   int scrH = 0;
@@ -105,6 +110,16 @@ public class Tool {
   //</editor-fold>
 
   public Tool() {
+    bundlePath = SX.getOption("Tool.bundlePath");
+    if (bundlePath.isEmpty()) {
+      String userwork = SX.getUSERWORK();
+      if (new File(userwork, "pom.xml").exists()) {
+        bundlePath = new File(userwork, "src/main/resources/Images").getAbsolutePath();
+      } else {
+        bundlePath = SX.getFolder(SX.getSXSTORE(), "Images").getAbsolutePath();
+      }
+      log.trace("%s", userwork);
+    }
     intro = new JFrame();
     intro.addKeyListener(new KeyAdapter() {
       @Override
@@ -115,7 +130,7 @@ public class Tool {
         if (e.getKeyChar() == VK_ESCAPE) {
           shouldQuit = true;
         } else {
-          if (!"pocq".contains(sKey)) {
+          if (!"pocaq".contains(sKey)) {
             log.trace("keyTyped: %s", sKey);
             return;
           }
@@ -130,6 +145,15 @@ public class Tool {
             intro.setVisible(false);
             SX.pause(0.5);
             actionCapture();
+          } else if ("a".equals("" + e.getKeyChar())) {
+            intro.setVisible(false);
+            appName = Do.input("name an application to focus", "SikulixTool::SwitchApp", intro);
+            if (SX.isNotNull(appName)) {
+              new Window(appName).toFront();
+            }
+            SX.pause(2);
+            intro.setVisible(true);
+            Do.popup("click ok to continue", intro);
           } else if ("q".equals("" + e.getKeyChar())) {
             shouldQuit = true;
           }
@@ -141,6 +165,7 @@ public class Tool {
       }
     });
     intro.setUndecorated(true);
+    intro.setAlwaysOnTop(true);
     intro.setResizable(false);
     if (!log.isGlobalLevel(log.TRACE)) {
       intro.setAlwaysOnTop(true);
@@ -158,6 +183,8 @@ public class Tool {
             "&nbsp;&nbsp;o - open an image file" +
             "<br>" +
             "&nbsp;&nbsp;c - capture screen image" +
+            "<br>" +
+            "&nbsp;&nbsp;a - focus an application" +
             "<br><br><hr><br>" +
             "&nbsp;ESC or q - to quit the tool" +
             "<br>";
@@ -508,7 +535,6 @@ public class Tool {
       String sKey = "" + e.getKeyChar();
       if (e.getKeyChar() == VK_ESCAPE) {
         log.trace("action: quit request");
-        dirty = false;
         sKey = "#";
         shouldQuit = true;
       } else {
@@ -576,6 +602,12 @@ public class Tool {
         }
       }
       if (shouldQuit) {
+        if (dirty) {
+          if (!Do.popAsk("discard not saved image?", "SikuliX Tool::SaveImage", box)) {
+            actionSave();
+          }
+          dirty = false;
+        }
         box.setVisible(false);
         intro.setVisible(true);
       }
@@ -590,6 +622,7 @@ public class Tool {
     isImage = false;
     activeSide = ALL;
     resetBox();
+    dirty = true;
   }
 
   private void actionReset() {
@@ -647,6 +680,8 @@ public class Tool {
       log.error("image not saved yet");
     }
     log.trace("waiting for subs to end");
+    SX.setOption("Tool.bundlePath", bundlePath);
+    SX.saveOptions();
     if (SX.isNotNull(box)) {
       box.dispose();
     }
@@ -677,7 +712,7 @@ public class Tool {
 
   private void actionOpen(JFrame frame) {
     frame.setVisible(false);
-    File fImage = FileChooser.loadImage(frame);
+    File fImage = FileChooser.loadImage(frame, new File(bundlePath));
     if (SX.isNotNull(fImage)) {
       String result = fImage.getAbsolutePath();
       log.trace("new image: %s", result);
@@ -687,7 +722,7 @@ public class Tool {
         isImage = true;
         resetBox();
         if (!bundlePath.equals(fImage.getParent()) && Do.popAsk(fImage.getParent() +
-                "\nUse this folder as bundlepath?", "SikuliX Tool::BundlePath")) {
+                "\nUse this folder as bundlepath?", "SikuliX Tool::BundlePath", box)) {
           bundlePath = fImage.getParent();
         }
         updateStatus();
@@ -704,7 +739,7 @@ public class Tool {
       shouldSelectPath = true;
     } else {
       if (!Do.popAsk(savePath +
-              "\nSave to this folder (bundle path)?", "SikuliX Tool::ImageSave")) {
+              "\nSave to this folder (bundle path)?", "SikuliX Tool::ImageSave", box)) {
         shouldSelectPath = true;
       }
     }
@@ -722,13 +757,13 @@ public class Tool {
     }
     if (SX.existsImageFile(savePath, base.getName())) {
       if (!Do.popAsk(new File(savePath, base.getName()).getAbsolutePath() +
-              "\nOverwrite image file?", "SikuliX Tool::ImageSave")) {
+              "\nOverwrite image file?", "SikuliX Tool::ImageSave", box)) {
         return;
       }
     }
     if (shot.save(base.getName(), savePath)) {
       if (!bundlePath.equals(savePath) && Do.popAsk(savePath +
-              "\nUse this folder as bundlepath?", "SikuliX Tool::BundlePath")) {
+              "\nUse this folder as bundlepath?", "SikuliX Tool::BundlePath", box)) {
         bundlePath = savePath;
       }
       dirty = false;
@@ -745,10 +780,9 @@ public class Tool {
   }
 
   private void actionName() {
-    String newName = Do.input("Change image name",
-            (base.hasName() ? base.getName() : ""),
-            "SikuliX Tool::ImageName");
-    if (!SX.isNotSet(newName) && !newName.equals(base.getName())) {
+    String newName = Do.input("Change image name", "SikuliX Tool::ImageName",
+            (base.hasName() ? base.getName() : ""), box);
+    if (SX.isSet(newName) && !newName.equals(base.getName())) {
       base.setName(newName);
       dirty = true;
       updateStatus();
@@ -756,7 +790,7 @@ public class Tool {
   }
 
   private void actionInfo() {
-    Do.popup(imgInfo(), "PictureTool::Information");
+    Do.popup(imgInfo(), "PictureTool::Information", box);
   }
 
   private void actionHelp() {

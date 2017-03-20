@@ -56,7 +56,7 @@ public class FileChooser {
 
   private File folder = null;
 
-  public FileChooser setFile(File folder) {
+  public FileChooser setFolder(File folder) {
     this.folder = folder;
     return this;
   }
@@ -70,6 +70,8 @@ public class FileChooser {
         setParent((Frame) arg);
       } else if (arg instanceof String) {
         setTitle((String) arg);
+      } else if (arg instanceof File) {
+        setFolder((File) arg);
       }
     }
   }
