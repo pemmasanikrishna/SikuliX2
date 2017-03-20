@@ -7,7 +7,7 @@ SikuliX Version 2 - Java API
 
 <hr>
 **Version 2.0.0 under developement**<br>
-[![Build Status](https://travis-ci.org/RaiMan/SikuliX2.svg?branch=master)](https://travis-ci.org/RaiMan/SikuliX2) Travis CI (Ubuntu 12.04-64, Java 8, xvfb)
+[![Build Status](https://travis-ci.org/RaiMan/SikuliX2.svg?branch=master)](https://travis-ci.org/RaiMan/SikuliX2)  Travis CI (Ubuntu 12.04-64, Java 8, xvfb)
 <br>Developing and testing locally on macOS 12 and Windows 10 with Java 8  
 <br><br>
 Translation project: [Transifex::SikuliX2](https://www.transifex.com/sikulix/sikulix2/dashboard/)
