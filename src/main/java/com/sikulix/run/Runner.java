@@ -4,6 +4,7 @@
 
 package com.sikulix.run;
 
+import com.sikulix.api.Do;
 import com.sikulix.core.Content;
 import com.sikulix.core.SX;
 import com.sikulix.core.SXLog;
@@ -11,7 +12,9 @@ import com.sikulix.core.SXLog;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +23,7 @@ public class Runner {
 
   static SXLog log = SX.getLogger("SX.Runner");
 
-  public enum ScriptType {FROMUNKNOWN, JAVASCRIPT, PYTHON, RUBY, FROMJAR, FROMNET}
+  public enum ScriptType {FROMUNKNOWN, JAVASCRIPT, PYTHON, RUBY, APPLESCRIPT, FROMJAR, FROMNET}
 
   public enum ScriptOption {WITHTRACE}
 
@@ -68,6 +71,7 @@ public class Runner {
   private static class RunBox implements Runnable {
 
     Object[] args;
+    int firstUserArg = 0;
     boolean running = false;
     boolean valid = false;
     ScriptType type = ScriptType.FROMUNKNOWN;
@@ -92,7 +96,14 @@ public class Runner {
         }
       }
       if (args[firstarg] instanceof String) {
+        firstUserArg = firstarg + 1;
         if (ScriptType.JAVASCRIPT.equals(type)) {
+          scriptName = "givenAsText";
+          setValid();
+          script = (String) args[firstarg];
+          return;
+        }
+        if (ScriptType.APPLESCRIPT.equals(type)) {
           scriptName = "givenAsText";
           setValid();
           script = (String) args[firstarg];
@@ -107,9 +118,11 @@ public class Runner {
         String args2 = "";
         if (args.length > firstarg + 1 && args[firstarg + 1] instanceof String) {
           args1 = (String) args[firstarg + 1];
+          firstUserArg++;
         }
         if (args.length > firstarg + 2 && args[firstarg + 2] instanceof String) {
           args2 = (String) args[firstarg + 2];
+          firstUserArg++;
         }
         if (ScriptType.FROMUNKNOWN.equals(type) || ScriptType.FROMJAR.equals(type)) {
           String scriptFolder = args1;
@@ -205,6 +218,7 @@ public class Runner {
     }
 
     public Object getReturnObject() {
+      //TODO Runner: RunBox: getReturnObject
       return new Integer(0);
     }
 
@@ -212,6 +226,8 @@ public class Runner {
     public void run() {
       if (ScriptType.JAVASCRIPT.equals(type)) {
         runJS();
+      } else if (ScriptType.APPLESCRIPT.equals(type)) {
+        runAS();
       }
       running = false;
     }
@@ -236,6 +252,40 @@ public class Runner {
         return false;
       }
       log.trace("%s: ending run", ScriptType.JAVASCRIPT);
+      return true;
+    }
+
+    private boolean runAS() {
+      if (!SX.isMac()) {
+        log.error("Applescript run: not on a Mac system");
+        return false;
+      }
+      String scriptBefore = "";
+      String scriptText = scriptBefore;
+      scriptText += script;
+      log.trace("%s: running script %s", ScriptType.APPLESCRIPT, scriptName);
+      if (log.isLevel(SXLog.TRACE) || log.isGlobalLevel(SXLog.TRACE)) {
+        log.p(script);
+        log.p("---------- end of script");
+      }
+      String osascriptShebang = "#!/usr/bin/osascript\n";
+      scriptText = osascriptShebang + scriptText;
+      File aFile = Content.createTempFile("script");
+      aFile.setExecutable(true);
+      Content.writeStringToFile(scriptText, aFile);
+      String retVal = Do.runcmd(new String[]{aFile.getAbsolutePath()});
+      String[] parts = retVal.split("\n");
+      int retcode = -1;
+      try {
+        retcode = Integer.parseInt(parts[0]);
+        if (retcode != 0) {
+          log.error("Applescript run: returns: %d", retcode);
+          return false;
+        }
+      } catch (Exception ex) {
+        log.error("Applescript run: returns: non-integer: %s", parts[0]);
+        return false;
+      }
       return true;
     }
   }
