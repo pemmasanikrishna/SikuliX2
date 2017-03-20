@@ -5,8 +5,7 @@
 package com.sikulix.util;
 
 import com.sikulix.api.*;
-import com.sikulix.core.SX;
-import com.sikulix.core.SXLog;
+import com.sikulix.core.*;
 import org.opencv.core.Mat;
 
 import javax.swing.*;
@@ -130,7 +129,7 @@ public class Tool {
         if (e.getKeyChar() == VK_ESCAPE) {
           shouldQuit = true;
         } else {
-          if (!"pocaq".contains(sKey)) {
+          if (!"pocabq".contains(sKey)) {
             log.trace("keyTyped: %s", sKey);
             return;
           }
@@ -154,6 +153,13 @@ public class Tool {
             SX.pause(2);
             intro.setVisible(true);
             Do.popup("click ok to continue", intro);
+          } else if ("b".equals("" + e.getKeyChar())) {
+            if (Do.popAsk("now going to background:" +
+                            "\n- use ctrl-alt-2 to capture" +
+                            "\n- use ctrl-alt-1 for back to foreground",
+                    "SikulixTool::ToBackground", intro)) {
+              actionToBackground();
+            }
           } else if ("q".equals("" + e.getKeyChar())) {
             shouldQuit = true;
           }
@@ -185,10 +191,12 @@ public class Tool {
             "&nbsp;&nbsp;c - capture screen image" +
             "<br>" +
             "&nbsp;&nbsp;a - focus an application" +
+            "<br>" +
+            "&nbsp;&nbsp;b - tool to background" +
             "<br><br><hr><br>" +
             "&nbsp;ESC or q - to quit the tool" +
             "<br>";
-    JLabel introText = getNewLabel(320, 270, aText);
+    JLabel introText = getNewLabel(320, 300, aText);
     introText.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
     introText.setBorder(BorderFactory.createLineBorder(Color.magenta, 2));
     introPane.add(introText);
@@ -609,13 +617,70 @@ public class Tool {
           dirty = false;
         }
         box.setVisible(false);
-        intro.setVisible(true);
+        if (!inBackground) {
+          intro.setVisible(true);
+        } else {
+          if (!Do.popAsk("still want to run in background?" +
+                          "\n- use ctrl-alt-2 to capture" +
+                          "\n- use ctrl-alt-1 for back to foreground",
+                  "SikulixTool::ToBackground", intro)) {
+            inBackground = false;
+            intro.setVisible(true);
+          }
+        }
       }
     }
   }
   //</editor-fold>
 
   //<editor-fold desc="actions">
+  String hotKeyCapture = "";
+  String hotKeyCaptureFinal = "";
+  String hotKeyCaptureDefault = "ctrl alt 2";
+  HotkeyCallback hotkeyCaptureListener = new HotkeyCallback() {
+    @Override
+    public void hotkeyPressed(HotkeyEvent e) {
+      if (inBackground) {
+        log.trace("Hotkey: %s (action capture)", e);
+        actionCapture();
+      }
+    }
+  };
+
+  String hotkeyForeground = "";
+  String hotkeyForegroundFinal = "";
+  String hotkeyForegroundDefault = "ctrl alt 1";
+  HotkeyCallback hotkeyForegroundListener = new HotkeyCallback() {
+    @Override
+    public void hotkeyPressed(HotkeyEvent e) {
+      if (inBackground) {
+        log.trace("Hotkey: %s (back to foreground)", e);
+        inBackground = false;
+        intro.setVisible(true);
+      }
+    }
+  };
+
+  private boolean inBackground = false;
+
+  private void actionToBackground() {
+    if (!inBackground && SX.isNotSet(hotkeyForegroundFinal)) {
+      hotkeyForeground = hotkeyForegroundDefault;
+      hotkeyForegroundFinal = HotkeyManager.get().addHotkey(hotkeyForegroundListener, hotkeyForeground);
+      if (SX.isSet(hotkeyForegroundFinal)) {
+        hotKeyCapture = hotKeyCaptureDefault;
+        hotKeyCaptureFinal = HotkeyManager.get().addHotkey(hotkeyCaptureListener, hotKeyCapture);
+        if (SX.isSet(hotKeyCaptureFinal)) {
+          inBackground = true;
+          intro.setVisible(false);
+        }
+      }
+    } else {
+      inBackground = true;
+      intro.setVisible(false);
+    }
+  }
+
   private void actionCapture() {
     box.setVisible(false);
     base = new Element(scrID).capture();
@@ -687,6 +752,7 @@ public class Tool {
     }
     intro.dispose();
     running = false;
+    HotkeyManager.get().stop();
     SX.pause(1);
   }
 
@@ -697,9 +763,9 @@ public class Tool {
       bundlePath = result;
       success = true;
     }
-    log.trace("new bundlePath: %s",result);
+    log.trace("new bundlePath: %s", result);
     return success;
-}
+  }
 
   private String selectPath(String title, JFrame frame) {
     String path = null;
@@ -744,10 +810,10 @@ public class Tool {
       }
     }
     if (shouldSelectPath) {
-       savePath = selectPath("Select a Directory/Folder", box);
-       if (SX.isNotSet(savePath)) {
-         return;
-       }
+      savePath = selectPath("Select a Directory/Folder", box);
+      if (SX.isNotSet(savePath)) {
+        return;
+      }
     }
     if (!base.hasName()) {
       actionName();

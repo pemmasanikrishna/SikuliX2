@@ -4,7 +4,7 @@
 
 package com.sikulix.core;
 
-public abstract class HotkeyListener {
+public abstract class HotkeyCallback {
 
   /**
    * Override this to implement your own hotkey handler.

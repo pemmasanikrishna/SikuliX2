@@ -763,7 +763,7 @@ public class Do {
    * @param listener  a HotKeyListener instance
    * @return true if ok, false otherwise
    */
-  public static boolean addHotkey(String key, int modifiers, HotkeyListener listener) {
+  public static boolean addHotkey(String key, int modifiers, HotkeyCallback listener) {
     return Key.addHotkey(key, modifiers, listener);
   }
 
@@ -773,7 +773,7 @@ public class Do {
    * @param listener  a HotKeyListener instance
    * @return true if ok, false otherwise
    */
-  public static boolean addHotkey(char key, int modifiers, HotkeyListener listener) {
+  public static boolean addHotkey(char key, int modifiers, HotkeyCallback listener) {
     return Key.addHotkey(key, modifiers, listener);
   }
 

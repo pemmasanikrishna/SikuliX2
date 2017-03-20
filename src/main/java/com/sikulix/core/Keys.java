@@ -338,8 +338,11 @@ public class Keys {
   public static int keyMaxLength;
 //</editor-fold>
 
-  private static Map<String, Integer> keyTexts = new HashMap<String, Integer>();
+  private static Map<String, Integer> keyNames = new HashMap<String, Integer>();
+  private static Map<Integer, String> keyCodes = new HashMap<Integer, String>();
+  private static Map<String, String> modifierNames = new HashMap<String, String>();
   private static Map<Integer, String> keys = new HashMap<Integer, String>();
+  private static Map<String, Integer> keyTexts = new HashMap<String, Integer>();
 
   static {
     //<editor-fold defaultstate="collapsed" desc="create the keyname map used with write()">
@@ -383,6 +386,35 @@ public class Keys {
       }
       keys.put(keyTexts.get(k), k);
     }
+    //</editor-fold>
+
+    //<editor-fold desc="key/modifier names according to AWT-KeyStroke">
+    keyNames = getKeyNames();
+    for (String key : keyNames.keySet()) {
+      keyCodes.put(keyNames.get(key), key);
+    }
+    modifierNames.put("CTRL", "ctrl");
+    modifierNames.put("CONTROL", "ctrl");
+    modifierNames.put(CTRL, "ctrl");
+    modifierNames.put("#C", "ctrl");
+    modifierNames.put("ALT", "alt");
+    modifierNames.put("#A", "alt");
+    modifierNames.put(ALT, "alt");
+    modifierNames.put("SHIFT", "shift");
+    modifierNames.put("#S", "shift");
+    modifierNames.put(SHIFT, "shift");
+    modifierNames.put(META, "meta");
+    modifierNames.put("#M", "meta");
+    modifierNames.put("META", "meta");
+    modifierNames.put("CMD", "meta");
+    modifierNames.put("COMMAND", "meta");
+    modifierNames.put(CMD, "meta");
+    modifierNames.put("WIN", "meta");
+    modifierNames.put("WINDOWS", "meta");
+    modifierNames.put(WIN, "meta");
+    modifierNames.put("ALTGR", "altGraph");
+    modifierNames.put("ALTGRAPH", "altGraph");
+    modifierNames.put(ALTGR, "altGraph");
     //</editor-fold>
   }
 
@@ -448,6 +480,47 @@ public class Keys {
       }
       System.out.println(String.format("%s = %d (%s)", key, keyN, namesVK.get(keyN)));
     }
+  }
+
+  public static Map<String, Integer> getKeyNames() {
+    Map<String, Integer> keyNames = new HashMap<>();
+    for (int i = 0; i < keyVK.length; i += 2) {
+      keyNames.put(keyVK[i].substring(3), Integer.decode(keyVK[i + 1]));
+    }
+    Map<String, Integer> sortedKeyNames = new TreeMap<>(keyNames);
+    return sortedKeyNames;
+  }
+
+  public static String getModifierName(String key) {
+    String modifier = modifierNames.get(key);
+    if (SX.isSet(modifier)) {
+      return modifier;
+    }
+    modifier = modifierNames.get(key.toUpperCase());
+    if (SX.isSet(modifier)) {
+      return modifier;
+    }
+    return "";
+  }
+
+  public static String getKeyName(String key) {
+    Integer keyCode = keyNames.get(key.toUpperCase());
+    if (SX.isNotNull(keyCode)) {
+      return key.toUpperCase();
+    }
+    if (isKeyConstant(key)) {
+      int code = toJavaKeyCode(key)[0];
+      key = keyCodes.get(code);
+      if (SX.isSet(key)) {
+        return key;
+      }
+    }
+    return "";
+  }
+
+  private static boolean isKeyConstant(String key) {
+    Character character = key.charAt(0);
+    return character >= '\ue000' && character < '\ue050';
   }
   //</editor-fold>
 

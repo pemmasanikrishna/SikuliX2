@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestAll {
@@ -798,8 +799,8 @@ public class TestAll {
   }
 
   @Test
-  public void test_130_toJSONbasic() {
-    currentTest = "test_130_toJSONbasic";
+  public void test_190_toJSONbasic() {
+    currentTest = "test_190_toJSONbasic";
     assert prepareDefaultScreen("shot", imageNameDefault);
     if (isHeadless) {
       return;
@@ -958,11 +959,33 @@ public class TestAll {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    //log.startTimer();
+    log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
+        HotkeyManager mgr = HotkeyManager.get();
+        HotkeyCallback callback = new HotkeyCallback() {
+          @Override
+          public void hotkeyPressed(HotkeyEvent e) {
+            log.trace("HotkeyCallback: %s", e);
+          }
+        };
+        String hotkey1 = mgr.addHotkey(callback, "ctrl alt 1");
+        assert !hotkey1.isEmpty();
+        String hotkey2 = mgr.addHotkey(callback, "ctrl alt 2");
+        assert !hotkey2.isEmpty();
+
+        Do.popup("ok to remove");
+        mgr.removeHotkey(hotkey2);
+
+        Do.popup("ok to restart");
+        mgr.stop();
+        hotkey1 = mgr.addHotkey(callback, "ctrl alt 1");
+        assert !hotkey1.isEmpty();
+
+        Do.popup("ok to terminate");
+        mgr.stop();
         result = "nothing to do here";
 //end
       } else {

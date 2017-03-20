@@ -31,8 +31,10 @@ public class Key {
    * @param listener  a HotKeyListener instance
    * @return true if ok, false otherwise
    */
-  public static boolean addHotkey(String key, int modifiers, HotkeyListener listener) {
-    return HotkeyManager.getInstance().addHotkey(key, modifiers, listener);
+  public static boolean addHotkey(String key, int modifiers, HotkeyCallback listener) {
+    //TODO addHotkey ... old API
+    String keyOK = "";
+    return SX.isSet(HotkeyManager.get().addHotkey(listener, keyOK));
   }
 
   /**
@@ -43,8 +45,10 @@ public class Key {
    * @param listener  a HotKeyListener instance
    * @return true if ok, false otherwise
    */
-  public static boolean addHotkey(char key, int modifiers, HotkeyListener listener) {
-    return HotkeyManager.getInstance().addHotkey(key, modifiers, listener);
+  public static boolean addHotkey(char key, int modifiers, HotkeyCallback listener) {
+    //TODO addHotkey ... old API
+    String keyOK = "";
+    return SX.isSet(HotkeyManager.get().addHotkey(listener, keyOK));
   }
 
   /**
@@ -55,7 +59,8 @@ public class Key {
    * @return true if ok, false otherwise
    */
   public static boolean removeHotkey(String key, int modifiers) {
-    return HotkeyManager.getInstance().removeHotkey(key, modifiers);
+    //TODO removeHotkey ... old API
+    return HotkeyManager.get().removeHotkey(key);
   }
 
   /**
@@ -66,7 +71,8 @@ public class Key {
    * @return true if ok, false otherwise
    */
   public static boolean removeHotkey(char key, int modifiers) {
-    return HotkeyManager.getInstance().removeHotkey(key, modifiers);
+    //TODO removeHotkey ... old API
+    return HotkeyManager.get().removeHotkey(""+ key);
   }
 
   static String[] keyVK = new String[]{

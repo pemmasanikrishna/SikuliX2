@@ -4,18 +4,32 @@
 
 package com.sikulix.core;
 
-
 public class HotkeyEvent {
-   public int keyCode;
-   public int modifiers;
+  private int keyCode = 0;
+  private int modifiers = 0;
+  private String key = "";
+  private String modifier = "";
 
-   public HotkeyEvent(int code_, int mod_){
-      init(code_, mod_);
-   }
+  public HotkeyEvent(String key, String modifier) {
+    this.key = key;
+    this.modifier = modifier;
+  }
 
-   void init(int code_, int mod_){
-      keyCode = code_;
-      modifiers = mod_;
-   }
+  public HotkeyEvent(int keyCode, int modifiers) {
+    this.keyCode = keyCode;
+    this.modifiers = modifiers;
+  }
+
+  public String get() {
+    return toString();
+  }
+
+  public String toString() {
+    if (key.isEmpty()) {
+      return String.format("%d(%d)", keyCode, modifiers);
+    } else {
+      return modifier + key;
+    }
+  }
 }
 
