@@ -234,6 +234,7 @@ public class Tool {
     box = new JFrame();
     box.setUndecorated(true);
     box.setResizable(false);
+    box.setAlwaysOnTop(true);
     if (!log.isGlobalLevel(log.TRACE)) {
       box.setAlwaysOnTop(true);
     }

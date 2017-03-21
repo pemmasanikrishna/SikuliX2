@@ -44,6 +44,7 @@ public class HotkeyManager {
     if (SX.isNull(hotkeyProvider)) {
       return;
     }
+    log.trace("stopping hotkey provider");
     hotkeyProvider.stop();
     hotkeyProvider = null;
     hotkeys.clear();
