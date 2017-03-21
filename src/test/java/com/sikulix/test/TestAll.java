@@ -10,19 +10,17 @@ import com.sikulix.remote.vnc.VNCDevice;
 import com.sikulix.run.Runner;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
-import org.opencv.core.Mat;
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
 import org.sikuli.script.Location;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
-import java.awt.AWTException;
 import java.awt.Color;
-import java.awt.Robot;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestAll {
@@ -681,31 +679,44 @@ public class TestAll {
 
   @Test
   public void test_090_edgeDetectionBasic() {
-    log.startTimer();
     currentTest = "test_090_edgeDetectionBasic";
     result = "basic edge detection sample";
     Do.setBundlePath(mavenRoot, "Images");
     Picture pBase, pEdges;
     pBase = new Picture("gui");
-    pEdges = Finder.detectEdges(pBase);
-    pBase.show();
-    pEdges.show();
+    pEdges = Finder.showEdges(pBase);
+    pBase.show(1);
+    pEdges.show(2);
     pBase = new Picture("gui-button");
-    pEdges = Finder.detectEdges(pBase);
-    pBase.show();
-    pEdges.show();
+    pEdges = Finder.showEdges(pBase);
+    pBase.show(1);
+    pEdges.show(2);
   }
 
   @Test
-  public void test_091_changeDetectionBasic() {
-    currentTest = "test_091_changeDetectionBasic";
+  public void test_091_edgeDetectionSegments() {
+    currentTest = "test_091_edgeDetectionSegments";
+    result = "segmenting a GUI into distinct elements";
+    Do.setBundlePath(mavenRoot, "Images");
+    Picture pBase = new Picture("gui");
+    Story segmented = new Story(pBase);
+    for (Element rect : Finder.getElements(pBase)) {
+      segmented.add(rect);
+    }
+    segmented.addBorder();
+    segmented.show();
+  }
+
+  @Test
+  public void test_095_changeDetectionBasic() {
+    currentTest = "test_095_changeDetectionBasic";
     result = "basic change detection sample";
     Do.setBundlePath(mavenRoot, "Images");
     Picture pBase, pChanged;
     pBase = new Picture("gui-button");
     pChanged = new Picture("gui-button-blank");
-    pBase.show();
-    pChanged.show();
+    pBase.show(2);
+    //pChanged.show();
     SX.setOption("highLightLine", "1");
     List<Element> rectangles = Finder.detectChanges(pBase.getContent(), pChanged.getContent());
     assert rectangles.size() == 3;
@@ -714,7 +725,7 @@ public class TestAll {
       changed.add(rect);
     }
     changed.addBorder();
-    changed.show(3);
+    changed.show(2);
   }
 
   @Test

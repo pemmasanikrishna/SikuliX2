@@ -415,10 +415,24 @@ public class Finder {
   //</editor-fold>
 
   //<editor-fold desc="detect edges">
-  public static Picture detectEdges(Picture src) {
-    Mat mSource;
+  public static Picture showEdges(Picture src) {
+    Picture result = new Picture();
     Mat mSourceGray = Element.getNewMat();
     Mat mDestination = Element.getNewMat();
+    Mat mDetectedEdges = Element.getNewMat();
+
+    if (src.isValid()) {
+      mDetectedEdges = detectEdges(src);
+      Core.add(mSourceGray, Scalar.all(0), mDestination);
+      mDetectedEdges.copyTo(mDestination);
+      result = new Picture(mDestination);
+    }
+    return result;
+  }
+
+  public static Mat detectEdges(Picture src) {
+    Mat mSource;
+    Mat mSourceGray = Element.getNewMat();
     Mat mDetectedEdges = Element.getNewMat();
 
     int edgeThresh = 1;
@@ -427,21 +441,15 @@ public class Finder {
     int kernelSize = 5;
     int blurFilterSize = 3;
 
-    Picture result = new Picture();
-
     if (src.isValid()) {
       mSource = src.getContent();
       Imgproc.cvtColor(mSource, mSourceGray, toGray);
       Imgproc.blur(mSourceGray, mDetectedEdges, new Size(blurFilterSize, blurFilterSize));
       Imgproc.Canny(mDetectedEdges, mDetectedEdges,
               lowThreshold, lowThreshold * ratio, kernelSize, false);
-      Core.add(mSourceGray, Scalar.all(0), mDestination);
-      mDetectedEdges.copyTo(mDestination);
-      result = new Picture(mDestination);
     }
-    return result;
+   return mDetectedEdges;
   }
-  //https://raw.githubusercontent.com/opencv-java/image-segmentation/master/src/it/polito/teaching/cv/ImageSegController.java
   //</editor-fold>
 
   //<editor-fold desc="detect changes">
@@ -459,20 +467,19 @@ public class Finder {
     return mat.type() == colored || mat.type() == transparent;
   }
 
-  public static List<Element> detectChanges(Mat base, Mat changed) {
+  public static List<Element> detectChanges(Mat base, Mat mChanged) {
     int PIXEL_DIFF_THRESHOLD = 3;
     int IMAGE_DIFF_THRESHOLD = 5;
-    Mat mBase = Element.getNewMat();
-    Mat mChanged = Element.getNewMat();
+    Mat mBaseGray = Element.getNewMat();
+    Mat mChangedGray = Element.getNewMat();
     Mat mDiffAbs = Element.getNewMat();
     Mat mDiffTresh = Element.getNewMat();
     Mat mChanges = Element.getNewMat();
-    Size size = mBase.size();
     List<Element> rectangles = new ArrayList<>();
 
-    Imgproc.cvtColor(base, mBase, toGray);
-    Imgproc.cvtColor(changed, mChanged, toGray);
-    Core.absdiff(mBase, mChanged, mDiffAbs);
+    Imgproc.cvtColor(base, mBaseGray, toGray);
+    Imgproc.cvtColor(mChanged, mChangedGray, toGray);
+    Core.absdiff(mBaseGray, mChangedGray, mDiffAbs);
     Imgproc.threshold(mDiffAbs, mDiffTresh, PIXEL_DIFF_THRESHOLD, 0.0, Imgproc.THRESH_TOZERO);
     if (Core.countNonZero(mDiffTresh) > IMAGE_DIFF_THRESHOLD) {
       Imgproc.threshold(mDiffAbs, mDiffAbs, PIXEL_DIFF_THRESHOLD, 255, Imgproc.THRESH_BINARY);
@@ -487,11 +494,26 @@ public class Finder {
 
       Core.subtract(mDiffAbs, mDiffAbs, mChanges);
       Imgproc.drawContours(mChanges, contours, -1, new Scalar(255));
+      //logShow(mDiffAbs);
     }
     return rectangles;
   }
 
-  private static List<Element> contoursToRectangle(List<MatOfPoint> contours) {
+  public static List<MatOfPoint> getContours(Mat mBase) {
+    Mat mHierarchy = Element.getNewMat();
+    List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+    Imgproc.findContours(mBase, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+    return contours;
+  }
+
+  public static Mat drawContours(List<MatOfPoint> contours, Mat mBase) {
+    Mat mResult = Element.getNewMat();
+    Core.subtract(mBase, mBase, mResult);
+    Imgproc.drawContours(mResult, contours, -1, new Scalar(255));
+    return  mResult;
+  }
+
+  public static List<Element> contoursToRectangle(List<MatOfPoint> contours) {
     List<Element> rects = new ArrayList<>();
     for (MatOfPoint contour : contours) {
       log.trace("*** new contour");
@@ -516,7 +538,20 @@ public class Finder {
     return rects;
   }
 
-  private static void logShow(Mat mat) {
+  public static List<Element> getElements(Picture picture) {
+    Mat mEdges = detectEdges(picture);
+    List<MatOfPoint> contours = getContours(mEdges);
+    Mat mResult = drawContours(contours, mEdges);
+    Imgproc.dilate(mResult, mResult, Element.getNewMat());
+    Imgproc.dilate(mResult, mResult, Element.getNewMat());
+    return contoursToRectangle(getContours(mResult));
+  }
+
+  public static void logShow(Mat mat) {
+    logShow(mat, 3);
+  }
+
+  public static void logShow(Mat mat, int time) {
     Picture image = new Picture();
     if (isGray(mat)) {
       Mat colored = Element.getNewMat();
@@ -526,7 +561,7 @@ public class Finder {
       image = new Picture(mat);
     }
     if (image.isValid()) {
-      image.show();
+      image.show(time);
     }
   }
 
@@ -634,20 +669,6 @@ public class Finder {
 
 */
   //</editor-fold>
-
-  private static void printMatI(Mat mat) {
-    int[] data = new int[mat.channels()];
-    for (int r = 0; r < mat.rows(); r++) {
-      for (int c = 0; c < mat.cols(); c++) {
-        mat.get(r, c, data);
-        log.trace("(%d, %d) %s", r, c, Arrays.toString(data));
-      }
-    }
-  }
-
-  public void setMinChanges(int min) {
-    log.terminate(1, "setMinChanges");
-  }
   //</editor-fold>
 
   //<editor-fold desc="runFind, Wait, WaitVanish, FindAll">
