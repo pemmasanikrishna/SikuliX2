@@ -208,7 +208,11 @@ public class Element implements Comparable<Element> {
   public static Element create(Object... args) {
     Element element = new Element();
     if (args.length > 0) {
-
+      Object arg0 = args[0];
+      if (arg0 instanceof BufferedImage) {
+        BufferedImage bImg = (BufferedImage) arg0;
+        element = new Element(0, 0, bImg.getWidth(), bImg.getHeight());
+      }
     }
     return element;
   }
@@ -1213,6 +1217,12 @@ public class Element implements Comparable<Element> {
       //A 0 - R 1 - G 2 - B 3 -> A 0 - B 1 - G 2 - R 3
       Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 1, 2, 2, 3, 3));
       return oMatBGR;
+    } else if (bImg.getType() == BufferedImage.TYPE_BYTE_GRAY) {
+      log.trace("makeMat: BYTE_GRAY (%dx%d)", bImg.getWidth(), bImg.getHeight());
+      byte[] data = ((DataBufferByte) bImg.getRaster().getDataBuffer()).getData();
+      aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC1);
+      aMat.put(0, 0, data);
+      return aMat;
     } else {
       log.error("makeMat: Type not supported: %d (%dx%d)",
               bImg.getType(), bImg.getWidth(), bImg.getHeight());

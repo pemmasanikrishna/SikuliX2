@@ -681,6 +681,7 @@ public class TestAll {
 
   @Test
   public void test_090_edgeDetectionBasic() {
+    log.startTimer();
     currentTest = "test_090_edgeDetectionBasic";
     result = "basic edge detection sample";
     Do.setBundlePath(mavenRoot, "Images");

@@ -113,9 +113,10 @@ public class Story {
         showImg = new Picture(showImg).resize(((int) (toResize * 100))/100.0).get();
         withBorder = true;
       }
-      storyImg = plainBackground(new Picture(showImg));
+      new Picture(showImg);
+      storyImg = plainBackground(Element.create(showImg));
     }
-    storyTopLeft = new Picture(storyImg).getCentered();
+    storyTopLeft = Element.create(storyImg).getCentered();
     if (withBorder && SX.isMac()) {
       storyTopLeft.y += 11;
     }
