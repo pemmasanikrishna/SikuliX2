@@ -857,11 +857,11 @@ public class TestAll {
       assert SX.isNull(returnBool) : "popError: return not null";
     }
     String returnString;
-    returnString = Do.input("give me some text", "text input", "preset", 2, loc);
+    returnString = Do.input("give me some text", "text input autoclose", "preset", 2, loc);
     if (!SX.onTravisCI()) {
       assert SX.isNull(returnString) : "input: return not null";
     }
-    returnString = Do.input("enter password", "hidden input", "preset", true, 2, loc);
+    returnString = Do.input("enter password", "hidden input autoclose", "preset", true, 2, loc);
     if (!SX.onTravisCI()) {
       assert SX.isNull(returnString) : "input hidden: return not null";
     }
@@ -959,8 +959,7 @@ public class TestAll {
     if (!SX.isHeadless() && !SX.onTravisCI()) {
       result = "capture something on a VNCScreen";
       IDevice vnc = new VNCDevice();
-      vnc.start("192.168.2.24", 5900);
-      Element area = new Element(100, 100, 300, 300);
+      assert SX.isNotNull(vnc.start("192.168.2.24", 5900)) : "VNC Server not connected";
       Picture picture;
       for (int n = 0; n < 3; n++) {
         start();
@@ -987,9 +986,9 @@ public class TestAll {
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        new Window("safari").toFront();
-        SX.pause(1);
-        Picture pBase = Tool.capture();
+//        new Window("safari").toFront();
+//        SX.pause(1);
+//        Picture pBase = Tool.capture();
         result = "nothing to do here";
 //end
       } else {
