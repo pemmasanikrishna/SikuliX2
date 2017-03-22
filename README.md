@@ -5,7 +5,7 @@ SikuliX Version 2 - Java API
 
 **Version 2.0.0 under developement** [![Join the chat at https://gitter.im/RaiMan/SikuliX2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RaiMan/SikuliX2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-============
+<hr>
 
 [![Build Status](https://travis-ci.org/RaiMan/SikuliX2.svg?branch=master)](https://travis-ci.org/RaiMan/SikuliX2) Travis CI (Ubuntu 12.04-64, Java 8, xvfb)<br>
 <br>Developing and testing locally on macOS 12 and Windows 10 with Java 8  
