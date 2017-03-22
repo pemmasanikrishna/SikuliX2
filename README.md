@@ -1,9 +1,9 @@
 SikuliX Version 2 - Java API
 ============
 
-**[latest useable version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
-
 **Version 2.0.0 under developement** [![Join the chat at https://gitter.im/RaiMan/SikuliX2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RaiMan/SikuliX2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/RaiMan/SikuliX2.svg?branch=master)](https://travis-ci.org/RaiMan/SikuliX2)
+
+**latest useable version is 1.1.1** [Download](http://sikulix.com) [Sources](https://github.com/RaiMan/SikuliX-2014)
 
 <hr>
 
