@@ -3,12 +3,12 @@ SikuliX Version 2 - Java API
 
 **[latest useable version is 1.1.1](https://github.com/RaiMan/SikuliX-2014)**
 
-**Version 2.0.0 under developement** [![Join the chat at https://gitter.im/RaiMan/SikuliX2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RaiMan/SikuliX2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+**Version 2.0.0 under developement** [![Join the chat at https://gitter.im/RaiMan/SikuliX2](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RaiMan/SikuliX2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/RaiMan/SikuliX2.svg?branch=master)](https://travis-ci.org/RaiMan/SikuliX2)
 
 <hr>
 
-[![Build Status](https://travis-ci.org/RaiMan/SikuliX2.svg?branch=master)](https://travis-ci.org/RaiMan/SikuliX2)
-Travis CI (Ubuntu 12.04-64, Java 8, xvfb) Developing and testing locally on macOS 12 and Windows 10 with Java 8  
+Travis CI (Ubuntu 12.04-64, Java 8, xvfb) 
+<br>Developing and testing locally on macOS 12 and Windows 10 with Java 8  
 <br>Translation project: [Transifex::SikuliX2](https://www.transifex.com/sikulix/sikulix2/dashboard/)
 <br>Documentation project: [ReadTheDocs::SikuliX2](http://sikulix2.readthedocs.org/) based on [GitHub::SikuliX2-Docs](https://github.com/RaiMan/SikuliX2-Docs)
 
