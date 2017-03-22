@@ -58,18 +58,22 @@ public class Story {
   }
 
   public Story(int monitor, int... times) {
-    init(monitor, null, times);
+    init(monitor, null, false, times);
   }
 
   public Story(Element background, int... times) {
-    init(-1, background, times);
+    init(-1, background, false, times);
   }
 
   public Story(int monitor, Element background, int... times) {
-    init(monitor, background, times);
+    init(monitor, background, false, times);
   }
 
-  private void init(int monitor, Element background, int... times) {
+  public Story(Element background, boolean internal) {
+    init(-1, background, internal);
+  }
+
+  private void init(int monitor, Element background, boolean internal, int... times) {
     if (SX.isNull(background)) {
       storyBackground = new Element(Do.getLocalDevice().getMonitor(monitor));
       onMonitor = storyBackground.getDevice().getContainingMonitorID(storyBackground);
@@ -95,7 +99,7 @@ public class Story {
       Element screen = new Element(Do.getLocalDevice().getMonitor(monitor));
       int addBorder = 0;
       int screenHeight = screen.h;
-      if (!storyBackground.equals(screen)) {
+      if (!storyBackground.equals(screen) && !internal) {
         withBorder = true;
         addBorder = 2 * borderThickness;
         screenHeight = screen.h - (SX.isMac() ? 21 : 0);
@@ -222,6 +226,129 @@ public class Story {
     stop();
   }
 
+  public Picture get() {
+    setStoryDim();
+    makeStoryImage(storyW, storyH);
+    return new Picture(storyImg);
+  }
+
+  private void makeStoryImage(int storyW, int storyH) {
+    Graphics2D gStory = (Graphics2D) storyImg.getGraphics().create();
+    if (SX.isNotNull(showImg)) {
+      if (withBorder) {
+        gStory.drawImage(showImg, borderThickness, borderThickness, null);
+      } else {
+        gStory.drawImage(showImg, 0, 0, null);
+      }
+    }
+    if (withBorder) {
+      drawRect(INSIDE, gStory, 0, 0, storyW, storyH, borderThickness, borderColor);
+    }
+    for (Element element : elements) {
+      drawElement(gStory, storyBackground, element);
+    }
+  }
+
+  private void drawElement(Graphics2D g2d, Element currentBase, Element what) {
+    Element topLeft;
+    Element where = null;
+    Object[] whatOptions = options.get(what);
+    if (SX.isNotNull(whatOptions)) {
+      where = (Element) whatOptions[0];
+    }
+    if (what.isSymbol()) {
+      Symbol symbol = (Symbol) what;
+      if (symbol.isRectangle() || symbol.isCircle() || symbol.isButton()) {
+        if (SX.isNull(where)) {
+          topLeft = what.getCentered(currentBase);
+        } else {
+          topLeft = where;
+        }
+        int stroke = symbol.getLine();
+        if (symbol.isButton()) {
+          if (SX.isNotNull(symbol.getFillColor())) {
+            g2d.setColor(symbol.getFillColor());
+            g2d.fillRoundRect(topLeft.x, topLeft.y, symbol.w, symbol.h, corner, corner);
+          }
+          drawRect(ROUNDED, g2d, topLeft.x, topLeft.y, symbol.w, symbol.h, stroke, symbol.getColor());
+        } else if (symbol.isRectangle()) {
+          drawRect(INSIDE, g2d, topLeft.x, topLeft.y, symbol.w, symbol.h, stroke, symbol.getColor());
+          if (SX.isNotNull(symbol.getFillColor())) {
+            g2d.setColor(symbol.getFillColor());
+            g2d.fillRect(topLeft.x + stroke, topLeft.y + stroke,
+                    symbol.w - 2 * (stroke), symbol.h - 2 * (stroke));
+          }
+        } else if (symbol.isCircle()) {
+          g2d.setStroke(new BasicStroke(stroke));
+          g2d.setColor(symbol.getColor());
+          g2d.drawArc(topLeft.x + stroke / 2, topLeft.y + stroke / 2,
+                  symbol.w - stroke, symbol.h - stroke, 0, 360);
+          if (SX.isNotNull(symbol.getFillColor())) {
+            g2d.setColor(symbol.getFillColor());
+            g2d.fillArc(topLeft.x + stroke, topLeft.y + stroke,
+                    symbol.w - 2 * stroke, symbol.h - 2 * stroke, 0, 360);
+          }
+        }
+        symbol.x = topLeft.x;
+        symbol.y = topLeft.y;
+      }
+    } else {
+      int locX = what.x - currentBase.x + margin;
+      int locY = what.y - currentBase.y + margin;
+      if (what.isMatch()) {
+        int rectW = 50;
+        int rectH = 20;
+        int rectX = locX;
+        int rectY = locY - what.getHighLightLine() - rectH;
+        if (rectY < 30) {
+          rectY += what.h + rectH + 3 * what.getHighLightLine();
+        }
+        int margin = 2;
+        int fontSize = rectH - margin * 2;
+        g2d.setColor(labelColor);
+        g2d.fillRect(rectX, rectY, rectW, rectH);
+        g2d.setColor(Color.black);
+        g2d.setFont(myFont);
+        double hlScore = what.isMatch() ? Math.min(what.getScore(), 0.9999) : 0;
+        g2d.drawString(String.format("%05.2f", 100 * hlScore), rectX + margin, rectY + fontSize);
+      }
+      drawRect(AROUND, g2d, locX, locY, what.w, what.h,
+              what.getHighLightLine(), what.getLineColor());
+    }
+  }
+
+  private int INSIDE = 0;
+  private int AROUND = 1;
+  private int ROUNDED = 2;
+  private int storyW, storyH;
+
+  private void setStoryDim() {
+    if (SX.isNotNull(showImg)) {
+      storyW = showImg.getWidth() + margin * 2;
+      storyH = showImg.getHeight() + margin * 2;
+    } else {
+      storyW = storyBackground.w;
+      storyH = storyBackground.h;
+    }
+  }
+
+  private void drawRect(int type, Graphics2D g2d, int x, int y, int w, int h, int stroke, Color color) {
+    g2d.setColor(color);
+    int offset = stroke / 2;
+    int margin = -stroke;
+    if (type == AROUND) {
+      stroke = ((stroke + 1) / 2) * 2;
+      offset = -stroke / 2;
+      margin = stroke;
+    }
+    g2d.setStroke(new BasicStroke(stroke));
+    if (type == ROUNDED) {
+      g2d.drawRoundRect(x + offset, y + offset, w + margin, h + margin, corner, corner);
+    } else {
+      g2d.drawRect(x + offset, y + offset, w + margin, h + margin);
+    }
+  }
+
   public void waitForEnd() {
     while (isRunning()) SX.pause(0.3);
   }
@@ -237,7 +364,6 @@ public class Story {
   private class ShowIt implements Runnable {
     public boolean running = false;
     private JFrame frame = new JFrame();
-    private int storyW, storyH;
     private int waitBefore = 0;
 
     public ShowIt() {
@@ -254,7 +380,7 @@ public class Story {
     @Override
     public void run() {
       frame.setUndecorated(true);
-      frame.setAlwaysOnTop(false);
+      frame.setAlwaysOnTop(true);
 
       frame.addMouseListener(new MouseInputAdapter() {
         @Override
@@ -329,20 +455,7 @@ public class Story {
         public void paintComponent(Graphics g) {
           super.paintComponent(g);
           Graphics2D gPanel = (Graphics2D) g.create();
-          Graphics2D gStory = (Graphics2D) storyImg.getGraphics().create();
-          if (SX.isNotNull(showImg)) {
-            if (withBorder) {
-              gStory.drawImage(showImg, borderThickness, borderThickness, null);
-            } else {
-              gStory.drawImage(showImg, 0, 0, null);
-            }
-          }
-          if (withBorder) {
-            drawRect(INSIDE, gStory, 0, 0, storyW, storyH, borderThickness, borderColor);
-          }
-          for (Element element : elements) {
-            drawElement(gStory, storyBackground, element);
-          }
+          makeStoryImage(storyW, storyH);
           gPanel.drawImage(storyImg, 0, 0, null);
           gPanel.dispose();
         }
@@ -353,13 +466,7 @@ public class Story {
       if (withBorder || shouldAddBorder) {
         margin = borderThickness;
       }
-      if (SX.isNotNull(showImg)) {
-        storyW = showImg.getWidth() + margin * 2;
-        storyH = showImg.getHeight() + margin * 2;
-      } else {
-        storyW = storyBackground.w;
-        storyH = storyBackground.h;
-      }
+      setStoryDim();
       Dimension panelSize = new Dimension(storyW, storyH);
       panel.setPreferredSize(panelSize);
       Element location = new Element(panelSize).getCentered(onElement);
@@ -391,95 +498,6 @@ public class Story {
 
     public Element whereShowing() {
       return new Element(frame.getLocation().x, frame.getLocation().y, frame.getWidth(), frame.getHeight());
-    }
-
-    private void drawElement(Graphics2D g2d, Element currentBase, Element what) {
-      Element topLeft;
-      Element where = null;
-      Object[] whatOptions = options.get(what);
-      if (SX.isNotNull(whatOptions)) {
-        where = (Element) whatOptions[0];
-      }
-      if (what.isSymbol()) {
-        Symbol symbol = (Symbol) what;
-        if (symbol.isRectangle() || symbol.isCircle() || symbol.isButton()) {
-          if (SX.isNull(where)) {
-            topLeft = what.getCentered(currentBase);
-          } else {
-            topLeft = where;
-          }
-          int stroke = symbol.getLine();
-          if (symbol.isButton()) {
-            if (SX.isNotNull(symbol.getFillColor())) {
-              g2d.setColor(symbol.getFillColor());
-              g2d.fillRoundRect(topLeft.x, topLeft.y, symbol.w, symbol.h, corner, corner);
-            }
-            drawRect(ROUNDED, g2d, topLeft.x, topLeft.y, symbol.w, symbol.h, stroke, symbol.getColor());
-          } else if (symbol.isRectangle()) {
-            drawRect(INSIDE, g2d, topLeft.x, topLeft.y, symbol.w, symbol.h, stroke, symbol.getColor());
-            if (SX.isNotNull(symbol.getFillColor())) {
-              g2d.setColor(symbol.getFillColor());
-              g2d.fillRect(topLeft.x + stroke, topLeft.y + stroke,
-                      symbol.w - 2 * (stroke), symbol.h - 2 * (stroke));
-            }
-          } else if (symbol.isCircle()) {
-            g2d.setStroke(new BasicStroke(stroke));
-            g2d.setColor(symbol.getColor());
-            g2d.drawArc(topLeft.x + stroke / 2, topLeft.y + stroke / 2,
-                    symbol.w - stroke, symbol.h - stroke, 0, 360);
-            if (SX.isNotNull(symbol.getFillColor())) {
-              g2d.setColor(symbol.getFillColor());
-              g2d.fillArc(topLeft.x + stroke, topLeft.y + stroke,
-                      symbol.w - 2 * stroke, symbol.h - 2 * stroke, 0, 360);
-            }
-          }
-          symbol.x = topLeft.x;
-          symbol.y = topLeft.y;
-        }
-      } else {
-        int locX = what.x - currentBase.x + margin;
-        int locY = what.y - currentBase.y + margin;
-        if (what.isMatch()) {
-          int rectW = 50;
-          int rectH = 20;
-          int rectX = locX;
-          int rectY = locY - what.getHighLightLine() - rectH;
-          if (rectY < 30) {
-            rectY += what.h + rectH + 3 * what.getHighLightLine();
-          }
-          int margin = 2;
-          int fontSize = rectH - margin * 2;
-          g2d.setColor(labelColor);
-          g2d.fillRect(rectX, rectY, rectW, rectH);
-          g2d.setColor(Color.black);
-          g2d.setFont(myFont);
-          double hlScore = what.isMatch() ? Math.min(what.getScore(), 0.9999) : 0;
-          g2d.drawString(String.format("%05.2f", 100 * hlScore), rectX + margin, rectY + fontSize);
-        }
-        drawRect(AROUND, g2d, locX, locY, what.w, what.h,
-                what.getHighLightLine(), what.getLineColor());
-      }
-    }
-
-    private int INSIDE = 0;
-    private int AROUND = 1;
-    private int ROUNDED = 2;
-
-    private void drawRect(int type, Graphics2D g2d, int x, int y, int w, int h, int stroke, Color color) {
-      g2d.setColor(color);
-      int offset = stroke / 2;
-      int margin = -stroke;
-      if (type == AROUND) {
-        stroke = ((stroke + 1) / 2) * 2;
-        offset = -stroke / 2;
-        margin = stroke;
-      }
-      g2d.setStroke(new BasicStroke(stroke));
-      if (type == ROUNDED) {
-        g2d.drawRoundRect(x + offset, y + offset, w + margin, h + margin, corner, corner);
-      } else {
-        g2d.drawRect(x + offset, y + offset, w + margin, h + margin);
-      }
     }
     //</editor-fold>
   }

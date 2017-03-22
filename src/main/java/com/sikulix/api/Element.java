@@ -1361,6 +1361,7 @@ public class Element implements Comparable<Element> {
   //</editor-fold>
 
   //<editor-fold desc="***** write, paste">
+
   /**
    * Compact alternative for type() with more options <br>
    * - special keys and options are coded as #XN. or #X+ or #X- <br>
@@ -1433,11 +1434,11 @@ public class Element implements Comparable<Element> {
             } catch (NumberFormatException ex) {
             }
             if ((token.startsWith("#w") && t > 60)) {
-              pause = 0.020 + (t > 1000 ? 1 : t/1000);
+              pause = 0.020 + (t > 1000 ? 1 : t / 1000);
               log.trace("write: type delay: " + t);
             } else {
               log.trace("write: wait: " + t);
-              SX.pause((double) (t < 60 ? t : t/1000));
+              SX.pause((double) (t < 60 ? t : t / 1000));
             }
             continue;
           }
@@ -1855,35 +1856,6 @@ public class Element implements Comparable<Element> {
   //</editor-fold>
 
   //<editor-fold desc="***** Tool, Symbol">
-  Element click = null;
-  long clickedTime = 0;
-
-  public boolean isClicked() {
-    return SX.isNotNull(click);
-  }
-
-  public Element getClick() {
-    return click;
-  }
-
-  public Element setClick(Element click) {
-    this.click = click;
-    click.setClicked(new Date().getTime());
-    return this;
-  }
-
-  public void resetClick() {
-    click = null;
-  }
-
-  public void setClicked(long clickedTime) {
-    this.clickedTime = clickedTime;
-  }
-
-  public long getClicked() {
-    return clickedTime;
-  }
-
   public enum Component {
     RECTANGLE, CIRCLE, LINE, IMAGE, TEXT, BUTTON;
   }

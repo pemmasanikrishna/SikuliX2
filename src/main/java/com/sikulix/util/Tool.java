@@ -208,6 +208,22 @@ public class Tool {
     intro.setVisible(true);
   }
 
+  public Tool(boolean internalUse) {
+    initBox();
+    internal = true;
+  }
+
+  private boolean internal = false;
+
+  public static Picture capture() {
+    Tool tool = new Tool(true);
+    tool.actionCapture();
+    while (tool.isRunning()) {
+      SX.pause(1);
+    }
+    return tool.shot;
+  }
+
   private JLabel getNewLabel(final int width, final int height, String text) {
     JLabel jLabel = new JLabel(text) {
       @Override
@@ -234,10 +250,7 @@ public class Tool {
     box = new JFrame();
     box.setUndecorated(true);
     box.setResizable(false);
-    box.setAlwaysOnTop(true);
-    if (!log.isGlobalLevel(log.TRACE)) {
-      box.setAlwaysOnTop(true);
-    }
+    box.setAlwaysOnTop(!log.isGlobalLevel(SXLog.TRACE));
 
     //<editor-fold desc="*** Key Mouse handler">
     box.addKeyListener(new KeyAdapter() {
@@ -362,11 +375,16 @@ public class Tool {
   //<editor-fold desc="mouse click/move/drag">
   private void myMouseClicked(MouseEvent e) {
     String doubleClick = e.getClickCount() > 1 ? "Double" : "";
-    log.trace("mouse%sClicked: %d,%d", doubleClick, e.getX(), e.getY());
-    if (!SX.isSet(doubleClick)) {
-      setClickStatusClicked(new Element(e.getX(), e.getY(), e.getButton()));
+    String rightClick = e.getButton() != MouseEvent.BUTTON1 ? "Right" : "";
+    log.trace("mouse%s%sClicked: %d,%d", rightClick, doubleClick, e.getX(), e.getY());
+    if (SX.isSet(doubleClick)) {
+      if (SX.isNotSet(rightClick)) {
+        clickState(CLICKDOUBLE, e.getX(), e.getY());
+      }
+    } else if (SX.isSet(rightClick)) {
+      clickState(CLICKRIGHT, e.getX(), e.getY());
     } else {
-      setClickStatusDoubleClicked();
+      clickState(CLICKLEFT, e.getX(), e.getY());
     }
   }
 
@@ -482,64 +500,71 @@ public class Tool {
   //</editor-fold>
 
   //<editor-fold desc="clickHandler">
-  List<Element> listElement = new ArrayList<>();
-  List<Element> clickStatus = Collections.synchronizedList(listElement);
+  private static int CLICKLEFT = 0;
+  private static int CLICKRIGHT = 1;
+  private static int CLICKDOUBLE = 2;
+  private static int CLICKNOTSET = -1;
 
-  synchronized void setClickStatusClicked(Element element) {
-    if (!clickStatus.get(0).isClicked()) {
-      clickStatus.get(0).setClick(element);
-      clickStatus.set(1, new Element());
+  int clickType = CLICKNOTSET;
+  int clickedX = 0;
+  int clickedY = 0;
+
+  synchronized int[] clickState(int... args) {
+    if (args.length == 0) {
+      return new int[]{clickType, clickedX, clickedY};
     }
-  }
-
-  synchronized void setClickStatusDoubleClicked() {
-    if (!clickStatus.get(1).isClicked()) {
-      clickStatus.set(1, clickStatus.get(0));
-      clickStatus.set(0, new Element());
-    }
-  }
-
-  synchronized void resetClickStatus() {
-    SX.pause(0.3);
-    clickStatus.set(0, new Element());
-    clickStatus.set(1, new Element());
+    clickType = (int) args[0];
+    clickedX = (int) args[1];
+    clickedY = (int) args[2];
+    return null;
   }
 
   protected class ClickHandler implements Runnable {
     @Override
     public void run() {
-      clickStatus.add(new Element());
-      clickStatus.add(new Element());
-      Element clicked = null;
+      Element element = null;
       log.trace("ClickHandler: started");
+      boolean shouldReset = false;
       while (isRunning()) {
-        if (clickStatus.get(0).isClicked()) {
+        int[] clicked = clickState();
+        element = new Element(clicked[1], clicked[2]);
+        if (clicked[0] == CLICKLEFT) {
           SX.pause(0.3);
-          if (clickStatus.get(0).isClicked()) {
-            clicked = clickStatus.get(0).getClick();
-            log.trace("action: crop at (%d,%d) from %s", clicked.x, clicked.y, getActiveSideText());
-            crop(clicked);
-            resetClickStatus();
-            rect.resetClick();
+          clicked = clickState();
+          element = new Element(clicked[1], clicked[2]);
+          if (clicked[0] == CLICKLEFT) {
+            if (evaluatingSegments) {
+              log.trace("action: crop segment at (%d,%d)", element.x, element.y);
+            } else {
+              log.trace("action: crop to (%d,%d) from %s", element.x, element.y, getActiveSideText());
+            }
+            crop(element);
+            shouldReset = true;
+          } else if (clicked[0] == CLICKDOUBLE) {
+            if (!evaluatingSegments) {
+              log.trace("action: center at (%d,%d) %s", element.x, element.y, rect);
+              center(element);
+            }
+            shouldReset = true;
           }
-        } else if (clickStatus.get(1).isClicked()) {
-          clicked = clickStatus.get(1).getClick();
-          log.trace("action: center at (%d,%d) %s", clicked.x, clicked.y, rect);
-          center(clicked);
-          resetClickStatus();
-          rect.resetClick();
+        } else if (clicked[0] == CLICKRIGHT) {
+          log.trace("action: menu at (%d,%d)", element.x, element.y);
+          shouldReset = true;
+        }
+        if (shouldReset) {
+          clickState(CLICKNOTSET, 0, 0);
+          shouldReset = false;
         }
       }
       log.trace("ClickHandler: ended");
     }
-
   }
   //</editor-fold>
 
   //<editor-fold desc="key typed">
   private void myKeyTyped(KeyEvent e) {
     boolean shouldQuit = false;
-    String allowed = " +-acrposftmnihqz";
+    String allowed = " +-acerposftmnihqz";
     if (e.CHAR_UNDEFINED != e.getKeyChar()) {
       String sKey = "" + e.getKeyChar();
       if (e.getKeyChar() == VK_ESCAPE) {
@@ -578,6 +603,9 @@ public class Tool {
         } else if ("c".equals("" + e.getKeyChar())) {
           log.trace("action: capture");
           actionCapture();
+        } else if ("e".equals("" + e.getKeyChar())) {
+          log.trace("action: segments");
+          actionSegments();
         } else if ("s".equals("" + e.getKeyChar())) {
           log.trace("action: save");
           actionSave();
@@ -611,22 +639,31 @@ public class Tool {
         }
       }
       if (shouldQuit) {
-        if (dirty) {
-          if (!Do.popAsk("discard not saved image?", "SikuliX Tool::SaveImage", box)) {
-            actionSave();
-          }
-          dirty = false;
-        }
-        box.setVisible(false);
-        if (!inBackground) {
-          intro.setVisible(true);
+        if (evaluatingSegments) {
+          evaluatingSegments = false;
+          resizeToFrame();
         } else {
-          if (!Do.popAsk("still want to run in background?" +
-                          "\n- use ctrl-alt-2 to capture" +
-                          "\n- use ctrl-alt-1 for back to foreground",
-                  "SikulixTool::ToBackground", intro)) {
-            inBackground = false;
-            intro.setVisible(true);
+          if (internal) {
+            actionQuit();
+          } else {
+            if (dirty) {
+              if (!Do.popAsk("discard not saved image?", "SikuliX Tool::SaveImage", box)) {
+                actionSave();
+              }
+              dirty = false;
+            }
+            box.setVisible(false);
+            if (!inBackground) {
+              intro.setVisible(true);
+            } else {
+              if (!Do.popAsk("still want to run in background?" +
+                              "\n- use ctrl-alt-2 to capture" +
+                              "\n- use ctrl-alt-1 for back to foreground",
+                      "SikulixTool::ToBackground", intro)) {
+                inBackground = false;
+                intro.setVisible(true);
+              }
+            }
           }
         }
       }
@@ -663,14 +700,16 @@ public class Tool {
   };
 
   private boolean inBackground = false;
+  private HotkeyManager hotkeyManager = null;
 
   private void actionToBackground() {
     if (!inBackground && SX.isNotSet(hotkeyForegroundFinal)) {
+      hotkeyManager = HotkeyManager.get();
       hotkeyForeground = hotkeyForegroundDefault;
-      hotkeyForegroundFinal = HotkeyManager.get().addHotkey(hotkeyForegroundListener, hotkeyForeground);
+      hotkeyForegroundFinal = hotkeyManager.addHotkey(hotkeyForegroundListener, hotkeyForeground);
       if (SX.isSet(hotkeyForegroundFinal)) {
         hotKeyCapture = hotKeyCaptureDefault;
-        hotKeyCaptureFinal = HotkeyManager.get().addHotkey(hotkeyCaptureListener, hotKeyCapture);
+        hotKeyCaptureFinal = hotkeyManager.addHotkey(hotkeyCaptureListener, hotKeyCapture);
         if (SX.isSet(hotKeyCaptureFinal)) {
           inBackground = true;
           intro.setVisible(false);
@@ -683,12 +722,32 @@ public class Tool {
   }
 
   private void actionCapture() {
-    box.setVisible(false);
     base = new Element(scrID).capture();
     isImage = false;
     activeSide = ALL;
     resetBox();
     dirty = true;
+  }
+
+  private boolean evaluatingSegments = false;
+  private List<Element> segments = null;
+
+  private void actionSegments() {
+    if (evaluatingSegments) {
+      activeSide = ALL;
+      evaluatingSegments = false;
+      resizeToFrame();
+      return;
+    }
+    activeSide = ALL;
+    evaluatingSegments = true;
+    segments = Finder.getElements(shot);
+    Story segmented = new Story(shot, true);
+    for (Element rect : segments) {
+      segmented.add(rect);
+    }
+    Picture picture = segmented.get();
+    resizeToFrame(picture);
   }
 
   private void actionReset() {
@@ -742,19 +801,25 @@ public class Tool {
   }
 
   private void actionQuit() {
-    if (dirty) {
-      log.error("image not saved yet");
+    if (!internal) {
+      if (dirty) {
+        log.error("image not saved yet");
+      }
+      log.trace("waiting for subs to end");
+      SX.setOption("Tool.bundlePath", bundlePath);
+      SX.saveOptions();
     }
-    log.trace("waiting for subs to end");
-    SX.setOption("Tool.bundlePath", bundlePath);
-    SX.saveOptions();
+    if (SX.isNotNull(hotkeyManager)) {
+      hotkeyManager.stop();
+    }
     if (SX.isNotNull(box)) {
       box.dispose();
     }
-    intro.dispose();
+    if (SX.isNotNull(intro)) {
+      intro.dispose();
+      SX.pause(1);
+    }
     running = false;
-    HotkeyManager.get().stop();
-    SX.pause(1);
   }
 
   private boolean actionBundlePath(JFrame frame) {
@@ -1040,7 +1105,7 @@ public class Tool {
 
   Element getPos(Element elem) {
     return new Element((int) ((elem.x - borderThickness) / resizeFactor),
-            (int) ((elem.y - borderThickness) / resizeFactor), elem.w);
+            (int) ((elem.y - borderThickness) / resizeFactor));
   }
 
   Element getPos(MouseEvent evt) {
@@ -1053,19 +1118,34 @@ public class Tool {
   void crop(Element clicked) {
     pushRect();
     clicked = getPos(clicked);
-    int x = clicked.x;
-    int y = clicked.y;
-    int button = clicked.w;
-    if (TOP == activeSide) {
-      rect.h -= y;
-      rect.y += y;
-    } else if (BOTTOM == activeSide) {
-      rect.h -= rect.h - y;
-    } else if (LEFT == activeSide) {
-      rect.w -= x;
-      rect.x += x;
-    } else if (RIGHT == activeSide) {
-      rect.w -= rect.w - x;
+    if (evaluatingSegments) {
+      boolean contained = false;
+      for (Element segment : segments) {
+        if (segment.contains(clicked)) {
+          log.trace("clicked: %s in segment: %s", clicked, segment);
+          rect.x += segment.x + 1;
+          rect.y += segment.y + 1;
+          rect.w = segment.w - 2;
+          rect.h = segment.h - 2;
+          contained = true;
+          break;
+        }
+      }
+      evaluatingSegments = false;
+    }else {
+      int x = clicked.x;
+      int y = clicked.y;
+      if (TOP == activeSide) {
+        rect.h -= y;
+        rect.y += y;
+      } else if (BOTTOM == activeSide) {
+        rect.h -= rect.h - y;
+      } else if (LEFT == activeSide) {
+        rect.w -= x;
+        rect.x += x;
+      } else if (RIGHT == activeSide) {
+        rect.w -= rect.w - x;
+      }
     }
     exited = -1;
     dirty = true;
@@ -1134,9 +1214,13 @@ public class Tool {
   private void resizeToFrame() {
     checkSelection();
     shot = base.getSub(rect);
+    resizeToFrame(shot);
+  }
+
+  private void resizeToFrame(Picture shot) {
     if (activeSide > RIGHT) {
-      double wFactor = rect.w / (scrW * 0.85f);
-      double hFactor = rect.h / (scrH * 0.85f);
+      double wFactor = shot.w / (scrW * 0.85f);
+      double hFactor = shot.h / (scrH * 0.85f);
       resizeFactor = 1 / Math.max(wFactor, hFactor);
       resizeFactor = Math.min(resizeFactor, 10);
     }

@@ -25,9 +25,11 @@ import java.util.List;
 public class Picture extends Element {
 
   eType eClazz = eType.PICTURE;
+
   public eType getType() {
     return eClazz;
   }
+
   public String getTypeFirstLetter() {
     return "I";
   }

@@ -8,6 +8,7 @@ import com.sikulix.api.*;
 import com.sikulix.core.*;
 import com.sikulix.remote.vnc.VNCDevice;
 import com.sikulix.run.Runner;
+import com.sikulix.util.Tool;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.*;
@@ -86,7 +87,7 @@ public class TestAll {
       });
     }
     SX.setBaseClass();
-    SX.setOption("SX.withHook", "yes");
+    SX.setOption("SX.withHook", "no");
   }
 
   @AfterClass
@@ -981,11 +982,14 @@ public class TestAll {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    //log.startTimer();
+    log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
+        new Window("safari").toFront();
+        SX.pause(1);
+        Picture pBase = Tool.capture();
         result = "nothing to do here";
 //end
       } else {
@@ -996,7 +1000,5 @@ public class TestAll {
     }
     assert true;
   }
-
-
 }
 

@@ -448,7 +448,7 @@ public class Finder {
       Imgproc.Canny(mDetectedEdges, mDetectedEdges,
               lowThreshold, lowThreshold * ratio, kernelSize, false);
     }
-   return mDetectedEdges;
+    return mDetectedEdges;
   }
   //</editor-fold>
 
@@ -499,24 +499,32 @@ public class Finder {
     return rectangles;
   }
 
-  public static List<MatOfPoint> getContours(Mat mBase) {
+  public static List<MatOfPoint> getContours(Mat mBase, boolean external) {
     Mat mHierarchy = Element.getNewMat();
     List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-    Imgproc.findContours(mBase, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+    if (external) {
+      Imgproc.findContours(mBase, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+    } else {
+      Imgproc.findContours(mBase, contours, mHierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+    }
     return contours;
+  }
+
+  public static List<MatOfPoint> getContours(Mat mBase) {
+    return getContours(mBase, true);
   }
 
   public static Mat drawContours(List<MatOfPoint> contours, Mat mBase) {
     Mat mResult = Element.getNewMat();
     Core.subtract(mBase, mBase, mResult);
     Imgproc.drawContours(mResult, contours, -1, new Scalar(255));
-    return  mResult;
+    return mResult;
   }
 
   public static List<Element> contoursToRectangle(List<MatOfPoint> contours) {
     List<Element> rects = new ArrayList<>();
     for (MatOfPoint contour : contours) {
-      log.trace("*** new contour");
+      //log.trace("*** new contour");
       int x1 = 99999;
       int y1 = 99999;
       int x2 = 0;
@@ -525,14 +533,14 @@ public class Finder {
       for (Point point : points) {
         int x = (int) point.x;
         int y = (int) point.y;
-        log.trace("x: %d y: %d", x, y);
+        //log.trace("x: %d y: %d", x, y);
         if (x < x1) x1 = x;
         if (x > x2) x2 = x;
         if (y < y1) y1 = y;
         if (y > y2) y2 = y;
       }
       Element rect = new Element(x1, y1, x2 - x1, y2 - y1);
-      log.trace("rectangle: %s", rect);
+      //log.trace("rectangle: %s", rect);
       rects.add(rect);
     }
     return rects;
@@ -540,11 +548,11 @@ public class Finder {
 
   public static List<Element> getElements(Picture picture) {
     Mat mEdges = detectEdges(picture);
-    List<MatOfPoint> contours = getContours(mEdges);
+    List<MatOfPoint> contours = getContours(mEdges, false);
     Mat mResult = drawContours(contours, mEdges);
     Imgproc.dilate(mResult, mResult, Element.getNewMat());
     Imgproc.dilate(mResult, mResult, Element.getNewMat());
-    return contoursToRectangle(getContours(mResult));
+    return contoursToRectangle(getContours(mResult, false));
   }
 
   public static void logShow(Mat mat) {
