@@ -14,6 +14,7 @@ SikuliX Version 2 - Java API
 Translation project: [Transifex::SikuliX2](https://www.transifex.com/sikulix/sikulix2/dashboard/)
 <br><br>
 Documentation project: [ReadTheDocs::SikuliX2](http://sikulix2.readthedocs.org/) based on [GitHub::SikuliX2-Docs](https://github.com/RaiMan/SikuliX2-Docs)
+
 <hr>
 **Forking and/or downloading this repo only makes sense:**
 
