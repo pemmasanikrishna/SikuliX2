@@ -113,11 +113,11 @@ public class VNCDevice implements IDevice, Closeable {
           }
         }).start();
         capture();
-      } catch (IOException e) {
+        devices.add(this);
+        return this;
+      } catch (Exception e) {
         log.error("VNCClient.connect: did not work: %s", e.getMessage());
       }
-      devices.add(this);
-      return this;
     }
     return null;
   }
