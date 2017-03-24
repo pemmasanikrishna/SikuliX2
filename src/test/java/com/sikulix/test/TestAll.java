@@ -987,9 +987,10 @@ public class TestAll {
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        new Window("safari").toFront();
-        SX.pause(1);
-        Picture pBase = Tool.capture();
+//        new Window("safari").toFront();
+//        SX.pause(1);
+        Picture pBase = Tool.open("gui-button");
+//        pBase.show();
         result = "nothing to do here";
 //end
       } else {

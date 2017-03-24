@@ -7,6 +7,9 @@ package com.sikulix.util;
 import com.sikulix.api.*;
 import com.sikulix.core.*;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -109,16 +112,7 @@ public class Tool {
   //</editor-fold>
 
   public Tool() {
-    bundlePath = SX.getOption("Tool.bundlePath");
-    if (bundlePath.isEmpty()) {
-      String userwork = SX.getUSERWORK();
-      if (new File(userwork, "pom.xml").exists()) {
-        bundlePath = new File(userwork, "src/main/resources/Images").getAbsolutePath();
-      } else {
-        bundlePath = SX.getFolder(SX.getSXSTORE(), "Images").getAbsolutePath();
-      }
-      log.trace("%s", userwork);
-    }
+    initBundlePath();
     intro = new JFrame();
     intro.addKeyListener(new KeyAdapter() {
       @Override
@@ -209,8 +203,24 @@ public class Tool {
   }
 
   public Tool(boolean internalUse) {
+    initBundlePath();
     initBox();
     internal = true;
+  }
+
+  private void initBundlePath() {
+    if (bundlePath.isEmpty()) {
+      bundlePath = SX.getOption("Tool.bundlePath");
+      if (bundlePath.isEmpty()) {
+        String userwork = SX.getUSERWORK();
+        if (new File(userwork, "pom.xml").exists()) {
+          bundlePath = new File(userwork, "src/main/resources/Images").getAbsolutePath();
+        } else {
+          bundlePath = SX.getFolder(SX.getSXSTORE(), "Images").getAbsolutePath();
+        }
+        log.trace("%s", userwork);
+      }
+    }
   }
 
   private boolean internal = false;
@@ -222,6 +232,36 @@ public class Tool {
       SX.pause(1);
     }
     return tool.shot;
+  }
+
+  public static Picture open(Object... args) {
+    String givenImage = null;
+    if (args.length > 0) {
+      if (args[0] instanceof String) {
+        givenImage = (String) args[0];
+      }
+    }
+    Tool tool = new Tool(true);
+    tool.actionOpen(null, givenImage);
+    if (tool.isValid()) {
+      tool.show();
+      while (tool.isRunning()) {
+        SX.pause(1);
+      }
+      return tool.shot;
+    }
+    return new Picture();
+  }
+
+  private boolean isValid() {
+    return SX.isNotNull(base);
+  }
+
+  private void show() {
+    isImage = false;
+    activeSide = ALL;
+    updateStatus();
+    resetBox();
   }
 
   private JLabel getNewLabel(final int width, final int height, String text) {
@@ -566,73 +606,75 @@ public class Tool {
     boolean shouldQuit = false;
     String allowed = " +-acerposftmnihqz";
     if (e.CHAR_UNDEFINED != e.getKeyChar()) {
-      String sKey = "" + e.getKeyChar();
       if (e.getKeyChar() == VK_ESCAPE) {
         log.trace("action: quit request");
-        sKey = "#";
         shouldQuit = true;
       } else {
+        String sKey = "" + e.getKeyChar();
         if (!allowed.contains(sKey)) {
           log.trace("keyTyped: %s", sKey);
           return;
         }
-        if (" ".equals("" + e.getKeyChar())) {
-          if (activeSide == NONE) {
-            activeSide = activeSideSaved;
-          } else {
-            activeSideSaved = activeSide;
-            activeSide = NONE;
+        if (!evaluatingSegments) {
+          if (" ".equals("" + e.getKeyChar())) {
+            if (activeSide == NONE) {
+              activeSide = activeSideSaved;
+            } else {
+              activeSideSaved = activeSide;
+              activeSide = NONE;
+            }
+            content.setBorder(coloredSide(activeSide));
+            box.pack();
+          } else if ("+".equals("" + e.getKeyChar())) {
+            zoomIn();
+            log.trace("action: zoom-in to %s", rect);
+          } else if ("-".equals("" + e.getKeyChar())) {
+            zoomOut();
+            log.trace("action: zoom-out to %s", rect);
+          } else if ("r".equals("" + e.getKeyChar())) {
+            log.trace("action: reset");
+            actionReset();
+          } else if ("p".equals("" + e.getKeyChar())) {
+            log.trace("action: bundlePath");
+            actionBundlePath(box);
+          } else if ("o".equals("" + e.getKeyChar())) {
+            log.trace("action: open");
+            actionOpen(box);
+          } else if ("c".equals("" + e.getKeyChar())) {
+            log.trace("action: capture");
+            actionCapture();
+          } else if ("s".equals("" + e.getKeyChar())) {
+            log.trace("action: save");
+            actionSave();
+          } else if ("f".equals("" + e.getKeyChar())) {
+            log.trace("action: find: %s", rect);
+            actionFind();
+          } else if ("a".equals("" + e.getKeyChar())) {
+            log.trace("action: findAll: %s", rect);
+            actionFindAll();
+          } else if ("t".equals("" + e.getKeyChar())) {
+            log.trace("action: set target");
+            actionTarget();
+          } else if ("m".equals("" + e.getKeyChar())) {
+            log.trace("action: set similarity");
+            actionSimilar();
+          } else if ("n".equals("" + e.getKeyChar())) {
+            log.trace("action: change name");
+            actionName();
+          } else if ("i".equals("" + e.getKeyChar())) {
+            log.trace("action: show info");
+            actionInfo();
+          } else if ("h".equals("" + e.getKeyChar())) {
+            log.trace("action: show help");
+            actionHelp();
+          } else if ("z".equals("" + e.getKeyChar())) {
+            log.trace("action: revert");
+            actionRevert();
           }
-          content.setBorder(coloredSide(activeSide));
-          box.pack();
-        } else if ("+".equals("" + e.getKeyChar())) {
-          zoomIn();
-          log.trace("action: zoom-in to %s", rect);
-        } else if ("-".equals("" + e.getKeyChar())) {
-          zoomOut();
-          log.trace("action: zoom-out to %s", rect);
-        } else if ("r".equals("" + e.getKeyChar())) {
-          log.trace("action: reset");
-          actionReset();
-        } else if ("p".equals("" + e.getKeyChar())) {
-          log.trace("action: bundlePath");
-          actionBundlePath(box);
-        } else if ("o".equals("" + e.getKeyChar())) {
-          log.trace("action: open");
-          actionOpen(box);
-        } else if ("c".equals("" + e.getKeyChar())) {
-          log.trace("action: capture");
-          actionCapture();
-        } else if ("e".equals("" + e.getKeyChar())) {
+        }
+        if ("e".equals("" + e.getKeyChar())) {
           log.trace("action: segments");
           actionSegments();
-        } else if ("s".equals("" + e.getKeyChar())) {
-          log.trace("action: save");
-          actionSave();
-        } else if ("f".equals("" + e.getKeyChar())) {
-          log.trace("action: find: %s", rect);
-          actionFind();
-        } else if ("a".equals("" + e.getKeyChar())) {
-          log.trace("action: findAll: %s", rect);
-          actionFindAll();
-        } else if ("t".equals("" + e.getKeyChar())) {
-          log.trace("action: set target");
-          actionTarget();
-        } else if ("m".equals("" + e.getKeyChar())) {
-          log.trace("action: set similarity");
-          actionSimilar();
-        } else if ("n".equals("" + e.getKeyChar())) {
-          log.trace("action: change name");
-          actionName();
-        } else if ("i".equals("" + e.getKeyChar())) {
-          log.trace("action: show info");
-          actionInfo();
-        } else if ("h".equals("" + e.getKeyChar())) {
-          log.trace("action: show help");
-          actionHelp();
-        } else if ("z".equals("" + e.getKeyChar())) {
-          log.trace("action: revert");
-          actionRevert();
         } else if ("q".equals("" + e.getKeyChar())) {
           log.trace("action: quit request");
           shouldQuit = true;
@@ -730,24 +772,89 @@ public class Tool {
   }
 
   private boolean evaluatingSegments = false;
-  private List<Element> segments = null;
+  private List<Element> segments = new ArrayList<>();
+
+  int segmentState = 0;
+  int segmentStateDetail = 0;
+  int segmentStateExternal = 1;
+  int segmentStateAll = 2;
 
   private void actionSegments() {
     if (evaluatingSegments) {
+      segmentState++;
+      if (segmentState > segmentStateAll) {
+        segments.clear();
+      }
+    } else {
+      activeSide = ALL;
+      evaluatingSegments = true;
+      segmentState = segmentStateDetail;
+    }
+    if (segmentState == segmentStateDetail) {
+      segments = Finder.getElements(shot);
+    } else if (segmentState == segmentStateExternal) {
+      segments = Finder.getElements(shot, true);
+    } else if (segmentState == segmentStateAll) {
+      if (segments.size() > 1) {
+        int x = 99999;
+        int y = 99999;
+        int w = 0;
+        int h = 0;
+        for (Element segment : segments) {
+          if (segment.x < x) {
+            x = segment.x;
+          }
+          if (segment.y < y) {
+            y = segment.y;
+          }
+          if (segment.x + segment.w > x + w) {
+            w = segment.x + segment.w - x;
+          }
+          if (segment.y + segment.h > y + h) {
+            h = segment.y + segment.h - y;
+          }
+        }
+        segments.clear();
+        segments.add(new Element(x, y, w, h));
+      } else {
+        List<MatOfPoint> contours = Finder.getElement(shot);
+        Mat mShot = shot.getContent();
+        Imgproc.fillPoly(mShot, contours, new Scalar(255));
+        Picture toShow;
+        Imgproc.dilate(mShot, mShot, Element.getNewMat());
+
+        toShow = new Picture(mShot);
+        contours = Finder.getElement(toShow);
+        mShot = toShow.getContent();
+        Imgproc.fillPoly(mShot, contours, new Scalar(255));
+
+        toShow = new Picture(mShot);
+        contours = Finder.getElement(toShow);
+        mShot = toShow.getContent();
+        Imgproc.fillPoly(mShot, contours, new Scalar(255));
+
+        toShow = new Picture(mShot);
+        contours = Finder.getElement(toShow);
+        mShot = toShow.getContent();
+        Imgproc.fillPoly(mShot, contours, new Scalar(0, 0, 0));
+
+        toShow = new Picture(mShot);
+        resizeToFrame(toShow);
+        return;
+      }
+    }
+    if (segments.size() > 0) {
+      Story segmented = new Story(shot, true);
+      for (Element rect : segments) {
+        segmented.add(Symbol.rectangle(rect.w, rect.h).setColor(Color.red), new Element(rect.x, rect.y));
+      }
+      Picture picture = segmented.get();
+      resizeToFrame(picture);
+    } else {
       activeSide = ALL;
       evaluatingSegments = false;
       resizeToFrame();
-      return;
     }
-    activeSide = ALL;
-    evaluatingSegments = true;
-    segments = Finder.getElements(shot);
-    Story segmented = new Story(shot, true);
-    for (Element rect : segments) {
-      segmented.add(rect);
-    }
-    Picture picture = segmented.get();
-    resizeToFrame(picture);
   }
 
   private void actionReset() {
@@ -843,25 +950,51 @@ public class Tool {
   }
 
   private void actionOpen(JFrame frame) {
-    frame.setVisible(false);
-    File fImage = FileChooser.loadImage(frame, new File(bundlePath));
-    if (SX.isNotNull(fImage)) {
-      String result = fImage.getAbsolutePath();
-      log.trace("new image: %s", result);
-      base = new Picture(result);
+    actionOpen(frame, null);
+  }
+
+  private void actionOpen(JFrame frame, String fpImage) {
+    boolean frameGiven = true;
+    if (SX.isNull(frame)) {
+      frameGiven = false;
+      frame = Do.getFrame();
+    } else {
+      frame.setVisible(false);
+    }
+    File fImage;
+    if (SX.isNull(fpImage)) {
+      fImage = FileChooser.loadImage(frame, new File(bundlePath));
+      if (SX.isNotNull(fImage)) {
+        String result = fImage.getAbsolutePath();
+        log.trace("new image: %s", result);
+        base = new Picture(result);
+        if (base.isValid()) {
+          rect = new Element(base);
+          isImage = true;
+          resetBox();
+          if (!bundlePath.equals(fImage.getParent()) && Do.popAsk(fImage.getParent() +
+                  "\nUse this folder as bundlepath?", "SikuliX Tool::BundlePath", box)) {
+            bundlePath = fImage.getParent();
+          }
+          updateStatus();
+          return;
+        }
+      }
+    } else {
+      fImage = new File(bundlePath, fpImage);
+      log.trace("open given image: %s", fImage.getAbsolutePath());
+      base = new Picture(fImage.getAbsolutePath());
       if (base.isValid()) {
         rect = new Element(base);
         isImage = true;
         resetBox();
-        if (!bundlePath.equals(fImage.getParent()) && Do.popAsk(fImage.getParent() +
-                "\nUse this folder as bundlepath?", "SikuliX Tool::BundlePath", box)) {
-          bundlePath = fImage.getParent();
-        }
         updateStatus();
         return;
       }
     }
-    frame.setVisible(true);
+    if (frameGiven) {
+      frame.setVisible(true);
+    }
   }
 
   private void actionSave() {
@@ -962,6 +1095,8 @@ public class Tool {
           newRect = new Element(rect.x, rect.y - step, rect.w, rect.h);
         } else if (activeSide == ALL) {
           newRect = new Element(rect.x + step, rect.y + step, rect.w - 2 * step, rect.h - 2 * step);
+        } else if (activeSide == NONE) {
+          newRect = new Element(rect.x, rect.y - step, rect.w, rect.h);
         }
         break;
       case KeyEvent.VK_UP:
@@ -974,6 +1109,8 @@ public class Tool {
           newRect = new Element(rect.x, rect.y + step, rect.w, rect.h);
         } else if (activeSide == ALL) {
           newRect = new Element(rect.x - step, rect.y - step, rect.w + 2 * step, rect.h + 2 * step);
+        } else if (activeSide == NONE) {
+          newRect = new Element(rect.x, rect.y + step, rect.w, rect.h);
         }
         break;
       case KeyEvent.VK_LEFT:
@@ -986,6 +1123,8 @@ public class Tool {
           newRect = new Element(rect.x - step, rect.y, rect.w, rect.h);
         } else if (activeSide == ALL) {
           newRect = new Element(rect.x - step, rect.y - step, rect.w + 2 * step, rect.h + 2 * step);
+        } else if (activeSide == NONE) {
+          newRect = new Element(rect.x + step, rect.y, rect.w, rect.h);
         }
         break;
       case KeyEvent.VK_RIGHT:
@@ -998,6 +1137,8 @@ public class Tool {
           newRect = new Element(rect.x + step, rect.y, rect.w, rect.h);
         } else if (activeSide == ALL) {
           newRect = new Element(rect.x + step, rect.y + step, rect.w - 2 * step, rect.h - 2 * step);
+        } else if (activeSide == NONE) {
+          newRect = new Element(rect.x - step, rect.y, rect.w, rect.h);
         }
         break;
       case KeyEvent.VK_SHIFT:
@@ -1123,16 +1264,16 @@ public class Tool {
       for (Element segment : segments) {
         if (segment.contains(clicked)) {
           log.trace("clicked: %s in segment: %s", clicked, segment);
-          rect.x += segment.x + 1;
-          rect.y += segment.y + 1;
-          rect.w = segment.w - 2;
-          rect.h = segment.h - 2;
+          rect.x += segment.x + 2;
+          rect.y += segment.y + 2;
+          rect.w = segment.w - 3;
+          rect.h = segment.h - 3;
           contained = true;
           break;
         }
       }
       evaluatingSegments = false;
-    }else {
+    } else {
       int x = clicked.x;
       int y = clicked.y;
       if (TOP == activeSide) {

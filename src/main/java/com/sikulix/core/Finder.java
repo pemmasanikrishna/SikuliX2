@@ -521,6 +521,15 @@ public class Finder {
     return mResult;
   }
 
+  public static Mat drawContoursInImage(List<MatOfPoint> contours, Mat mBase) {
+    Mat mResult = Element.getNewMat();
+    Mat mWork = new Mat();
+    Imgproc.cvtColor(mBase, mWork, toGray);
+    Imgproc.cvtColor(mWork, mResult, toColor);
+    Imgproc.drawContours(mResult, contours, -1, new Scalar(0, 0,255));
+    return mResult;
+  }
+
   public static List<Element> contoursToRectangle(List<MatOfPoint> contours) {
     List<Element> rects = new ArrayList<>();
     for (MatOfPoint contour : contours) {
@@ -547,12 +556,21 @@ public class Finder {
   }
 
   public static List<Element> getElements(Picture picture) {
+    return getElements(picture, false);
+  }
+
+  public static List<Element> getElements(Picture picture, boolean external) {
     Mat mEdges = detectEdges(picture);
-    List<MatOfPoint> contours = getContours(mEdges, false);
+    List<MatOfPoint> contours = getContours(mEdges, external);
     Mat mResult = drawContours(contours, mEdges);
     Imgproc.dilate(mResult, mResult, Element.getNewMat());
     Imgproc.dilate(mResult, mResult, Element.getNewMat());
-    return contoursToRectangle(getContours(mResult, false));
+    return contoursToRectangle(getContours(mResult, external));
+  }
+
+  public static List<MatOfPoint> getElement(Picture picture) {
+    Mat mEdges = detectEdges(picture);
+    return getContours(mEdges, true);
   }
 
   public static void logShow(Mat mat) {

@@ -140,7 +140,10 @@ public class Picture extends Element {
    */
   @Override
   public boolean isValid() {
-    return !getContent().empty();
+    if (SX.isSet(getContent())) {
+      return !getContent().empty();
+    }
+    return false;
   }
 
   public String getURL() {

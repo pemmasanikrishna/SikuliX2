@@ -1326,8 +1326,10 @@ public class Element implements Comparable<Element> {
 
   public void show(int time, int... times) {
     Story showing;
-    showing = new Story(this, times);
-    showing.show(time);
+    if (isValid()) {
+      showing = new Story(this, times);
+      showing.show(time);
+    }
   }
 
   public Element showMatch(int... times) {

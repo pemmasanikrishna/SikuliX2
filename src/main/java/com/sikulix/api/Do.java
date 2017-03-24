@@ -73,17 +73,21 @@ public class Do {
     return getFrame(locPopAt);
   }
 
-  private static JFrame getFrame(Object point) {
-    int x;
-    int y;
-    if (point instanceof Point) {
-      x = ((Point) point).x;
-      y = ((Point) point).y;
-    } if (point instanceof Frame) {
-      return (JFrame) point;
-    } else {
-      x = ((Element) point).getCenter().x;
-      y = ((Element) point).getCenter().y;
+  public static JFrame getFrame(Object... args) {
+    int x = Do.on().getCenter().x;
+    int y = Do.on().getCenter().y;
+    if (args.length > 0) {
+      Object point = args[0];
+      if (point instanceof Point) {
+        x = ((Point) point).x;
+        y = ((Point) point).y;
+      }
+      if (point instanceof Frame) {
+        return (JFrame) point;
+      } else {
+        x = ((Element) point).getCenter().x;
+        y = ((Element) point).getCenter().y;
+      }
     }
     JFrame anchor = new JFrame();
     anchor.setAlwaysOnTop(true);
