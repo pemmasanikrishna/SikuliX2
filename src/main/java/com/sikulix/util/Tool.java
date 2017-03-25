@@ -25,7 +25,6 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static java.awt.event.KeyEvent.VK_ESCAPE;
@@ -43,6 +42,8 @@ public class Tool {
   private List<Element> lastRects = new ArrayList<>();
   private int maxRevert = 10;
   private Picture shot;
+  private Mat mShot = null;
+  private Mat mShotSaved = null;
   int shotDisplayedW = 0;
   int shotDisplayedH = 0;
   boolean dirty = false;
@@ -235,20 +236,16 @@ public class Tool {
   }
 
   public static Picture open(Object... args) {
-    String givenImage = null;
     if (args.length > 0) {
-      if (args[0] instanceof String) {
-        givenImage = (String) args[0];
+      Tool tool = new Tool(true);
+      tool.actionOpen(null, args[0]);
+      if (tool.isValid()) {
+        tool.show();
+        while (tool.isRunning()) {
+          SX.pause(1);
+        }
+        return tool.shot;
       }
-    }
-    Tool tool = new Tool(true);
-    tool.actionOpen(null, givenImage);
-    if (tool.isValid()) {
-      tool.show();
-      while (tool.isRunning()) {
-        SX.pause(1);
-      }
-      return tool.shot;
     }
     return new Picture();
   }
@@ -371,9 +368,9 @@ public class Tool {
       public void mouseWheelMoved(MouseWheelEvent e) {
         if (getActiveSide() != ALL) {
           if (e.getWheelRotation() < 0) {
-            zoomIn();
+            actionZoomIn();
           } else {
-            zoomOut();
+            actionZoomOut();
           }
         }
       }
@@ -512,7 +509,7 @@ public class Tool {
       exited = whichSide(e.getX() - borderThickness, e.getY() - borderThickness);
       log.trace("mouseExited: %s ", activeSides[exited]);
     } else {
-      zoomOut();
+      actionZoomOut();
     }
   }
 
@@ -578,7 +575,7 @@ public class Tool {
             } else {
               log.trace("action: crop to (%d,%d) from %s", element.x, element.y, getActiveSideText());
             }
-            crop(element);
+            crop(getPos(element));
             shouldReset = true;
           } else if (clicked[0] == CLICKDOUBLE) {
             if (!evaluatingSegments) {
@@ -626,10 +623,10 @@ public class Tool {
             content.setBorder(coloredSide(activeSide));
             box.pack();
           } else if ("+".equals("" + e.getKeyChar())) {
-            zoomIn();
+            actionZoomIn();
             log.trace("action: zoom-in to %s", rect);
           } else if ("-".equals("" + e.getKeyChar())) {
-            zoomOut();
+            actionZoomOut();
             log.trace("action: zoom-out to %s", rect);
           } else if ("r".equals("" + e.getKeyChar())) {
             log.trace("action: reset");
@@ -671,6 +668,24 @@ public class Tool {
             log.trace("action: revert");
             actionRevert();
           }
+        } else {
+          if ("+".equals("" + e.getKeyChar()) && segmentState == segmentStateAll) {
+            mShotSaved = mShot.clone();
+            mShot = actionSegmentsExpand(mShot);
+            resizeToFrame(new Picture(mShot));
+          } else if ("-".equals("" + e.getKeyChar()) && segmentState == segmentStateAll) {
+            if (SX.isNotNull(mShotSaved)) {
+              mShot = mShotSaved.clone();
+              mShotSaved = null;
+              resizeToFrame(new Picture(mShot));
+            }
+          } else if (" ".equals("" + e.getKeyChar())) {
+            if (segmentState == segmentStateAll) {
+              crop(null);
+            } else if (segmentState == segmentStateExternal && segments.size() == 1) {
+              crop(new Element(segments.get(0).x + 1, segments.get(0).y + 1));
+            }
+          }
         }
         if ("e".equals("" + e.getKeyChar())) {
           log.trace("action: segments");
@@ -680,31 +695,31 @@ public class Tool {
           shouldQuit = true;
         }
       }
-      if (shouldQuit) {
-        if (evaluatingSegments) {
-          evaluatingSegments = false;
-          resizeToFrame();
+    }
+    if (shouldQuit) {
+      if (evaluatingSegments) {
+        evaluatingSegments = false;
+        resizeToFrame();
+      } else {
+        if (internal) {
+          actionQuit();
         } else {
-          if (internal) {
-            actionQuit();
-          } else {
-            if (dirty) {
-              if (!Do.popAsk("discard not saved image?", "SikuliX Tool::SaveImage", box)) {
-                actionSave();
-              }
-              dirty = false;
+          if (dirty) {
+            if (!Do.popAsk("discard not saved image?", "SikuliX Tool::SaveImage", box)) {
+              actionSave();
             }
-            box.setVisible(false);
-            if (!inBackground) {
+            dirty = false;
+          }
+          box.setVisible(false);
+          if (!inBackground) {
+            intro.setVisible(true);
+          } else {
+            if (!Do.popAsk("still want to run in background?" +
+                            "\n- use ctrl-alt-2 to capture" +
+                            "\n- use ctrl-alt-1 for back to foreground",
+                    "SikulixTool::ToBackground", intro)) {
+              inBackground = false;
               intro.setVisible(true);
-            } else {
-              if (!Do.popAsk("still want to run in background?" +
-                              "\n- use ctrl-alt-2 to capture" +
-                              "\n- use ctrl-alt-1 for back to foreground",
-                      "SikulixTool::ToBackground", intro)) {
-                inBackground = false;
-                intro.setVisible(true);
-              }
             }
           }
         }
@@ -763,6 +778,36 @@ public class Tool {
     }
   }
 
+  private void actionZoomOut() {
+    int stepX, stepY;
+    stepX = stepY = 1;
+    if (rect.w > halfCenteredWidth && rect.h > halfCenteredWidth) {
+      stepX = Math.max(1, rect.w / 10);
+      stepY = Math.max(1, rect.h / 10);
+    }
+    rect.x -= stepX;
+    rect.w += 2 * stepX;
+    rect.y -= stepY;
+    rect.h += 2 * stepY;
+    dirty = true;
+    resizeToFrame();
+  }
+
+  private void actionZoomIn() {
+    int stepX, stepY;
+    stepX = stepY = 1;
+    if (rect.w > halfCenteredWidth && rect.h > halfCenteredWidth) {
+      stepX = Math.max(1, rect.w / 10);
+      stepY = Math.max(1, rect.h / 10);
+    }
+    rect.x += stepX;
+    rect.w -= 2 * stepX;
+    rect.y += stepY;
+    rect.h -= 2 * stepY;
+    dirty = true;
+    resizeToFrame();
+  }
+
   private void actionCapture() {
     base = new Element(scrID).capture();
     isImage = false;
@@ -773,6 +818,7 @@ public class Tool {
 
   private boolean evaluatingSegments = false;
   private List<Element> segments = new ArrayList<>();
+  private List<MatOfPoint> contours = new ArrayList<>();
 
   int segmentState = 0;
   int segmentStateDetail = 0;
@@ -789,6 +835,7 @@ public class Tool {
       activeSide = ALL;
       evaluatingSegments = true;
       segmentState = segmentStateDetail;
+      contours = new ArrayList<>();
     }
     if (segmentState == segmentStateDetail) {
       segments = Finder.getElements(shot);
@@ -817,29 +864,11 @@ public class Tool {
         segments.clear();
         segments.add(new Element(x, y, w, h));
       } else {
-        List<MatOfPoint> contours = Finder.getElement(shot);
-        Mat mShot = shot.getContent();
-        Imgproc.fillPoly(mShot, contours, new Scalar(255));
-        Picture toShow;
+        contours = Finder.getElement(shot);
+        mShot = shot.getContent();
+        Imgproc.fillPoly(mShot, contours, oColorBlack);
         Imgproc.dilate(mShot, mShot, Element.getNewMat());
-
-        toShow = new Picture(mShot);
-        contours = Finder.getElement(toShow);
-        mShot = toShow.getContent();
-        Imgproc.fillPoly(mShot, contours, new Scalar(255));
-
-        toShow = new Picture(mShot);
-        contours = Finder.getElement(toShow);
-        mShot = toShow.getContent();
-        Imgproc.fillPoly(mShot, contours, new Scalar(255));
-
-        toShow = new Picture(mShot);
-        contours = Finder.getElement(toShow);
-        mShot = toShow.getContent();
-        Imgproc.fillPoly(mShot, contours, new Scalar(0, 0, 0));
-
-        toShow = new Picture(mShot);
-        resizeToFrame(toShow);
+        resizeToFrame(new Picture(mShot));
         return;
       }
     }
@@ -855,6 +884,17 @@ public class Tool {
       evaluatingSegments = false;
       resizeToFrame();
     }
+  }
+
+  private Scalar oColorBlack = new Scalar(0, 0, 0);
+  private Scalar oColorWhite = new Scalar(255, 255, 255);
+
+  private Mat actionSegmentsExpand(Mat mShot) {
+    Picture toShow = new Picture(mShot);
+    contours = Finder.getElement(toShow);
+    mShot = toShow.getContent();
+    Imgproc.fillPoly(mShot, contours, oColorBlack);
+    return mShot;
   }
 
   private void actionReset() {
@@ -953,7 +993,7 @@ public class Tool {
     actionOpen(frame, null);
   }
 
-  private void actionOpen(JFrame frame, String fpImage) {
+  private void actionOpen(JFrame frame, Object image) {
     boolean frameGiven = true;
     if (SX.isNull(frame)) {
       frameGiven = false;
@@ -962,7 +1002,7 @@ public class Tool {
       frame.setVisible(false);
     }
     File fImage;
-    if (SX.isNull(fpImage)) {
+    if (SX.isNull(image)) {
       fImage = FileChooser.loadImage(frame, new File(bundlePath));
       if (SX.isNotNull(fImage)) {
         String result = fImage.getAbsolutePath();
@@ -981,9 +1021,13 @@ public class Tool {
         }
       }
     } else {
-      fImage = new File(bundlePath, fpImage);
-      log.trace("open given image: %s", fImage.getAbsolutePath());
-      base = new Picture(fImage.getAbsolutePath());
+      if (image instanceof String) {
+        fImage = new File(bundlePath, (String) image);
+        log.trace("open given image: %s", fImage.getAbsolutePath());
+        base = new Picture(fImage.getAbsolutePath());
+      } else if (image instanceof Picture) {
+        base = (Picture) image;
+      }
       if (base.isValid()) {
         rect = new Element(base);
         isImage = true;
@@ -1258,22 +1302,29 @@ public class Tool {
 
   void crop(Element clicked) {
     pushRect();
-    clicked = getPos(clicked);
     if (evaluatingSegments) {
-      boolean contained = false;
-      for (Element segment : segments) {
-        if (segment.contains(clicked)) {
-          log.trace("clicked: %s in segment: %s", clicked, segment);
-          rect.x += segment.x + 2;
-          rect.y += segment.y + 2;
-          rect.w = segment.w - 3;
-          rect.h = segment.h - 3;
-          contained = true;
-          break;
+      if (contours.size() > 0) {
+        Element segment = Finder.contoursToRectangle(contours).get(0);
+        log.trace("clicked: %s erase around: %s", clicked, segment);
+        rect.x += segment.x - 1;
+        rect.y += segment.y - 1;
+        rect.w = segment.w + 3;
+        rect.h = segment.h + 3;
+      } else {
+        for (Element segment : segments) {
+          if (segment.contains(clicked)) {
+            log.trace("clicked: %s in segment: %s", clicked, segment);
+            rect.x += segment.x + 2;
+            rect.y += segment.y + 2;
+            rect.w = segment.w - 3;
+            rect.h = segment.h - 3;
+            break;
+          }
         }
       }
       evaluatingSegments = false;
     } else {
+      clicked = getPos(clicked);
       int x = clicked.x;
       int y = clicked.y;
       if (TOP == activeSide) {
@@ -1308,36 +1359,6 @@ public class Tool {
       rect.y = y - rect.y / 2;
     }
     exited = -1;
-    dirty = true;
-    resizeToFrame();
-  }
-
-  private void zoomOut() {
-    int stepX, stepY;
-    stepX = stepY = 1;
-    if (rect.w > halfCenteredWidth && rect.h > halfCenteredWidth) {
-      stepX = Math.max(1, rect.w / 10);
-      stepY = Math.max(1, rect.h / 10);
-    }
-    rect.x -= stepX;
-    rect.w += 2 * stepX;
-    rect.y -= stepY;
-    rect.h += 2 * stepY;
-    dirty = true;
-    resizeToFrame();
-  }
-
-  private void zoomIn() {
-    int stepX, stepY;
-    stepX = stepY = 1;
-    if (rect.w > halfCenteredWidth && rect.h > halfCenteredWidth) {
-      stepX = Math.max(1, rect.w / 10);
-      stepY = Math.max(1, rect.h / 10);
-    }
-    rect.x += stepX;
-    rect.w -= 2 * stepX;
-    rect.y += stepY;
-    rect.h -= 2 * stepY;
     dirty = true;
     resizeToFrame();
   }

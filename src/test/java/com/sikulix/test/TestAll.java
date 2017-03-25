@@ -114,6 +114,7 @@ public class TestAll {
       log.info("hook started");
     }
     button = Symbol.button(200, 80).setColor(Color.gray).fill(Color.lightGray).setLine(4);
+    Do.setBundlePath(mavenRoot, "Images");
   }
 
   @After
@@ -162,7 +163,6 @@ public class TestAll {
       if (SX.isNull(fnBase)) {
         return true;
       }
-      Do.setBundlePath(mavenRoot, "Images");
       base = new Picture(fnBase);
       if (base.hasContent()) {
         theShow = new Story(base, showPauseAfter, showPauseBefore).start();
@@ -987,10 +987,13 @@ public class TestAll {
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-//        new Window("safari").toFront();
-//        SX.pause(1);
-        Picture pBase = Tool.open("gui-button");
-//        pBase.show();
+        new Window("google chrome").toFront();
+        SX.pause(3);
+        Picture pBase;
+        pBase = Tool.capture();
+//        Picture pBase = new Picture("gui");
+//        Picture pResult = Tool.open(pBase);
+        pBase.show();
         result = "nothing to do here";
 //end
       } else {
