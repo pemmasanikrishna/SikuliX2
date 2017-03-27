@@ -255,7 +255,7 @@ public class Tool {
   }
 
   private void show() {
-    isImage = false;
+    //isImage = false;
     activeSide = ALL;
     updateStatus();
     resetBox();
@@ -601,7 +601,7 @@ public class Tool {
   //<editor-fold desc="key typed">
   private void myKeyTyped(KeyEvent e) {
     boolean shouldQuit = false;
-    String allowed = " +-acerposftmnihqz";
+    String allowed = " +-acerposftmnihqxz";
     if (e.CHAR_UNDEFINED != e.getKeyChar()) {
       if (e.getKeyChar() == VK_ESCAPE) {
         log.trace("action: quit request");
@@ -622,6 +622,8 @@ public class Tool {
             }
             content.setBorder(coloredSide(activeSide));
             box.pack();
+          } else if ("x".equals("" + e.getKeyChar())) {
+            actionTesting();
           } else if ("+".equals("" + e.getKeyChar())) {
             actionZoomIn();
             log.trace("action: zoom-in to %s", rect);
@@ -729,6 +731,37 @@ public class Tool {
   //</editor-fold>
 
   //<editor-fold desc="actions">
+  private boolean testing = false;
+  int thresh = 100;
+  int threshStart = 100;
+  int threshMin = 50;
+  int threshStep = 10;
+  private void actionTesting() {
+    if (testing) {
+      if (thresh <= threshMin) {
+        testing = false;
+        resizeToFrame();
+        return;
+      }
+      thresh -= threshStep;
+    } else {
+      testing = true;
+      thresh = threshStart;
+    }
+    Picture testShot = new Picture(shot);
+    Mat mTestShot = testShot.getContent();
+    Mat mResult = Element.getNewMat();
+    Mat mVoid = Element.getNewMat();
+    Imgproc.cvtColor(mTestShot, mVoid, Imgproc.COLOR_BGR2GRAY);
+    Imgproc.threshold(mVoid, mResult, thresh, 255, Imgproc.THRESH_BINARY);
+    mVoid = Finder.detectEdges(mResult);
+    List<MatOfPoint> contours = Finder.getContours(mVoid, true);
+//    mResult = mVoid;
+//    resizeToFrame(new Picture(mResult));
+    resizeToFrame(new Picture(Finder.drawContoursInImage(contours, mTestShot)));
+    log.trace("action: testing: thresh = %d", thresh);
+  }
+
   String hotKeyCapture = "";
   String hotKeyCaptureFinal = "";
   String hotKeyCaptureDefault = "ctrl alt 2";
@@ -865,9 +898,10 @@ public class Tool {
         segments.add(new Element(x, y, w, h));
       } else {
         contours = Finder.getElement(shot);
-        mShot = shot.getContent();
+        mShot = shot.getContent().clone();
         Imgproc.fillPoly(mShot, contours, oColorBlack);
         Imgproc.dilate(mShot, mShot, Element.getNewMat());
+        contours = Finder.getElement(new Picture(mShot));
         resizeToFrame(new Picture(mShot));
         return;
       }
@@ -894,6 +928,7 @@ public class Tool {
     contours = Finder.getElement(toShow);
     mShot = toShow.getContent();
     Imgproc.fillPoly(mShot, contours, oColorBlack);
+    contours = Finder.getElement(new Picture(mShot));
     return mShot;
   }
 
@@ -1304,12 +1339,15 @@ public class Tool {
     pushRect();
     if (evaluatingSegments) {
       if (contours.size() > 0) {
-        Element segment = Finder.contoursToRectangle(contours).get(0);
-        log.trace("clicked: %s erase around: %s", clicked, segment);
-        rect.x += segment.x - 1;
-        rect.y += segment.y - 1;
-        rect.w = segment.w + 3;
-        rect.h = segment.h + 3;
+        log.trace("clicked: %s erase around", clicked);
+//        Element segment = Finder.contoursToRectangle(contours).get(0);
+//        rect.x += segment.x - 1;
+//        rect.y += segment.y - 1;
+//        rect.w = segment.w + 3;
+//        rect.h = segment.h + 3;
+        Mat mShot = Finder.drawContoursInImage(contours, shot.getContent());
+        resizeToFrame(new Picture(mShot));
+        return;
       } else {
         for (Element segment : segments) {
           if (segment.contains(clicked)) {

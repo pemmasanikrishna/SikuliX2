@@ -987,13 +987,13 @@ public class TestAll {
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        new Window("google chrome").toFront();
-        SX.pause(3);
+//        new Window("google chrome").toFront();
+//        SX.pause(3);
         Picture pBase;
-        pBase = Tool.capture();
-//        Picture pBase = new Picture("gui");
-//        Picture pResult = Tool.open(pBase);
-        pBase.show();
+//        pBase = Tool.capture();
+        pBase = new Picture("game-button");
+        Picture pResult = Tool.open(pBase);
+//        pBase.show();
         result = "nothing to do here";
 //end
       } else {

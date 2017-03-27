@@ -416,22 +416,30 @@ public class Finder {
 
   //<editor-fold desc="detect edges">
   public static Picture showEdges(Picture src) {
-    Picture result = new Picture();
+    Mat mSource = src.getContent();
     Mat mSourceGray = Element.getNewMat();
-    Mat mDestination = Element.getNewMat();
+    Mat mResult = Element.getNewMat();
     Mat mDetectedEdges = Element.getNewMat();
 
     if (src.isValid()) {
-      mDetectedEdges = detectEdges(src);
-      Core.add(mSourceGray, Scalar.all(0), mDestination);
-      mDetectedEdges.copyTo(mDestination);
-      result = new Picture(mDestination);
+      mDetectedEdges = detectEdges(mSource);
+//      Imgproc.cvtColor(mSource, mSourceGray, toGray);
+//      mDetectedEdges.copyTo(mSourceGray, mDetectedEdges);
+      mResult = mDetectedEdges;
     }
-    return result;
+    return new Picture(mResult);
   }
 
+
   public static Mat detectEdges(Picture src) {
-    Mat mSource;
+    if (src.isValid()) {
+      return detectEdges(src.getContent());
+    } else {
+      return Element.getNewMat();
+    }
+  }
+
+  public static Mat detectEdges(Mat mSource) {
     Mat mSourceGray = Element.getNewMat();
     Mat mDetectedEdges = Element.getNewMat();
 
@@ -441,13 +449,14 @@ public class Finder {
     int kernelSize = 5;
     int blurFilterSize = 3;
 
-    if (src.isValid()) {
-      mSource = src.getContent();
+    if (mSource.channels() == 1) {
+      mSourceGray = mSource;
+    } else {
       Imgproc.cvtColor(mSource, mSourceGray, toGray);
-      Imgproc.blur(mSourceGray, mDetectedEdges, new Size(blurFilterSize, blurFilterSize));
-      Imgproc.Canny(mDetectedEdges, mDetectedEdges,
-              lowThreshold, lowThreshold * ratio, kernelSize, false);
     }
+    Imgproc.blur(mSourceGray, mDetectedEdges, new Size(blurFilterSize, blurFilterSize));
+    Imgproc.Canny(mDetectedEdges, mDetectedEdges,
+            lowThreshold, lowThreshold * ratio, kernelSize, false);
     return mDetectedEdges;
   }
   //</editor-fold>
@@ -526,7 +535,7 @@ public class Finder {
     Mat mWork = new Mat();
     Imgproc.cvtColor(mBase, mWork, toGray);
     Imgproc.cvtColor(mWork, mResult, toColor);
-    Imgproc.drawContours(mResult, contours, -1, new Scalar(0, 0,255));
+    Imgproc.drawContours(mResult, contours, -1, new Scalar(0, 0, 255));
     return mResult;
   }
 
