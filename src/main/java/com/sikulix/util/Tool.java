@@ -6,9 +6,8 @@ package com.sikulix.util;
 
 import com.sikulix.api.*;
 import com.sikulix.core.*;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Scalar;
+import com.sun.xml.internal.ws.client.ClientSchemaValidationTube;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 import javax.swing.*;
@@ -324,7 +323,15 @@ public class Tool {
           dragStart = null;
           dragCurrent = null;
           content.repaint();
-          resizeToFrame();
+          if (masking) {
+            mask = new Element(rect);
+            rect = lastRects.remove(0);
+            mask.x -= rect.x;
+            mask.y -= rect.y;
+            eventState(MASKDRAWN, 0, 0);
+          } else {
+            resizeToFrame();
+          }
         }
         lastDrag = null;
         dragButton = 1;
@@ -388,12 +395,13 @@ public class Tool {
     pBox.add(content);
     pBox.add(status);
     running = true;
-    new Thread(new ClickHandler()).start();
+    new Thread(new EventHandler()).start();
     scrW = Do.onMain().w;
     scrH = Do.onMain().h;
   }
 
   private Element mousePos = new Element();
+  private String statusAction = "";
 
   private void updateStatus() {
     updateStatus(null);
@@ -403,9 +411,9 @@ public class Tool {
     if (!SX.isNull(elem)) {
       mousePos = elem;
     }
-    status.setText(String.format("%s%04d, %04d [%04d, %04d %04dx%04d] %s ",
+    status.setText(String.format("%s%04d, %04d [%04d, %04d %04dx%04d] %s %s",
             dirty ? "*" : "",
-            rect.x + mousePos.x, rect.y + mousePos.y, rect.x, rect.y, rect.w, rect.h, base.getName()));
+            rect.x + mousePos.x, rect.y + mousePos.y, rect.x, rect.y, rect.w, rect.h, base.getName(), statusAction));
   }
   //</editor-fold>
 
@@ -416,12 +424,12 @@ public class Tool {
     log.trace("mouse%s%sClicked: %d,%d", rightClick, doubleClick, e.getX(), e.getY());
     if (SX.isSet(doubleClick)) {
       if (SX.isNotSet(rightClick)) {
-        clickState(CLICKDOUBLE, e.getX(), e.getY());
+        eventState(CLICKDOUBLE, e.getX(), e.getY());
       }
     } else if (SX.isSet(rightClick)) {
-      clickState(CLICKRIGHT, e.getX(), e.getY());
+      eventState(CLICKRIGHT, e.getX(), e.getY());
     } else {
-      clickState(CLICKLEFT, e.getX(), e.getY());
+      eventState(CLICKLEFT, e.getX(), e.getY());
     }
   }
 
@@ -536,17 +544,18 @@ public class Tool {
   }
   //</editor-fold>
 
-  //<editor-fold desc="clickHandler">
+  //<editor-fold desc="eventHandler">
   private static int CLICKLEFT = 0;
   private static int CLICKRIGHT = 1;
   private static int CLICKDOUBLE = 2;
-  private static int CLICKNOTSET = -1;
+  private static int MASKDRAWN = 3;
+  private static int EVENTNOTSET = -1;
 
-  int clickType = CLICKNOTSET;
+  int clickType = EVENTNOTSET;
   int clickedX = 0;
   int clickedY = 0;
 
-  synchronized int[] clickState(int... args) {
+  synchronized int[] eventState(int... args) {
     if (args.length == 0) {
       return new int[]{clickType, clickedX, clickedY};
     }
@@ -556,40 +565,44 @@ public class Tool {
     return null;
   }
 
-  protected class ClickHandler implements Runnable {
+  protected class EventHandler implements Runnable {
     @Override
     public void run() {
       Element element = null;
       log.trace("ClickHandler: started");
       boolean shouldReset = false;
       while (isRunning()) {
-        int[] clicked = clickState();
-        element = new Element(clicked[1], clicked[2]);
-        if (clicked[0] == CLICKLEFT) {
+        int[] event = eventState();
+        element = new Element(event[1], event[2]);
+        if (event[0] == CLICKLEFT) {
           SX.pause(0.3);
-          clicked = clickState();
-          element = new Element(clicked[1], clicked[2]);
-          if (clicked[0] == CLICKLEFT) {
+          event = eventState();
+          element = new Element(event[1], event[2]);
+          if (event[0] == CLICKLEFT) {
             if (evaluatingSegments) {
-              log.trace("action: crop segment at (%d,%d)", element.x, element.y);
+              log.trace("event: crop segment at (%d,%d)", element.x, element.y);
             } else {
-              log.trace("action: crop to (%d,%d) from %s", element.x, element.y, getActiveSideText());
+              log.trace("event: crop to (%d,%d) from %s", element.x, element.y, getActiveSideText());
             }
             crop(getPos(element));
             shouldReset = true;
-          } else if (clicked[0] == CLICKDOUBLE) {
+          } else if (event[0] == CLICKDOUBLE) {
             if (!evaluatingSegments) {
-              log.trace("action: center at (%d,%d) %s", element.x, element.y, rect);
+              log.trace("event: center at (%d,%d) %s", element.x, element.y, rect);
               center(element);
             }
             shouldReset = true;
           }
-        } else if (clicked[0] == CLICKRIGHT) {
-          log.trace("action: menu at (%d,%d)", element.x, element.y);
+        } else if (event[0] == CLICKRIGHT) {
+          log.trace("event: menu at (%d,%d)", element.x, element.y);
+          shouldReset = true;
+        } else if (event[0] == MASKDRAWN) {
+          log.trace("event: mask %s", mask);
+          actionMasking();
           shouldReset = true;
         }
         if (shouldReset) {
-          clickState(CLICKNOTSET, 0, 0);
+          eventState(EVENTNOTSET, 0, 0);
           shouldReset = false;
         }
       }
@@ -614,16 +627,25 @@ public class Tool {
         }
         if (!evaluatingSegments) {
           if (" ".equals("" + e.getKeyChar())) {
-            if (activeSide == NONE) {
-              activeSide = activeSideSaved;
+            if (masking) {
+              maskingToggle = maskingToggle ? false : true;
+              actionMasking();
             } else {
-              activeSideSaved = activeSide;
-              activeSide = NONE;
+              if (activeSide == NONE) {
+                activeSide = activeSideSaved;
+              } else {
+                activeSideSaved = activeSide;
+                activeSide = NONE;
+              }
+              content.setBorder(coloredSide(activeSide));
+              box.pack();
             }
-            content.setBorder(coloredSide(activeSide));
-            box.pack();
           } else if ("x".equals("" + e.getKeyChar())) {
-            actionTesting();
+            if (masking) {
+              actionMaskingStop();
+            } else {
+              actionMasking();
+            }
           } else if ("+".equals("" + e.getKeyChar())) {
             actionZoomIn();
             log.trace("action: zoom-in to %s", rect);
@@ -731,35 +753,73 @@ public class Tool {
   //</editor-fold>
 
   //<editor-fold desc="actions">
-  private boolean testing = false;
-  int thresh = 100;
-  int threshStart = 100;
-  int threshMin = 50;
-  int threshStep = 10;
-  private void actionTesting() {
-    if (testing) {
-      if (thresh <= threshMin) {
-        testing = false;
-        resizeToFrame();
-        return;
+  private boolean masking = false;
+  private boolean maskingToggle = false;
+  private Element mask;
+  private boolean innerMask = true;
+  private Mat mMask;
+  private Picture shotMasked = null;
+
+  private void actionMasking() {
+    if (masking) {
+      if (SX.isNotNull(mask)) {
+        mMask = new Mat(shot.getContent().size(), CvType.CV_8UC1);
+        if (!maskingToggle) {
+          mMask.setTo(new Scalar(0));
+          Imgproc.fillPoly(mMask, elementToPoints(mask), new Scalar(255));
+          innerMask = true;
+        } else {
+          mMask.setTo(new Scalar(255));
+          Imgproc.fillPoly(mMask, elementToPoints(mask), new Scalar(0));
+          innerMask = false;
+        }
+        List<Mat> mBGRA = new ArrayList<>();
+        Core.split(shot.getContent(), mBGRA);
+        mBGRA.add(mMask);
+        Mat mResult = new Mat(mMask.size(), CvType.CV_8UC4);
+        Core.merge(mBGRA, mResult);
+        shotMasked = new Picture(mResult);
+        resizeToFrame(shotMasked);
       }
-      thresh -= threshStep;
     } else {
-      testing = true;
-      thresh = threshStart;
+      masking = true;
+      mask = null;
+      activeSide = ALL;
+      statusAction = "<-masking->";
+      updateStatus();
+      resizeToFrame();
+      log.trace("action: masking: started");
+      return;
     }
-    Picture testShot = new Picture(shot);
-    Mat mTestShot = testShot.getContent();
-    Mat mResult = Element.getNewMat();
-    Mat mVoid = Element.getNewMat();
-    Imgproc.cvtColor(mTestShot, mVoid, Imgproc.COLOR_BGR2GRAY);
-    Imgproc.threshold(mVoid, mResult, thresh, 255, Imgproc.THRESH_BINARY);
-    mVoid = Finder.detectEdges(mResult);
-    List<MatOfPoint> contours = Finder.getContours(mVoid, true);
-//    mResult = mVoid;
-//    resizeToFrame(new Picture(mResult));
-    resizeToFrame(new Picture(Finder.drawContoursInImage(contours, mTestShot)));
-    log.trace("action: testing: thresh = %d", thresh);
+  }
+
+  private void actionMaskingStop() {
+    if (SX.isNotNull(mask)) {
+      dirty = true;
+      shotMasked.setName("");
+      imageToSave = shotMasked;
+      actionSave();
+    }
+    mask = null;
+    mMask = null;
+    masking = false;
+    statusAction = "";
+    updateStatus();
+    resizeToFrame();
+    log.trace("action: masking: stopped");
+  }
+
+  private List<MatOfPoint> elementToPoints(Element element) {
+    List<Point> points = new ArrayList<>();
+    points.add(new Point(element.x, element.y));
+    points.add(new Point(element.x + element.w, element.y));
+    points.add(new Point(element.x + element.w, element.y + element.h));
+    points.add(new Point(element.x, element.y + element.h));
+    MatOfPoint mPoints = new MatOfPoint();
+    mPoints.fromList(points);
+    List<MatOfPoint> finalPoints = new ArrayList<MatOfPoint>();
+    finalPoints.add(mPoints);
+    return finalPoints;
   }
 
   String hotKeyCapture = "";
@@ -1030,6 +1090,7 @@ public class Tool {
 
   private void actionOpen(JFrame frame, Object image) {
     boolean frameGiven = true;
+    activeSide = ALL;
     if (SX.isNull(frame)) {
       frameGiven = false;
       frame = Do.getFrame();
@@ -1076,7 +1137,14 @@ public class Tool {
     }
   }
 
+  private Picture imageToSave = null;
+
   private void actionSave() {
+    String savedName = base.getName();
+    if (SX.isNull(imageToSave)) {
+      imageToSave = shot;
+      shot.setName("");
+    }
     boolean shouldSelectPath = false;
     String savePath = bundlePath;
     if (SX.isNotSet(savePath)) {
@@ -1093,19 +1161,22 @@ public class Tool {
         return;
       }
     }
-    if (!base.hasName()) {
+    if (!imageToSave.hasName()) {
       actionName();
+      if (base.hasName()) {
+        imageToSave.setName(base.getName());
+        base.setName(savedName);
+      } else {
+        return;
+      }
     }
-    if (!base.hasName()) {
-      return;
-    }
-    if (SX.existsImageFile(savePath, base.getName())) {
-      if (!Do.popAsk(new File(savePath, base.getName()).getAbsolutePath() +
+    if (SX.existsImageFile(savePath, imageToSave.getName())) {
+      if (!Do.popAsk(new File(savePath, imageToSave.getName()).getAbsolutePath() +
               "\nOverwrite image file?", "SikuliX Tool::ImageSave", box)) {
         return;
       }
     }
-    if (shot.save(base.getName(), savePath)) {
+    if (imageToSave.save(imageToSave.getName(), savePath)) {
       if (!bundlePath.equals(savePath) && Do.popAsk(savePath +
               "\nUse this folder as bundlepath?", "SikuliX Tool::BundlePath", box)) {
         bundlePath = savePath;
@@ -1144,8 +1215,11 @@ public class Tool {
     if (lastRects.size() > 0) {
       log.trace("action: revert crop from %s to %s", rect, lastRects.get(0));
       rect = lastRects.remove(0);
-      resizeToFrame();
     }
+    masking = false;
+    statusAction = "";
+    updateStatus();
+    resizeToFrame();
   }
   //</editor-fold>
 
