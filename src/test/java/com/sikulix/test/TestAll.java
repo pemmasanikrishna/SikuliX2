@@ -870,37 +870,41 @@ public class TestAll {
   @Test
   public void test_300_oldAPI_Basic() {
     currentTest = "test_300_oldAPI_Basic";
-    Screen.showMonitors();
-    Screen scr = new Screen();
-    assert scr.getID() == 0;
-    assert SX.isRectangleEqual(scr, Do.on().getRectangle());
-    scr.hover();
-    Location center = scr.getCenter();
-    assert Do.isMouseposition(hook, center.x, center.y);
-    Element grow = center.grow(scr.w / 3, scr.h / 3);
-    grow.show(3);
-    result = "Screen basics: " + scr.toString();
-    if (Do.getDevice().getNumberOfMonitors() > 1) {
-      scr = new Screen(1);
+    if (!SX.isHeadless()) {
+      Screen.showMonitors();
+      Screen scr = new Screen();
+      assert scr.getID() == 0;
+      assert SX.isRectangleEqual(scr, Do.on().getRectangle());
       scr.hover();
-      center = scr.getCenter();
+      Location center = scr.getCenter();
       assert Do.isMouseposition(hook, center.x, center.y);
-      grow = center.grow(scr.w / 3, scr.h / 3);
+      Element grow = center.grow(scr.w / 3, scr.h / 3);
       grow.show(3);
-      result += " with second monitor";
+      result = "Screen basics: " + scr.toString();
+      if (Do.getDevice().getNumberOfMonitors() > 1) {
+        scr = new Screen(1);
+        scr.hover();
+        center = scr.getCenter();
+        assert Do.isMouseposition(hook, center.x, center.y);
+        grow = center.grow(scr.w / 3, scr.h / 3);
+        grow.show(3);
+        result += " with second monitor";
+      }
     }
   }
 
   @Test
   public void test_300_oldAPI_Region() {
     currentTest = "test_300_oldAPI_Region";
-    result = "old API: Region";
-    Region region = new Region(100, 100, 100, 100);
-    assert region.isValid() && region instanceof Region : "new Region(100, 100, 100, 100)";
-    region = Region.create(100, 100, 100, 100);
-    assert region.isValid() && region instanceof Region : "Region.create(100, 100, 100, 100)";
-    region = Region.create(-200, -200, 100, 100);
-    assert !region.isValid() && region instanceof Region : "Region.create(-200, -200, 100, 100)";
+    if (!SX.isHeadless()) {
+      result = "old API: Region";
+      Region region = new Region(100, 100, 100, 100);
+      assert region.isValid() && region instanceof Region : "new Region(100, 100, 100, 100)";
+      region = Region.create(100, 100, 100, 100);
+      assert region.isValid() && region instanceof Region : "Region.create(100, 100, 100, 100)";
+      region = Region.create(-200, -200, 100, 100);
+      assert !region.isValid() && region instanceof Region : "Region.create(-200, -200, 100, 100)";
+    }
   }
 
   @Test
@@ -953,6 +957,10 @@ public class TestAll {
     }
   }
 
+  //TODO test for write()
+  //</editor-fold>
+
+  //<editor-fold desc="ignored">
   @Test
   public void test_601_basicVNC() {
     currentTest = "test_601_basicVNC";
@@ -973,10 +981,6 @@ public class TestAll {
     }
   }
 
-  //TODO test for write()
-  //</editor-fold>
-
-  //<editor-fold desc="ignored">
   //</editor-fold>
 
   //log.startTimer();

@@ -1063,11 +1063,52 @@ public class Element implements Comparable<Element> {
   }
 
   public Mat getContent() {
+    return getContent(null);
+  }
+
+  public Mat getContentBGRA() {
+    if (!hasMask()) {
+      Mat mBGRA = getNewMat(mask.size(), 4, -1);
+      List<Mat> mats = new ArrayList<>();
+      mats.add(content);
+      mats.add(getNewMat(content.size(), 1, 255));
+      Core.merge(mats, mBGRA);
+      return mBGRA;
+    }
+    return getContent(null);
+  }
+
+  public Mat getContentBGR() {
     return content;
   }
 
+  public Mat getContentA() {
+    if (hasMask()) {
+      return mask;
+    } else {
+      return getNewMat(content.size(), 1, 255);
+    }
+  }
+
   public Mat getContent(Element elem) {
-    return content.submat(new Rect(elem.x, elem.y, elem.w, elem.h));
+    if (SX.isNull(elem)) {
+      return makeContent();
+    } else {
+      return makeContent().submat(new Rect(elem.x, elem.y, elem.w, elem.h));
+    }
+  }
+
+  private Mat makeContent() {
+    if (hasMask()) {
+      Mat mBGRA = getNewMat(mask.size(), 4, -1);
+      List<Mat> mats = new ArrayList<>();
+      mats.add(content);
+      mats.add(mask);
+      Core.merge(mats, mBGRA);
+      return mBGRA;
+    } else {
+      return content;
+    }
   }
 
   public void setContent(Mat content) {
@@ -1109,6 +1150,33 @@ public class Element implements Comparable<Element> {
     return new Mat();
   }
 
+  public static Mat getNewMat(Size size, int type, int fill) {
+    SX.loadNative(SX.NATIVES.OPENCV);
+    switch (type) {
+      case 1:
+        type = CvType.CV_8UC1;
+        break;
+      case 3:
+        type = CvType.CV_8UC3;
+        break;
+      case 4:
+        type = CvType.CV_8UC4;
+        break;
+      default:
+        type = -1;
+    }
+    if (type < 0) {
+      return new Mat();
+    }
+    Mat result;
+    if (fill < 0) {
+      result = new Mat(size, type);
+    } else {
+      result = new Mat(size, type, new Scalar(fill));
+    }
+    return result;
+  }
+
   public Mat getResizedMat(double factor) {
     Mat newMat = getContent();
     if (isValid()) {
@@ -1125,6 +1193,13 @@ public class Element implements Comparable<Element> {
 
   public boolean hasMask() {
     return SX.isNotNull(mask) && !mask.empty();
+  }
+
+  public Mat getMask() {
+    if (hasMask()) {
+      return mask;
+    }
+    return getNewMat();
   }
 
   private Mat content = null;
@@ -1240,13 +1315,12 @@ public class Element implements Comparable<Element> {
       byte[] data = ((DataBufferByte) bImg.getRaster().getDataBuffer()).getData();
       aMat = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC4);
       aMat.put(0, 0, data);
-      Mat oMatBGR = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC3);
-      Mat oMatA = new Mat(bImg.getHeight(), bImg.getWidth(), CvType.CV_8UC1);
-      java.util.List<Mat> mixIn = new ArrayList<Mat>(Arrays.asList(new Mat[]{aMat}));
-      java.util.List<Mat> mixOut = new ArrayList<Mat>(Arrays.asList(new Mat[]{oMatA, oMatBGR}));
-      //A 0 - R 1 - G 2 - B 3 -> A 0 - B 1 - G 2 - R 3
-      Core.mixChannels(mixIn, mixOut, new MatOfInt(0, 0, 1, 1, 2, 2, 3, 3));
-      return oMatBGR;
+      Mat mBGRA = getNewMat(aMat.size(), 4, -1);
+      List<Mat> mats = new ArrayList<Mat>();
+      Core.split(aMat, mats);
+      mats.add(mats.remove(0));
+      Core.merge(mats, mBGRA);
+      return mBGRA;
     } else if (bImg.getType() == BufferedImage.TYPE_BYTE_GRAY) {
       log.trace("makeMat: BYTE_GRAY (%dx%d)", bImg.getWidth(), bImg.getHeight());
       byte[] data = ((DataBufferByte) bImg.getRaster().getDataBuffer()).getData();

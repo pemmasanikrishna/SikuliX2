@@ -178,7 +178,7 @@ public class Picture extends Element {
         String urlProto = urlImg.getProtocol();
         if (urlProto.equals("file")) {
           File imgFile = new File(urlImg.getPath());
-          setContent(Imgcodecs.imread(imgFile.getAbsolutePath()));
+          setContent(Imgcodecs.imread(imgFile.getAbsolutePath(), Imgcodecs.IMREAD_UNCHANGED));
         } else {
           try {
             setContent(makeMat(ImageIO.read(urlImg)));
