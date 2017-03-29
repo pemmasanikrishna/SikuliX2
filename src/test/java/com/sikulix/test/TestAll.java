@@ -94,8 +94,8 @@ public class TestAll {
   public static void tearDownClass() {
     if (SX.isNotNull(hook)) {
       hook.stop();
+      log.info("hook stopped");
     }
-    log.info("hook stopped");
   }
 
   @Before
@@ -109,7 +109,7 @@ public class TestAll {
     if (log.isLevel(SXLog.TRACE)) {
       log.startTimer();
     }
-    if (SX.isNull(hook)) {
+    if (SX.isOption("SX.withHook") && SX.isNull(hook)) {
       hook = Do.getHook();
       log.info("hook started");
     }
@@ -961,7 +961,7 @@ public class TestAll {
   //</editor-fold>
 
   //<editor-fold desc="ignored">
-  @Test
+  @Ignore
   public void test_601_basicVNC() {
     currentTest = "test_601_basicVNC";
     if (!SX.isHeadless() && !SX.onTravisCI()) {
@@ -980,7 +980,6 @@ public class TestAll {
       vnc.stop();
     }
   }
-
   //</editor-fold>
 
   //log.startTimer();

@@ -34,7 +34,7 @@ public class Finder {
   public Finder(Element elem) {
     if (elem != null && elem.isValid()) {
       baseElement = elem;
-      base = elem.getContent();
+      base = elem.getContentBGR();
     } else {
       log.error("init: invalid element: %s", elem);
     }
@@ -45,7 +45,7 @@ public class Finder {
   }
 
   public void refreshBase() {
-    base = baseElement.getContent();
+    base = baseElement.getContentBGR();
   }
   //</editor-fold>
 
@@ -112,15 +112,16 @@ public class Finder {
       // ************************************************* search in downsized
       begin_t = new Date().getTime();
       double imgFactor = target.getResizeFactor();
-      Size sb, sp;
-      Mat mBase = Element.getNewMat(), mPattern = Element.getNewMat();
+      Size sizeBase, sizePattern;
+      Mat mBase = Element.getNewMat();
+      Mat mPattern = Element.getNewMat();
       result = null;
       for (double factor : resizeLevels) {
         rfactor = factor * imgFactor;
-        sb = new Size(base.cols() / rfactor, base.rows() / rfactor);
-        sp = new Size(target.getContent().cols() / rfactor, target.getContent().rows() / rfactor);
-        Imgproc.resize(base, mBase, sb, 0, 0, Imgproc.INTER_AREA);
-        Imgproc.resize(target.getContent(), mPattern, sp, 0, 0, Imgproc.INTER_AREA);
+        sizeBase = new Size(base.cols() / rfactor, base.rows() / rfactor);
+        sizePattern = new Size(target.getContent().cols() / rfactor, target.getContent().rows() / rfactor);
+        Imgproc.resize(base, mBase, sizeBase, 0, 0, Imgproc.INTER_AREA);
+        Imgproc.resize(target.getContentBGR(), mPattern, sizePattern, 0, 0, Imgproc.INTER_AREA);
         result = doFindMatch(target, mBase, mPattern);
         mMinMax = Core.minMaxLoc(result);
         downSizeWantedScore = ((int) ((target.getWantedScore() - downSimDiff) * 100)) / 100.0;
@@ -174,7 +175,7 @@ public class Finder {
 
   private Mat doFindMatch(Element target, Mat base, Mat probe) {
     if (SX.isNull(probe)) {
-      probe = target.getContent();
+      probe = target.getContentBGR();
     }
     Mat result = Element.getNewMat();
     Mat plainBase = base;
@@ -416,7 +417,7 @@ public class Finder {
 
   //<editor-fold desc="detect edges">
   public static Picture showEdges(Picture src) {
-    Mat mSource = src.getContent();
+    Mat mSource = src.getContentBGR();
     Mat mSourceGray = Element.getNewMat();
     Mat mResult = Element.getNewMat();
     Mat mDetectedEdges = Element.getNewMat();
@@ -433,7 +434,7 @@ public class Finder {
 
   public static Mat detectEdges(Picture src) {
     if (src.isValid()) {
-      return detectEdges(src.getContent());
+      return detectEdges(src.getContentBGR());
     } else {
       return Element.getNewMat();
     }
