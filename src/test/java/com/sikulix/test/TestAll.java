@@ -982,19 +982,11 @@ public class TestAll {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    log.startTimer();
+    //log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        Picture pBase;
-        pBase = new Picture("game-button");
-//        pBase.show();
-        Mat mMask = new Mat(pBase.getContent().size(), CvType.CV_8UC1);
-        mMask.setTo(new Scalar(125));
-        Picture pMask = new Picture(mMask);
-        pMask.show();
-        result = "nothing to do here";
 //end
       } else {
         result = "headless: not testing";

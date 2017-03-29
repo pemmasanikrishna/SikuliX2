@@ -6,7 +6,6 @@ package com.sikulix.util;
 
 import com.sikulix.api.*;
 import com.sikulix.core.*;
-import com.sun.xml.internal.ws.client.ClientSchemaValidationTube;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 

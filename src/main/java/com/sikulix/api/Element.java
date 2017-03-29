@@ -1071,11 +1071,36 @@ public class Element implements Comparable<Element> {
   }
 
   public void setContent(Mat content) {
-    this.content = content;
+    List<Mat> mats = checkMat(content);
+    if (mats.size() > 0) {
+      this.content = mats.get(0);
+      if (mats.size() > 1) {
+        this.mask = mats.get(1);
+      }
+    } else {
+      log.error("setContent: given CVMat not valid: %s", content);
+    }
+  }
+
+  private List<Mat> checkMat(Mat mat) {
+    List<Mat> mats = new ArrayList<>();
+    if (CvType.CV_8UC1 == mat.type() || CvType.CV_8UC3 == mat.type()) {
+      mats.add(mat);
+    } else if (CvType.CV_8UC4 == mat.type()) {
+      List<Mat> matsBGRA = new ArrayList<>();
+      Core.split(mat, matsBGRA);
+      Mat mBGR = new Mat(mat.size(), CvType.CV_8UC3);
+      Mat matA = matsBGRA.remove(3);
+      Core.merge(matsBGRA, mBGR);
+      mats.add(mBGR);
+      mats.add(matA);
+    }
+    return mats;
   }
 
   public Element setContent() {
     content = getNewMat();
+    mask = getNewMat();
     return this;
   }
 
@@ -1098,7 +1123,12 @@ public class Element implements Comparable<Element> {
     return SX.isNotNull(content) && !content.empty();
   }
 
+  public boolean hasMask() {
+    return SX.isNotNull(mask) && !mask.empty();
+  }
+
   private Mat content = null;
+  private Mat mask = null;
 
   public Element load() {
     capture();
