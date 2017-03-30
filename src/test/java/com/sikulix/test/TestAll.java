@@ -565,8 +565,17 @@ public class TestAll {
       if (base.hasMatch()) {
         base.showMatch(2);
       } else {
-        assert false : "image not found";
+        assert false : "image center_small not found";
       }
+      target = new Picture("sikulix2_frame_filled");
+      base.reset();
+      Do.find(target, base);
+      assert !base.hasMatch() : "image frame_filled should not be found";
+      target = new Picture("sikulix2_frame");
+      base.reset();
+      Do.find(target, base);
+      assert base.hasMatch() : "image frame not found";
+      base.showMatch(2);
     } else {
       result = "headless: not testing";
     }
