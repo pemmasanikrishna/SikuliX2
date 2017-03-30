@@ -256,7 +256,11 @@ public class Picture extends Element {
     resizeFactor = Math.max(1.0, resizeFactor);
     MatOfDouble pMean = new MatOfDouble();
     MatOfDouble pStdDev = new MatOfDouble();
-    Core.meanStdDev(getContentBGR(), pMean, pStdDev);
+    if (hasMask()) {
+      Core.meanStdDev(getContentBGR(), pMean, pStdDev, getMask());
+    } else {
+      Core.meanStdDev(getContentBGR(), pMean, pStdDev);
+    }
     double sum = 0.0;
     double[] arr = pStdDev.toArray();
     for (int i = 0; i < arr.length; i++) {

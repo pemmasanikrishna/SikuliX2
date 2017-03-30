@@ -554,27 +554,27 @@ public class TestAll {
   }
 
   @Test
-  public void test_057_saveCapturePartOfDefaultScreen() {
-    currentTest = "test_057_saveCapturePartOfDefaultScreen";
-    assert prepareDefaultScreen(imageNameDefault);
-    if (isHeadless) {
-      return;
+  public void test_58_basicFindWithMask() {
+    log.startTimer();
+    currentTest = "test_58_basicFindWithMask";
+    if (!SX.isHeadless()) {
+      Picture target = new Picture("sikulix2_center_small");
+      Picture base = new Picture("shot-tile");
+      base.show(1);
+      Do.find(target, base);
+      if (base.hasMatch()) {
+        base.showMatch(2);
+      } else {
+        assert false : "image not found";
+      }
+    } else {
+      result = "headless: not testing";
     }
-    start();
-    elemDisplayed = elemDisplayed.grow(20);
-    elemDisplayed.load();
-    result = end() + elemDisplayed.toString();
-    if (elemDisplayed.hasContent()) {
-      elemDisplayed.show();
-      elemDisplayed.save("test_057_saveCapturePartOfDefaultScreen");
-      return;
-    }
-    assert false;
   }
 
   @Test
-  public void test_058_basicStory() {
-    currentTest = "test_058_basicStory";
+  public void test_060_basicStory() {
+    currentTest = "test_060_basicStory";
     result = "showing some grafics";
     if (!SX.isHeadless()) {
       Story story = new Story(0);
@@ -607,6 +607,25 @@ public class TestAll {
     String givenWhere = "noimagewhere";
     Element missing = Do.find(givenWhat, givenWhere);
     assert missing.getName().equals(givenWhere) && !missing.hasContent();
+  }
+
+  @Test
+  public void test_072_saveCapturePartOfDefaultScreen() {
+    currentTest = "test_072_saveCapturePartOfDefaultScreen";
+    assert prepareDefaultScreen(imageNameDefault);
+    if (isHeadless) {
+      return;
+    }
+    start();
+    elemDisplayed = elemDisplayed.grow(20);
+    elemDisplayed.load();
+    result = end() + elemDisplayed.toString();
+    if (elemDisplayed.hasContent()) {
+      elemDisplayed.show();
+      elemDisplayed.save("test_057_saveCapturePartOfDefaultScreen");
+      return;
+    }
+    assert false;
   }
 
   @Test
@@ -985,11 +1004,20 @@ public class TestAll {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    //log.startTimer();
+    log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
+        Picture target = new Picture("sikulix2_center_small");
+        Picture base = new Picture("shot-tile");
+        base.show(1);
+        Do.find(target, base);
+        if (base.hasMatch()) {
+          base.showMatch(2);
+        } else {
+          assert false : "image not found";
+        }
 //end
       } else {
         result = "headless: not testing";

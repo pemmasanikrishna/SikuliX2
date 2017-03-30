@@ -20,9 +20,9 @@ public class Finder {
   //<editor-fold desc="housekeeping">
   private static final SXLog log = SX.getLogger("SX.Finder");
 
-  private Element baseElement = null;
-  private Mat base = Element.getNewMat();
-  private Mat result = Element.getNewMat();
+  private Element base = null;
+  private Mat mBase = Element.getNewMat();
+  private Mat mResult = Element.getNewMat();
 
   private enum FindType {
     ONE, ALL
@@ -33,41 +33,41 @@ public class Finder {
 
   public Finder(Element elem) {
     if (elem != null && elem.isValid()) {
-      baseElement = elem;
-      base = elem.getContentBGR();
+      base = elem;
+      mBase = elem.getContentBGR();
     } else {
       log.error("init: invalid element: %s", elem);
     }
   }
 
   public boolean isValid() {
-    return !base.empty();
+    return !mBase.empty();
   }
 
   public void refreshBase() {
-    base = baseElement.getContentBGR();
+    mBase = base.getContentBGR();
   }
   //</editor-fold>
 
   //<editor-fold desc="find basic">
   public Element find(Element target) {
-    baseElement.resetMatches();
+    base.resetMatches();
     FindResult findResult = doFind(target, FindType.ONE);
     if (SX.isNotNull(findResult) && findResult.hasNext()) {
-      baseElement.setLastMatch(findResult.next());
-      return baseElement.getLastMatch();
+      base.setLastMatch(findResult.next());
+      return base.getLastMatch();
     }
     return new Element();
   }
 
   public List<Element> findAll(Element target) {
-    baseElement.resetMatches();
+    base.resetMatches();
     FindResult findResult = doFind(target, FindType.ALL);
     List<Element> matches = findResult.getMatches();
     Collections.sort(matches);
     Collections.sort(matches);
-    baseElement.setLastMatches(matches);
-    baseElement.setLastScores(findResult.getScores());
+    base.setLastMatches(matches);
+    base.setLastScores(findResult.getScores());
     return matches;
   }
 
@@ -78,12 +78,11 @@ public class Finder {
   private boolean isCheckLastSeen = false;
   private static final double downSimDiff = 0.15;
 
-  private FindResult doFind(Element elem, FindType findType) {
-    if (!elem.isTarget()) {
+  private FindResult doFind(Element target, FindType findType) {
+    if (!target.isTarget()) {
       return null;
     }
     log.trace("doFind: start");
-    Element target = elem;
     if (target.getWantedScore() < 0) {
       target.setWantedScore(0.8);
     }
@@ -95,8 +94,7 @@ public class Finder {
       begin_t = new Date().getTime();
       Finder lastSeenFinder = new Finder(target.getLastSeen());
       lastSeenFinder.isCheckLastSeen = true;
-      target = new Target(target, target.getLastSeen().getScore() - 0.01);
-      findResult = lastSeenFinder.doFind(target, FindType.ONE);
+      findResult = lastSeenFinder.doFind(new Target(target, target.getLastSeen().getScore() - 0.01), FindType.ONE);
       if (findResult.hasNext()) {
         log.trace("doFind: checkLastSeen: success %d msec", new Date().getTime() - begin_t);
         return findResult;
@@ -115,15 +113,21 @@ public class Finder {
       Size sizeBase, sizePattern;
       Mat mBase = Element.getNewMat();
       Mat mPattern = Element.getNewMat();
-      result = null;
+      Mat mPatternMask = Element.getNewMat();
+      mResult = null;
       for (double factor : resizeLevels) {
         rfactor = factor * imgFactor;
-        sizeBase = new Size(base.cols() / rfactor, base.rows() / rfactor);
+        sizeBase = new Size(this.mBase.cols() / rfactor, this.mBase.rows() / rfactor);
         sizePattern = new Size(target.getContent().cols() / rfactor, target.getContent().rows() / rfactor);
-        Imgproc.resize(base, mBase, sizeBase, 0, 0, Imgproc.INTER_AREA);
+        Imgproc.resize(this.mBase, mBase, sizeBase, 0, 0, Imgproc.INTER_AREA);
         Imgproc.resize(target.getContentBGR(), mPattern, sizePattern, 0, 0, Imgproc.INTER_AREA);
-        result = doFindMatch(target, mBase, mPattern);
-        mMinMax = Core.minMaxLoc(result);
+        Picture pPattern = new Picture(mPattern);
+        if (target.hasMask()) {
+          Imgproc.resize(target.getMask(), mPatternMask, sizePattern, 0, 0, Imgproc.INTER_AREA);
+          pPattern.setMask(mPatternMask);
+        }
+        mResult = doFindMatch(target, mBase, pPattern);
+        mMinMax = Core.minMaxLoc(mResult);
         downSizeWantedScore = ((int) ((target.getWantedScore() - downSimDiff) * 100)) / 100.0;
         downSizeScore = mMinMax.maxVal;
         if (downSizeScore > downSizeWantedScore) {
@@ -135,21 +139,21 @@ public class Finder {
     }
     if (FindType.ONE.equals(findType) && downSizeFound) {
       // ************************************* check after downsized success
-      if (base.size().equals(target.getContent().size())) {
-        // trust downsized result, if images have same size
-        return new FindResult(result, target);
+      if (mBase.size().equals(target.getContent().size())) {
+        // trust downsized mResult, if images have same size
+        return new FindResult(mResult, target);
       } else {
         int maxLocX = (int) (mMinMax.maxLoc.x * rfactor);
         int maxLocY = (int) (mMinMax.maxLoc.y * rfactor);
         begin_t = new Date().getTime();
         int margin = ((int) target.getResizeFactor()) + 1;
         Rect rectSub = new Rect(Math.max(0, maxLocX - margin), Math.max(0, maxLocY - margin),
-                Math.min(target.w + 2 * margin, base.width()),
-                Math.min(target.h + 2 * margin, base.height()));
-        result = doFindMatch(target, base.submat(rectSub), null);
-        mMinMax = Core.minMaxLoc(result);
+                Math.min(target.w + 2 * margin, mBase.width()),
+                Math.min(target.h + 2 * margin, mBase.height()));
+        mResult = doFindMatch(target, mBase.submat(rectSub), null);
+        mMinMax = Core.minMaxLoc(mResult);
         if (mMinMax.maxVal > target.getWantedScore()) {
-          findResult = new FindResult(result, target, new int[]{rectSub.x, rectSub.y});
+          findResult = new FindResult(mResult, target, new int[]{rectSub.x, rectSub.y});
         }
         if (SX.isNotNull(findResult)) {
           log.trace("doFind: after down: %%%.2f(?%%%.2f) %d msec",
@@ -160,37 +164,61 @@ public class Finder {
     // ************************************** search in original
     if (((int) (100 * downSizeScore)) == 0) {
       begin_t = new Date().getTime();
-      result = doFindMatch(target, base, null);
-      mMinMax = Core.minMaxLoc(result);
+      mResult = doFindMatch(target, mBase, null);
+      mMinMax = Core.minMaxLoc(mResult);
       if (!isCheckLastSeen) {
         log.trace("doFind: search in original: %d msec", new Date().getTime() - begin_t);
       }
       if (mMinMax.maxVal > target.getWantedScore()) {
-        findResult = new FindResult(result, target);
+        findResult = new FindResult(mResult, target);
       }
     }
     log.trace("doFind: end");
     return findResult;
   }
 
-  private Mat doFindMatch(Element target, Mat base, Mat probe) {
+  private Mat doFindMatch(Element target, Mat mBase, Element probe) {
     if (SX.isNull(probe)) {
-      probe = target.getContentBGR();
+      probe = target;
     }
-    Mat result = Element.getNewMat();
-    Mat plainBase = base;
-    Mat plainProbe = probe;
+    Mat mResult = Element.getNewMat();
+    Mat mProbe = probe.getContentBGR();
     if (!target.isPlainColor()) {
-      Imgproc.matchTemplate(base, probe, result, Imgproc.TM_CCOEFF_NORMED);
-    } else {
-      if (target.isBlack()) {
-        Core.bitwise_not(base, plainBase);
-        Core.bitwise_not(probe, plainProbe);
+      if (probe.hasMask()) {
+        Mat mMask = matMulti(probe.getMask(), mProbe.channels());
+        Imgproc.matchTemplate(mBase, mProbe, mResult, Imgproc.TM_CCORR_NORMED, mMask);
+      } else {
+        Imgproc.matchTemplate(mBase, mProbe, mResult, Imgproc.TM_CCOEFF_NORMED);
       }
-      Imgproc.matchTemplate(plainBase, plainProbe, result, Imgproc.TM_SQDIFF_NORMED);
-      Core.subtract(Mat.ones(result.size(), CvType.CV_32F), result, result);
+    } else {
+      Mat mBasePlain = mBase;
+      Mat mProbePlain = mProbe;
+      if (target.isBlack()) {
+        Core.bitwise_not(mBase, mBasePlain);
+        Core.bitwise_not(mProbe, mProbePlain);
+      }
+      if (probe.hasMask()) {
+        Mat mMask = matMulti(probe.getMask(), mProbe.channels());
+        Imgproc.matchTemplate(mBasePlain, mProbePlain, mResult, Imgproc.TM_SQDIFF_NORMED, mMask);
+      } else {
+        Imgproc.matchTemplate(mBasePlain, mProbePlain, mResult, Imgproc.TM_SQDIFF_NORMED);
+      }
+      Core.subtract(Mat.ones(mResult.size(), CvType.CV_32F), mResult, mResult);
     }
-    return result;
+    return mResult;
+  }
+
+  private Mat matMulti(Mat mat, int channels) {
+    if (mat.type() != CvType.CV_8UC1 || mat.channels() == channels) {
+      return mat;
+    }
+    List<Mat> listMat = new ArrayList<>();
+    for (int n = 0; n < channels; n++) {
+      listMat.add(mat);
+    }
+    Mat mResult = Element.getNewMat();
+    Core.merge(listMat, mResult);
+    return mResult;
   }
 
   private static class FindResult implements Iterator<Element> {

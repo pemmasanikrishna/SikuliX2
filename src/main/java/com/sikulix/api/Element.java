@@ -1134,7 +1134,11 @@ public class Element implements Comparable<Element> {
       Mat matA = matsBGRA.remove(3);
       Core.merge(matsBGRA, mBGR);
       mats.add(mBGR);
-      mats.add(matA);
+      MatOfDouble mStdDev = new MatOfDouble();
+      Core.meanStdDev(matA, new MatOfDouble(), mStdDev);
+      if (0 < mStdDev.toArray()[0]) {
+        mats.add(matA);
+      }
     }
     return mats;
   }
@@ -1200,6 +1204,12 @@ public class Element implements Comparable<Element> {
       return mask;
     }
     return getNewMat();
+  }
+
+  public void setMask(Mat mMask) {
+    if (mMask.type() == CvType.CV_8UC1) {
+      mask = mMask;
+    }
   }
 
   private Mat content = null;
