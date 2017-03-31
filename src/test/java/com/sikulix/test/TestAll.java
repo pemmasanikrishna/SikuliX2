@@ -135,6 +135,9 @@ public class TestAll {
       theShow.waitForEnd();
     }
     SX.setOption("Settings.MoveMouseDelay", "0.5");
+    if (SX.isNull(result)) {
+      result = currentTest;
+    }
     log.info("!%2d: result: %s: %s ", nTest++, currentTest, result);
   }
 
@@ -574,8 +577,12 @@ public class TestAll {
       target = new Picture("sikulix2_frame");
       base.reset();
       Do.find(target, base);
-      assert base.hasMatch() : "image frame not found";
+      assert base.hasMatch() : "find: image frame not found";
       base.showMatch(2);
+      base.reset();
+      Do.findAll(target, base);
+      assert base.hasMatches() : "findAll: image frame not found";
+      base.showMatches(2);
     } else {
       result = "headless: not testing";
     }
