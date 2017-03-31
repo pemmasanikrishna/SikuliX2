@@ -557,9 +557,8 @@ public class TestAll {
   }
 
   @Test
-  public void test_58_basicFindWithMask() {
-    log.startTimer();
-    currentTest = "test_58_basicFindWithMask";
+  public void test_058_basicFindWithMask() {
+    currentTest = "test_058_basicFindWithMask";
     if (!SX.isHeadless()) {
       Picture target = new Picture("sikulix2_center_small");
       Picture base = new Picture("shot-tile");
@@ -834,6 +833,7 @@ public class TestAll {
         assert (mButton.isMatch() && mButton.contains(Do.at())) : assertMsg;
         Do.at().click();
         story.stop();
+        Do.wait(1.0);
         assert (!Do.exists(pButton, 0)) : "Story still visible after action";
         if (story.hasClickedSymbol()) {
           Symbol clickedSymbol = story.getClickedSymbol();
@@ -892,11 +892,11 @@ public class TestAll {
       assert SX.isNull(returnBool) : "popError: return not null";
     }
     String returnString;
-    returnString = Do.input("give me some text", "text input", "preset", 2, loc);
+    returnString = Do.input("give me some text", "text input autoclose", "preset", 2, loc);
     if (!SX.onTravisCI()) {
       assert SX.isNull(returnString) : "input: return not null";
     }
-    returnString = Do.input("enter password", "hidden input", "preset", true, 2, loc);
+    returnString = Do.input("enter password", "hidden input autoclose", "preset", true, 2, loc);
     if (!SX.onTravisCI()) {
       assert SX.isNull(returnString) : "input hidden: return not null";
     }
@@ -1020,20 +1020,10 @@ public class TestAll {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
-    log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        Picture target = new Picture("sikulix2_center_small");
-        Picture base = new Picture("shot-tile");
-        base.show(1);
-        Do.find(target, base);
-        if (base.hasMatch()) {
-          base.showMatch(2);
-        } else {
-          assert false : "image not found";
-        }
 //end
       } else {
         result = "headless: not testing";

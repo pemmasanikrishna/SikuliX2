@@ -670,6 +670,13 @@ public class Element implements Comparable<Element> {
     if (equals(elem)) {
       return 0;
     }
+    if (isMatch() && elem.isMatch()) {
+      if (elem.getScore() > getScore()) {
+        return -1;
+      } else if (elem.getScore() > getScore()) {
+        return 1;
+      } else return 0;
+    }
     if (elem.x > x) {
       return -1;
     } else if (elem.x == x && elem.y > y) {
