@@ -337,7 +337,7 @@ public class Finder {
   //</editor-fold>
 
   //<editor-fold desc="find extended">
-  public Element findBest(List<Element> targets) {
+  public Element findBest(List<Picture> targets) {
     List<Element> mList = findAny(targets);
     if (mList != null) {
       if (mList.size() > 1) {
@@ -359,12 +359,12 @@ public class Finder {
     return null;
   }
 
-  public List<Element> findAny(List<Element> targets) {
+  public List<Element> findAny(List<Picture> targets) {
     List<Element> mList = findAnyCollect(targets);
     return mList;
   }
 
-  private List<Element> findAnyCollect(List<Element> targets) {
+  private List<Element> findAnyCollect(List<Picture> targets) {
     int targetCount = 0;
     if (SX.isNull(targets)) {
       return null;
@@ -745,6 +745,7 @@ public class Finder {
   public static final String DRAG = "drag()";
   public static final String DROP = "drop()";
   public static final String FIND = "find()";
+  public static final String FINDBEST = "findBest()";
   public static final String WAIT = "wait()";
   public static final String EXISTS = "exists()";
   static final String VANISH = "waitVanish()";
@@ -870,11 +871,40 @@ public class Finder {
     return matches;
   }
 
+  public static Element runFindBest(Object... args) {
+    List<Element> matches = runFindAny(Finder.FINDBEST, args);
+    Element match = null;
+    if (matches.size() > 0) {
+      match = matches.get(0);
+    }
+    return match;
+  }
+
+  public static List<Element> runFindAny(String type, Object... args) {
+    PossibleMatch possibleMatch = new PossibleMatch(type);
+    boolean shouldRepeat = true;
+    List<Element> matches = new ArrayList<>();
+    while (shouldRepeat) {
+      Element where = possibleMatch.get(args);
+      if (possibleMatch.isImageMissingWhat() || possibleMatch.isImageMissingWhere()) {
+        shouldRepeat = Picture.handleImageMissing(type, possibleMatch);
+      } else {
+        if (where.hasMatches()) {
+          matches = where.getLastMatches();
+          shouldRepeat = false;
+        } else {
+          shouldRepeat = Picture.handleFindFailed(type, possibleMatch);
+        }
+      }
+    }
+    return matches;
+  }
   //</editor-fold>
 
   //<editor-fold desc="PossibleMatch">
   public static class PossibleMatch {
     Element what = null;
+    List<Object> whatsGiven = new ArrayList<>();
     List<Picture> whats = new ArrayList<>();
 
     public Element getWhat() {
@@ -948,6 +978,11 @@ public class Finder {
       init(type);
     }
 
+    public PossibleMatch(String type) {
+      if (Finder.FINDBEST.equals(type))
+        init(Type.ANYBEST);
+    }
+
     private void init(Type type) {
       this.type = type;
       setScanRate();
@@ -960,26 +995,41 @@ public class Finder {
       }
       log.trace(form, args);
       Object args0, args1;
+      args0 = args[0];
+      boolean isListWhat = false;
       if (args.length > 0) {
-        args0 = args[0];
-        if (args0 instanceof String) {
-          what = new Picture((String) args0);
-          if (!what.isValid()) {
-            imageMissingWhat = true;
-          }
-        } else if (args0 instanceof Element) {
-          what = (Element) args0;
-        } else if (type.toString().startsWith("ANY") && whats.getClass().isAssignableFrom(args0.getClass()) ) {
-
-        } else {
-          if (Type.WAIT.equals(type)) {
-            if (args0 instanceof Float || args0 instanceof Double) {
-              SX.pause((Double) args0);
-              return new Element();
+        if (type.toString().startsWith("ANY")) {
+          if (whatsGiven.getClass().isAssignableFrom(args0.getClass())) {
+            isListWhat = true;
+            what = new Element();
+            for (Object anyWhat: (List<Object>) args0) {
+              if (anyWhat instanceof Picture) {
+                whats.add((Picture) anyWhat);
+              } else if (anyWhat instanceof String){
+                whats.add(new Picture((String) anyWhat));
+              } else {
+                whats.add(null);
+              }
             }
           }
-          log.error("EvaluateTarget: args0 invalid: %s", args0);
-          what = new Element();
+        } else {
+          if (args0 instanceof String) {
+            what = new Picture((String) args0);
+            if (!what.isValid()) {
+              imageMissingWhat = true;
+            }
+          } else if (args0 instanceof Element) {
+            what = (Element) args0;
+          } else {
+            if (Type.WAIT.equals(type)) {
+              if (args0 instanceof Float || args0 instanceof Double) {
+                SX.pause((Double) args0);
+                return new Element();
+              }
+            }
+            log.error("EvaluateTarget: args0 invalid: %s", args0);
+            what = new Element();
+          }
         }
         if (SX.isNotNull(what) && args.length == 2 && !imageMissingWhat) {
           args1 = args[1];
@@ -999,7 +1049,7 @@ public class Finder {
           }
         }
         if (SX.isNotNull(what) && !imageMissingWhat && !imageMissingWhere) {
-          if (what.isTarget()) {
+          if (what.isTarget() || isListWhat) {
             if (SX.isNull(where)) {
               where = Do.on();
             }
@@ -1020,6 +1070,8 @@ public class Finder {
                 finder.find(what);
               } else if (Type.ALL.equals(type)) {
                 finder.findAll(what);
+              } else if (type.toString().startsWith("ANY")) {
+                finder.findBest(whats);
               }
             }
           } else {

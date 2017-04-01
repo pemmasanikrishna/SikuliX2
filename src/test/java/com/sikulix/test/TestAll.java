@@ -1020,10 +1020,15 @@ public class TestAll {
   //log.startTimer();
   @Test
   public void test_999_someThingToTest() {
+    //log.startTimer();
     currentTest = "test_0999_someThingToTest";
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
+        List<Object> pictures = new ArrayList<>();
+        pictures.add(imageNameDefault);
+        pictures.add(new Picture(imageNameDefault));
+        Do.findBest(pictures);
 //end
       } else {
         result = "headless: not testing";

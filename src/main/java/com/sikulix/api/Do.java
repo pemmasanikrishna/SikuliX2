@@ -1184,6 +1184,13 @@ public class Do {
     return matches;
   }
 
+  public static Element findBest(Object... args) {
+    log.trace("findBest: start");
+    Element match = Finder.runFindBest(args);
+    log.trace("findBest: end");
+    return match;
+  }
+
   public static boolean hasMatch() {
     return getDefaultElement().hasMatch();
   }
