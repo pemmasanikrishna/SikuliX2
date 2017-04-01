@@ -65,7 +65,6 @@ public class Finder {
     FindResult findResult = doFind(target, FindType.ALL);
     List<Element> matches = findResult.getMatches();
     Collections.sort(matches);
-    Collections.sort(matches);
     base.setLastMatches(matches);
     base.setLastScores(findResult.getScores());
     return matches;
@@ -167,7 +166,8 @@ public class Finder {
       mResult = doFindMatch(target, mBase, null);
       mMinMax = Core.minMaxLoc(mResult);
       if (!isCheckLastSeen) {
-        log.trace("doFind: search in original: %d msec", new Date().getTime() - begin_t);
+        log.trace("doFind: search in original: %%%.2f(?%%%.2f) %d msec",
+                mMinMax.maxVal * 100, target.getWantedScore() * 100, new Date().getTime() - begin_t);
       }
       if (mMinMax.maxVal > target.getWantedScore()) {
         findResult = new FindResult(mResult, target);
@@ -250,7 +250,7 @@ public class Finder {
 
     private double currentScore = -1;
     double firstScore = -1;
-    double scoreMaxDiff = 0.005;
+    double scoreMaxDiff = 0.001;
 
     private int currentX = -1;
     private int currentY = -1;
@@ -263,7 +263,9 @@ public class Finder {
       if (firstScore < 0) {
         firstScore = currentScore;
       }
-      if (currentScore > target.getScore() && currentScore > firstScore - scoreMaxDiff) {
+      double targetScore = target.getScore();
+      double scoreMin = firstScore - scoreMaxDiff;
+      if (currentScore > targetScore && currentScore > scoreMin) {
         return true;
       }
       return false;
@@ -300,8 +302,11 @@ public class Finder {
       if (hasNext()) {
         List<Element> matches = new ArrayList<Element>();
         List<Double> scores = new ArrayList<>();
-        while (hasNext()) {
+        while (true) {
           Element match = next();
+          if (SX.isNull(match)) {
+            break;
+          }
           meanScore = (meanScore * matches.size() + match.getScore()) / (matches.size() + 1);
           bestScore = Math.max(bestScore, match.getScore());
           matches.add(match);
