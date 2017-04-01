@@ -418,15 +418,12 @@ public class Finder {
 
     @Override
     public void run() {
-      try {
-        Element match = find(target);
-        matches.set(subN, null);
-        if (SX.isNotNull(match)) {
-          matches.set(subN, match);
-        }
-      } catch (Exception ex) {
-        log.error("findAnyCollect: image file not found:\n", target);
+      Element match = null;
+      FindResult findResult = doFind(target, FindType.ONE);
+      if (SX.isNotNull(findResult) && findResult.hasNext()) {
+        match = findResult.next();
       }
+      matches.set(subN, match);
       hasFinished(true);
     }
 
@@ -873,6 +870,7 @@ public class Finder {
   //<editor-fold desc="PossibleMatch">
   public static class PossibleMatch {
     Element what = null;
+    List<Picture> whats = new ArrayList<>();
 
     public Element getWhat() {
       return what;
@@ -888,7 +886,7 @@ public class Finder {
     Element target = new Element();
 
     public static enum Type {
-      FIND, WAIT, ALL, OBSERVE, DEVICE
+      FIND, WAIT, ALL, ANY, ANYBEST, OBSERVE, DEVICE
     }
 
     Type type = Type.FIND;
@@ -966,6 +964,8 @@ public class Finder {
           }
         } else if (args0 instanceof Element) {
           what = (Element) args0;
+        } else if (type.toString().startsWith("ANY") && whats.getClass().isAssignableFrom(args0.getClass()) ) {
+
         } else {
           if (Type.WAIT.equals(type)) {
             if (args0 instanceof Float || args0 instanceof Double) {
