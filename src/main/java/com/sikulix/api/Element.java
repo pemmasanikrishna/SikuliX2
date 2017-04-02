@@ -350,10 +350,14 @@ public class Element implements Comparable<Element> {
   }
 
   protected String toStringPlus() {
+    String plus = "";
     if (isMatch()) {
-      return " %" + score * 100;
+      plus = " %" + score * 100;
+      if (getMatchIndex() > -1) {
+        plus += " #" + getMatchIndex();
+      }
     }
-    return "";
+    return plus;
   }
 
   public String logString() {

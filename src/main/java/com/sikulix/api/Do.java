@@ -1176,7 +1176,6 @@ public class Do {
     return vanished;
   }
 
-  //<editor-fold desc="findAll">
   public static List<Element> findAll(Object... args) {
     log.trace("findAll: start");
     List<Element> matches = Finder.runFindAll(args);
@@ -1189,6 +1188,13 @@ public class Do {
     Element match = Finder.runFindBest(args);
     log.trace("findBest: end");
     return match;
+  }
+
+  public static List<Element> findAny(Object... args) {
+    log.trace("findAny: start");
+    List<Element> matches = Finder.runFindAny(args);
+    log.trace("findAny: end");
+    return matches;
   }
 
   public static boolean hasMatch() {
@@ -1230,7 +1236,6 @@ public class Do {
   public static void showMatches(int... times) {
     getDefaultElement().showMatches(times);
   }
-  //</editor-fold>
   //</editor-fold>
 
   public static boolean write(Object... args) {

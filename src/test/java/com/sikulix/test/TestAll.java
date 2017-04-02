@@ -377,14 +377,16 @@ public class TestAll {
     currentTest = "test_041_findImageInSameImage";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
-    start();
     Picture base = new Picture(imageNameDefault);
     success &= base.isValid();
     Picture img = new Picture(base);
     Element match = null;
+    String tEnd = "";
     if (success) {
       base.show(1);
+      start();
       match = Do.find(img, base);
+      tEnd = end();
       success &= match.isMatch() && 0.99 < match.getScore() &&
               0 == match.x && 0 == match.y &&
               match.w == (int) base.w && match.h == (int) base.h;
@@ -393,7 +395,7 @@ public class TestAll {
       result = match.toString();
       base.showMatch(1);
     }
-    result = end() + result;
+    result = tEnd + result;
     assert success;
   }
 
@@ -403,6 +405,7 @@ public class TestAll {
     boolean success = Do.setBundlePath(mavenRoot, "Images");
     result = "Not Found";
     start();
+    String tEnd = "";
     Picture target = new Picture(imageNameDefault);
     success &= target.isValid();
     Picture base = new Picture("shot-tile");
@@ -410,13 +413,15 @@ public class TestAll {
     Element element = null;
     if (success) {
       base.show(1);
+      start();
       element = Do.find(target, base);
+      tEnd = end();
       success &= element.isMatch();
     }
     if (success) {
       result = element.toString();
     }
-    result = end() + result;
+    result = tEnd + result;
     if (success) {
       base.showMatch(2);
     }
@@ -447,6 +452,46 @@ public class TestAll {
       base.showMatches(2);
     }
     assert success;
+  }
+
+  @Test
+  public void test_44_findBestInImage() {
+    currentTest = "test_44_findBestInImage";
+    Picture base = new Picture("shot-tile");
+    List<Object> pictures = new ArrayList<>();
+    pictures.add("game-button");
+    pictures.add(new Picture(imageNameDefault));
+    pictures.add(new Picture(imageNameDefault));
+    pictures.add(imageNameDefault);
+    start();
+    String tEnd = "";
+    Element best = Do.findBest(pictures, base);
+    tEnd = end();
+    assert best.isMatch() : "not found";
+    best.setName("best");
+    result = String.format("%s", best);
+    result = tEnd + result;
+  }
+
+  @Test
+  public void test_45_findAnyInImage() {
+    currentTest = "test_45_findAnyInImage";
+    Picture base = new Picture("shot-tile");
+    List<Object> pictures = new ArrayList<>();
+    pictures.add("game-button");
+    pictures.add(new Picture(imageNameDefault));
+    pictures.add(new Picture(imageNameDefault));
+    pictures.add(imageNameDefault);
+    start();
+    String tEnd = "";
+    List<Element> matches = Do.findAny(pictures, base);
+    tEnd = end();
+    assert matches.size() == 4 : "invalid result";
+    assert !matches.get(0).isMatch() : "first should not be found";
+    assert matches.get(1).isMatch() : "second should be found";
+    assert matches.get(2).isMatch() : "third should be found";
+    assert matches.get(3).isMatch() : "forth should be found";
+    result = tEnd + String.format("%d images", matches.size());
   }
 
   @Test
@@ -496,6 +541,7 @@ public class TestAll {
 
   @Test
   public void test_053_findAllInDefaultScreen() {
+    log.startTimer();
     currentTest = "test_053_findAllInDefaultScreen";
     assert prepareDefaultScreen("shot-tile", imageNameDefault);
     if (isHeadless) {
@@ -1025,10 +1071,6 @@ public class TestAll {
     if (!SX.onTravisCI() && log.isGlobalLevel(log.TRACE)) {
       if (!SX.isHeadless()) {
 // start
-        List<Object> pictures = new ArrayList<>();
-        pictures.add(imageNameDefault);
-        pictures.add(new Picture(imageNameDefault));
-        Do.findBest(pictures);
 //end
       } else {
         result = "headless: not testing";

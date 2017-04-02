@@ -337,34 +337,8 @@ public class Finder {
   //</editor-fold>
 
   //<editor-fold desc="find extended">
-  public Element findBest(List<Picture> targets) {
-    List<Element> mList = findAny(targets);
-    if (mList != null) {
-      if (mList.size() > 1) {
-        Collections.sort(mList, new Comparator<Element>() {
-          @Override
-          public int compare(Element m1, Element m2) {
-            double ms = m2.getScore() - m1.getScore();
-            if (ms < 0) {
-              return -1;
-            } else if (ms > 0) {
-              return 1;
-            }
-            return 0;
-          }
-        });
-      }
-      return mList.get(0);
-    }
-    return null;
-  }
-
   public List<Element> findAny(List<Picture> targets) {
-    List<Element> mList = findAnyCollect(targets);
-    return mList;
-  }
-
-  private List<Element> findAnyCollect(List<Picture> targets) {
+    base.resetMatches();
     int targetCount = 0;
     if (SX.isNull(targets)) {
       return null;
@@ -383,12 +357,12 @@ public class Finder {
       }
       nobj++;
     }
-    log.trace("findAnyCollect: waiting for SubFindRuns");
+    log.trace("findAnyCollect: waiting for (%d) SubFindRuns", targetCount);
     nobj = 0;
     boolean all = false;
-    int waitCount = targetCount;
     while (!all) {
       all = true;
+      int waitCount = targetCount;
       for (SubFindRun sub : theSubs) {
         if (sub.hasFinished()) {
           waitCount -= 1;
@@ -405,6 +379,7 @@ public class Finder {
       }
       nobj++;
     }
+    base.setLastMatches(matches);
     return matches;
   }
 
@@ -423,12 +398,13 @@ public class Finder {
 
     @Override
     public void run() {
-      Element match = null;
+      Element match = new Element();
       FindResult findResult = doFind(target, FindType.ONE);
       if (SX.isNotNull(findResult) && findResult.hasNext()) {
         match = findResult.next();
       }
       matches.set(subN, match);
+      log.trace("SubFindRun: %d finished", subN);
       hasFinished(true);
     }
 
@@ -745,7 +721,8 @@ public class Finder {
   public static final String DRAG = "drag()";
   public static final String DROP = "drop()";
   public static final String FIND = "find()";
-  public static final String FINDBEST = "findBest()";
+  public static final String BEST = "findBest()";
+  public static final String ANY = "findAny()";
   public static final String WAIT = "wait()";
   public static final String EXISTS = "exists()";
   static final String VANISH = "waitVanish()";
@@ -872,7 +849,7 @@ public class Finder {
   }
 
   public static Element runFindBest(Object... args) {
-    List<Element> matches = runFindAny(Finder.FINDBEST, args);
+    List<Element> matches = runFindAny(BEST, args);
     Element match = null;
     if (matches.size() > 0) {
       match = matches.get(0);
@@ -880,8 +857,12 @@ public class Finder {
     return match;
   }
 
-  public static List<Element> runFindAny(String type, Object... args) {
-    PossibleMatch possibleMatch = new PossibleMatch(type);
+  public static List<Element> runFindAny(Object... args) {
+    return runFindAny(ANY, args);
+  }
+
+  private static List<Element> runFindAny(String type, Object... args) {
+    PossibleMatch possibleMatch = new PossibleMatch(PossibleMatch.Type.ANY);
     boolean shouldRepeat = true;
     List<Element> matches = new ArrayList<>();
     while (shouldRepeat) {
@@ -891,6 +872,25 @@ public class Finder {
       } else {
         if (where.hasMatches()) {
           matches = where.getLastMatches();
+          if (BEST.equals(type)) {
+            if (matches.size() > 1) {
+              Collections.sort(matches, new Comparator<Element>() {
+                @Override
+                public int compare(Element m1, Element m2) {
+                  double ms = m2.getScore() - m1.getScore();
+                  if (ms < 0) {
+                    return -1;
+                  } else if (ms > 0) {
+                    return 1;
+                  }
+                  return 0;
+                }
+              });
+            }
+            if (matches.size() > 0) {
+              where.setLastMatch(matches.get(0));
+            }
+          }
           shouldRepeat = false;
         } else {
           shouldRepeat = Picture.handleFindFailed(type, possibleMatch);
@@ -899,7 +899,7 @@ public class Finder {
     }
     return matches;
   }
-  //</editor-fold>
+//</editor-fold>
 
   //<editor-fold desc="PossibleMatch">
   public static class PossibleMatch {
@@ -921,7 +921,7 @@ public class Finder {
     Element target = new Element();
 
     public static enum Type {
-      FIND, WAIT, ALL, ANY, ANYBEST, OBSERVE, DEVICE
+      FIND, WAIT, ALL, ANY, OBSERVE, DEVICE
     }
 
     Type type = Type.FIND;
@@ -978,11 +978,6 @@ public class Finder {
       init(type);
     }
 
-    public PossibleMatch(String type) {
-      if (Finder.FINDBEST.equals(type))
-        init(Type.ANYBEST);
-    }
-
     private void init(Type type) {
       this.type = type;
       setScanRate();
@@ -998,19 +993,22 @@ public class Finder {
       args0 = args[0];
       boolean isListWhat = false;
       if (args.length > 0) {
-        if (type.toString().startsWith("ANY")) {
+        if (Type.ANY.equals(type)) {
           if (whatsGiven.getClass().isAssignableFrom(args0.getClass())) {
             isListWhat = true;
             what = new Element();
-            for (Object anyWhat: (List<Object>) args0) {
+            for (Object anyWhat : (List<Object>) args0) {
               if (anyWhat instanceof Picture) {
                 whats.add((Picture) anyWhat);
-              } else if (anyWhat instanceof String){
+              } else if (anyWhat instanceof String) {
                 whats.add(new Picture((String) anyWhat));
               } else {
                 whats.add(null);
               }
             }
+          } else {
+            //TODO implement args as Object... args for whatsGiven
+            log.error("EvaluateTarget: type %s: args0 invalid: %s", type, args0);
           }
         } else {
           if (args0 instanceof String) {
@@ -1031,7 +1029,7 @@ public class Finder {
             what = new Element();
           }
         }
-        if (SX.isNotNull(what) && args.length == 2 && !imageMissingWhat) {
+        if (SX.isNotNull(what) && args.length > 1 && !imageMissingWhat) {
           args1 = args[1];
           if (args1 instanceof String) {
             where = new Picture((String) args1);
@@ -1046,6 +1044,16 @@ public class Finder {
             waitTime = 1000 * (Integer) args1;
           } else {
             log.error("EvaluateTarget: args1 invalid: %s", args0);
+          }
+          if (args.length > 2) {
+            Object args2 = args[2];
+            if (args2 instanceof Double) {
+              waitTime = (int) (1000 * (Double) args2);
+            } else if (args2 instanceof Integer) {
+              waitTime = 1000 * (Integer) args2;
+            } else {
+              log.error("EvaluateTarget: args2 invalid: %s", args0);
+            }
           }
         }
         if (SX.isNotNull(what) && !imageMissingWhat && !imageMissingWhere) {
@@ -1070,8 +1078,8 @@ public class Finder {
                 finder.find(what);
               } else if (Type.ALL.equals(type)) {
                 finder.findAll(what);
-              } else if (type.toString().startsWith("ANY")) {
-                finder.findBest(whats);
+              } else if (Type.ANY.equals(type)) {
+                finder.findAny(whats);
               }
             }
           } else {
@@ -1123,6 +1131,6 @@ public class Finder {
       return String.format("what: %s, where: %s: wait: %d sec", what, where, waitTime);
     }
   }
-  //</editor-fold>
+//</editor-fold>
 
 }
