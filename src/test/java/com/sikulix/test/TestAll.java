@@ -8,11 +8,9 @@ import com.sikulix.api.*;
 import com.sikulix.core.*;
 import com.sikulix.remote.vnc.VNCDevice;
 import com.sikulix.run.Runner;
-import com.sikulix.util.Tool;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.opencv.core.*;
-import org.opencv.imgproc.Imgproc;
 import org.sikuli.script.Location;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
@@ -126,9 +124,9 @@ public class TestAll {
     resetDefaultScreen();
     Events.waitUntilFinished();
     Events.reset();
-    if (SX.isSetSXLOCALDEVICE()) {
+    if (SX.isSetLOCALDEVICE()) {
       Do.on().removeEvents();
-      Do.on().setLastMatch(null);
+      Do.on().resetMatches();
     }
     if (SX.isNotNull(theShow)) {
       theShow.stop();
@@ -691,6 +689,7 @@ public class TestAll {
 
   @Test
   public void test_080_basicsObserve() {
+    log.startTimer();
     currentTest = "test_080_basicsObserve";
     result = "basic observe features";
     boolean success = Do.setBundlePath(mavenRoot, "Images");

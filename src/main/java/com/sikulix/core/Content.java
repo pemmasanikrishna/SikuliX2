@@ -402,7 +402,7 @@ public class Content {
   }
 
   public static File createTempDir(String path) {
-    File fTempDir = new File(SX.getSXTEMP(), path);
+    File fTempDir = new File(SX.getTEMP(), path);
     log.debug("createTempDir:\n%s", fTempDir);
     if (!fTempDir.exists()) {
       fTempDir.mkdirs();
@@ -530,7 +530,7 @@ public class Content {
   public static File createTempFile(String suffix, String path) {
     String temp1 = "sikuli-";
     String temp2 = "." + suffix;
-    File fpath = new File(SX.getSXTEMP());
+    File fpath = new File(SX.getTEMP());
     if (path != null) {
       fpath = new File(path);
     }

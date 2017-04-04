@@ -479,7 +479,7 @@ public class Element implements Comparable<Element> {
   }
 
   public void setCentered() {
-    Element centered = getCentered(new Element(SX.getSXLOCALDEVICE().getMonitor()));
+    Element centered = getCentered(new Element(SX.getLOCALDEVICE().getMonitor()));
     x = centered.x;
     y = centered.y;
   }
@@ -492,9 +492,9 @@ public class Element implements Comparable<Element> {
 
   public Element getCentered(int... args) {
     if (args.length == 0) {
-      return getCentered(new Element(SX.getSXLOCALDEVICE().getMonitor()), null);
+      return getCentered(new Element(SX.getLOCALDEVICE().getMonitor()), null);
     } else {
-      return getCentered(new Element(SX.getSXLOCALDEVICE().getMonitor()), new Element(-args[0]));
+      return getCentered(new Element(SX.getLOCALDEVICE().getMonitor()), new Element(-args[0]));
     }
   }
 
@@ -1019,13 +1019,13 @@ public class Element implements Comparable<Element> {
   //<editor-fold desc="***** device related">
   public IDevice getDevice() {
     if (SX.isNull(elementDevice)) {
-      elementDevice = SX.getSXLOCALDEVICE();
+      elementDevice = SX.getLOCALDEVICE();
     }
     return elementDevice;
   }
 
   public LocalDevice getLocalDevice() {
-    return SX.getSXLOCALDEVICE();
+    return SX.getLOCALDEVICE();
   }
 
   public void setDevice(IDevice elementDevice) {
@@ -1803,14 +1803,14 @@ public class Element implements Comparable<Element> {
     findFailedResponse = response;
   }
 
-  private Handler findFaileHandler = null;
+  private Handler findFailedHandler = null;
 
-  public void setFindFaileHandler(Handler handler) {
-    findFaileHandler = handler;
+  public void setFindFailedHandler(Handler handler) {
+    findFailedHandler = handler;
   }
 
-  public void unsetFindFaileHandler() {
-    findFaileHandler = null;
+  public void unsetFindFailedHandler() {
+    findFailedHandler = null;
   }
 
   private Event.RESPONSE imageMissingResponse = Event.RESPONSE.ABORT;

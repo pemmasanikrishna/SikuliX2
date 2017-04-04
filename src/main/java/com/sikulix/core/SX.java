@@ -4,7 +4,6 @@
 
 package com.sikulix.core;
 
-import com.sikulix.api.Do;
 import com.sikulix.api.Element;
 //import com.sikulix.scripting.JythonHelper;
 import org.apache.commons.cli.*;
@@ -123,7 +122,7 @@ public class SX {
               }
               if (name.toLowerCase().contains("sikuli")) {
                 if (name.contains("Sikulix_")) {
-                  if (isObsolete || aFile.equals(getFile(getSXTEMP()))) {
+                  if (isObsolete || aFile.equals(getFile(getTEMP()))) {
                     return true;
                   }
                 } else {
@@ -175,7 +174,7 @@ public class SX {
       loadOptions();
 
       // *** get the version info
-      getSXVERSION();
+      getVERSION();
 
       // *** check how we are running
       sxRunningAs();
@@ -300,13 +299,13 @@ public class SX {
       } else {
         if (isWindows()) {
           if (jn.endsWith(".exe")) {
-            setSXASAPP(true);
+            setASAPP(true);
             runningJar = false;
             appType = "as application .exe";
           }
         } else if (isMac()) {
           if (fSxBase.getAbsolutePath().contains("SikuliX.app/Content")) {
-            setSXASAPP(true);
+            setASAPP(true);
             appType = "as application .app";
             if (!fSxBase.getAbsolutePath().startsWith("/Applications")) {
               appType += " (not from /Applications folder)";
@@ -614,23 +613,23 @@ public class SX {
   }
 
   /**
-   * ***** Property SXASAPP *****
+   * ***** Property ASAPP *****
    *
    * @return to know wether running as .exe/.app
    */
-  public static boolean isSXASAPP() {
-    if (isNotSet(SXASAPP)) {
-      //TODO isSXASAPP detect running as .exe/.app
-      setSXASAPP(false);
+  public static boolean asAPP() {
+    if (isNotSet(ASAPP)) {
+      //TODO getASAPP detect running as .exe/.app
+      setASAPP(false);
     }
-    return SXASAPP;
+    return ASAPP;
   }
 
-  static Boolean SXASAPP = null;
+  static Boolean ASAPP = null;
 
-  public static boolean setSXASAPP(boolean val) {
-    SXASAPP = val;
-    return SXASAPP;
+  public static boolean setASAPP(boolean val) {
+    ASAPP = val;
+    return ASAPP;
   }
 
 
@@ -725,12 +724,12 @@ public class SX {
   static String SYSTEMP = "";
 
   /**
-   * ***** Property SXTEMP *****
+   * ***** Property TEMP *****
    *
    * @return the path to the area where Sikulix stores temporary stuff (located in SYSTEMP)
    */
-  public static String getSXTEMP() {
-    if (isNotSet(SXTEMP)) {
+  public static String getTEMP() {
+    if (isNotSet(TEMP)) {
       File fSXTempPath = getFile(getSYSTEMP(), String.format("Sikulix_%d", getRandomInt()));
       for (String aFile : getFile(SYSTEMP).list()) {
         if ((aFile.startsWith("Sikulix") && (new File(aFile).isFile()))
@@ -740,14 +739,14 @@ public class SX {
       }
       fSXTempPath.mkdirs();
       if (!fSXTempPath.exists()) {
-        terminate(1, "getSXTEMP: could not create: %s", fSXTempPath.getAbsolutePath());
+        terminate(1, "getTEMP: could not create: %s", fSXTempPath.getAbsolutePath());
       }
-      SXTEMP = fSXTempPath.getAbsolutePath();
+      TEMP = fSXTempPath.getAbsolutePath();
     }
-    return SXTEMP;
+    return TEMP;
   }
 
-  static String SXTEMP = "";
+  static String TEMP = "";
 
   /**
    * @return a positive random int > 0 using Java's Random().nextInt()
@@ -1120,12 +1119,12 @@ public class SX {
   //<editor-fold desc="*** SX version info">
 
   /**
-   * ***** Property SXVERSION *****
+   * ***** Property VERSION *****
    *
    * @return Sikulix version
    */
-  public static String getSXVERSION() {
-    if (isNotSet(SXVERSION)) {
+  public static String getVERSION() {
+    if (isNotSet(VERSION)) {
       String sxVersion = "?sxVersion?";
       String sxBuild = "?sxBuild?";
       String sxVersionShow = "?sxVersionShow?";
@@ -1139,7 +1138,7 @@ public class SX {
       String sxJythonVersion = sxOptions.getString("sxjython");
       String sxJRubyVersion = sxOptions.getString("sxjruby");
 
-      debug("getSXVERSION: version: %s build: %s", sxVersion, sxBuild);
+      debug("getVERSION: version: %s build: %s", sxVersion, sxBuild);
       sxStamp = String.format("%s_%s", sxVersion, sxBuild);
 
       // used for download of production versions
@@ -1157,57 +1156,57 @@ public class SX {
       tessData.put("eng", "http://download.sikulix.com/tesseract-ocr-3.02.eng.tar.gz");
 
       sxLibsCheckName = String.format(sxLibsCheckStamp, sxStamp);
-      SXVERSION = sxVersion;
-      SXBUILD = sxBuild;
-      SXVERSIONSHOW = String.format("%s (%s)", sxVersion, sxBuild);
-      SXSTAMP = sxStamp;
+      VERSION = sxVersion;
+      BUILD = sxBuild;
+      VERSIONSHOW = String.format("%s (%s)", sxVersion, sxBuild);
+      STAMP = sxStamp;
     }
-    return SXVERSION;
+    return VERSION;
   }
 
-  static String SXVERSION = "";
+  static String VERSION = "";
 
   /**
-   * ***** Property SXBUILD *****
+   * ***** Property BUILD *****
    *
    * @return Sikulix build timestamp
    */
-  public static String getSXBUILD() {
-    if (isNotSet(SXBUILD)) {
-      getSXVERSION();
+  public static String getBUILD() {
+    if (isNotSet(BUILD)) {
+      getVERSION();
     }
-    return SXBUILD;
+    return BUILD;
   }
 
-  static String SXBUILD = "";
+  static String BUILD = "";
 
   /**
-   * ***** Property SXVERSIONSHOW *****
+   * ***** Property VERSIONSHOW *****
    *
    * @return Version (Build)
    */
-  public static String getSXVERSIONSHOW() {
-    if (isNotSet(SXVERSIONSHOW)) {
-      getSXVERSION();
+  public static String getVERSIONSHOW() {
+    if (isNotSet(VERSIONSHOW)) {
+      getVERSION();
     }
-    return SXVERSIONSHOW;
+    return VERSIONSHOW;
   }
 
-  static String SXVERSIONSHOW = "";
+  static String VERSIONSHOW = "";
 
   /**
-   * ***** Property SXSTAMP *****
+   * ***** Property STAMP *****
    *
    * @return Version_Build
    */
-  public static String getSXSTAMP() {
-    if (isNotSet(SXSTAMP)) {
-      getSXVERSION();
+  public static String getSTAMP() {
+    if (isNotSet(STAMP)) {
+      getVERSION();
     }
-    return SXSTAMP;
+    return STAMP;
   }
 
-  static String SXSTAMP = "";
+  static String STAMP = "";
   //</editor-fold>
 
   //<editor-fold desc="*** monitor info">
@@ -1485,7 +1484,7 @@ public class SX {
     if (hasOptions()) {
       dumpOptions();
     }
-    p("***** show environment (%s)", getSXVERSIONSHOW());
+    p("***** show environment (%s)", getVERSIONSHOW());
     p("user.home: %s", getUSERHOME());
     p("user.dir (work dir): %s", getUSERWORK());
     p("java.io.tmpdir: %s", getSYSTEMP());
@@ -1907,26 +1906,26 @@ public class SX {
   //</editor-fold>
 
   /**
-   * ***** Property SXLOCALDEVICE *****
+   * ***** Property LOCALDEVICE *****
    *
    * @return
    */
-  public static LocalDevice getSXLOCALDEVICE() {
-    if (isNotSet(SXLOCALDEVICE)) {
-      SXLOCALDEVICE = (LocalDevice) new LocalDevice().start();
+  public static LocalDevice getLOCALDEVICE() {
+    if (isNotSet(LOCALDEVICE)) {
+      LOCALDEVICE = (LocalDevice) new LocalDevice().start();
     }
-    return SXLOCALDEVICE;
+    return LOCALDEVICE;
   }
 
-  public static boolean isSetSXLOCALDEVICE() {
-    return SX.isNotNull(SXLOCALDEVICE);
+  public static boolean isSetLOCALDEVICE() {
+    return SX.isNotNull(LOCALDEVICE);
   }
 
-  public static void setSXLOCALDEVICE(LocalDevice SXLOCALDEVICE) {
-    SX.SXLOCALDEVICE = SXLOCALDEVICE;
+  public static void setLOCALDEVICE(LocalDevice LOCALDEVICE) {
+    SX.LOCALDEVICE = LOCALDEVICE;
   }
 
-  private static LocalDevice SXLOCALDEVICE = null;
+  private static LocalDevice LOCALDEVICE = null;
 
   private static String baseClass = "";
 

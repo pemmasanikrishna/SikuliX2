@@ -985,7 +985,7 @@ public class Do {
 
   private static Element getDefaultScreenAsElement() {
     if (SX.isNull(defaultScreenAsElement)) {
-      defaultScreenAsElement = new Element(SX.getSXLOCALDEVICE().getMonitor().getBounds());
+      defaultScreenAsElement = new Element(SX.getLOCALDEVICE().getMonitor().getBounds());
       defaultScreenAsElement.setName("SCREEN0");
     }
     return defaultScreenAsElement;
@@ -1056,11 +1056,11 @@ public class Do {
   }
 
   public static IDevice getLocalDevice() {
-    return SX.getSXLOCALDEVICE();
+    return SX.getLOCALDEVICE();
   }
 
   public static NativeHook getHook() {
-    return SX.getSXLOCALDEVICE().getHook();
+    return SX.getLOCALDEVICE().getHook();
   }
 
   public static boolean isMouseposition(NativeHook hook, int x, int y) {

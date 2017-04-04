@@ -41,7 +41,7 @@ public class LocalDevice implements IDevice {
 
   @Override
   public void stop() {
-    SX.setSXLOCALDEVICE(null);
+    SX.setLOCALDEVICE(null);
   }
 
   public boolean isValid() {
