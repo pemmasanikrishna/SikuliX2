@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
-  <!--
-  * Copyright 2010-2015, Sikuli.org, sikulix.com
-  * Released under the MIT License.
+<!--
+  Copyright (c) 2016 - sikulix.com - License MIT
   -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.sikulix</groupId>
-  <artifactId>sikulix2all</artifactId>
+  <artifactId>sikulix2</artifactId>
   <version>2.0.0-SNAPSHOT</version>
-
-  <!-- to globally change the pom version:
-  mvn versions:set -DnewVersion=2.0.0
-  reminder: property sikuli.usedversion
-  -->
 
   <packaging>pom</packaging>
 
@@ -46,70 +41,12 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <sikuli.jartype>plain.xml</sikuli.jartype>
-    <sikuli.jarname>${project.version}</sikuli.jarname>
-    <sikulixvmaj>2</sikulixvmaj>
-    <sikulixvmin>0</sikulixvmin>
-    <sikulixvsub>0</sikulixvsub>
-    <!--   this decides, SNAPSHOT (1) or Release (0)   -->
-    <sikulixbeta>1</sikulixbeta>
-    <sikulixversionstable>1.1.0</sikulixversionstable>
-<!--
-    <sikuli.usedversion>${sikulixvmaj}.${sikulixvmin}.${sikulixvsub}</sikuli.usedversion>
-    <sikuli.minorversion>${sikulixvmaj}.${sikulixvmin}.${sikulixvsub}</sikuli.minorversion>
--->
-    <sikulixjythonversion>2.7.0</sikulixjythonversion>
-    <sikulixjrubyversion>9.0.1.0</sikulixjrubyversion>
-    <sikulixlocalrepo>${settings.localRepository}</sikulixlocalrepo>
-    <sikuli.helpers>API/src/main/resources/content</sikuli.helpers>
     <timestamp>${maven.build.timestamp}</timestamp>
     <maven.build.timestamp.format>yyyy-MM-dd_HH:mm</maven.build.timestamp.format>
+    <sxjython>2.7.0</sxjython>
+    <sxjruby>9.0.1.0</sxjruby>
+    <sxrepo>${settings.localRepository}</sxrepo>
   </properties>
-
-	<profiles>
-		<profile>
-			<id>Windows</id>
-			<activation>
-				<os>
-					<family>windows</family>
-				</os>
-			</activation>
-			<properties>
-				<sikulix.libs>sikulix2libswin</sikulix.libs>
-			</properties>
-		</profile>
-		<profile>
-			<id>Unix</id>
-			<activation>
-				<os>
-					<family>unix</family>
-				</os>
-			</activation>
-			<properties>
-				<sikulix.libs>sikulix2libslux</sikulix.libs>
-			</properties>
-		</profile>
-		<profile>
-			<id>Mac</id>
-			<activation>
-				<os>
-					<family>mac</family>
-				</os>
-			</activation>
-			<properties>
-				<sikulix.libs>sikulix2libsmac</sikulix.libs>
-			</properties>
-		</profile>
-	</profiles>
-
-  <repositories>
-    <repository>  <!-- OSSRH: com.sikulix -->
-      <id>com-sikulix-snapshots</id>
-      <name>com-sikulix-snapshots</name>
-      <url>https://oss.sonatype.org/content/groups/public</url>
-      <layout>default</layout>
-    </repository>
-  </repositories>
 
   <dependencies>
     <dependency>
@@ -131,13 +68,9 @@
   </dependencies>
 
   <modules>
-    <module>sikulix2libslux</module>
-    <module>sikulix2libsmac</module>
-    <module>sikulix2libswin</module>
-    <module>sikulix2api</module>
-    <!--    <module>sikulix</module>-->
-    <!--    <module>sikulixtensions</module>-->
-    <module>sikulix2apitest</module>
+    <module>sikulixapi</module>
+    <module>sikulix</module>
+    <module>sikulixcoretest</module>
   </modules>
 
   <build>
@@ -148,8 +81,6 @@
         <configuration>
           <source>1.7</source>
           <target>1.7</target>
-          <!--					might be needed for compiling with Java 8 -->
-          <!--					<compilerArgument>-XDignore.symbol.file=true</compilerArgument>-->
         </configuration>
       </plugin>
     </plugins>
