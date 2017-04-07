@@ -49,6 +49,10 @@
       <url>https://jitpack.io</url>
     </repository>
     <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/groups/public</url>
+    </repository>
+    <repository>
       <id>sikulix-local</id>
       <url>file://${project.basedir}/lib</url>
     </repository>
