@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - sikulix.com - MIT license
+ * Copyright (c) 2017 - sikulix.com - MIT license
  */
 
 package com.sikulix.api;
@@ -1979,6 +1979,18 @@ public class Element implements Comparable<Element> {
 
   public List<Element> findAll(Object... args) {
     return Do.findAll(target, this);
+  }
+
+  public Text findText(String text, Object... settings) {
+    return new Text(text, settings).find(this);
+  }
+
+  public Text findTextAll(String text, Object... settings) {
+    return new Text(text, settings).findAll(this);
+  }
+
+  public Text read(Object... settings) {
+    return new Text(settings).read(this);
   }
   //</editor-fold>
 

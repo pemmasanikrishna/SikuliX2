@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2017 - sikulix.com - MIT license
+ */
+
 package org.opencv.core;
 
 // C++: class Mat

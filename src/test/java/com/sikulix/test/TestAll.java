@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - sikulix.com - MIT license
+ * Copyright (c) 2017 - sikulix.com - MIT license
  */
 
 package com.sikulix.test;
@@ -1038,6 +1038,17 @@ public class TestAll {
   }
 
   //TODO test for write()
+
+  @Test
+  public void test_800_basicTesseract() {
+    currentTest = "test_800_basicTesseract";
+    if (!SX.onTravisCI()) {
+      TextFinder textFinder = new TextFinder();
+      assert textFinder.isValid() : "TextFinder not valid";
+      String textRead = textFinder.read(new Picture("gui-button"));
+      assert !"did not work".equals(textRead) : "read did not work";
+    }
+  }
   //</editor-fold>
 
   //<editor-fold desc="ignored">

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - sikulix.com - MIT license
+ * Copyright (c) 2017 - sikulix.com - MIT license
  */
 
 package org.sikuli.script;

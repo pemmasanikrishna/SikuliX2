@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2017 - sikulix.com - MIT license
+ */
+
 package com.sikulix.remote.android;
 
 import com.sikulix.core.SX;

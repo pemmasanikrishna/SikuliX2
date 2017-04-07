@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2017 - sikulix.com - MIT license
+ */
+
 package org.sikuli.script;
 
 import com.sikulix.api.Picture;

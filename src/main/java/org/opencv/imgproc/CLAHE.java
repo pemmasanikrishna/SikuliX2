@@ -1,4 +1,8 @@
 
+/*
+ * Copyright (c) 2017 - sikulix.com - MIT license
+ */
+
 //
 // This file is auto-generated. Please don't modify it!
 //
