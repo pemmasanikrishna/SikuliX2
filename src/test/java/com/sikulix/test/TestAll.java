@@ -540,7 +540,6 @@ public class TestAll {
 
   @Test
   public void test_053_findAllInDefaultScreen() {
-    log.startTimer();
     currentTest = "test_053_findAllInDefaultScreen";
     assert prepareDefaultScreen("shot-tile", imageNameDefault);
     if (isHeadless) {
@@ -690,7 +689,6 @@ public class TestAll {
 
   @Test
   public void test_080_basicsObserve() {
-    log.startTimer();
     currentTest = "test_080_basicsObserve";
     result = "basic observe features";
     boolean success = Do.setBundlePath(mavenRoot, "Images");
