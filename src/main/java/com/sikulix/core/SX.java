@@ -400,6 +400,14 @@ public class SX {
     Iterator<String> allKeys = extraOptions.getKeys();
     while (allKeys.hasNext()) {
       String key = allKeys.next();
+      if ("sxversion".equals(key)) {
+        baseOptions.setProperty("sxversion_saved", extraOptions.getProperty(key));
+        continue;
+      }
+      if ("sxbuild".equals(key)) {
+        baseOptions.setProperty("sxbuild_saved", extraOptions.getProperty(key));
+        continue;
+      }
       Object value = baseOptions.getProperty(key);
       if (isNull(value)) {
         baseOptions.addProperty(key, extraOptions.getProperty(key));

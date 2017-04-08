@@ -5,7 +5,7 @@
 package com.sikulix.core;
 
 import com.sikulix.api.Picture;
-import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.Tesseract1;
 import net.sourceforge.tess4j.TesseractException;
 
 import java.io.File;
@@ -17,7 +17,7 @@ public class TextFinder {
 
   private static final SXLog log = SX.getLogger("SX.TextFinder");
 
-  private Tesseract tess = null;
+  private Tesseract1 tess = null;
   private String datapath = SX.getSYSAPP() + "/Sikulix/SikulixTesseract";
   private boolean valid = false;
 
@@ -31,7 +31,7 @@ public class TextFinder {
   }
 
   private void init() {
-    tess = new Tesseract();
+    tess = new Tesseract1();
     valid = setTessdata();
     if (valid) {
       log.trace("init: tessdata = %s", datapath);
