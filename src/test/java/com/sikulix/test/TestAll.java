@@ -217,6 +217,7 @@ public class TestAll {
   @Test
   public void test_011_startup_native_load() {
     currentTest = "test_011_startup_native_load";
+    Element.getNewMat();
     File test = SX.getFileExists(SX.getSXNATIVE(), SX.sxLibsCheckName);
     result = SX.sxLibsCheckName;
     assert !SX.isNull(test) && SX.existsFile(test);

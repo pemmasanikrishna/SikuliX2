@@ -273,13 +273,18 @@ public class SX {
 
   private static boolean runningJar = true;
 
-  static void sxRunningAs() {
-    CodeSource codeSrc = sxGlobalClassReference.getProtectionDomain().getCodeSource();
+  static String whereIs(Class clazz) {
+    CodeSource codeSrc = clazz.getProtectionDomain().getCodeSource();
     String base = null;
     if (codeSrc != null && codeSrc.getLocation() != null) {
       base = Content.slashify(codeSrc.getLocation().getPath(), false);
     }
+    return base;
+  }
+
+  static void sxRunningAs() {
     appType = "from a jar";
+    String base = whereIs(sxGlobalClassReference);
     if (base != null) {
       fSxBaseJar = new File(base);
       String jn = fSxBaseJar.getName();
@@ -1329,37 +1334,36 @@ public class SX {
     return false;
   }
 
-  static void exportNativeLibraries() {
+  static void exportLibraries() {
     if (areLibsExported) {
       return;
     }
     File fSXNative = getFile(getSXNATIVE());
     if (!new File(fSXNative, sxLibsCheckName).exists()) {
-      debug("exportNativeLibraries: folder empty or has wrong content");
+      debug("exportLibraries: folder empty or has wrong content");
       Content.deleteFileOrFolder(fSXNative);
     }
     if (fSXNative.exists()) {
-      debug("exportNativeLibraries: folder exists: %s", fSXNative);
+      debug("exportLibraries: folder exists: %s", fSXNative);
     } else {
       fSXNative.mkdirs();
       if (!fSXNative.exists()) {
-        terminate(1, "exportNativeLibraries: folder not available: %s", fSXNative);
+        terminate(1, "exportLibraries: folder not available: %s", fSXNative);
       }
-      debug("exportNativeLibraries: new folder: %s", fSXNative);
+      debug("exportLibraries: new folder: %s", fSXNative);
       fpJarLibs = "/Native/" + SXSYSshort;
-      URL uLibsFrom = sxGlobalClassReference.getResource(fpJarLibs);
-      if (uLibsFrom == null) {
-        Content.dumpClassPath("sikulix");
-        terminate(1, "exportNativeLibraries: libs not on classpath: " + fpJarLibs);
+      extractLibraries(sxGlobalClassReference, fpJarLibs, fSXNative);
+      try {
+        extractLibraries(Class.forName("com.sikulix.opencv.Sikulix"), fpJarLibs, fSXNative);
+      } catch (ClassNotFoundException e) {
+        log.error("exportLibraries: package com.sikulix.opencv not on classpath");
       }
-      debug("exportNativeLibraries: from: %s", uLibsFrom);
-      Content.extractResourcesToFolder(fpJarLibs, fSXNative, null);
       if (!new File(fSXNative, sflibsCheckFileStored).exists()) {
-        terminate(1, "exportNativeLibraries: did not work");
+        terminate(1, "exportLibraries: did not work");
       }
       new File(fSXNative, sflibsCheckFileStored).renameTo(new File(fSXNative, sxLibsCheckName));
       if (!new File(fSXNative, sxLibsCheckName).exists()) {
-        terminate(1, "exportNativeLibraries: did not work");
+        terminate(1, "exportLibraries: did not work");
       }
     }
     for (String aFile : fSXNative.list()) {
@@ -1380,6 +1384,30 @@ public class SX {
     areLibsExported = true;
   }
 
+  private static void extractLibraries(Class classRef, String from, File fTo) {
+    String classLocation = whereIs(classRef);
+    List<String> libraries;
+    String source = classLocation;
+    String sourceType = " from jar";
+    if (classLocation.endsWith(".jar")) {
+      libraries = Content.extractResourcesToFolderFromJar(classLocation, from, fTo, null);
+    } else {
+      URL uLibsFrom = classRef.getResource(from);
+      libraries = Content.extractResourcesToFolder(from, fTo, null);
+      source = uLibsFrom.toString();
+      sourceType = "";
+    }
+    int libCount = libraries.size();
+    if ( libCount == 0) {
+      error("extractLibraries: (none)%s: %s", sourceType, source);
+    } else {
+      if (libraries.contains("MadeForSikuliX2")) {
+        libCount--;
+      }
+      trace("extractLibraries: (%d)%s: %s", libCount, sourceType, source);
+    }
+  }
+
   public static enum NATIVES {
     OPENCV, TESSERACT, SYSUTIL, HOTKEY
   }
@@ -1390,18 +1418,18 @@ public class SX {
       for (NATIVES nType : NATIVES.values()) {
         libsLoaded.put(nType, false);
       }
-      exportNativeLibraries();
+      exportLibraries();
       if (isWindows()) {
         addToWindowsSystemPath(getFile(getSXNATIVE()));
         if (!checkJavaUsrPath(getFile(getSXNATIVE()))) {
-          error("exportNativeLibraries: JavaUserPath: see errors - might not work and crash later");
+          error("exportLibraries: JavaUserPath: see errors - might not work and crash later");
         }
         String lib = "jawt.dll";
         File fJawtDll = new File(getFile(getSXNATIVE()), lib);
         Content.deleteFileOrFolder(fJawtDll);
         Content.xcopy(new File(getJHOME() + "/bin/" + lib), fJawtDll);
         if (!fJawtDll.exists()) {
-          terminate(1, "exportNativeLibraries: problem copying %s", fJawtDll);
+          terminate(1, "exportLibraries: problem copying %s", fJawtDll);
         }
       }
     }
