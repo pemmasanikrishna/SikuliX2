@@ -34,8 +34,8 @@ the API to be used in Java and Java aware scripting languages
  
  **Related subprojects** (available on OSSRH/MavenCentral)
  
- [Sikulix2openCV](https://github.com/RaiMan/Sikulix2opencv) OpenCV Java API and prebuilt libraries
- [Sikulix2tesseract](https://github.com/RaiMan/Sikulix2tesseract) Tess4J Java API and prebuilt libraries
+ [Sikulix2openCV](https://github.com/RaiMan/Sikulix2opencv) OpenCV Java API and prebuilt libraries<br>
+ [Sikulix2tesseract](https://github.com/RaiMan/Sikulix2tesseract) Tess4J Java API and prebuilt libraries<br>
  [Sikulix2TigerVNC](https://github.com/RaiMan/Sikulix2tigervnc) The TigerVNC Java implementation for VNC support
  
 Prerequisites for development and testing
