@@ -31,11 +31,14 @@ the API to be used in Java and Java aware scripting languages
  - the new public features are in **com.sikulix.api**
  - the current API (up to 1.1.x) in **org.sikuli.script** will be kept for backwards compatibility, but rerouted to **com.sikulix.api/core** as needed
  - new projects using Java should use the API as provided by **com.sikulix.api**
+ 
+ **related subprojects**
+ 
 
 Prerequisites for development and testing
 ---
 
- - a Java JDK 1.7+
+ - a Java JDK 1.8
  - Maven 3+
  - only 64-Bit Systems supported
 
