@@ -117,7 +117,7 @@ public class TestAll {
 
   @After
   public void tearDown() {
-    if (log.isLevel(SXLog.TRACE)) {
+    if (log.isGlobalLevel(SXLog.TRACE)) {
       log.stopTimer();
     }
     Picture.clearPath();
