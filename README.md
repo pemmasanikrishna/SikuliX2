@@ -32,9 +32,12 @@ the API to be used in Java and Java aware scripting languages
  - the current API (up to 1.1.x) in **org.sikuli.script** will be kept for backwards compatibility, but rerouted to **com.sikulix.api/core** as needed
  - new projects using Java should use the API as provided by **com.sikulix.api**
  
- **related subprojects**
+ **Related subprojects** (available on OSSRH/MavenCentral)
  
-
+ [Sikulix2openCV](https://github.com/RaiMan/Sikulix2opencv) OpenCV Java API and prebuilt libraries
+ [Sikulix2tesseract](https://github.com/RaiMan/Sikulix2tesseract) Tess4J Java API and prebuilt libraries
+ [Sikulix2TigerVNC](https://github.com/RaiMan/Sikulix2tigervnc) The TigerVNC Java implementation for VNC support
+ 
 Prerequisites for development and testing
 ---
 
