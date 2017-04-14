@@ -856,7 +856,6 @@ public class TestAll {
 
   @Test
   public void test_111_mouseDragDrop() {
-    log.startTimer();
     currentTest = "test_111_mouseDragDrop";
     if (!SX.isHeadless()) {
       result = "mouse drag drop";
