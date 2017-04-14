@@ -19,5 +19,5 @@ before_script:
 script:
  - mvn test -P !build-extras -B
  - if [ $TRAVIS_TEST_RESULT -eq 0 ]; then
-      mvn deploy -P sign,build-extras --settings codesigning/mvnsettings.xml;
+      mvn deploy -DskipTests=true -P sign,build-extras --settings codesigning/mvnsettings.xml;
    fi
