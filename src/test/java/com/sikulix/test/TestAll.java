@@ -249,13 +249,13 @@ public class TestAll {
     assert success;
   }
 
-  @Test
+  @Ignore
   public void test_023_setBundlePathJarByClass() {
     currentTest = "test_023_setBundlePathJarByClass";
     boolean success = Do.setBundlePath(jarImagePathClass);
     result = Do.getBundlePath();
     success &= SX.existsFile(result);
-    assert success;
+    assert success : "Reference class not found in classpath";
   }
 
   @Test
@@ -325,7 +325,7 @@ public class TestAll {
     assert success;
   }
 
-  @Test
+  @Ignore
   public void test_0032_loadImageFromJarByClass() {
     currentTest = "test_0032_loadImageFromJarByClass";
     boolean success = Do.setBundlePath(jarImagePathClass);
@@ -856,6 +856,7 @@ public class TestAll {
 
   @Test
   public void test_111_mouseDragDrop() {
+    log.startTimer();
     currentTest = "test_111_mouseDragDrop";
     if (!SX.isHeadless()) {
       result = "mouse drag drop";
