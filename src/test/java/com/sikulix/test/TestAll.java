@@ -32,15 +32,13 @@ public class TestAll {
   private static int nTest = 0;
   private static boolean testLimit = false;
 
-  private static String defaultImagePath = "Images";
+  private static String defaultImagePath = "SX_Images";
   private static String mavenRoot = "target/classes";
-  private static String mavenImagePath = mavenRoot + "/" + defaultImagePath;
   private static String jarImagePathDefault = "." + "/" + defaultImagePath;
-  private static String jarImagePathClass = "TestJar" + "/" + defaultImagePath;
+  private static String jarImagePathClass = "com.sikulix.testjar.Testjar" + "/" + defaultImagePath;
   private static String httpRoot = "https://raw.githubusercontent.com/RaiMan/SikuliX2";
   private static String httpImagePath = httpRoot + "/" + defaultImagePath;
   private static String imageNameDefault = "sikulix2";
-  private static String imageDefault = imageNameDefault + ".png";
 
   public TestAll() {
     log.trace("TestAPI()");
@@ -112,7 +110,7 @@ public class TestAll {
       log.info("hook started");
     }
     button = Symbol.button(200, 80).setColor(Color.gray).fill(Color.lightGray).setLine(4);
-    Do.setBundlePath(mavenRoot, "Images");
+    Do.setBundlePath(jarImagePathClass);
   }
 
   @After
@@ -249,7 +247,7 @@ public class TestAll {
     assert success;
   }
 
-  @Ignore
+  @Test
   public void test_023_setBundlePathJarByClass() {
     currentTest = "test_023_setBundlePathJarByClass";
     boolean success = Do.setBundlePath(jarImagePathClass);
@@ -312,7 +310,7 @@ public class TestAll {
   @Test
   public void test_0031_loadImageFromFile() {
     currentTest = "test_0031_loadImageFromFile";
-    boolean success = Do.setBundlePath(mavenRoot, "Images");
+    boolean success = true;
     result = "BundlePath: " + Do.getBundlePath();
     Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
@@ -325,7 +323,7 @@ public class TestAll {
     assert success;
   }
 
-  @Ignore
+  @Test
   public void test_0032_loadImageFromJarByClass() {
     currentTest = "test_0032_loadImageFromJarByClass";
     boolean success = Do.setBundlePath(jarImagePathClass);
@@ -344,7 +342,7 @@ public class TestAll {
   @Test
   public void test_033_loadImageFromHttp() {
     currentTest = "test_033_loadImageFromHttp";
-    boolean success = Do.setBundlePath(httpRoot, "master");
+    boolean success = true;
     result = "BundlePath: " + Do.getBundlePath();
     Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
@@ -360,7 +358,7 @@ public class TestAll {
   @Test
   public void test_040_createFinderFromImage() {
     currentTest = "test_040_createFinderFromImage";
-    boolean success = Do.setBundlePath(mavenRoot, "Images");
+    boolean success = true;
     result = "";
     Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
@@ -374,7 +372,7 @@ public class TestAll {
   @Test
   public void test_041_findImageInSameImage() {
     currentTest = "test_041_findImageInSameImage";
-    boolean success = Do.setBundlePath(mavenRoot, "Images");
+    boolean success = true;
     result = "Not Found";
     Picture base = new Picture(imageNameDefault);
     success &= base.isValid();
@@ -401,7 +399,7 @@ public class TestAll {
   @Test
   public void test_042_findImageInOtherImage() {
     currentTest = "test_042_findImageInOtherImage";
-    boolean success = Do.setBundlePath(mavenRoot, "Images");
+    boolean success = true;
     result = "Not Found";
     start();
     String tEnd = "";
@@ -430,7 +428,7 @@ public class TestAll {
   @Test
   public void test_043_findAllInImage() {
     currentTest = "test_043_findAllInImage";
-    boolean success = Do.setBundlePath(mavenRoot, "Images");
+    boolean success = true;
     result = "Not Found";
     start();
     Picture target = new Picture(imageNameDefault);
@@ -661,7 +659,6 @@ public class TestAll {
   public void test_071_handlingWhereImageNotOnImagePath() {
     currentTest = "test_071_handlingWhereImageNotOnImagePath";
     result = "where image not found on imagepath";
-    boolean success = Do.setBundlePath(mavenRoot, "Images");
     String givenWhat = imageNameDefault;
     String givenWhere = "noimagewhere";
     Element missing = Do.find(givenWhat, givenWhere);
@@ -679,19 +676,17 @@ public class TestAll {
     elemDisplayed = elemDisplayed.grow(20);
     elemDisplayed.load();
     result = end() + elemDisplayed.toString();
-    if (elemDisplayed.hasContent()) {
-      elemDisplayed.show();
-      elemDisplayed.save("test_057_saveCapturePartOfDefaultScreen");
-      return;
-    }
-    assert false;
+    assert elemDisplayed.hasContent() : "Element.load() did not work";
+    elemDisplayed.show();
+    String imageName = "test_072_saveCapturePartOfDefaultScreen";
+    elemDisplayed.save(imageName);
+    assert new Picture(new File(SX.getSXIMAGES(), imageName).getAbsolutePath()).isValid() : "Element.save() did not work";
   }
 
   @Test
   public void test_080_basicsObserve() {
     currentTest = "test_080_basicsObserve";
     result = "basic observe features";
-    boolean success = Do.setBundlePath(mavenRoot, "Images");
     Events.shouldProcessEvents(false);
     Element where = Do.on();
     Element what = new Picture(imageNameDefault);
@@ -760,7 +755,6 @@ public class TestAll {
   public void test_090_edgeDetectionBasic() {
     currentTest = "test_090_edgeDetectionBasic";
     result = "basic edge detection sample";
-    Do.setBundlePath(mavenRoot, "Images");
     Picture pBase, pEdges;
     pBase = new Picture("gui");
     pEdges = Finder.showEdges(pBase);
@@ -776,7 +770,6 @@ public class TestAll {
   public void test_091_edgeDetectionSegments() {
     currentTest = "test_091_edgeDetectionSegments";
     result = "segmenting a GUI into distinct elements";
-    Do.setBundlePath(mavenRoot, "Images");
     Picture pBase = new Picture("gui");
     Story segmented = new Story(pBase);
     for (Element rect : Finder.getElements(pBase)) {
@@ -790,7 +783,6 @@ public class TestAll {
   public void test_095_changeDetectionBasic() {
     currentTest = "test_095_changeDetectionBasic";
     result = "basic change detection sample";
-    Do.setBundlePath(mavenRoot, "Images");
     Picture pBase, pChanged;
     pBase = new Picture("gui-button");
     pChanged = new Picture("gui-button-blank");
@@ -1001,6 +993,7 @@ public class TestAll {
 
   @Test
   public void test_502_runJavaScriptFromJar() {
+    log.startTimer();
     currentTest = "test_502_runJavaScriptFromJar";
     if (!SX.isHeadless()) {
       result = "running JavaScript from jar: mouse moves to center";
@@ -1027,7 +1020,6 @@ public class TestAll {
     currentTest = "test_504_runJavaScriptWithFind";
     if (!SX.isHeadless()) {
       result = "running JavaScript: find image on screen";
-      Do.setBundlePath(mavenRoot, "Images");
       Picture picture = new Picture("shot-tile");
       assert picture.isValid() : "Image: shot-tile not valid";
       Story story = new Story(picture, 3).start();

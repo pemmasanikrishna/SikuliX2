@@ -36,14 +36,14 @@ public class Sikulix {
   //</editor-fold>
 
   public static void main(String[] args) {
+    log = SX.getLogger("SX.Sikulix");
     options.addAll(Arrays.asList(args));
     if (options.isEmpty()) {
-      options.add("tool");
+      log.p("SikuliX2::util.Sikulix::main: no args - nothing to do :-)");
     }
     if (options.contains("trace")) {
       System.setProperty("sikulix.logging", "trace");
     }
-    log = SX.getLogger("SX.Sikulix");
     log.trace("main: start: %s", "parameter");
 
     //<editor-fold desc="tests">

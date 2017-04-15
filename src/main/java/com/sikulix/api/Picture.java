@@ -288,9 +288,12 @@ public class Picture extends Element {
   //<editor-fold desc="*** path">
   private static final List<URL> imagePath = Collections.synchronizedList(new ArrayList<URL>());
 
+  private static boolean bundlePathIsFile = true;
+
   private static void initPath() {
     if (imagePath.isEmpty()) {
       imagePath.add(SX.getFileURL(SX.getSXIMAGES()));
+      bundlePathIsFile = true;
     }
   }
 
@@ -302,6 +305,7 @@ public class Picture extends Element {
     initPath();
     if (args.length == 0) {
       imagePath.set(0, SX.getFileURL(SX.getSXIMAGES()));
+      bundlePathIsFile = true;
       return true;
     }
     URL urlPath = SX.makeURL(args);
@@ -311,6 +315,12 @@ public class Picture extends Element {
           urlPath = new URL("file", null, 0, urlPath.getPath().replace("test-", ""));
         } catch (MalformedURLException e) {
           log.error("setBundlePath: hack(test-classes -> classes) did not work");
+        }
+      }
+      bundlePathIsFile = false;
+      if ("file".equals(urlPath.getProtocol())) {
+        if (!urlPath.getPath().contains(".jar!/")) {
+          bundlePathIsFile = true;
         }
       }
       imagePath.set(0, urlPath);
@@ -331,6 +341,11 @@ public class Picture extends Element {
   public static String getBundlePath() {
     initPath();
     return SX.makePath(imagePath.get(0));
+  }
+
+  public static boolean isBundlePathFile() {
+    getBundlePath();
+    return bundlePathIsFile;
   }
 
   public static String[] getPath(String filter) {

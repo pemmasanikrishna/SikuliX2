@@ -1232,7 +1232,10 @@ public class Element implements Comparable<Element> {
   }
 
   public boolean save(String name) {
-    return save(name, Picture.getBundlePath());
+    if (Picture.isBundlePathFile()) {
+      return save(name, Picture.getBundlePath());
+    }
+    return save(name, SX.getSXIMAGES());
   }
 
   public boolean save(String name, String path) {
