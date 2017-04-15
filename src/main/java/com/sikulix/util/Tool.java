@@ -1175,7 +1175,7 @@ public class Tool {
         return;
       }
     }
-    if (imageToSave.save(imageToSave.getName(), savePath)) {
+    if (SX.isSet(imageToSave.save(imageToSave.getName(), savePath))) {
       if (!bundlePath.equals(savePath) && Do.popAsk(savePath +
               "\nUse this folder as bundlepath?", "SikuliX Tool::BundlePath", box)) {
         bundlePath = savePath;

@@ -679,8 +679,11 @@ public class TestAll {
     assert elemDisplayed.hasContent() : "Element.load() did not work";
     elemDisplayed.show();
     String imageName = "test_072_saveCapturePartOfDefaultScreen";
-    elemDisplayed.save(imageName);
-    assert new Picture(new File(SX.getSXIMAGES(), imageName).getAbsolutePath()).isValid() : "Element.save() did not work";
+    String savedFilename = elemDisplayed.save(imageName);
+    result += "to: " + savedFilename;
+    String expectedFilename = new File(SX.getSXIMAGES(), imageName).getAbsolutePath();
+    String assertError = set("Element.save() %s expected: %s", savedFilename, expectedFilename);
+    assert new Picture(expectedFilename).isValid() : assertError;
   }
 
   @Test
