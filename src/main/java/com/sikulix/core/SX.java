@@ -538,19 +538,16 @@ public class SX {
 
   public static String getValidImageFilename(String fname) {
     String validEndings = ".png.jpg.jpeg.tiff.bmp";
+    String currentEnding = "";
     String defaultEnding = ".png";
-    int dot = fname.lastIndexOf(".");
-    String ending = defaultEnding;
-    if (dot > 0) {
-      ending = fname.substring(dot);
-      if (validEndings.contains(ending.toLowerCase())) {
-        return fname;
+    boolean shouldAddEnding = true;
+    if (fname.length() > 4) {
+      currentEnding = fname.substring(fname.length() - 4, fname.length());
+      if (validEndings.contains(currentEnding.toLowerCase())) {
+        shouldAddEnding = false;
       }
-    } else {
-      fname += ending;
-      return fname;
     }
-    return "";
+    return shouldAddEnding ? fname + defaultEnding : fname;
   }
   //</editor-fold>
 
@@ -1446,7 +1443,7 @@ public class SX {
       sourceType = "";
     }
     int libCount = libraries.size();
-    if ( libCount == 0) {
+    if (libCount == 0) {
       error("extractLibraries: (none)%s: %s", sourceType, source);
     } else {
       if (libraries.contains("MadeForSikuliX2")) {
