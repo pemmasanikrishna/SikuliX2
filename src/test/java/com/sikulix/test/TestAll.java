@@ -36,8 +36,8 @@ public class TestAll {
   private static String mavenRoot = "target/classes";
   private static String jarImagePathDefault = "." + "/" + defaultImagePath;
   private static String jarImagePathClass = "com.sikulix.testjar.Testjar" + "/" + defaultImagePath;
-  private static String httpRoot = "https://raw.githubusercontent.com/RaiMan/SikuliX2";
-  private static String httpImagePath = httpRoot + "/" + defaultImagePath;
+  private static String gitRoot = "https://raw.githubusercontent.com/RaiMan/SikuliX2/master";
+  private static String gitImagePath = gitRoot + "/src/main/resources/" + defaultImagePath;
   private static String imageNameDefault = "sikulix2";
 
   public TestAll() {
@@ -259,9 +259,9 @@ public class TestAll {
   @Test
   public void test_024_setBundlePathHttp() {
     currentTest = "test_024_setBundlePathHttp";
-    boolean success = Do.setBundlePath(httpRoot, defaultImagePath);
+    boolean success = Do.setBundlePath(gitRoot, "src/main/resources/" + defaultImagePath);
     result = Do.getBundlePath();
-    success &= (httpImagePath).equals(result);
+    success &= (gitImagePath).equals(result);
     assert success;
   }
 
@@ -270,7 +270,7 @@ public class TestAll {
     currentTest = "test_029_getImagePath";
     Do.setBundlePath(jarImagePathDefault);
     Do.addImagePath(jarImagePathClass);
-    Do.addImagePath(httpImagePath);
+    Do.addImagePath(gitImagePath);
     String[] paths = Do.getImagePath();
     result = "[";
     for (String path : paths) {
@@ -308,9 +308,9 @@ public class TestAll {
   }
 
   @Test
-  public void test_0031_loadImageFromFile() {
-    currentTest = "test_0031_loadImageFromFile";
-    boolean success = true;
+  public void test_031_loadImageFromFile() {
+    currentTest = "test_031_loadImageFromFile";
+    boolean success = Do.setBundlePath(mavenRoot, defaultImagePath);
     result = "BundlePath: " + Do.getBundlePath();
     Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
@@ -324,8 +324,8 @@ public class TestAll {
   }
 
   @Test
-  public void test_0032_loadImageFromJarByClass() {
-    currentTest = "test_0032_loadImageFromJarByClass";
+  public void test_032_loadImageFromJarByClass() {
+    currentTest = "test_032_loadImageFromJarByClass";
     boolean success = Do.setBundlePath(jarImagePathClass);
     result = "BundlePath: " + Do.getBundlePath();
     Picture img = new Picture(imageNameDefault);
@@ -342,7 +342,7 @@ public class TestAll {
   @Test
   public void test_033_loadImageFromHttp() {
     currentTest = "test_033_loadImageFromHttp";
-    boolean success = true;
+    boolean success = Do.setBundlePath(gitImagePath);
     result = "BundlePath: " + Do.getBundlePath();
     Picture img = new Picture(imageNameDefault);
     success &= img.isValid();
