@@ -37,7 +37,7 @@ public class Runner {
   }
 
   static URL scriptPath = null;
-  static String inJarFolderSX = "/Scripts";
+  static String inJarFolderSX = "/SX_Scripts";
 
 
   public static URL getScriptPath() {

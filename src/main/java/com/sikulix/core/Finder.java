@@ -12,6 +12,7 @@ import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
+import java.awt.Rectangle;
 import java.util.*;
 import java.util.List;
 
@@ -134,6 +135,7 @@ public class Finder {
           break;
         }
       }
+      log.trace("downSizeFound: %s", downSizeFound);
       log.trace("doFind: down: %%%.2f %d msec", 100 * mMinMax.maxVal, new Date().getTime() - begin_t);
     }
     if (FindType.ONE.equals(findType) && downSizeFound) {
@@ -146,9 +148,11 @@ public class Finder {
         int maxLocY = (int) (mMinMax.maxLoc.y * rfactor);
         begin_t = new Date().getTime();
         int margin = ((int) target.getResizeFactor()) + 1;
-        Rect rectSub = new Rect(Math.max(0, maxLocX - margin), Math.max(0, maxLocY - margin),
+        Rectangle rSub = new Rectangle(Math.max(0, maxLocX - margin), Math.max(0, maxLocY - margin),
                 Math.min(target.w + 2 * margin, mBase.width()),
                 Math.min(target.h + 2 * margin, mBase.height()));
+        rSub = new Rectangle(0, 0, mBase.cols(), mBase.rows()).intersection(rSub);
+        Rect rectSub = new Rect(rSub.x, rSub.y, rSub.width, rSub.height);
         mResult = doFindMatch(target, mBase.submat(rectSub), null);
         mMinMax = Core.minMaxLoc(mResult);
         if (mMinMax.maxVal > target.getWantedScore()) {

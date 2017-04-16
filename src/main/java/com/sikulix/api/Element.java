@@ -1231,14 +1231,17 @@ public class Element implements Comparable<Element> {
     return this;
   }
 
-  public boolean save(String name) {
-    return save(name, Picture.getBundlePath());
+  public String save(String name) {
+    if (Picture.isBundlePathFile()) {
+      return save(name, Picture.getBundlePath());
+    }
+    return save(name, SX.getSXIMAGES());
   }
 
-  public boolean save(String name, String path) {
+  public String save(String name, String path) {
     URL url = Content.makeURL(new File(path, name).getAbsolutePath());
     if (SX.isNull(url)) {
-      return false;
+      return "";
     }
     try {
       url = Content.makeURL(new File(path, name).getCanonicalPath());
@@ -1246,20 +1249,20 @@ public class Element implements Comparable<Element> {
     } catch (IOException e) {
     }
     log.error("save: invalid: %s / %s", path, name);
-    return false;
+    return "";
   }
 
-  public boolean save(String name, URL urlPath) {
+  public String save(String name, URL urlPath) {
     URL url = Content.makeURL(urlPath, name);
     if (SX.isNotNull(url)) {
       return save(url, name);
     } else {
       log.error("save: invalid: %s / %s", urlPath, name);
     }
-    return false;
+    return "";
   }
 
-  public boolean save(URL url, String name) {
+  public String save(URL url, String name) {
     if (!hasContent()) {
       load();
     }
@@ -1272,14 +1275,14 @@ public class Element implements Comparable<Element> {
         if (Imgcodecs.imwrite(imgFileName, imgContent)) {
           urlImg = url;
           setName(name);
-          return true;
+          return imgFileName;
         }
       } else {
         //TODO save: http and jar
         log.error("save: not implemented: %s", url);
       }
     }
-    return false;
+    return "";
   }
 
   protected boolean plainColor = false;

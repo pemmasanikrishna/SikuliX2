@@ -28,6 +28,25 @@ Travis CI (Ubuntu 12.04-64, Java 8, xvfb)
 
 the API to be used in Java and Java aware scripting languages
 
+Snapshots available on OSSRH (should work in Maven and Gradle projects):
+
+```
+  <repositories>
+    <repository>
+      <id>snapshot</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.sikulix</groupId>
+      <artifactId>sikulixapi</artifactId>
+      <version>2.0.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+```
+
  - the new public features are in **com.sikulix.api**
  - the current API (up to 1.1.x) in **org.sikuli.script** will be kept for backwards compatibility, but rerouted to **com.sikulix.api/core** as needed
  - new projects using Java should use the API as provided by **com.sikulix.api**

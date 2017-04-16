@@ -288,9 +288,12 @@ public class Picture extends Element {
   //<editor-fold desc="*** path">
   private static final List<URL> imagePath = Collections.synchronizedList(new ArrayList<URL>());
 
+  private static boolean bundlePathIsFile = true;
+
   private static void initPath() {
     if (imagePath.isEmpty()) {
       imagePath.add(SX.getFileURL(SX.getSXIMAGES()));
+      bundlePathIsFile = true;
     }
   }
 
@@ -302,6 +305,7 @@ public class Picture extends Element {
     initPath();
     if (args.length == 0) {
       imagePath.set(0, SX.getFileURL(SX.getSXIMAGES()));
+      bundlePathIsFile = true;
       return true;
     }
     URL urlPath = SX.makeURL(args);
@@ -311,6 +315,12 @@ public class Picture extends Element {
           urlPath = new URL("file", null, 0, urlPath.getPath().replace("test-", ""));
         } catch (MalformedURLException e) {
           log.error("setBundlePath: hack(test-classes -> classes) did not work");
+        }
+      }
+      bundlePathIsFile = false;
+      if ("file".equals(urlPath.getProtocol())) {
+        if (!urlPath.getPath().contains(".jar!/")) {
+          bundlePathIsFile = true;
         }
       }
       imagePath.set(0, urlPath);
@@ -331,6 +341,11 @@ public class Picture extends Element {
   public static String getBundlePath() {
     initPath();
     return SX.makePath(imagePath.get(0));
+  }
+
+  public static boolean isBundlePathFile() {
+    getBundlePath();
+    return bundlePathIsFile;
   }
 
   public static String[] getPath(String filter) {
@@ -469,32 +484,29 @@ public class Picture extends Element {
   }
 
   /**
-   * image file types supported by OpenCV highgui.imgread<br>
-   * Windows bitmaps - *.bmp, *.dib (always supported) <br>
-   * JPEG files - *.jpeg, *.jpg, *.jpe (see the *Notes* section)<br>
-   * JPEG 2000 files - *.jp2 (see the *Notes* section) <br>
-   * Portable Network Graphics - *.png (see the *Notes* section) <br>
-   * Portable image format - *.pbm, *.pgm, *.ppm (always supported) <br>
-   * Sun rasters - *.sr, *.ras (always supported) <br>
+   * image file types supported <br>
+   * Windows bitmaps - *.bmp <br>
+   * JPEG files - *.jpeg, *.jpg, *.jpe<br>
+   * Portable Network Graphics - *.png <br>
    * TIFF files - *.tiff, *.tif (see the *Notes* section)
    *
    * @param name an image file name
    * @return the name optionally .png added if no ending
    */
   public static String getValidName(String name) {
-    String validEndings = ".bmp.dib.jpeg.jpg.jpe.jp2.png.pbm.pgm.ppm.sr.ras.tiff.tif";
-    String validName = name;
-    String[] parts = validName.split("\\.");
-    if (parts.length == 1) {
-      log.trace("getValidName: supposing PNG: %s", name);
-      validName += ".png";
-    } else {
-      String ending = "." + parts[parts.length - 1];
-      if (validEndings.indexOf(ending) == -1) {
-        log.error("getValidName: image file ending %s not supported: %s", ending, name);
-      }
-    }
-    return validName;
+//    String validEndings = ".bmp.dib.jpeg.jpg.jpe.jp2.png.pbm.pgm.ppm.sr.ras.tiff.tif";
+//    String validName = name;
+//    String[] parts = validName.split("\\.");
+//    if (parts.length == 1) {
+//      log.trace("getValidName: supposing PNG: %s", name);
+//      validName += ".png";
+//    } else {
+//      String ending = "." + parts[parts.length - 1];
+//      if (validEndings.indexOf(ending) == -1) {
+//        log.error("getValidName: image file ending %s not supported: %s", ending, name);
+//      }
+//    }
+    return SX.getValidImageFilename(name);
   }
 
   public static boolean handleImageMissing(String type, Finder.PossibleMatch possibleMatch) {

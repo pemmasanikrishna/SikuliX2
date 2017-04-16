@@ -29,7 +29,7 @@ public class SX {
 
   private static long startTime = new Date().getTime();
 
-  //<editor-fold desc="*** logging">
+  //<editor-fold desc="00*** logging">
   public static final int INFO = 1;
   public static final int DEBUG = 3;
   public static final int TRACE = 4;
@@ -84,7 +84,7 @@ public class SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** init">
+  //<editor-fold desc="01*** init">
   private static String sxInstance = null;
 
   private static boolean shouldLock = false;
@@ -185,7 +185,7 @@ public class SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** command line args">
+  //<editor-fold desc="02*** command line args">
   private static List<String> sxArgs = new ArrayList<String>();
   private static List<String> userArgs = new ArrayList<String>();
   private static CommandLine sxCommandArgs = null;
@@ -247,7 +247,7 @@ public class SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** check how we are running">
+  //<editor-fold desc="03*** check how we are running">
   public static String sxGlobalClassNameIDE = "";
 
   private static boolean isJythonReady = false;
@@ -323,9 +323,31 @@ public class SX {
               + "(java.security.CodeSource.getLocation() is null)");
     }
   }
+
+  private static String baseClass = "";
+
+  public static void setBaseClass() {
+    log.trace("setBaseClass: start");
+    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+    boolean takeit = false;
+    for (StackTraceElement traceElement : stackTrace) {
+      String tName = traceElement.getClassName();
+      if (takeit) {
+        baseClass = tName;
+        break;
+      }
+      if (tName.equals(SX.class.getName())) {
+        takeit = true;
+      }
+    }
+  }
+
+  public static String getBaseClass() {
+    return baseClass;
+  }
   //</editor-fold>
 
-  //<editor-fold desc="*** get SX options at startup">
+  //<editor-fold desc="04*** get SX options at startup">
   private static File fOptions = null;
   private static String fnOptions = "sxoptions.txt";
 
@@ -430,7 +452,7 @@ public class SX {
 
 //</editor-fold> at start
 
-  //<editor-fold desc="*** handle options at runtime">
+  //<editor-fold desc="05*** handle options at runtime">
   public static void loadOptions(String fpOptions) {
     error("loadOptions: not yet implemented");
   }
@@ -516,23 +538,20 @@ public class SX {
 
   public static String getValidImageFilename(String fname) {
     String validEndings = ".png.jpg.jpeg.tiff.bmp";
+    String currentEnding = "";
     String defaultEnding = ".png";
-    int dot = fname.lastIndexOf(".");
-    String ending = defaultEnding;
-    if (dot > 0) {
-      ending = fname.substring(dot);
-      if (validEndings.contains(ending.toLowerCase())) {
-        return fname;
+    boolean shouldAddEnding = true;
+    if (fname.length() > 4) {
+      currentEnding = fname.substring(fname.length() - 4, fname.length());
+      if (validEndings.contains(currentEnding.toLowerCase())) {
+        shouldAddEnding = false;
       }
-    } else {
-      fname += ending;
-      return fname;
     }
-    return "";
+    return shouldAddEnding ? fname + defaultEnding : fname;
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** system/java version info">
+  //<editor-fold desc="06*** system/java version info">
   static enum theSystem {
     WIN, MAC, LUX, FOO
   }
@@ -716,7 +735,7 @@ public class SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** temp folders">
+  //<editor-fold desc="07*** temp folders">
 
   /**
    * ***** Property SYSTEMP *****
@@ -770,7 +789,7 @@ public class SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** user/work/appdata folder">
+  //<editor-fold desc="08*** user/work/appdata folder">
 
   /**
    * ***** Property USERHOME *****
@@ -838,7 +857,7 @@ public class SX {
   static String SYSAPP = "";
   //</editor-fold>
 
-  //<editor-fold desc="*** SX app data folder">
+  //<editor-fold desc="09*** SX app data folder">
   public static String getSXWEBHOME() {
     if (isNotSet(SXWEBHOME)) {
       SXWEBHOME = SXWEBHOMEdefault;
@@ -1129,7 +1148,7 @@ public class SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** SX version info">
+  //<editor-fold desc="10*** SX version info">
 
   /**
    * ***** Property VERSION *****
@@ -1220,9 +1239,13 @@ public class SX {
   }
 
   static String STAMP = "";
+
+  public static boolean isSnapshot() {
+    return getVERSION().endsWith("-SNAPSHOT");
+  }
   //</editor-fold>
 
-  //<editor-fold desc="*** monitor info">
+  //<editor-fold desc="11*** monitor / local defice">
 
   /**
    * checks, whether Java runs with a valid GraphicsEnvironment (usually means real screens connected)
@@ -1236,9 +1259,31 @@ public class SX {
   public static boolean onTravisCI() {
     return SX.isSet(System.getenv("TRAVIS"), "true");
   }
+
+  /**
+   * ***** Property LOCALDEVICE *****
+   *
+   * @return
+   */
+  public static LocalDevice getLOCALDEVICE() {
+    if (isNotSet(LOCALDEVICE)) {
+      LOCALDEVICE = (LocalDevice) new LocalDevice().start();
+    }
+    return LOCALDEVICE;
+  }
+
+  public static boolean isSetLOCALDEVICE() {
+    return SX.isNotNull(LOCALDEVICE);
+  }
+
+  public static void setLOCALDEVICE(LocalDevice LOCALDEVICE) {
+    SX.LOCALDEVICE = LOCALDEVICE;
+  }
+
+  private static LocalDevice LOCALDEVICE = null;
   //</editor-fold>
 
-  //<editor-fold desc="*** handle native libs">
+  //<editor-fold desc="12*** handle native libs">
   public static File fLibsProvided;
   public static boolean useLibsProvided;
   public static String linuxNeededLibs = "";
@@ -1398,7 +1443,7 @@ public class SX {
       sourceType = "";
     }
     int libCount = libraries.size();
-    if ( libCount == 0) {
+    if (libCount == 0) {
       error("extractLibraries: (none)%s: %s", sourceType, source);
     } else {
       if (libraries.contains("MadeForSikuliX2")) {
@@ -1473,7 +1518,7 @@ public class SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** global helper methods">
+  //<editor-fold desc="13*** global helper methods">
 
   /**
    * check wether the given object is in JSON format as ["ID", ...]
@@ -1803,7 +1848,7 @@ public class SX {
   }
   //</editor-fold>
 
-  //<editor-fold desc="*** candidates for Content">
+  //<editor-fold desc="14*** candidates for Content">
   public static String canonicalPath(File aFile) {
     try {
       return aFile.getCanonicalPath();
@@ -1940,48 +1985,4 @@ public class SX {
     return sPath;
   }
   //</editor-fold>
-
-  /**
-   * ***** Property LOCALDEVICE *****
-   *
-   * @return
-   */
-  public static LocalDevice getLOCALDEVICE() {
-    if (isNotSet(LOCALDEVICE)) {
-      LOCALDEVICE = (LocalDevice) new LocalDevice().start();
-    }
-    return LOCALDEVICE;
-  }
-
-  public static boolean isSetLOCALDEVICE() {
-    return SX.isNotNull(LOCALDEVICE);
-  }
-
-  public static void setLOCALDEVICE(LocalDevice LOCALDEVICE) {
-    SX.LOCALDEVICE = LOCALDEVICE;
-  }
-
-  private static LocalDevice LOCALDEVICE = null;
-
-  private static String baseClass = "";
-
-  public static void setBaseClass() {
-    log.trace("setBaseClass: start");
-    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-    boolean takeit = false;
-    for (StackTraceElement traceElement : stackTrace) {
-      String tName = traceElement.getClassName();
-      if (takeit) {
-        baseClass = tName;
-        break;
-      }
-      if (tName.equals(SX.class.getName())) {
-        takeit = true;
-      }
-    }
-  }
-
-  public static String getBaseClass() {
-    return baseClass;
-  }
 }
